@@ -1,0 +1,43 @@
+@extends('layouts.app')
+@section('content')
+    <div class="container py-4">
+
+        <h1 class="mb-4">Veicoli</h1>
+        <div class="card my-0">
+
+            <table class="table table-striped table-hover my-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Sigla</th>
+                        <th scope="col">Modello</th>
+                        <th scope="col">Targa</th>
+                        <th scope="col">Immatricolazione</th>
+                        <th scope="col">Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($vehicles as $vehicle)
+                        <tr>
+                            <td>{{ $vehicle->internal_code }}</td>
+                            <td>{{ $vehicle->model }}</td>
+                            <td>
+                                {{ preg_replace('/^([A-Z]{2})(\d{3})([A-Z]{2})$/', '$1 $2 $3', strtoupper($vehicle->license_plate)) }}
+                            </td>
+                            <td>{{ $vehicle->immatricolation_date }}</td>
+                            <td class="text-nowrap">
+                                <a href="{{ route('vehicles.show', $vehicle->id) }}" class="btn btn-primary"
+                                    aria-label="Visualizza veicolo {{ $vehicle->internal_code }}">Visualizza veicolo</a>
+                                <a href="{{ route('vehicles.edit', $vehicle->id) }}" class="btn btn-warning"
+                                    aria-label="Modifica veicolo {{ $vehicle->internal_code }}">Modifica</a>
+                                <button type="button" data-bs-toggle="modal"
+                                    data-bs-target="#confirmDeleteModal-{{ $vehicle->id }}" class="btn btn-danger"
+                                    aria-label="Elimina veicolo {{ $vehicle->internal_code }}">Elimina</button>
+                            </td>
+                        </tr>
+                        <x-delete-modal type="vehicle" :object="$vehicle" />
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+@endsection
