@@ -3,18 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Issue;
 use Illuminate\Http\Request;
 
-class IssueController extends Controller
+class vehicleTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $issues = Issue::with('vehicle')->get();
-        return view('issues.index', compact('issues'));
+        //
     }
 
     /**
@@ -36,7 +34,7 @@ class IssueController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Issue $issue)
+    public function show(string $id)
     {
         //
     }
@@ -44,7 +42,7 @@ class IssueController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Issue $issue)
+    public function edit(string $id)
     {
         //
     }
@@ -52,7 +50,7 @@ class IssueController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Issue $issue)
+    public function update(Request $request, string $id)
     {
         //
     }
@@ -60,7 +58,7 @@ class IssueController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Issue $issue)
+    public function destroy(string $id)
     {
         //
     }

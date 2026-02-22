@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('brand');
             $table->string('model');
             $table->enum('fuel_type', ['benzina', 'diesel', 'elettrico', 'ibrido'])->nullable();
-            $table->enum('type', ['auto', 'mezzo attrezzato', 'ambulanza'])->nullable();
+            $table->foreignId('vehicle_type_id')->nullable()->constrained('vehicle_types')->onDelete('set null');
             $table->date('immatricolation_date');
             $table->string('registration_card_path')->nullable();
             $table->date('warranty_original_expiration_date')->nullable();

@@ -13,7 +13,7 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::all()->load('vehicleType'); // Carica la relazione 'vehicle_type' per ogni veicolo
         return view('vehicles.index', compact('vehicles'));
     }
 
@@ -22,7 +22,7 @@ class VehicleController extends Controller
      */
     public function create()
     {
-        //
+        return view('vehicles.create');
     }
 
     /**

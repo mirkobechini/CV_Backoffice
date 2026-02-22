@@ -2,7 +2,9 @@
 @section('content')
     <div class="container py-4">
 
-        <h1 class="mb-4">Veicoli</h1>
+        <h1 class="mb-4">Veicoli <a class="btn btn-success rounded-pill ms-3 py-0 px-2"
+                        href="{{ route('vehicles.create') }}"><i
+                            class="fa-solid fa-add text-light"></i></a></h1>
         <div class="card my-0">
 
             <table class="table table-striped table-hover my-0 align-middle text-center">
@@ -11,7 +13,7 @@
                         <th scope="col">Sigla</th>
                         <th scope="col">Modello</th>
                         <th scope="col">Targa</th>
-                        <th scope="col">Immatricolazione</th>
+                        <th scope="col">Tipo</th>
                         <th scope="col">Stato</th>
                         <th scope="col">Azioni</th>
                     </tr>
@@ -24,7 +26,7 @@
                             <td>
                                 {{ preg_replace('/^([A-Z]{2})(\d{3})([A-Z]{2})$/', '$1 $2 $3', strtoupper($vehicle->license_plate)) }}
                             </td>
-                            <td>{{ \Carbon\Carbon::parse($vehicle->immatricolation_date)->format('d/m/Y') }}</td>
+                            <td>{{ $vehicle->vehicleType->name ?? 'N/A' }}</td>
                             <td> <i class="fa-solid  {{ $vehicle->issues->isEmpty() ? 'fa-check text-success' : 'fa-exclamation-triangle text-danger' }}"></i></td>
                             <td class="text-nowrap">
                                 <a href="{{ route('vehicles.show', $vehicle->id) }}" class="btn btn-primary"

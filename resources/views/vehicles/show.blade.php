@@ -2,8 +2,10 @@
 @section('content')
     <div class="container py-4">
         <div class="row">
-            <div class="col-3">
-                <h1 class="display-1 fw-bold text-center align-middle pt-4">{{ $vehicle->internal_code }}</h1>
+            <div class="col-3 align-middle text-center">
+                <h1 class="display-1 fw-bold text-center align-middle pt-3">{{ $vehicle->internal_code }}</h1>
+                <h5>{{ $vehicle->vehicleType->name ?? 'N/A' }}</h5>
+                
             </div>
             <div class="col-8">
                 <div class="card border-0 mb-3">
