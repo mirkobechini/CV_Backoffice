@@ -5,13 +5,14 @@
         <h1 class="mb-4">Veicoli</h1>
         <div class="card my-0">
 
-            <table class="table table-striped table-hover my-0">
+            <table class="table table-striped table-hover my-0 align-middle text-center">
                 <thead>
                     <tr>
                         <th scope="col">Sigla</th>
                         <th scope="col">Modello</th>
                         <th scope="col">Targa</th>
                         <th scope="col">Immatricolazione</th>
+                        <th scope="col">Stato</th>
                         <th scope="col">Azioni</th>
                     </tr>
                 </thead>
@@ -23,7 +24,8 @@
                             <td>
                                 {{ preg_replace('/^([A-Z]{2})(\d{3})([A-Z]{2})$/', '$1 $2 $3', strtoupper($vehicle->license_plate)) }}
                             </td>
-                            <td>{{ $vehicle->immatricolation_date }}</td>
+                            <td>{{ \Carbon\Carbon::parse($vehicle->immatricolation_date)->format('d/m/Y') }}</td>
+                            <td> <i class="fa-solid  {{ $vehicle->issues->isEmpty() ? 'fa-check text-success' : 'fa-exclamation-triangle text-danger' }}"></i></td>
                             <td class="text-nowrap">
                                 <a href="{{ route('vehicles.show', $vehicle->id) }}" class="btn btn-primary"
                                     aria-label="Visualizza veicolo {{ $vehicle->internal_code }}">Visualizza veicolo</a>
