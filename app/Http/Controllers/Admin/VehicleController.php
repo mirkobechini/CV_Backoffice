@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
+use App\Models\vehicleType;
 use Illuminate\Http\Request;
 
 class VehicleController extends Controller
@@ -22,7 +23,9 @@ class VehicleController extends Controller
      */
     public function create()
     {
-        return view('vehicles.create');
+        $vehicleTypes = vehicleType::all();
+  
+        return view('vehicles.create', compact('vehicleTypes'));
     }
 
     /**

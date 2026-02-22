@@ -57,8 +57,12 @@
                     </div>
                     <div class="mb-3">
                         <label for="type" class="form-label">Tipologia</label>
-                        <input type="text" class="form-control @error('type') is-invalid @enderror" id="type"
-                            name="type" value="{{ old('type') }}" required>
+                        <select class="form-select @error('type') is-invalid @enderror" id="type" name="type" required>
+                            @foreach ($vehicleTypes as $type)
+                                <option value="{{ $type->id }}" {{ old('type') == $type->id ? 'selected' : '' }}>
+                                    {{ $type->name }}</option>
+                            @endforeach
+                        </select>
                         @error('type')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
