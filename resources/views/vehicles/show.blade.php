@@ -5,30 +5,44 @@
             <div class="col-3 align-middle text-center">
                 <h1 class="display-1 fw-bold text-center align-middle pt-3">{{ $vehicle->internal_code }}</h1>
                 <h5>{{ $vehicle->vehicleType->name ?? 'N/A' }}</h5>
-                
+
             </div>
             <div class="col-8">
                 <div class="card border-0 mb-3">
                     <div class="card-body">
-                        <div class="row row-cols-2">
+                        <div class="row row-cols-1 row-cols-md-3">
                             <div class="col">
+                                <span class="card-text d-block"><strong>Targa:</strong> {{ $vehicle->license_plate }}</span>
                                 <span class="card-text d-block"><strong>Marca:</strong> {{ $vehicle->brand }}</span>
                                 <span class="card-text d-block"><strong>Modello:</strong> {{ $vehicle->model }}</span>
-                                <span class="card-text d-block"><strong>Targa:</strong> {{ $vehicle->license_plate }}</span>
+                                <span class="card-text d-block"><strong>Carburante:</strong>
+                                    {{ $vehicle->fuel_type }}</span>
+                                <span class="card-text d-block"><strong>Chilometri:</strong> {{ $vehicle->mileage }}</span>
+                            </div>
+                            <div class="col">
                                 <span class="card-text d-block"><strong>Data immatricolazione:</strong>
                                     {{ \Carbon\Carbon::parse($vehicle->immatricolation_date)->format('d/m/Y') }}</span>
-                                <span class="card-text d-block"><strong>Chilometri:</strong> {{ $vehicle->mileage }}</span>
+                                <span class="card-text d-block"><strong>Carta di circolazione:</strong>
+                                    @if ($vehicle->registration_card_path)
+                                        <a href="{{ Storage::url($vehicle->registration_card_path) }}" target="_blank"
+                                            rel="noopener noreferrer">Apri file</a>
+                                    @else
+                                        N/A
+                                    @endif
+                                </span>
+
+                                <span class="card-text d-block"><strong>Garanzia:</strong>
+                                    {{ $vehicle->warranty_expiration_date ? \Carbon\Carbon::parse($vehicle->warranty_expiration_date)->format('d/m/Y') : 'N/A' }}
+                                    {!! !$vehicle->warranty_expiration_date || \Carbon\Carbon::parse($vehicle->warranty_expiration_date)->isPast()
+                                        ? '<i class="fa-solid fa-times text-danger"></i>'
+                                        : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                </span>
                             </div>
                             <div class="col">
                                 <span class="card-text d-block"><strong>Revisione:</strong> {{ $vehicle->revision }}</span>
                                 <span class="card-text d-block"><strong>Tagliando:</strong> {{ $vehicle->service }}</span>
-                                <span class="card-text d-block"><strong>Assicurazione:</strong> {{ $vehicle->insurance }}</span>
-                                <span class="card-text d-block"><strong>Garanzia:</strong>
-                                    {{ $vehicle->warranty_expiration_date ? \Carbon\Carbon::parse($vehicle->warranty_expiration_date)->format('d/m/Y') : 'N/A' }}
-                                    {!! (!$vehicle->warranty_expiration_date || \Carbon\Carbon::parse($vehicle->warranty_expiration_date)->isPast())
-                                        ? '<i class="fa-solid fa-times text-danger"></i>'
-                                        : '<i class="fa-solid fa-check text-success"></i>' !!}
-                                </span>
+                                <span class="card-text d-block"><strong>Assicurazione:</strong>
+                                    {{ $vehicle->insurance }}</span>
 
                             </div>
                         </div>

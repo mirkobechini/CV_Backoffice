@@ -7,7 +7,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
     brand string Marca,
     model string Modello,
     fuel_type string nullable Alimentazione,
-    type string Tipologia (es. ambulanza, auto),
+    vehicle_type_id string Tipologia (es. ambulanza, auto),
     immatricolation_date string Data immatricolazione,
     registration_card_path string nullable Percorso file carta circolazione.
     warranty_original_expiration_date string nullable Data di scadenza originale della garanzia (per confronto).
@@ -129,8 +129,8 @@ Un mezzo può avere più guasti nel tempo.
 #### Vehicle 🔄
 - [X] index
 - [X] show
-- [] create
-- [] store
+- [X] create
+- [X] store
 - [] edit
 - [] update
 - [] destroy
