@@ -17,7 +17,24 @@
                         <p><strong>Veicolo:</strong> {{ $issue->vehicle->internal_code }} - {{ $issue->vehicle->brand }}
                             {{ $issue->vehicle->model }}</p>
                         <p><strong>Data del guasto:</strong> {{ $issue->event_date_formatted ?? 'N/A' }}</p>
-                        <p><strong>Stato:</strong> {{ $issue->status }}</p>
+                        <p><strong>Stato:</strong>
+                            @switch($issue->status)
+                                @case('open')
+                                    <span class="badge bg-danger">Aperto</span>
+                                @break
+
+                                @case('in_progress')
+                                    <span class="badge bg-warning text-dark">In lavorazione</span>
+                                @break
+
+                                @case('closed')
+                                    <span class="badge bg-success">Risolto</span>
+                                @break
+
+                                @default
+                                    <span class="badge bg-secondary">Sconosciuto</span>
+                            @endswitch
+                        </p>
                         @if ($issue->photo)
                             <div class="card mb-3">
                                 <div class="card-body">
