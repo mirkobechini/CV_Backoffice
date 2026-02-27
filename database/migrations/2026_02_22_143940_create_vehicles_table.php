@@ -22,9 +22,9 @@ return new class extends Migration
             $table->foreignId('vehicle_type_id')->nullable()->constrained('vehicle_types')->onDelete('set null');
             $table->date('immatricolation_date');
             $table->string('registration_card_path')->nullable();
-            $table->date('warranty_original_expiration_date')->nullable();
-            $table->boolean('has_warranty_extension')->default(false);
             $table->date('warranty_expiration_date')->nullable();
+            $table->boolean('has_warranty_extension')->default(false);
+            $table->integer('warranty_extension_duration')->nullable();
             $table->timestamps();
         });
 
