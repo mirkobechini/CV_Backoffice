@@ -4,9 +4,10 @@
         <h1 class="mb-4">Modifica struttura</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.providers.update', $provider->id) }}">
+                <form id="provider-edit-form" method="POST" action="{{ route('admin.providers.update', $provider->id) }}"
+                    data-single-submit="true">
                     @csrf
-                    @method("PUT")
+                    @method('PUT')
                     <section class="mb-3 row">
                         <h2>Dettagli struttura</h2>
                         <div class="mb-3">
@@ -20,7 +21,8 @@
                         <div class="mb-3">
                             <label for="contact_info" class="form-label">Contatti</label>
                             <input type="text" class="form-control @error('contact_info') is-invalid @enderror"
-                                id="contact_info" name="contact_info" value="{{ old('contact_info', $provider->contact_info) }}" required>
+                                id="contact_info" name="contact_info"
+                                value="{{ old('contact_info', $provider->contact_info) }}" required>
                             @error('contact_info')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -42,7 +44,8 @@
                             @enderror
                         </div>
                     </section>
-                    <button type="submit" class="btn btn-primary">Salva modifiche</button>
+                    <button id="provider-edit-submit-btn" type="submit" class="btn btn-primary"
+                        data-loading-text="Salvataggio...">Salva modifiche</button>
                 </form>
             </div>
         </div>

@@ -4,7 +4,8 @@
         <h1 class="mb-4">Aggiungi nuovo appuntamento</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.maintenancerecords.store') }}" enctype="multipart/form-data">
+                <form id="maintenance-record-form" method="POST" action="{{ route('admin.maintenancerecords.store') }}"
+                    enctype="multipart/form-data" data-single-submit="true">
                     @csrf
                     <section class="mb-3 row">
                         <h2>Dettagli veicolo</h2>
@@ -106,7 +107,8 @@
                             @enderror
                         </div>
                     </section>
-                    <button type="submit" class="btn btn-primary">Aggiungi</button>
+                    <button id="maintenance-submit-btn" type="submit" class="btn btn-primary"
+                        data-loading-text="Salvataggio...">Aggiungi</button>
                 </form>
             </div>
         </div>
@@ -158,7 +160,7 @@
                     issueSelect.disabled = true;
                     issueSelect.value = '';
                     createIssueLink.href =
-                    `{{ route('admin.issues.create') }}?vehicle_id=${selectedVehicleId}`;
+                        `{{ route('admin.issues.create') }}?vehicle_id=${selectedVehicleId}`;
                 } else {
                     issueSection.style.display = '';
                     noIssueCta.style.display = 'none';
@@ -168,6 +170,7 @@
 
             filterIssuesByVehicle();
             vehicleSelect.addEventListener('change', filterIssuesByVehicle);
+
         });
     </script>
 @endsection

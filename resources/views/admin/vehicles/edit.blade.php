@@ -4,7 +4,8 @@
         <h1 class="mb-4">Modifica veicolo</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.vehicles.update', $vehicle->id) }}" enctype="multipart/form-data">
+                <form id="vehicle-edit-form" method="POST" action="{{ route('admin.vehicles.update', $vehicle->id) }}"
+                    enctype="multipart/form-data" data-single-submit="true">
                     @csrf
                     @method('PUT')
                     <section class="mb-3 row">
@@ -13,7 +14,8 @@
                             <label for="license_plate" class="form-label">Targa</label>
                             <input type="text" class="form-control @error('license_plate') is-invalid @enderror"
                                 id="license_plate" name="license_plate"
-                                value="{{ old('license_plate', $vehicle->license_plate) }}" style="text-transform: uppercase;" required>
+                                value="{{ old('license_plate', $vehicle->license_plate) }}"
+                                style="text-transform: uppercase;" required>
                             @error('license_plate')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -151,7 +153,8 @@
                             </div>
                         </section>
                     </section>
-                    <button type="submit" class="btn btn-primary">Salva modifiche</button>
+                    <button id="vehicle-edit-submit-btn" type="submit" class="btn btn-primary"
+                        data-loading-text="Salvataggio...">Salva modifiche</button>
                 </form>
             </div>
         </div>
@@ -179,6 +182,7 @@
             uppercaseLicensePlate();
             warrantyExtensionCheckbox.addEventListener('change', toggleWarrantyRequiredFields);
             licensePlateInput.addEventListener('input', uppercaseLicensePlate);
+
         });
     </script>
 @endsection

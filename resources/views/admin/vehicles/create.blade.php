@@ -4,7 +4,8 @@
         <h1 class="mb-4">Aggiungi nuovo veicolo</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.vehicles.store') }}" enctype="multipart/form-data">
+                <form id="vehicle-form" method="POST" action="{{ route('admin.vehicles.store') }}"
+                    enctype="multipart/form-data" data-single-submit="true">
                     @csrf
                     <section class="mb-3 row">
                         <h2>Dettagli veicolo</h2>
@@ -107,7 +108,8 @@
                             </div>
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <label for="has_warranty_extension" class="form-check-label">Estensione garanzia</label>
+                                    <label for="has_warranty_extension" class="form-check-label">Estensione
+                                        garanzia</label>
                                     <input type="hidden" name="has_warranty_extension" value="0">
                                     <input type="checkbox"
                                         class="form-check-input @error('has_warranty_extension') is-invalid @enderror"
@@ -145,7 +147,8 @@
                             </div>
                         </section>
                     </section>
-                    <button type="submit" class="btn btn-primary">Aggiungi</button>
+                    <button id="vehicle-submit-btn" type="submit" class="btn btn-primary"
+                        data-loading-text="Salvataggio...">Aggiungi</button>
                 </form>
             </div>
         </div>
@@ -173,6 +176,7 @@
             uppercaseLicensePlate();
             warrantyExtensionCheckbox.addEventListener('change', toggleWarrantyRequiredFields);
             licensePlateInput.addEventListener('input', uppercaseLicensePlate);
+
         });
     </script>
 @endsection

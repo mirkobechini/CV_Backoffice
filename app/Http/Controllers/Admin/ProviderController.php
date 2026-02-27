@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Provider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class ProviderController extends Controller
 {
@@ -49,6 +50,39 @@ class ProviderController extends Controller
                 'type.max' => 'Il tipo non può superare i 255 caratteri.',
             ]
         );
+
+        $duplicateProvider = Provider::query()
+            ->where('name', $data['name'])
+            ->where(function ($query) use ($data) {
+                if (array_key_exists('address', $data) && $data['address'] !== null) {
+                    $query->where('address', $data['address']);
+                } else {
+                    $query->whereNull('address');
+                }
+            })
+            ->where(function ($query) use ($data) {
+                if (array_key_exists('contact_info', $data) && $data['contact_info'] !== null) {
+                    $query->where('contact_info', $data['contact_info']);
+                } else {
+                    $query->whereNull('contact_info');
+                }
+            })
+            ->where(function ($query) use ($data) {
+                if (array_key_exists('type', $data) && $data['type'] !== null) {
+                    $query->where('type', $data['type']);
+                } else {
+                    $query->whereNull('type');
+                }
+            })
+            ->where('created_at', '>=', Carbon::now()->subMinutes(5))
+            ->latest('id')
+            ->first();
+
+        if ($duplicateProvider) {
+            return redirect()
+                ->route('admin.providers.show', $duplicateProvider->id)
+                ->with('status', 'Struttura già registrata: creazione duplicata bloccata.');
+        }
 
         $newProvider = new Provider();
         $newProvider->name = $data['name'];

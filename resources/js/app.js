@@ -32,4 +32,30 @@ document.addEventListener('DOMContentLoaded', () => {
             applyTheme(nextTheme);
         });
     }
+
+    document.querySelectorAll('form[data-single-submit="true"]').forEach((form) => {
+        form.addEventListener('submit', (event) => {
+            if (form.dataset.submitting === 'true') {
+                event.preventDefault();
+                return;
+            }
+
+            form.dataset.submitting = 'true';
+
+            form.querySelectorAll('button[type="submit"], input[type="submit"]').forEach((control) => {
+                control.disabled = true;
+
+                if (!control.dataset.loadingText) {
+                    return;
+                }
+
+                if (control.tagName === 'INPUT') {
+                    control.value = control.dataset.loadingText;
+                    return;
+                }
+
+                control.textContent = control.dataset.loadingText;
+            });
+        });
+    });
 });

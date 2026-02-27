@@ -4,7 +4,8 @@
         <h1 class="mb-4">Aggiungi nuovo guasto</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.issues.store') }}" enctype="multipart/form-data">
+                <form id="issue-form" method="POST" action="{{ route('admin.issues.store') }}" enctype="multipart/form-data"
+                    data-single-submit="true">
                     @csrf
                     <section class="mb-3 row">
                         <h2>Dettagli Guasto</h2>
@@ -63,7 +64,8 @@
                             @enderror
                         </div>
                     </section>
-                    <button type="submit" class="btn btn-primary">Salva</button>
+                    <button id="issue-submit-btn" type="submit" class="btn btn-primary"
+                        data-loading-text="Salvataggio...">Salva</button>
                 </form>
             </div>
         </div>

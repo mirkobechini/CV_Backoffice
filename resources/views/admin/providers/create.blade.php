@@ -4,7 +4,7 @@
         <h1 class="mb-4">Aggiungi nuova struttura</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form method="POST" action="{{ route('admin.providers.store') }}">
+                <form id="provider-form" method="POST" action="{{ route('admin.providers.store') }}" data-single-submit="true">
                     @csrf
                     <section class="mb-3 row">
                         <h2>Dettagli struttura</h2>
@@ -41,7 +41,8 @@
                             @enderror
                         </div>
                     </section>
-                    <button type="submit" class="btn btn-primary">Aggiungi</button>
+                    <button id="provider-submit-btn" type="submit" class="btn btn-primary"
+                        data-loading-text="Salvataggio...">Aggiungi</button>
                 </form>
             </div>
         </div>

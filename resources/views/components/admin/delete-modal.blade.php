@@ -29,7 +29,7 @@
             <div class="modal-body">
                 Sei sicuro di voler eliminare "{{ $displayValue }}"
                 @if ($type === 'vehicle')
-                , tutti i guasti e le manutenzioni associate
+                    , tutti i guasti e le manutenzioni associate
                 @endif
                 ?
                 <br>
@@ -38,10 +38,12 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                     aria-label="Annulla eliminazione {{ $entityLabel }} {{ $displayValue }}">Annulla</button>
-                <form action="{{ route('admin.' . $type . 's.destroy', $object->id) }}" method="POST">
+                <form action="{{ route('admin.' . $type . 's.destroy', $object->id) }}" method="POST"
+                    data-single-submit="true">
                     @csrf
                     @method('DELETE')
                     <input type="submit" class="btn btn-danger" value="Elimina definitivamente"
+                        data-loading-text="Eliminazione..."
                         aria-label="Conferma eliminazione {{ $entityLabel }} {{ $displayValue }}">
                 </form>
             </div>

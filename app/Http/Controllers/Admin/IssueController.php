@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Issue;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class IssueController extends Controller
 {
@@ -55,6 +56,21 @@ class IssueController extends Controller
                 'image.max' => 'L\'immagine non può superare i 2MB.',
             ]
         );
+
+        $duplicateIssue = Issue::query()
+            ->where('vehicle_id', $data['vehicle_id'])
+            ->where('description', $data['description'])
+            ->whereDate('event_date', $data['event_date'])
+            ->where('status', $data['status'])
+            ->where('created_at', '>=', Carbon::now()->subMinutes(5))
+            ->latest('id')
+            ->first();
+
+        if ($duplicateIssue) {
+            return redirect()
+                ->route('admin.issues.show', $duplicateIssue->id)
+                ->with('status', 'Guasto già registrato: creazione duplicata bloccata.');
+        }
 
         $newIssue = new Issue();
         $newIssue->vehicle_id = $data['vehicle_id'];
