@@ -9,6 +9,10 @@
         default => $type,
     };
 
+    $routeParameterName = $type;
+    $routeParameterValue = $object?->getRouteKey();
+    $modalIdSuffix = $routeParameterValue ?? 'missing-' . $type;
+
     $displayValue = match ($type) {
         'vehicle' => $object->internal_code ?? ($object->license_plate ?? (string) $object->id),
         'provider' => $object->name ?? (string) $object->id,
@@ -18,12 +22,13 @@
     };
 @endphp
 
-<div class="modal fade" id="confirmDeleteModal-{{ $object->id }}" tabindex="-1"
-    aria-labelledby="confirmDeleteModalLabel-{{ $object->id }}" aria-hidden="true">
+<div class="modal fade" id="confirmDeleteModal-{{ $modalIdSuffix }}" tabindex="-1"
+    aria-labelledby="confirmDeleteModalLabel-{{ $modalIdSuffix }}" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h1 class="modal-title fs-5" id="confirmDeleteModalLabel-{{ $object->id }}">Confermare eliminazione</h1>
+                <h1 class="modal-title fs-5" id="confirmDeleteModalLabel-{{ $modalIdSuffix }}">Confermare eliminazione
+                </h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
             </div>
             <div class="modal-body">
@@ -38,14 +43,19 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                     aria-label="Annulla eliminazione {{ $entityLabel }} {{ $displayValue }}">Annulla</button>
-                <form action="{{ route('admin.' . $type . 's.destroy', $object->id) }}" method="POST"
-                    data-single-submit="true">
-                    @csrf
-                    @method('DELETE')
-                    <input type="submit" class="btn btn-danger" value="Elimina definitivamente"
-                        data-loading-text="Eliminazione..."
-                        aria-label="Conferma eliminazione {{ $entityLabel }} {{ $displayValue }}">
-                </form>
+                @if ($routeParameterValue)
+                    <form
+                        action="{{ route('admin.' . $type . 's.destroy', [$routeParameterName => $routeParameterValue]) }}"
+                        method="POST" data-single-submit="true">
+                        @csrf
+                        @method('DELETE')
+                        <input type="submit" class="btn btn-danger" value="Elimina definitivamente"
+                            data-loading-text="Eliminazione..."
+                            aria-label="Conferma eliminazione {{ $entityLabel }} {{ $displayValue }}">
+                    </form>
+                @else
+                    <button type="button" class="btn btn-danger" disabled>Elimina non disponibile</button>
+                @endif
             </div>
         </div>
     </div>
