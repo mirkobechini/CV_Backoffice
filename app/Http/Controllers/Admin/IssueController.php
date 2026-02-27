@@ -69,7 +69,7 @@ class IssueController extends Controller
 
         $newIssue->save();
 
-        return redirect()->route('admin.issues.index')->with('status', 'Guasto aggiunto con successo.');
+        return redirect()->route('admin.issues.show', $newIssue->id)->with('status', 'Guasto aggiunto con successo.');
     }
 
     /**
@@ -77,9 +77,7 @@ class IssueController extends Controller
      */
     public function show(Issue $issue)
     {
-        return redirect()
-            ->route('admin.issues.index')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        return view('admin.issues.show', compact('issue'));
     }
 
     /**
@@ -126,7 +124,7 @@ class IssueController extends Controller
             $issue->photo = $path;
         }
         $issue->update();
-        return redirect()->route('admin.issues.index')->with('status', 'Guasto aggiornato con successo.');
+        return redirect()->route('admin.issues.show', $issue->id)->with('status', 'Guasto aggiornato con successo.');
     }
 
     /**

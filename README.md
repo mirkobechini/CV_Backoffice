@@ -144,14 +144,14 @@ Un mezzo può avere più guasti nel tempo.
 - [X] update
 - [X] destroy
 
-#### Issue 🔄
+#### Issue ✅
 - [X] index
-- [] show
-- [] create
-- [] store
-- [] edit
-- [] update
-- [] destroy
+- [X] show
+- [X] create
+- [X] store
+- [X] edit
+- [X] update
+- [X] destroy
 
 #### MaintenanceRecord 🔄
 - [X] index
