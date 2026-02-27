@@ -35,6 +35,11 @@ class VehicleController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'license_plate' => strtoupper(str_replace(' ', '', (string) $request->input('license_plate'))),
+            'has_warranty_extension' => $request->boolean('has_warranty_extension'),
+        ]);
+
         $data = $request->validate([
             'license_plate' => 'required|string|size:7|regex:/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/|unique:vehicles,license_plate',
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
@@ -126,6 +131,11 @@ class VehicleController extends Controller
      */
     public function update(Request $request, Vehicle $vehicle)
     {
+        $request->merge([
+            'license_plate' => strtoupper(str_replace(' ', '', (string) $request->input('license_plate'))),
+            'has_warranty_extension' => $request->boolean('has_warranty_extension'),
+        ]);
+
         $data = $request->validate(
             [
             'license_plate' => 'required|string|size:7|regex:/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/|unique:vehicles,license_plate,' . $vehicle->id,

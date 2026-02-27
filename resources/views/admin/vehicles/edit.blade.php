@@ -13,7 +13,7 @@
                             <label for="license_plate" class="form-label">Targa</label>
                             <input type="text" class="form-control @error('license_plate') is-invalid @enderror"
                                 id="license_plate" name="license_plate"
-                                value="{{ old('license_plate', $vehicle->license_plate) }}" required>
+                                value="{{ old('license_plate', $vehicle->license_plate) }}" style="text-transform: uppercase;" required>
                             @error('license_plate')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -114,9 +114,10 @@
                             <div class="mb-3">
                                 <div class="form-check">
                                     <label for="has_warranty_extension" class="form-check-label">Estensione garanzia</label>
+                                    <input type="hidden" name="has_warranty_extension" value="0">
                                     <input type="checkbox"
                                         class="form-check-input @error('has_warranty_extension') is-invalid @enderror"
-                                        id="has_warranty_extension" name="has_warranty_extension"
+                                        id="has_warranty_extension" name="has_warranty_extension" value="1"
                                         {{ old('has_warranty_extension', $vehicle->has_warranty_extension) ? 'checked' : '' }}>
                                     @error('has_warranty_extension')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -158,9 +159,14 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const licensePlateInput = document.getElementById('license_plate');
             const warrantyExtensionCheckbox = document.getElementById('has_warranty_extension');
             const warrantyExpirationDateInput = document.getElementById('warranty_expiration_date');
             const warrantyExtensionDurationInput = document.getElementById('warranty_extension_duration');
+
+            function uppercaseLicensePlate() {
+                licensePlateInput.value = licensePlateInput.value.toUpperCase().replace(/\s+/g, '');
+            }
 
             function toggleWarrantyRequiredFields() {
                 const isChecked = warrantyExtensionCheckbox.checked;
@@ -170,7 +176,9 @@
             }
 
             toggleWarrantyRequiredFields();
+            uppercaseLicensePlate();
             warrantyExtensionCheckbox.addEventListener('change', toggleWarrantyRequiredFields);
+            licensePlateInput.addEventListener('input', uppercaseLicensePlate);
         });
     </script>
 @endsection
