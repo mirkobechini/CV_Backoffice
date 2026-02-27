@@ -13,9 +13,8 @@ class MaintenanceRecordController extends Controller
      */
     public function index()
     {
-        return redirect()
-            ->route('dashboard')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        $maintenanceRecords = MaintenanceRecord::with(['vehicle', 'provider', 'issue'])->get();
+        return view('admin.maintenancerecords.index', compact('maintenanceRecords'));
     }
 
     /**

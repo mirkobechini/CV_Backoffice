@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\IssueController;
+use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\ProfileController;
@@ -25,6 +26,7 @@ Route::middleware(['auth', 'verified'])
         Route::resource("vehicles", VehicleController::class);
         Route::resource("providers", ProviderController::class);
         Route::resource("issues", IssueController::class);
+        Route::resource("maintenancerecords", MaintenanceRecordController::class);
     });
 
 

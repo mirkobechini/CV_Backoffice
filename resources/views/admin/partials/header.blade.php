@@ -27,6 +27,9 @@
                         <li class="nav-item">
                             <a class="nav-link" href="{{route("welcome")}}">{{ __('Scadenze') }}</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{route("admin.maintenancerecords.index")}}">{{ __('Appuntamenti') }}</a>
+                        </li>
                     </ul>
 
                     <!-- Right Side Of Navbar -->
