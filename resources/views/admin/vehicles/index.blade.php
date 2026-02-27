@@ -3,7 +3,7 @@
     <div class="container py-4">
 
         <h1 class="mb-4">Veicoli <a class="btn btn-success rounded-pill ms-3 py-0 px-2"
-                        href="{{ route('vehicles.create') }}"><i
+                        href="{{ route('admin.vehicles.create') }}"><i
                             class="fa-solid fa-add text-light"></i></a></h1>
         <div class="card my-0">
 
@@ -29,9 +29,9 @@
                             <td>{{ $vehicle->vehicleType->name ?? 'N/A' }}</td>
                             <td> <i class="fa-solid  {{ $vehicle->issues->isEmpty() ? 'fa-check text-success' : 'fa-exclamation-triangle text-danger' }}"></i></td>
                             <td class="text-nowrap">
-                                <a href="{{ route('vehicles.show', $vehicle->id) }}" class="btn btn-primary"
+                                <a href="{{ route('admin.vehicles.show', $vehicle->id) }}" class="btn btn-primary"
                                     aria-label="Visualizza veicolo {{ $vehicle->internal_code }}">Visualizza veicolo</a>
-                                <a href="{{ route('vehicles.edit', $vehicle->id) }}" class="btn btn-warning"
+                                <a href="{{ route('admin.vehicles.edit', $vehicle->id) }}" class="btn btn-warning"
                                     aria-label="Modifica veicolo {{ $vehicle->internal_code }}">Modifica</a>
                                 <button type="button" data-bs-toggle="modal"
                                     data-bs-target="#confirmDeleteModal-{{ $vehicle->id }}" class="btn btn-danger"

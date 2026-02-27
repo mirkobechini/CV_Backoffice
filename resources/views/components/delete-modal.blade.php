@@ -19,7 +19,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" aria-label="Annulla eliminazione del {{ $type }} {{ $object->name }}">Annulla</button>
-                <form action="{{ route($type . 's.destroy', $object->id) }}" method="POST">
+                <form action="{{ route('admin.' . $type . 's.destroy', $object->id) }}" method="POST">
                     @csrf
                     @method('DELETE')
                     <input type="submit" class="btn btn-danger" value="Elimina definitivamente" aria-label="Conferma eliminazione del {{ $type }} {{ $object->name }}">

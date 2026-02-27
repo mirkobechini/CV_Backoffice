@@ -17,7 +17,7 @@ class VehicleController extends Controller
     public function index()
     {
         $vehicles = Vehicle::all()->load('vehicleType'); // Carica la relazione 'vehicle_type' per ogni veicolo
-        return view('vehicles.index', compact('vehicles'));
+        return view('admin.vehicles.index', compact('vehicles'));
     }
 
     /**
@@ -27,7 +27,7 @@ class VehicleController extends Controller
     {
         $vehicleTypes = vehicleType::all();
   
-        return view('vehicles.create', compact('vehicleTypes'));
+        return view('admin.vehicles.create', compact('vehicleTypes'));
     }
 
     /**
@@ -98,7 +98,7 @@ class VehicleController extends Controller
 
         $newVehicle->save();
 
-        return redirect()->route('vehicles.index')->with('status', 'Veicolo creato con successo.');
+        return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo creato con successo.');
     }
 
     /**
@@ -106,7 +106,7 @@ class VehicleController extends Controller
      */
     public function show(Vehicle $vehicle)
     {
-        return view('vehicles.show', compact('vehicle'));
+        return view('admin.vehicles.show', compact('vehicle'));
     }
 
     /**
@@ -114,7 +114,7 @@ class VehicleController extends Controller
      */
     public function edit(Vehicle $vehicle)
     {
-        //
+        return view('admin.vehicles.edit', compact('vehicle'));
     }
 
     /**

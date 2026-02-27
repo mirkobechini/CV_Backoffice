@@ -14,7 +14,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
     has_warranty_extension boolean default false Flag per estensione garanzia,
     warranty_expiration_date string nullable Data di scadenza della garanzia.
 
-### VehicleType (Configurazione Categorie) :Tabella di configurazione che definisce le regole di business per ogni categoria di mezzo.
+### VehicleType (Configurazione Categorie): Tabella di configurazione che definisce le regole di business per ogni categoria di mezzo.
     name string Nome della tipologia,
     needs_oxygen_check (booleano) per attivare la gestione impianto ossigeno.
     extinguishers_required (intero) per definire il numero minimo di estintori a bordo.

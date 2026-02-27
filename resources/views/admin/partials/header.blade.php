@@ -16,13 +16,13 @@
                             <a class="nav-link" href="{{url('/') }}">{{ __('Home') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{route("vehicles.index") }}">{{ __('Veicoli') }}</a>
+                            <a class="nav-link" href="{{route("admin.vehicles.index") }}">{{ __('Veicoli') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{route("providers.index")}}">{{ __('Officine') }}</a>
+                            <a class="nav-link" href="{{route("admin.providers.index")}}">{{ __('Officine') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{route("issues.index") }}">{{ __('Guasti') }}</a>
+                            <a class="nav-link" href="{{route("admin.issues.index") }}">{{ __('Guasti') }}</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="{{route("welcome")}}">{{ __('Scadenze') }}</a>

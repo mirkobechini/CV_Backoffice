@@ -53,7 +53,7 @@
         <div class="row">
             <div class="col-12 mb-3">
                 <h2 class="display-6 fw-bold">Guasti<a class="btn btn-success rounded-pill ms-3 py-0 px-2"
-                        href="{{ route('issues.create', ['vehicle_id' => $vehicle->id]) }}"><i
+                        href="{{ route('admin.issues.create', ['vehicle_id' => $vehicle->id]) }}"><i
                             class="fa-solid fa-add text-light"></i></a>
                 </h2>
                 @if ($vehicle->issues->isEmpty())
@@ -81,7 +81,7 @@
             </div>
             <div class="row">
                 <div class="col-12">
-                    <a href="{{ route('vehicles.index') }}" class="btn btn-secondary">Torna alla lista</a>
+                    <a href="{{ route('admin.vehicles.index') }}" class="btn btn-secondary">Torna alla lista</a>
                 </div>
             </div>
         </div>

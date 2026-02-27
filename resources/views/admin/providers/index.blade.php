@@ -23,9 +23,9 @@
                             <td>{{ $provider->address }}</td>
                             <td>{{ $provider->type }}</td>
                             <td class="text-nowrap">
-                                <a href="{{ route('providers.show', $provider->id) }}" class="btn btn-primary"
+                                <a href="{{ route('admin.providers.show', $provider->id) }}" class="btn btn-primary"
                                     aria-label="Visualizza officina {{ $provider->name }}">Visualizza officina</a>
-                                <a href="{{ route('providers.edit', $provider->id) }}" class="btn btn-warning"
+                                <a href="{{ route('admin.providers.edit', $provider->id) }}" class="btn btn-warning"
                                     aria-label="Modifica officina {{ $provider->name }}">Modifica</a>
                                 <button type="button" data-bs-toggle="modal"
                                     data-bs-target="#confirmDeleteModal-{{ $provider->id }}" class="btn btn-danger"

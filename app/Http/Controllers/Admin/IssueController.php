@@ -14,7 +14,7 @@ class IssueController extends Controller
     public function index()
     {
         $issues = Issue::with('vehicle')->get();
-        return view('issues.index', compact('issues'));
+        return view('admin.issues.index', compact('issues'));
     }
 
     /**
@@ -22,7 +22,9 @@ class IssueController extends Controller
      */
     public function create()
     {
-        //
+        return redirect()
+            ->route('admin.issues.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -30,7 +32,9 @@ class IssueController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        return redirect()
+            ->route('admin.issues.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -38,7 +42,9 @@ class IssueController extends Controller
      */
     public function show(Issue $issue)
     {
-        //
+        return redirect()
+            ->route('admin.issues.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -46,7 +52,9 @@ class IssueController extends Controller
      */
     public function edit(Issue $issue)
     {
-        //
+        return redirect()
+            ->route('admin.issues.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -54,7 +62,9 @@ class IssueController extends Controller
      */
     public function update(Request $request, Issue $issue)
     {
-        //
+        return redirect()
+            ->route('admin.issues.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -62,6 +72,8 @@ class IssueController extends Controller
      */
     public function destroy(Issue $issue)
     {
-        //
+        return redirect()
+            ->route('admin.issues.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 }

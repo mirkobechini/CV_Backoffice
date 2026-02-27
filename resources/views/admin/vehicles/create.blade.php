@@ -1,10 +1,10 @@
-@extends('layouts.app')
+@extends('..layouts.app')
 @section('content')
     <div class="container py-4">
         <h1 class="mb-4">Aggiungi nuovo veicolo</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form method="POST" action="{{ route('vehicles.store') }}" enctype="multipart/form-data">
+                <form method="POST" action="{{ route('admin.vehicles.store') }}" enctype="multipart/form-data">
                     @csrf
                     <section class="mb-3 row">
                         <h2>Dettagli veicolo</h2>
@@ -34,7 +34,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="fuel_type" class="form-label">Carburante</label>
-                            <select type="text" class="form-control @error('fuel_type') is-invalid @enderror" id="fuel_type"
+                            <select class="form-select @error('fuel_type') is-invalid @enderror" id="fuel_type"
                             name="fuel_type" value="{{ old('fuel_type') }}">
                             <option value="benzina" {{ old('fuel_type') == 'benzina' ? 'selected' : '' }}>Benzina</option>
                             <option value="diesel" {{ old('fuel_type') == 'diesel' ? 'selected' : '' }}>Diesel</option>

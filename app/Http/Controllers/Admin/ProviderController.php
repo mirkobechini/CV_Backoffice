@@ -14,7 +14,7 @@ class ProviderController extends Controller
     public function index()
     {
         $providers = Provider::all();
-        return view('providers.index', compact('providers'));
+        return view('admin.providers.index', compact('providers'));
     }
 
     /**
@@ -22,7 +22,9 @@ class ProviderController extends Controller
      */
     public function create()
     {
-        //
+        return redirect()
+            ->route('admin.providers.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -30,7 +32,9 @@ class ProviderController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        return redirect()
+            ->route('admin.providers.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -38,7 +42,9 @@ class ProviderController extends Controller
      */
     public function show(Provider $provider)
     {
-        //
+        return redirect()
+            ->route('admin.providers.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -46,7 +52,9 @@ class ProviderController extends Controller
      */
     public function edit(Provider $provider)
     {
-        //
+        return redirect()
+            ->route('admin.providers.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -54,7 +62,9 @@ class ProviderController extends Controller
      */
     public function update(Request $request, Provider $provider)
     {
-        //
+        return redirect()
+            ->route('admin.providers.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -62,6 +72,8 @@ class ProviderController extends Controller
      */
     public function destroy(Provider $provider)
     {
-        //
+        return redirect()
+            ->route('admin.providers.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 }

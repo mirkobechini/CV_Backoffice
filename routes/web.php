@@ -6,13 +6,11 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('welcome');
+Route::view('/', 'welcome')->name('welcome');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::view('/dashboard', 'dashboard')
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -20,14 +18,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::resource("vehicles", VehicleController::class)
-    ->middleware(["auth", "verified"]);
+Route::middleware(['auth', 'verified'])
+    ->name("admin.")
+    ->prefix("admin")
+    ->group(function () {
+        Route::resource("vehicles", VehicleController::class);
+        Route::resource("providers", ProviderController::class);
+        Route::resource("issues", IssueController::class);
+    });
 
-Route::resource("providers", ProviderController::class)
-    ->middleware(["auth", "verified"]);
 
-Route::resource("issues", IssueController::class)
-    ->middleware(["auth", "verified"]);
-
-
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

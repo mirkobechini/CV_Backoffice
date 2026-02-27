@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\vehicleType;
+use App\Models\MaintenanceRecord;
 use Illuminate\Http\Request;
 
-class vehicleTypeController extends Controller
+class MaintenanceRecordController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $vehicleTypes = vehicleType::all();
-        return view('admin.vehicletypes.index', compact('vehicleTypes'));
+        $maintenances = MaintenanceRecord::all();
+        return view('admin.maintenancerecords.index', compact('maintenances')); 
     }
 
     /**
@@ -22,7 +22,7 @@ class vehicleTypeController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.maintenancerecords.create');
     }
 
     /**
@@ -36,23 +36,22 @@ class vehicleTypeController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(vehicleType $vehicleType)
+    public function show(MaintenanceRecord $maintenanceRecord)
     {
-        return view('admin.vehicletypes.show', compact('vehicleType'));
+        return view('admin.maintenancerecords.show', compact('maintenanceRecord'));
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(vehicleType $vehicleType)
-    {
-        //
+    public function edit(MaintenanceRecord $maintenanceRecord)
+     {
+        return view('admin.maintenancerecords.edit', compact('maintenanceRecord'));
     }
-
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, vehicleType $vehicleType)
+    public function update(Request $request, MaintenanceRecord $maintenanceRecord)
     {
         //
     }
@@ -60,7 +59,7 @@ class vehicleTypeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(vehicleType $vehicleType)
+    public function destroy(MaintenanceRecord $maintenanceRecord)
     {
         //
     }
