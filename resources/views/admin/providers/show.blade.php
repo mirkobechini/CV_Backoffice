@@ -35,10 +35,12 @@
             @else
                 <ul class="list-group">
                     @foreach ($provider->maintenanceRecords as $record)
-                        <li class="list-group-item">
-                            <a href="{{ route('admin.maintenancerecords.show', $record->id) }}">{{ $record->description }}
+                        <li class="list-group-item d-flex gap-3">
+                            <p class="m-0">
+                                {{$record->vehicle?->internal_code ?? 'N/A'}} - {{ $record->issue?->description ?? ($record->activity_type ?? 'N/A') }}
                                 ({{ $record->appointment_date_formatted ?? 'N/A' }})
-                            </a>
+                            </p>
+                            <a href="{{ route('admin.maintenancerecords.show', $record->id) }}" class="btn btn-sm btn-primary rounded-pill "><i class="bi bi-eye"></i></a>
                         </li>
                     @endforeach
                 </ul>
