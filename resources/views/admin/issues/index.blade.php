@@ -18,7 +18,24 @@
                 <tr>
                     <td>{{ $issue->vehicle->internal_code }}</td>
                     <td>{{ $issue->description }}</td>
-                    <td>{{ $issue->status }}</td>
+                    <td>
+                        @switch($issue->status)
+                            @case('open')
+                                <span class="badge bg-danger">Aperto</span>
+                            @break
+
+                            @case('in_progress')
+                                <span class="badge bg-warning text-dark">In lavorazione</span>
+                            @break
+
+                            @case('closed')
+                                <span class="badge bg-success">Risolto</span>
+                            @break
+
+                            @default
+                                <span class="badge bg-secondary">Sconosciuto</span>
+                        @endswitch
+                    </td>
                     <td>{{ $issue->event_date }}</td>
                     <x-admin.row-actions :showUrl="route('admin.issues.show', $issue->id)" :editUrl="route('admin.issues.edit', $issue->id)" :deleteTarget="'#confirmDeleteModal-' . $issue->id" :label="'guasto ' . $issue->description" />
                 </tr>
