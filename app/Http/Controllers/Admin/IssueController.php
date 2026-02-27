@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Issue;
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
 
 class IssueController extends Controller
@@ -22,9 +23,10 @@ class IssueController extends Controller
      */
     public function create()
     {
-        return redirect()
-            ->route('admin.issues.index')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        $vehicles = Vehicle::all();
+        $selectedVehicleId = request('vehicle_id');
+
+        return view('admin.issues.create', compact('vehicles', 'selectedVehicleId'));
     }
 
     /**
@@ -32,9 +34,42 @@ class IssueController extends Controller
      */
     public function store(Request $request)
     {
-        return redirect()
-            ->route('admin.issues.index')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        $data = $request->validate(
+            [
+                'vehicle_id' => 'required|exists:vehicles,id',
+                'description' => 'required|string',
+                'event_date' => 'required|date',
+                'status' => 'required|in:open,in_progress,closed',
+                'image' => 'nullable|image|max:2048', // Optional image upload
+            ],
+            [
+                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
+                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
+                'description.required' => 'La descrizione è obbligatoria.',
+                'description.string' => 'La descrizione deve essere una stringa.',
+                'event_date.required' => 'La data di segnalazione è obbligatoria.',
+                'event_date.date' => 'La data di segnalazione deve essere una data valida.',
+                'status.required' => 'Lo stato è obbligatorio.',
+                'status.in' => 'Lo stato selezionato non è valido.',
+                'image.image' => 'Il file caricato deve essere un\'immagine.',
+                'image.max' => 'L\'immagine non può superare i 2MB.',
+            ]
+        );
+
+        $newIssue = new Issue();
+        $newIssue->vehicle_id = $data['vehicle_id'];
+        $newIssue->description = $data['description'];
+        $newIssue->event_date = $data['event_date'];
+        $newIssue->status = $data['status'];
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('issue_images', 'public');
+            $newIssue->photo = $path;
+        }
+
+        $newIssue->save();
+
+        return redirect()->route('admin.issues.index')->with('status', 'Guasto aggiunto con successo.');
     }
 
     /**
@@ -52,9 +87,8 @@ class IssueController extends Controller
      */
     public function edit(Issue $issue)
     {
-        return redirect()
-            ->route('admin.issues.index')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        $vehicles = Vehicle::all();
+        return view('admin.issues.edit', compact('issue', 'vehicles'));
     }
 
     /**
@@ -62,9 +96,37 @@ class IssueController extends Controller
      */
     public function update(Request $request, Issue $issue)
     {
-        return redirect()
-            ->route('admin.issues.index')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        $data = $request->validate(
+            [
+                'vehicle_id' => 'required|exists:vehicles,id',
+                'description' => 'required|string',
+                'event_date' => 'required|date',
+                'status' => 'required|in:open,in_progress,closed',
+                'image' => 'nullable|image|max:2048', // Optional image upload
+            ],
+            [
+                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
+                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
+                'description.required' => 'La descrizione è obbligatoria.',
+                'description.string' => 'La descrizione deve essere una stringa.',
+                'event_date.required' => 'La data di segnalazione è obbligatoria.',
+                'event_date.date' => 'La data di segnalazione deve essere una data valida.',
+                'status.required' => 'Lo stato è obbligatorio.',
+                'status.in' => 'Lo stato selezionato non è valido.',
+                'image.image' => 'Il file caricato deve essere un\'immagine.',
+                'image.max' => 'L\'immagine non può superare i 2MB.',
+            ]
+        );
+        $issue->vehicle_id = $data['vehicle_id'];
+        $issue->description = $data['description'];
+        $issue->event_date = $data['event_date'];
+        $issue->status = $data['status'];
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('issue_images', 'public');
+            $issue->photo = $path;
+        }
+        $issue->update();
+        return redirect()->route('admin.issues.index')->with('status', 'Guasto aggiornato con successo.');
     }
 
     /**
@@ -72,8 +134,7 @@ class IssueController extends Controller
      */
     public function destroy(Issue $issue)
     {
-        return redirect()
-            ->route('admin.issues.index')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        $issue->delete();
+        return redirect()->route('admin.issues.index')->with('status', 'Guasto eliminato con successo.');
     }
 }
