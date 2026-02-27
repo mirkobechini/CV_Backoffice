@@ -37,6 +37,7 @@
                             <label for="fuel_type" class="form-label">Carburante</label>
                             <select class="form-select @error('fuel_type') is-invalid @enderror" id="fuel_type"
                                 name="fuel_type" value="{{ old('fuel_type') }}">
+                                <option value="">Seleziona un carburante</option>
                                 <option value="benzina" {{ old('fuel_type') == 'benzina' ? 'selected' : '' }}>Benzina
                                 </option>
                                 <option value="diesel" {{ old('fuel_type') == 'diesel' ? 'selected' : '' }}>Diesel</option>
@@ -52,6 +53,7 @@
                             <label for="vehicle_type_id" class="form-label">Tipologia</label>
                             <select class="form-select @error('vehicle_type_id') is-invalid @enderror" id="vehicle_type_id"
                                 name="vehicle_type_id" required>
+                                <option value="">Seleziona una tipologia</option>
                                 @foreach ($vehicleTypes as $type)
                                     <option value="{{ $type->id }}"
                                         {{ old('vehicle_type_id') == $type->id ? 'selected' : '' }}>

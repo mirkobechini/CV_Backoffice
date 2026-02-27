@@ -16,9 +16,9 @@
             @foreach ($maintenanceRecords as $record)
                 <tr>
                     <td>{{ $record->vehicle->internal_code }}</td>
-                    <td>{{ $record->description }}</td>
+                    <td>{{ $record->issue?->description ?? $record->activity_type ?? 'N/A' }}</td>
                     <td>{{ $record->appointment_date_formatted ?? 'N/A' }}</td>
-                    <x-admin.row-actions :showUrl="route('admin.maintenancerecords.show', $record->id)" :editUrl="route('admin.maintenancerecords.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' . $record->description" />
+                    <x-admin.row-actions :showUrl="route('admin.maintenancerecords.show', $record->id)" :editUrl="route('admin.maintenancerecords.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' . ($record->issue?->description ?? $record->activity_type ?? $record->id)" />
                 </tr>
                 <x-admin.delete-modal type="maintenancerecord" :object="$record" />
             @endforeach
