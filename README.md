@@ -104,7 +104,7 @@ Un mezzo può avere più guasti nel tempo.
 - [X] Vehicle model & migration
 - [X] Provider model & migration
 - [X] Issue model & migration
-- [] MaintenanceRecord model & migration
+- [X] MaintenanceRecord model & migration
 - [] Deadline model & migration
 - [] MileageLog model & migration
 - [] Equipment model & migration
@@ -135,14 +135,14 @@ Un mezzo può avere più guasti nel tempo.
 - [/] update
 - [X] destroy
 
-#### Provider 🔄
+#### Provider ✅
 - [X] index
-- [] show
-- [] create
-- [] store
-- [] edit
-- [] update
-- [] destroy
+- [X] show
+- [X] create
+- [X] store
+- [X] edit
+- [X] update
+- [X] destroy
 
 #### Issue 🔄
 - [X] index
@@ -192,7 +192,7 @@ Un mezzo può avere più guasti nel tempo.
 ### Admin 🔄
 #### Controllers 🔄
 - [/] admin/VehicleController (CRUD)
-- [] admin/ProviderController (CRUD)
+- [X] admin/ProviderController (CRUD)
 - [] admin/IssueController (CRUD)
 - [] admin/MaintenanceRecordController (CRUD)
 - [] admin/DeadlineController (CRUD)
