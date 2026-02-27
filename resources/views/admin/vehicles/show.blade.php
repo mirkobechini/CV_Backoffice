@@ -67,17 +67,19 @@
                     <ul class="list-group">
                         @foreach ($vehicle->issues as $issue)
                             <li
-                                class="list-group-item @if ($issue->status === 'open') list-group-item-danger @elseif($issue->status === 'in_progress') list-group-item-warning @endif">
+                                class="list-group-item @if ($issue->status === 'open') list-group-item-danger @elseif($issue->status === 'in_progress') list-group-item-warning @else list-group-item-success @endif">
                                 <div class="row">
                                     <div class="col-6">
                                         <strong>Data:</strong>
                                         {{ \Carbon\Carbon::parse($issue->date)->format('d/m/Y') }}<br>
                                         <strong>Descrizione:</strong> {{ $issue->description }}<br>
                                     </div>
-                                    <div class="col-6">
-                                        <h5>Officina</h5>
-                                        <p class="card-text">Da contattare</p>
-                                    </div>
+                                    @if ($issue->status != 'closed')
+                                        <div class="col-6">
+                                            <h5>Officina</h5>
+                                            <p class="card-text">Da contattare</p>
+                                        </div>
+                                    @endif
                                 </div>
                             </li>
                         @endforeach

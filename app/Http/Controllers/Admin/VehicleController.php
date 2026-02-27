@@ -16,7 +16,13 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        $vehicles = Vehicle::all()->load('vehicleType'); // Carica la relazione 'vehicle_type' per ogni veicolo
+        $vehicles = Vehicle::query()
+            ->with('vehicleType')
+            ->withCount([
+                'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
+            ])
+            ->get();
+
         return view('admin.vehicles.index', compact('vehicles'));
     }
 
