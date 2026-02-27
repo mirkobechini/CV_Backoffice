@@ -28,7 +28,7 @@
                     </td>
                     <x-admin.row-actions :showUrl="route('admin.vehicles.show', $vehicle->id)" :editUrl="route('admin.vehicles.edit', $vehicle->id)" :deleteTarget="'#confirmDeleteModal-' . $vehicle->id" :label="'veicolo ' . $vehicle->internal_code" />
                 </tr>
-                <x-delete-modal type="vehicle" :object="$vehicle" />
+                <x-admin.delete-modal type="vehicle" :object="$vehicle" />
             @endforeach
         </x-slot:rows>
     </x-admin.index-table>

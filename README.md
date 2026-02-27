@@ -126,14 +126,14 @@ Un mezzo può avere più guasti nel tempo.
 - [] welcomePage
 
 
-#### Vehicle 🔄
+#### Vehicle ⏳
 - [X] index
 - [X] show
 - [X] create
-- [X] store
-- [] edit
-- [] update
-- [] destroy
+- [/] store
+- [X] edit
+- [/] update
+- [X] destroy
 
 #### Provider 🔄
 - [X] index
@@ -144,7 +144,7 @@ Un mezzo può avere più guasti nel tempo.
 - [] update
 - [] destroy
 
-#### Issue ⬜
+#### Issue 🔄
 - [X] index
 - [] show
 - [] create
@@ -153,8 +153,8 @@ Un mezzo può avere più guasti nel tempo.
 - [] update
 - [] destroy
 
-#### MaintenanceRecord ⬜
-- [] index
+#### MaintenanceRecord 🔄
+- [X] index
 - [] show
 - [] create
 - [] store
@@ -191,7 +191,7 @@ Un mezzo può avere più guasti nel tempo.
 
 ### Admin 🔄
 #### Controllers 🔄
-- [] admin/VehicleController (CRUD)
+- [/] admin/VehicleController (CRUD)
 - [] admin/ProviderController (CRUD)
 - [] admin/IssueController (CRUD)
 - [] admin/MaintenanceRecordController (CRUD)
@@ -203,7 +203,7 @@ Un mezzo può avere più guasti nel tempo.
 - [X] admin/VehicleController route (web)
 - [X] admin/ProviderController route (web)
 - [X] admin/IssueController route (web)
-- [] admin/MaintenanceRecordController route (web)
+- [X] admin/MaintenanceRecordController route (web)
 - [] admin/DeadlineController route (web)
 - [] admin/MileageLogController route (web)
 - [] admin/EquipmentController route (web)

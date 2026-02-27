@@ -22,7 +22,7 @@
                     <td>{{ $issue->event_date }}</td>
                     <x-admin.row-actions :showUrl="route('admin.issues.show', $issue->id)" :editUrl="route('admin.issues.edit', $issue->id)" :deleteTarget="'#confirmDeleteModal-' . $issue->id" :label="'guasto ' . $issue->description" />
                 </tr>
-                <x-delete-modal type="issue" :object="$issue" />
+                <x-admin.delete-modal type="issue" :object="$issue" />
             @endforeach
         </x-slot:rows>
     </x-admin.index-table>

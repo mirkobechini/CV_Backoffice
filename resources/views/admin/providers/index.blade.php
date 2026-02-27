@@ -22,7 +22,7 @@
                     <td>{{ $provider->type }}</td>
                     <x-admin.row-actions :showUrl="route('admin.providers.show', $provider->id)" :editUrl="route('admin.providers.edit', $provider->id)" :deleteTarget="'#confirmDeleteModal-' . $provider->id" :label="'officina ' . $provider->name" />
                 </tr>
-                <x-delete-modal type="provider" :object="$provider" />
+                <x-admin.delete-modal type="provider" :object="$provider" />
             @endforeach
         </x-slot:rows>
     </x-admin.index-table>

@@ -20,7 +20,7 @@
                     <td>{{ $record->maintenance_date }}</td>
                     <x-admin.row-actions :showUrl="route('admin.maintenancerecords.show', $record->id)" :editUrl="route('admin.maintenancerecords.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' . $record->description" />
                 </tr>
-                <x-delete-modal type="maintenancerecord" :object="$record" />
+                <x-admin.delete-modal type="maintenancerecord" :object="$record" />
             @endforeach
         </x-slot:rows>
     </x-admin.index-table>
