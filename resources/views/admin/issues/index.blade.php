@@ -2,9 +2,7 @@
 @section('content')
     <x-admin.index-table title="Guasti">
         <x-slot:headingActions>
-            <a class="btn btn-success rounded-pill py-0 px-2" href="{{ route('admin.issues.create') }}">
-                <i class="fa-solid fa-add text-light"></i>
-            </a>
+            <x-admin.create-button :href="route('admin.issues.create')" label="guasto" />
         </x-slot:headingActions>
 
         <x-slot:head>
@@ -22,15 +20,7 @@
                     <td>{{ $issue->description }}</td>
                     <td>{{ $issue->status }}</td>
                     <td>{{ $issue->event_date }}</td>
-                    <td class="text-nowrap">
-                        <a href="{{ route('admin.issues.show', $issue->id) }}" class="btn btn-primary"
-                            aria-label="Visualizza guasto {{ $issue->description }}">Visualizza guasto</a>
-                        <a href="{{ route('admin.issues.edit', $issue->id) }}" class="btn btn-warning"
-                            aria-label="Modifica guasto {{ $issue->description }}">Modifica</a>
-                        <button type="button" data-bs-toggle="modal"
-                            data-bs-target="#confirmDeleteModal-{{ $issue->id }}" class="btn btn-danger"
-                            aria-label="Elimina guasto {{ $issue->description }}">Elimina</button>
-                    </td>
+                    <x-admin.row-actions :showUrl="route('admin.issues.show', $issue->id)" :editUrl="route('admin.issues.edit', $issue->id)" :deleteTarget="'#confirmDeleteModal-' . $issue->id" :label="'guasto ' . $issue->description" />
                 </tr>
                 <x-delete-modal type="issue" :object="$issue" />
             @endforeach
