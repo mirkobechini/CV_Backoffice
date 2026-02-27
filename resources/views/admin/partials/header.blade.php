@@ -35,6 +35,11 @@
                     <!-- Right Side Of Navbar -->
                     <ul class="navbar-nav ml-auto">
                         <!-- Authentication Links -->
+                        <li class="nav-item d-flex align-items-center me-2">
+                            <button id="theme-toggle" class="btn btn-sm btn-outline-secondary rounded-pill" type="button" aria-label="Cambia tema">
+                                <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
+                            </button>
+                        </li>
                         @guest
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
