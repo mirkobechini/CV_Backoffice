@@ -101,11 +101,11 @@
                         <section class="col mb-3 card p-3">
                             <h4>Garanzia</h4>
                             <div class="mb-3">
-                                <label for="warranty_expiration_date" class="form-label">Data di scadenza</label>
+                                <label for="warranty_expiration_date" class="form-label">Data di scadenza originale</label>
                                 <input type="date"
                                     class="form-control @error('warranty_expiration_date') is-invalid @enderror"
                                     id="warranty_expiration_date" name="warranty_expiration_date"
-                                    value="{{ old('warranty_expiration_date', $vehicle->warranty_expiration_date) }}"
+                                    value="{{ old('warranty_expiration_date', $warrantyOriginalExpirationDate) }}"
                                     @if (old('has_warranty_extension', $vehicle->has_warranty_extension)) required @endif>
                                 @error('warranty_expiration_date')
                                     <div class="invalid-feedback">{{ $message }}</div>

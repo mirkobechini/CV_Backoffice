@@ -79,6 +79,15 @@ class VehicleController extends Controller
         );
 
         $hasWarrantyExtension = $request->boolean('has_warranty_extension');
+        $warrantyOriginalExpirationDate = $data['warranty_expiration_date'] ?? null;
+        $warrantyExtensionDuration = $hasWarrantyExtension ? (int) ($data['warranty_extension_duration'] ?? 0) : null;
+        $warrantyEffectiveExpirationDate = $warrantyOriginalExpirationDate;
+
+        if ($hasWarrantyExtension && $warrantyOriginalExpirationDate && $warrantyExtensionDuration) {
+            $warrantyEffectiveExpirationDate = Carbon::parse($warrantyOriginalExpirationDate)
+                ->addMonths($warrantyExtensionDuration)
+                ->toDateString();
+        }
 
         $newVehicle = new Vehicle();
         $newVehicle->license_plate = $data['license_plate'];
@@ -88,20 +97,14 @@ class VehicleController extends Controller
         $newVehicle->model = $data['model'];
         $newVehicle->fuel_type = $data['fuel_type'] ?? null;
         $newVehicle->immatricolation_date = $data['immatricolation_date'];
-        $newVehicle->warranty_expiration_date = $data['warranty_expiration_date'] ?? null;
         $newVehicle->has_warranty_extension = $hasWarrantyExtension;
-        $newVehicle->warranty_expiration_date = $data['warranty_expiration_date'] ?? null;
+        $newVehicle->warranty_extension_duration = $warrantyExtensionDuration;
+        $newVehicle->warranty_expiration_date = $warrantyEffectiveExpirationDate;
 
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');
             $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
             $newVehicle->registration_card_path = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
-        }
-
-        if ($hasWarrantyExtension && !empty($data['warranty_expiration_date'])) {
-            $newVehicle->warranty_expiration_date = Carbon::parse($data['warranty_expiration_date'])
-                ->addMonths((int) $data['warranty_extension_duration'])
-                ->toDateString();
         }
 
         $newVehicle->save();
@@ -123,7 +126,15 @@ class VehicleController extends Controller
     public function edit(Vehicle $vehicle)
     {
         $vehicleTypes = VehicleType::all();
-        return view('admin.vehicles.edit', compact('vehicle', 'vehicleTypes'));
+
+        $warrantyOriginalExpirationDate = $vehicle->warranty_expiration_date;
+        if ($vehicle->has_warranty_extension && $vehicle->warranty_expiration_date && $vehicle->warranty_extension_duration) {
+            $warrantyOriginalExpirationDate = Carbon::parse($vehicle->warranty_expiration_date)
+                ->subMonths((int) $vehicle->warranty_extension_duration)
+                ->toDateString();
+        }
+
+        return view('admin.vehicles.edit', compact('vehicle', 'vehicleTypes', 'warrantyOriginalExpirationDate'));
     }
 
     /**
@@ -174,6 +185,18 @@ class VehicleController extends Controller
             'warranty_extension_duration.min' => "La durata dell'estensione della garanzia deve essere almeno di 1 mese."
         ]
         );
+
+        $hasWarrantyExtension = $request->boolean('has_warranty_extension');
+        $warrantyOriginalExpirationDate = $data['warranty_expiration_date'] ?? null;
+        $warrantyExtensionDuration = $hasWarrantyExtension ? (int) ($data['warranty_extension_duration'] ?? 0) : null;
+        $warrantyEffectiveExpirationDate = $warrantyOriginalExpirationDate;
+
+        if ($hasWarrantyExtension && $warrantyOriginalExpirationDate && $warrantyExtensionDuration) {
+            $warrantyEffectiveExpirationDate = Carbon::parse($warrantyOriginalExpirationDate)
+                ->addMonths($warrantyExtensionDuration)
+                ->toDateString();
+        }
+
         $vehicle->license_plate = $data['license_plate'];
         $vehicle->vehicle_type_id = $data['vehicle_type_id'];
         $vehicle->internal_code = $data['internal_code'];
@@ -181,9 +204,9 @@ class VehicleController extends Controller
         $vehicle->model = $data['model'];
         $vehicle->fuel_type = $data['fuel_type'] ?? null;
         $vehicle->immatricolation_date = $data['immatricolation_date'];
-        $vehicle->warranty_expiration_date = $data['warranty_expiration_date'] ?? null;
-        $vehicle->has_warranty_extension = $request->boolean('has_warranty_extension');
-        $vehicle->warranty_extension_duration = $data['warranty_extension_duration'] ?? null;
+        $vehicle->warranty_expiration_date = $warrantyEffectiveExpirationDate;
+        $vehicle->has_warranty_extension = $hasWarrantyExtension;
+        $vehicle->warranty_extension_duration = $warrantyExtensionDuration;
 
         $vehicle->update();
 
