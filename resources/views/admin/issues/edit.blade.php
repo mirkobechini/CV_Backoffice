@@ -29,8 +29,8 @@
                         <div class="mb-3">
                             <label for="event_date" class="form-label">Data del guasto</label>
                             <input type="date" class="form-control @error('event_date') is-invalid @enderror"
-                                id="event_date" name="event_date" value="{{ old('event_date', $issue->event_date) }}"
-                                required>
+                                id="event_date" name="event_date"
+                                value="{{ old('event_date', $issue->event_date?->format('Y-m-d')) }}" required>
                             @error('event_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

@@ -123,7 +123,11 @@ class VehicleController extends Controller
      */
     public function show(Vehicle $vehicle)
     {
-        return view('admin.vehicles.show', compact('vehicle'));
+        $vehicleAppointments = $vehicle->maintenanceRecords()
+            ->with('issue', 'provider')
+            ->orderByDesc('appointment_date')
+            ->get();
+        return view('admin.vehicles.show', compact('vehicle', 'vehicleAppointments'));
     }
 
     /**

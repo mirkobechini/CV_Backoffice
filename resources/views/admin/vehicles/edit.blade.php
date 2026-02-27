@@ -84,7 +84,8 @@
                             <label for="immatricolation_date" class="form-label">Data immatricolazione</label>
                             <input type="date" class="form-control @error('immatricolation_date') is-invalid @enderror"
                                 id="immatricolation_date" name="immatricolation_date"
-                                value="{{ old('immatricolation_date', $vehicle->immatricolation_date) }}" required>
+                                value="{{ old('immatricolation_date', $vehicle->immatricolation_date?->format('Y-m-d')) }}"
+                                required>
                             @error('immatricolation_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -146,7 +147,7 @@
                                 <input type="date"
                                     class="form-control @error('insurance_due_date') is-invalid @enderror"
                                     id="insurance_due_date" name="insurance_due_date"
-                                    value="{{ old('insurance_due_date', $vehicle->insurance_due_date) }}">
+                                    value="{{ old('insurance_due_date', $vehicle->insurance_due_date ? \Illuminate\Support\Carbon::parse($vehicle->insurance_due_date)->format('Y-m-d') : null) }}">
                                 @error('insurance_due_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror

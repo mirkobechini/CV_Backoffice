@@ -74,10 +74,10 @@
                                         {{ $issue->event_date_formatted ?? 'N/A' }}<br>
                                         <strong>Descrizione:</strong> {{ $issue->description }}<br>
                                     </div>
-                                    @if ($issue->status != 'closed')
+                                    @if ($vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->isNotEmpty())
                                         <div class="col-6">
                                             <h5>Officina</h5>
-                                            <p class="card-text">Da contattare</p>
+                                            <p class="card-text">{{ $vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->first()->provider->name ?? 'N/A' }}</p>
                                         </div>
                                     @endif
                                 </div>
