@@ -26,7 +26,7 @@
                             </div>
                             <div class="col">
                                 <span class="card-text d-block"><strong>Data immatricolazione:</strong>
-                                    {{ \Carbon\Carbon::parse($vehicle->immatricolation_date)->format('d/m/Y') }}</span>
+                                    {{ $vehicle->immatricolation_date_formatted ?? 'N/A' }}</span>
                                 <span class="card-text d-block"><strong>Carta di circolazione:</strong>
                                     @if ($vehicle->registration_card_path)
                                         <a href="{{ Storage::url($vehicle->registration_card_path) }}" target="_blank"
@@ -37,8 +37,8 @@
                                 </span>
 
                                 <span class="card-text d-block"><strong>Garanzia:</strong>
-                                    {{ $vehicle->warranty_expiration_date ? \Carbon\Carbon::parse($vehicle->warranty_expiration_date)->format('d/m/Y') : 'N/A' }}
-                                    {!! !$vehicle->warranty_expiration_date || \Carbon\Carbon::parse($vehicle->warranty_expiration_date)->isPast()
+                                    {{ $vehicle->warranty_expiration_date_formatted ?? 'N/A' }}
+                                    {!! $vehicle->is_warranty_expired
                                         ? '<i class="fa-solid fa-times text-danger"></i>'
                                         : '<i class="fa-solid fa-check text-success"></i>' !!}
                                 </span>
@@ -71,7 +71,7 @@
                                 <div class="row">
                                     <div class="col-6">
                                         <strong>Data:</strong>
-                                        {{ \Carbon\Carbon::parse($issue->date)->format('d/m/Y') }}<br>
+                                        {{ $issue->event_date_formatted ?? 'N/A' }}<br>
                                         <strong>Descrizione:</strong> {{ $issue->description }}<br>
                                     </div>
                                     @if ($issue->status != 'closed')

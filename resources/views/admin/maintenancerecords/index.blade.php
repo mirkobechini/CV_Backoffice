@@ -17,7 +17,7 @@
                 <tr>
                     <td>{{ $record->vehicle->internal_code }}</td>
                     <td>{{ $record->description }}</td>
-                    <td>{{ $record->maintenance_date }}</td>
+                    <td>{{ $record->appointment_date_formatted ?? 'N/A' }}</td>
                     <x-admin.row-actions :showUrl="route('admin.maintenancerecords.show', $record->id)" :editUrl="route('admin.maintenancerecords.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' . $record->description" />
                 </tr>
                 <x-admin.delete-modal type="maintenancerecord" :object="$record" />

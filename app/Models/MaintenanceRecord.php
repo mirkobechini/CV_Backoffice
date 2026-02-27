@@ -8,6 +8,11 @@ class MaintenanceRecord extends Model
 {
     protected $table = 'maintenancerecords';
 
+    protected $casts = [
+        'appointment_date' => 'date',
+        'return_date' => 'date',
+    ];
+
     protected $fillable = [
         'vehicle_id',
         'provider_id',
@@ -30,5 +35,15 @@ class MaintenanceRecord extends Model
     public function issue()
     {
         return $this->belongsTo(Issue::class);
+    }
+
+    public function getAppointmentDateFormattedAttribute(): ?string
+    {
+        return $this->appointment_date?->format('d/m/Y');
+    }
+
+    public function getReturnDateFormattedAttribute(): ?string
+    {
+        return $this->return_date?->format('d/m/Y');
     }
 }
