@@ -26,7 +26,8 @@ Route::middleware(['auth', 'verified'])
         Route::resource("vehicles", VehicleController::class);
         Route::resource("providers", ProviderController::class);
         Route::resource("issues", IssueController::class);
-        Route::resource("maintenancerecords", MaintenanceRecordController::class);
+        Route::resource("maintenancerecords", MaintenanceRecordController::class)
+            ->parameters(['maintenancerecords' => 'maintenanceRecord']);
     });
 
 

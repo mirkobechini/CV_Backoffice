@@ -35,6 +35,6 @@
                 </button>
             </div>
         </div>
-        <x-admin.delete-modal type="maintenancerecord" :object="$maintenanceRecord" />
+        <x-admin.delete-modal type="maintenanceRecord" :object="$maintenanceRecord" />
     </div>
 @endsection

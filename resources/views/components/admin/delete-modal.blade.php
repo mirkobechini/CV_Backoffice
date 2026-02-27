@@ -5,11 +5,22 @@
         'vehicle' => 'veicolo',
         'provider' => 'officina',
         'issue' => 'guasto',
-        'maintenancerecord' => 'manutenzione',
+        'maintenanceRecord' => 'manutenzione',
         default => $type,
     };
 
-    $routeParameterName = $type;
+    $destroyRouteName = match ($type) {
+        'vehicle' => 'admin.vehicles.destroy',
+        'provider' => 'admin.providers.destroy',
+        'issue' => 'admin.issues.destroy',
+        'maintenanceRecord' => 'admin.maintenancerecords.destroy',
+        default => 'admin.' . strtolower($type) . 's.destroy',
+    };
+
+    $routeParameterName = match ($type) {
+        'maintenanceRecord' => 'maintenanceRecord',
+        default => $type,
+    };
     $routeParameterValue = $object?->getRouteKey();
     $modalIdSuffix = $routeParameterValue ?? 'missing-' . $type;
 
@@ -17,7 +28,7 @@
         'vehicle' => $object->internal_code ?? ($object->license_plate ?? (string) $object->id),
         'provider' => $object->name ?? (string) $object->id,
         'issue' => $object->description ?? (string) $object->id,
-        'maintenancerecord' => $object->activity_type ?? (string) $object->id,
+        'maintenanceRecord' => $object->activity_type ?? (string) $object->id,
         default => $object->name ?? ($object->title ?? (string) $object->id),
     };
 @endphp
@@ -44,8 +55,7 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                     aria-label="Annulla eliminazione {{ $entityLabel }} {{ $displayValue }}">Annulla</button>
                 @if ($routeParameterValue)
-                    <form
-                        action="{{ route('admin.' . $type . 's.destroy', [$routeParameterName => $routeParameterValue]) }}"
+                    <form action="{{ route($destroyRouteName, [$routeParameterName => $routeParameterValue]) }}"
                         method="POST" data-single-submit="true">
                         @csrf
                         @method('DELETE')
