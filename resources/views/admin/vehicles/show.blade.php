@@ -1,6 +1,11 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ route('admin.vehicles.index') }}" class="btn btn-secondary">Torna alla lista</a>
+            </div>
+        </div>
         <div class="row">
             <div class="col-3 align-middle text-center">
                 <h1 class="display-1 fw-bold text-center align-middle pt-3">{{ $vehicle->internal_code }}</h1>
@@ -78,11 +83,6 @@
                         @endforeach
                     </ul>
                 @endif
-            </div>
-            <div class="row">
-                <div class="col-12">
-                    <a href="{{ route('admin.vehicles.index') }}" class="btn btn-secondary">Torna alla lista</a>
-                </div>
             </div>
         </div>
     </div>
