@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\vehicleType;
+use App\Models\VehicleType;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -38,7 +38,7 @@ class VehicleTypeTableSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            vehicleType::create($type);
+            VehicleType::create($type);
         }
     }
 }

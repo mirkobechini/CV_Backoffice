@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\MaintenanceRecord;
+use App\Models\VehicleType;
 use Illuminate\Http\Request;
 
-class MaintenanceRecordController extends Controller
+class VehicleTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -41,7 +41,7 @@ class MaintenanceRecordController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(MaintenanceRecord $maintenanceRecord)
+    public function show(VehicleType $vehicleType)
     {
         return redirect()
             ->route('dashboard')
@@ -51,16 +51,17 @@ class MaintenanceRecordController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(MaintenanceRecord $maintenanceRecord)
+    public function edit(VehicleType $vehicleType)
     {
         return redirect()
             ->route('dashboard')
             ->with('status', 'Funzionalità non ancora disponibile.');
     }
+
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, MaintenanceRecord $maintenanceRecord)
+    public function update(Request $request, VehicleType $vehicleType)
     {
         return redirect()
             ->route('dashboard')
@@ -70,7 +71,7 @@ class MaintenanceRecordController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MaintenanceRecord $maintenanceRecord)
+    public function destroy(VehicleType $vehicleType)
     {
         return redirect()
             ->route('dashboard')

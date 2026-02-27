@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
-use App\Models\vehicleType;
+use App\Models\VehicleType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -25,7 +25,7 @@ class VehicleController extends Controller
      */
     public function create()
     {
-        $vehicleTypes = vehicleType::all();
+        $vehicleTypes = VehicleType::all();
   
         return view('admin.vehicles.create', compact('vehicleTypes'));
     }
@@ -114,7 +114,9 @@ class VehicleController extends Controller
      */
     public function edit(Vehicle $vehicle)
     {
-        return view('admin.vehicles.edit', compact('vehicle'));
+        return redirect()
+            ->route('admin.vehicles.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -122,7 +124,9 @@ class VehicleController extends Controller
      */
     public function update(Request $request, Vehicle $vehicle)
     {
-        //
+        return redirect()
+            ->route('admin.vehicles.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
     /**
@@ -130,6 +134,8 @@ class VehicleController extends Controller
      */
     public function destroy(Vehicle $vehicle)
     {
-        //
+        return redirect()
+            ->route('admin.vehicles.index')
+            ->with('status', 'Funzionalità non ancora disponibile.');
     }
 }
