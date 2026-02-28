@@ -139,12 +139,38 @@ class MaintenanceRecordController extends Controller
             ->with('status', 'Funzionalità non ancora disponibile.');
     }
 
+    public function complete(Request $request, MaintenanceRecord $maintenanceRecord)
+    {
+        $data = $request->validate(
+            [
+                'issue_resolved' => 'required|boolean',
+            ],
+            [
+                'issue_resolved.required' => 'Seleziona se il guasto è stato risolto o meno.',
+                'issue_resolved.boolean' => 'Il valore selezionato non è valido.',
+            ]
+        );
+
+        $maintenanceRecord->loadMissing('issue');
+        $maintenanceRecord->return_date = Carbon::today();
+        $maintenanceRecord->save();
+
+        if ((bool) $data['issue_resolved'] && $maintenanceRecord->issue) {
+            $maintenanceRecord->issue->status = 'closed';
+            $maintenanceRecord->issue->save();
+        }
+
+        return redirect()
+            ->route('admin.maintenancerecords.show', $maintenanceRecord->id)
+            ->with('status', 'Intervento completato con successo.');
+    }
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(MaintenanceRecord $maintenanceRecord)
     {
         $maintenanceRecord->delete();
-         return redirect()->route('admin.maintenancerecords.index')->with('status', 'Intervento eliminato con successo.');    
+        return redirect()->route('admin.maintenancerecords.index')->with('status', 'Intervento eliminato con successo.');
     }
 }

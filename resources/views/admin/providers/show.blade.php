@@ -33,6 +33,7 @@
             @if ($provider->maintenanceRecords->isEmpty())
                 <p>Nessuna manutenzione associata a questa officina.</p>
             @else
+            {{-- Raggruppare per fatti/da fare prima i da fare --}}
                 <ul class="list-group">
                     @foreach ($provider->maintenanceRecords as $record)
                         <li class="list-group-item d-flex gap-3">
