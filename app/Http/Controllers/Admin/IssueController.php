@@ -13,10 +13,53 @@ class IssueController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $validated = $request->validate([
+            'group_by' => 'nullable|in:vehicle,status,date',
+            'sort_by' => 'nullable|in:vehicle,status,date',
+            'sort_dir' => 'nullable|in:asc,desc',
+        ]);
+
+        $groupBy = $validated['group_by'] ?? null;
+        $sortBy = $validated['sort_by'] ?? 'date';
+        $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
+
         $issues = Issue::with('vehicle')->get();
-        return view('admin.issues.index', compact('issues'));
+
+        $issues = $sortDir === 'desc'
+            ? $issues->sortByDesc(function (Issue $issue) use ($sortBy) {
+                return match ($sortBy) {
+                    'vehicle' => $issue->vehicle?->internal_code ?? '',
+                    'status' => $issue->status,
+                    'date' => $issue->event_date?->format('Y-m-d') ?? '',
+                };
+            })->values()
+            : $issues->sortBy(function (Issue $issue) use ($sortBy) {
+                return match ($sortBy) {
+                    'vehicle' => $issue->vehicle?->internal_code ?? '',
+                    'status' => $issue->status,
+                    'date' => $issue->event_date?->format('Y-m-d') ?? '',
+                };
+            })->values();
+
+        $groupedIssues = null;
+        if ($groupBy !== null) {
+            $groupedIssues = $issues->groupBy(function (Issue $issue) use ($groupBy) {
+                return match ($groupBy) {
+                    'vehicle' => $issue->vehicle?->internal_code ?? 'N/A',
+                    'status' => match ($issue->status) {
+                        'open' => 'Aperto',
+                        'in_progress' => 'In lavorazione',
+                        'closed' => 'Risolto',
+                        default => 'Sconosciuto',
+                    },
+                    'date' => $issue->event_date_formatted ?? 'N/A',
+                };
+            });
+        }
+
+        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues'));
     }
 
     /**
