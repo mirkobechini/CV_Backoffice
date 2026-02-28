@@ -20,6 +20,7 @@ class VehicleController extends Controller
             ->with('vehicleType')
             ->withCount([
                 'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
+                'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
             ])
             ->get();
 
