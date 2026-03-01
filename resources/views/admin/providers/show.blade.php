@@ -21,7 +21,8 @@
                 </div>
             </div>
             <div class="col-12">
-                <a href="{{ route('admin.providers.edit', $provider->id) }}" class="btn btn-primary">Modifica</a>
+                <a href="{{ route('admin.providers.edit', ['provider' => $provider->id, 'back' => url()->full()]) }}"
+                    class="btn btn-primary">Modifica</a>
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                     data-bs-target="#confirmDeleteModal-{{ $provider->id }}">
                     Elimina

@@ -1,6 +1,12 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ request('back', route('admin.maintenancerecords.index')) }}" class="btn btn-secondary">Torna alla
+                    pagina precedente</a>
+            </div>
+        </div>
         <h1 class="mb-4">Modifica appuntamento</h1>
         <div class="card my-0">
             <div class="card-body">
@@ -46,7 +52,7 @@
                             <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
                                 <span>Nessun guasto aperto per il veicolo selezionato.</span>
                                 <a id="create-issue-link" class="btn btn-sm btn-primary"
-                                    href="{{ route('admin.issues.create') }}">
+                                    href="{{ route('admin.issues.create', ['back' => url()->full()]) }}">
                                     Crea guasto
                                 </a>
                             </div>
@@ -204,7 +210,7 @@
                     issueSelect.disabled = true;
                     issueSelect.value = '';
                     createIssueLink.href =
-                        `{{ route('admin.issues.create') }}?vehicle_id=${selectedVehicleId}`;
+                        `{{ route('admin.issues.create') }}?vehicle_id=${selectedVehicleId}&back={{ urlencode(url()->full()) }}`;
                 } else {
                     issueSection.style.display = '';
                     noIssueCta.style.display = 'none';

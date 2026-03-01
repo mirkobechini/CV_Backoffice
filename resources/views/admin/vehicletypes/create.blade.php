@@ -1,6 +1,12 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ request('back', route('admin.vehicletypes.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
+            </div>
+        </div>
         <h1 class="mb-4">Aggiungi nuovo tipo di veicolo</h1>
         <div class="card my-0">
             <div class="card-body">
@@ -27,25 +33,27 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="first_inspection_months" class="form-label">Dopo quanti mesi la prima revisione</label>
+                            <label for="first_inspection_months" class="form-label">Dopo quanti mesi la prima
+                                revisione</label>
                             <input type="number"
                                 class="form-control @error('first_inspection_months') is-invalid @enderror"
                                 id="first_inspection_months" name="first_inspection_months"
                                 value="{{ old('first_inspection_months') }}" required>
                             @error('first_inspection_months')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="regular_inspection_months" class="form-label">Dopo quanti mesi le successive revisioni</label>
+                            <label for="regular_inspection_months" class="form-label">Dopo quanti mesi le successive
+                                revisioni</label>
                             <input type="number"
                                 class="form-control @error('regular_inspection_months') is-invalid @enderror"
                                 id="regular_inspection_months" name="regular_inspection_months"
                                 value="{{ old('regular_inspection_months') }}" required>
                             @error('regular_inspection_months')
                                 <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            @enderror
+                        </div>
                         <div class="mb-3">
                             <input type="hidden" name="needs_oxygen_check" value="0">
                             <div class="form-check form-switch">

@@ -50,7 +50,8 @@
             </div>
         </div>
         <div class="col-12">
-            <a href="{{ route('admin.issues.edit', $issue->id) }}" class="btn btn-primary">Modifica</a>
+            <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}"
+                class="btn btn-primary">Modifica</a>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                 data-bs-target="#confirmDeleteModal-{{ $issue->id }}">
                 Elimina

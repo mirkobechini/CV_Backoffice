@@ -30,7 +30,7 @@
                     <x-admin.complete-maintenance-modal :maintenanceRecord="$maintenanceRecord" />
                 @endif
                 @if ($maintenanceRecord?->getKey())
-                    <a href="{{ route('admin.maintenancerecords.edit', $maintenanceRecord->getKey()) }}"
+                    <a href="{{ route('admin.maintenancerecords.edit', ['maintenanceRecord' => $maintenanceRecord->getKey(), 'back' => url()->full()]) }}"
                         class="btn btn-primary">Modifica</a>
                 @endif
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal"

@@ -1,6 +1,12 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ request('back', route('admin.vehicles.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
+            </div>
+        </div>
         <h1 class="mb-4">Aggiungi nuovo veicolo</h1>
         <div class="card my-0">
             <div class="card-body">

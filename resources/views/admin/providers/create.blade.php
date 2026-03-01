@@ -1,10 +1,17 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ request('back', route('admin.providers.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
+            </div>
+        </div>
         <h1 class="mb-4">Aggiungi nuova struttura</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form id="provider-form" method="POST" action="{{ route('admin.providers.store') }}" data-single-submit="true">
+                <form id="provider-form" method="POST" action="{{ route('admin.providers.store') }}"
+                    data-single-submit="true">
                     @csrf
                     <section class="mb-3 row">
                         <h2>Dettagli struttura</h2>

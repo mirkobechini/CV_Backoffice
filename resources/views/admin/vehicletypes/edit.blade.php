@@ -1,11 +1,18 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ request('back', route('admin.vehicletypes.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
+            </div>
+        </div>
         <h1 class="mb-4">Modifica tipo di veicolo</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form id="vehicle-type-form" method="POST" action="{{ route('admin.vehicletypes.update', $vehicleType->id) }}"
-                    enctype="multipart/form-data" data-single-submit="true">
+                <form id="vehicle-type-form" method="POST"
+                    action="{{ route('admin.vehicletypes.update', $vehicleType->id) }}" enctype="multipart/form-data"
+                    data-single-submit="true">
                     @csrf
                     @method('PUT')
                     <section class="mb-3 row">

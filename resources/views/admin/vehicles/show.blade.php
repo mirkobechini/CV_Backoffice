@@ -59,7 +59,7 @@
         <div class="row">
             <div class="col-12 mb-3">
                 <h2 class="display-6 fw-bold">Guasti<a class="btn btn-success rounded-pill ms-3 py-0 px-2"
-                        href="{{ route('admin.issues.create', ['vehicle_id' => $vehicle->id]) }}"><i
+                        href="{{ route('admin.issues.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"><i
                             class="fa-solid fa-add text-light"></i></a>
                 </h2>
                 @if ($vehicle->issues->isEmpty())
@@ -82,11 +82,15 @@
                                                 <div class="col-md-2">
                                                     <h5>Officina</h5>
                                                     @php
-                                                        $appointment = $vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->first();
+                                                        $appointment = $vehicleAppointments
+                                                            ->where('issue_id', $issue->id)
+                                                            ->where('provider_id', '!=', '')
+                                                            ->first();
                                                     @endphp
                                                     <p class="card-text">
                                                         @if ($appointment?->provider)
-                                                            <a class="text-decoration-none text-reset" href="{{ route('admin.providers.show', ['provider' => $appointment->provider->id, 'back' => url()->full()]) }}">{{ $appointment->provider->name }}</a>
+                                                            <a class="text-decoration-none text-reset"
+                                                                href="{{ route('admin.providers.show', ['provider' => $appointment->provider->id, 'back' => url()->full()]) }}">{{ $appointment->provider->name }}</a>
                                                         @else
                                                             N/A
                                                         @endif
@@ -96,8 +100,10 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2">
-                                        <a class="btn btn-primary rounded-pill " href="{{ route('admin.issues.show', ['issue' => $issue->id, 'back' => url()->full()]) }}"><i class="bi bi-eye"></i></a>
-                                        <a href="{{ route('admin.issues.edit', $issue->id) }}"
+                                        <a class="btn btn-primary rounded-pill "
+                                            href="{{ route('admin.issues.show', ['issue' => $issue->id, 'back' => url()->full()]) }}"><i
+                                                class="bi bi-eye"></i></a>
+                                        <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}"
                                             class="btn btn-secondary rounded-pill "><i class="bi bi-pencil"></i></a>
                                         <button type="button" class="btn btn-danger rounded-pill " data-bs-toggle="modal"
                                             data-bs-target="#confirmDeleteModal-{{ $issue->id }}">

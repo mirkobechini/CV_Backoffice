@@ -1,6 +1,12 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
+        <div class="row mb-3">
+            <div class="col-12">
+                <a href="{{ request('back', route('admin.vehicles.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
+            </div>
+        </div>
         <h1 class="mb-4">Modifica veicolo</h1>
         <div class="card my-0">
             <div class="card-body">
@@ -116,7 +122,8 @@
                             </div>
                             <div class="mb-3">
                                 <div class="form-check">
-                                    <label for="has_warranty_extension" class="form-check-label">Estensione garanzia</label>
+                                    <label for="has_warranty_extension" class="form-check-label">Estensione
+                                        garanzia</label>
                                     <input type="hidden" name="has_warranty_extension" value="0">
                                     <input type="checkbox"
                                         class="form-check-input @error('has_warranty_extension') is-invalid @enderror"
