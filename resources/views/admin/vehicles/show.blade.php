@@ -69,20 +69,42 @@
                         @foreach ($vehicle->issues as $issue)
                             <li
                                 class="list-group-item @if ($issue->status === 'open') list-group-item-danger @elseif($issue->status === 'in_progress') list-group-item-warning @else list-group-item-success @endif">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <strong>Data:</strong>
-                                        {{ $issue->event_date_formatted ?? 'N/A' }}<br>
-                                        <strong>Descrizione:</strong> {{ $issue->description }}<br>
-                                    </div>
-                                    @if ($vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->isNotEmpty())
-                                        <div class="col-6">
-                                            <h5>Officina</h5>
-                                            <p class="card-text">
-                                                {{ $vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->first()->provider->name ?? 'N/A' }}
-                                            </p>
+                                <div class="row row-cols-1 row-cols-md-2 justify-content-between align-items-center">
+                                    <div class="col">
+                                        <div class="row row-cols-1 row-cols-md-2">
+
+                                            <div class="col-md-10">
+                                                <strong>Data:</strong>
+                                                {{ $issue->event_date_formatted ?? 'N/A' }}<br>
+                                                <strong>Descrizione:</strong> {{ $issue->description }}<br>
+                                            </div>
+                                            @if ($vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->isNotEmpty())
+                                                <div class="col-md-2">
+                                                    <h5>Officina</h5>
+                                                    @php
+                                                        $appointment = $vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->first();
+                                                    @endphp
+                                                    <p class="card-text">
+                                                        @if ($appointment?->provider)
+                                                            <a class="text-decoration-none text-reset" href="{{ route('admin.providers.show', ['provider' => $appointment->provider->id, 'back' => url()->full()]) }}">{{ $appointment->provider->name }}</a>
+                                                        @else
+                                                            N/A
+                                                        @endif
+                                                    </p>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @endif
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a class="btn btn-primary rounded-pill " href="{{ route('admin.issues.show', $issue->id) }}"><i class="bi bi-eye"></i></a>
+                                        <a href="{{ route('admin.issues.edit', $issue->id) }}"
+                                            class="btn btn-secondary rounded-pill "><i class="bi bi-pencil"></i></a>
+                                        <button type="button" class="btn btn-danger rounded-pill " data-bs-toggle="modal"
+                                            data-bs-target="#confirmDeleteModal-{{ $issue->id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <x-admin.delete-modal type="issue" :object="$issue" />
+                                    </div>
                                 </div>
                             </li>
                         @endforeach
