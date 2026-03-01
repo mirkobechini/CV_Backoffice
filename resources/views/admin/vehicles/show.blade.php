@@ -96,7 +96,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2">
-                                        <a class="btn btn-primary rounded-pill " href="{{ route('admin.issues.show', $issue->id) }}"><i class="bi bi-eye"></i></a>
+                                        <a class="btn btn-primary rounded-pill " href="{{ route('admin.issues.show', ['issue' => $issue->id, 'back' => url()->full()]) }}"><i class="bi bi-eye"></i></a>
                                         <a href="{{ route('admin.issues.edit', $issue->id) }}"
                                             class="btn btn-secondary rounded-pill "><i class="bi bi-pencil"></i></a>
                                         <button type="button" class="btn btn-danger rounded-pill " data-bs-toggle="modal"
