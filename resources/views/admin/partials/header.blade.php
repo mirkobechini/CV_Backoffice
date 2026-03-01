@@ -17,6 +17,10 @@
                         <a class="nav-link" href="{{ url('/') }}">{{ __('Home') }}</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link"
+                            href="{{ route('admin.vehicletypes.index') }}">{{ __('Tipi di veicoli') }}</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.vehicles.index') }}">{{ __('Veicoli') }}</a>
                     </li>
                     <li class="nav-item">
@@ -25,13 +29,15 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.issues.index') }}">{{ __('Guasti') }}</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('welcome') }}">{{ __('Scadenze') }}</a>
-                    </li>
+                    
                     <li class="nav-item">
                         <a class="nav-link"
                             href="{{ route('admin.maintenancerecords.index') }}">{{ __('Appuntamenti') }}</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('welcome') }}">{{ __('Scadenze') }}</a>
+                    </li>
+                    
                 </ul>
 
                 <!-- Right Side Of Navbar -->

@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Admin\VehicleTypeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +31,8 @@ Route::middleware(['auth', 'verified'])
             ->name('maintenancerecords.complete');
         Route::resource("maintenancerecords", MaintenanceRecordController::class)
             ->parameters(['maintenancerecords' => 'maintenanceRecord']);
+        Route::resource("vehicletypes", VehicleTypeController::class)
+            ->parameters(['vehicletypes' => 'vehicleType']);
     });
 
 
