@@ -127,16 +127,77 @@ class MaintenanceRecordController extends Controller
      */
     public function edit(MaintenanceRecord $maintenanceRecord)
     {
-        return view('admin.maintenancerecords.edit', compact('maintenanceRecord'));
+        $maintenanceRecord->load(['vehicle', 'provider', 'issue']);
+
+        $vehicles = Vehicle::all();
+        $providers = Provider::all();
+        $openIssues = Issue::where('status', 'open')
+            ->orWhere('id', $maintenanceRecord->issue_id)
+            ->get(['id', 'vehicle_id', 'description', 'status']);
+
+        return view('admin.maintenancerecords.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues'));
     }
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, MaintenanceRecord $maintenanceRecord)
     {
-        return redirect()
-            ->route('dashboard')
-            ->with('status', 'Funzionalità non ancora disponibile.');
+        $data = $request->validate(
+            [
+                'vehicle_id' => 'required|exists:vehicles,id',
+                'issue_id' => 'required|exists:issues,id',
+                'provider_id' => 'required|exists:providers,id',
+                'appointment_date' => 'required|date',
+                'return_date' => 'nullable|date|after_or_equal:appointment_date',
+                'activity_type' => 'nullable|string|max:255',
+                'issue_resolved' => 'nullable|boolean',
+            ],
+            [
+                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
+                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
+                'issue_id.required' => 'Il guasto è obbligatorio.',
+                'issue_id.exists' => 'Il guasto selezionato non esiste.',
+                'provider_id.required' => 'L\'officina è obbligatoria.',
+                'provider_id.exists' => 'L\'officina selezionata non esiste.',
+                'appointment_date.required' => 'La data dell\'appuntamento è obbligatoria.',
+                'appointment_date.date' => 'La data dell\'appuntamento deve essere una data valida.',
+                'return_date.date' => 'La data di completamento deve essere una data valida.',
+                'return_date.after_or_equal' => 'La data di completamento deve essere uguale o successiva alla data dell\'appuntamento.',
+                'activity_type.string' => 'Il tipo di attività deve essere una stringa.',
+                'activity_type.max' => 'Il tipo di attività non può superare i 255 caratteri.',
+                'issue_resolved.boolean' => 'Il valore selezionato per la risoluzione del guasto non è valido.',
+            ]
+        );
+
+        $issueBelongsToVehicle = Issue::where('id', $data['issue_id'])
+            ->where('vehicle_id', $data['vehicle_id'])
+            ->exists();
+
+        if (!$issueBelongsToVehicle) {
+            return back()
+                ->withErrors(['issue_id' => 'Il guasto selezionato non appartiene al veicolo scelto.'])
+                ->withInput();
+        }
+
+        $maintenanceRecord->vehicle_id = $data['vehicle_id'];
+        $maintenanceRecord->issue_id = $data['issue_id'];
+        $maintenanceRecord->provider_id = $data['provider_id'];
+        $maintenanceRecord->appointment_date = $data['appointment_date'];
+        $maintenanceRecord->return_date = $data['return_date'] ?? null;
+        $maintenanceRecord->activity_type = $data['activity_type'] ?? null;
+        $maintenanceRecord->update();
+
+        if ($maintenanceRecord->issue && array_key_exists('issue_resolved', $data)) {
+            if ((bool) $data['issue_resolved']) {
+                $maintenanceRecord->issue->status = 'closed';
+                $maintenanceRecord->issue->save();
+            } else {
+                $maintenanceRecord->issue->status = 'in_progress';
+                $maintenanceRecord->issue->save();
+            }
+        }
+
+        return redirect()->route('admin.maintenancerecords.show', $maintenanceRecord->id)->with('status', 'Intervento aggiornato con successo.');
     }
 
     public function complete(Request $request, MaintenanceRecord $maintenanceRecord)
@@ -155,9 +216,14 @@ class MaintenanceRecordController extends Controller
         $maintenanceRecord->return_date = Carbon::today();
         $maintenanceRecord->save();
 
-        if ((bool) $data['issue_resolved'] && $maintenanceRecord->issue) {
-            $maintenanceRecord->issue->status = 'closed';
-            $maintenanceRecord->issue->save();
+        if ($maintenanceRecord->issue) {
+            if ((bool) $data['issue_resolved']) {
+                $maintenanceRecord->issue->status = 'closed';
+                $maintenanceRecord->issue->save();
+            } else {
+                $maintenanceRecord->issue->status = 'in_progress';
+                $maintenanceRecord->issue->save();
+            }
         }
 
         return redirect()
