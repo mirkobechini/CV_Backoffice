@@ -108,9 +108,6 @@ Un mezzo può avere più guasti nel tempo.
 - [] Deadline model & migration
 - [] MileageLog model & migration
 - [] Equipment model & migration
-- [] 1xN
-- [] NxN
-- [] Pivot table
 - [X] Vehicle seed
 - [X] Provider seed
 - [] Issue seed
@@ -126,13 +123,22 @@ Un mezzo può avere più guasti nel tempo.
 - [] welcomePage
 
 
-#### Vehicle ⏳
+#### Vehicle ✅
 - [X] index
 - [X] show
 - [X] create
-- [/] store
+- [X] store
 - [X] edit
-- [/] update
+- [X] update
+- [X] destroy
+
+#### VehicleType ✅
+- [X] index
+- [X] show
+- [X] create
+- [X] store
+- [X] edit
+- [X] update
 - [X] destroy
 
 #### Provider ✅
@@ -153,14 +159,14 @@ Un mezzo può avere più guasti nel tempo.
 - [X] update
 - [X] destroy
 
-#### MaintenanceRecord 🔄
+#### MaintenanceRecord ✅
 - [X] index
-- [] show
-- [] create
-- [] store
-- [] edit
-- [] update
-- [] destroy
+- [X] show
+- [X] create
+- [X] store
+- [X] edit
+- [X] update
+- [X] destroy
 
 #### Deadline ⬜
 - [] index
@@ -191,16 +197,18 @@ Un mezzo può avere più guasti nel tempo.
 
 ### Admin 🔄
 #### Controllers 🔄
-- [/] admin/VehicleController (CRUD)
+- [X] admin/VehicleController (CRUD)
+- [X] admin/VehicleTypeController (CRUD)
 - [X] admin/ProviderController (CRUD)
-- [] admin/IssueController (CRUD)
-- [] admin/MaintenanceRecordController (CRUD)
+- [X] admin/IssueController (CRUD)
+- [X] admin/MaintenanceRecordController (CRUD)
 - [] admin/DeadlineController (CRUD)
 - [] admin/MileageLogController (CRUD)
 - [] admin/EquipmentController (CRUD)
 
 #### Routes 🔄
 - [X] admin/VehicleController route (web)
+- [X] admin/VehicleTypeController route (web)
 - [X] admin/ProviderController route (web)
 - [X] admin/IssueController route (web)
 - [X] admin/MaintenanceRecordController route (web)
@@ -211,6 +219,7 @@ Un mezzo può avere più guasti nel tempo.
 ### API ⬜
 #### Controllers ⬜
 - [] api/VehicleController (R)
+- [] api/VehicleTypeController (R)
 - [] api/ProviderController (R)
 - [] api/IssueController (R)
 - [] api/MaintenanceRecordController (R)
@@ -220,6 +229,7 @@ Un mezzo può avere più guasti nel tempo.
 
 #### Routes ⬜
 - [] api/VehicleController route (api)
+- [] api/VehicleTypeController route (api)
 - [] api/ProviderController route (api)
 - [] api/IssueController route (api)
 - [] api/MaintenanceRecordController route (api)
