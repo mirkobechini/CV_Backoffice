@@ -3,7 +3,8 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ route('admin.providers.index') }}" class="btn btn-secondary">Torna alla lista</a>
+                <a href="{{ request('back', route('admin.providers.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
             </div>
         </div>
         <div class="row mb-3">
@@ -33,15 +34,17 @@
             @if ($provider->maintenanceRecords->isEmpty())
                 <p>Nessuna manutenzione associata a questa officina.</p>
             @else
-            {{-- Raggruppare per fatti/da fare prima i da fare --}}
+                {{-- Raggruppare per fatti/da fare prima i da fare --}}
                 <ul class="list-group">
                     @foreach ($provider->maintenanceRecords as $record)
                         <li class="list-group-item d-flex gap-3">
                             <p class="m-0">
-                                {{$record->vehicle?->internal_code ?? 'N/A'}} - {{ $record->issue?->description ?? ($record->activity_type ?? 'N/A') }}
+                                {{ $record->vehicle?->internal_code ?? 'N/A' }} -
+                                {{ $record->issue?->description ?? ($record->activity_type ?? 'N/A') }}
                                 ({{ $record->appointment_date_formatted ?? 'N/A' }})
                             </p>
-                            <a href="{{ route('admin.maintenancerecords.show', $record->id) }}" class="btn btn-sm btn-primary rounded-pill "><i class="bi bi-eye"></i></a>
+                            <a href="{{ route('admin.maintenancerecords.show', ['maintenanceRecord' => $record->id, 'back' => url()->full()]) }}"
+                                class="btn btn-sm btn-primary rounded-pill "><i class="bi bi-eye"></i></a>
                         </li>
                     @endforeach
                 </ul>

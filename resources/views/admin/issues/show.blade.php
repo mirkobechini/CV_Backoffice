@@ -3,7 +3,8 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ route('admin.issues.index') }}" class="btn btn-secondary">Torna alla lista</a>
+                <a href="{{ request('back', route('admin.issues.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
             </div>
         </div>
         <div class="row">

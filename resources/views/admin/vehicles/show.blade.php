@@ -3,7 +3,8 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ route('admin.vehicles.index') }}" class="btn btn-secondary">Torna alla lista</a>
+                <a href="{{ request('back', route('admin.vehicles.index')) }}" class="btn btn-secondary">Torna alla pagina
+                    precedente</a>
             </div>
         </div>
         <div class="row">
@@ -77,7 +78,9 @@
                                     @if ($vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->isNotEmpty())
                                         <div class="col-6">
                                             <h5>Officina</h5>
-                                            <p class="card-text">{{ $vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->first()->provider->name ?? 'N/A' }}</p>
+                                            <p class="card-text">
+                                                {{ $vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->first()->provider->name ?? 'N/A' }}
+                                            </p>
                                         </div>
                                     @endif
                                 </div>

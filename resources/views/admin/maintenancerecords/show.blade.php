@@ -3,7 +3,8 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ route('admin.maintenancerecords.index') }}" class="btn btn-secondary">Torna alla lista</a>
+                <a href="{{ request('back', route('admin.maintenancerecords.index')) }}" class="btn btn-secondary">Torna alla
+                    pagina precedente</a>
             </div>
         </div>
         <div class="row mb-3">
@@ -25,7 +26,7 @@
                 </div>
             </div>
             <div class="col-12">
-                @if(!$maintenanceRecord->issue?->status ==='closed')
+                @if (!$maintenanceRecord->issue?->status === 'closed')
                     <x-admin.complete-maintenance-modal :maintenanceRecord="$maintenanceRecord" />
                 @endif
                 @if ($maintenanceRecord?->getKey())
