@@ -90,15 +90,11 @@
                             <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
                                 name="activity_type" value="{{ old('activity_type') }}">
                                 <option value="">Seleziona una tipologia</option>
-                                <option value="tagliando" {{ old('activity_type') == 'tagliando' ? 'selected' : '' }}>
-                                    Tagliando
-                                </option>
-                                <option value="revisione" {{ old('activity_type') == 'revisione' ? 'selected' : '' }}>
-                                    Revisione</option>
-                                <option value="riparazione" {{ old('activity_type') == 'riparazione' ? 'selected' : '' }}>
-                                    Riparazione</option>
-                                <option value="lavaggio" {{ old('activity_type') == 'lavaggio' ? 'selected' : '' }}>
-                                    Lavaggio</option>
+                                @foreach (MaintenanceRecord::ACTIVITY_TYPES as $item)
+                                    <option value="{{ $item }}" {{ old('activity_type') == $item ? 'selected' : '' }}>
+                                        {{ $item }}
+                                    </option>
+                                @endforeach
                             </select>
                             @error('activity_type')
                                 <div class="invalid-feedback">{{ $message }}</div>

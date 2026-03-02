@@ -22,6 +22,15 @@ class Deadline extends Model
         'due_date' => 'date',
     ];
 
+    
+    public function maintenanceRecord()
+    {
+        return $this->hasOne(MaintenanceRecord::class);
+    }
+
+
+    
+    
     public function getDueDateFormattedAttribute(): ?string
     {
         return $this->due_date?->format('m/Y');

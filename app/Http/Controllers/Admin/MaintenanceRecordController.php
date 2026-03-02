@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deadline;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class MaintenanceRecordController extends Controller
 {
@@ -44,7 +47,7 @@ class MaintenanceRecordController extends Controller
                 'provider_id' => 'required|exists:providers,id',
                 'appointment_date' => 'required|date',
                 'return_date' => 'nullable|date|after_or_equal:appointment_date',
-                'activity_type' => 'nullable|string|max:255',
+                'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             ],
             [
                 'vehicle_id.required' => 'Il veicolo è obbligatorio.',
@@ -59,6 +62,7 @@ class MaintenanceRecordController extends Controller
                 'return_date.after_or_equal' => 'La data di completamento deve essere uguale o successiva alla data dell\'appuntamento.',
                 'activity_type.string' => 'Il tipo di attività deve essere una stringa.',
                 'activity_type.max' => 'Il tipo di attività non può superare i 255 caratteri.',
+                'activity_type.in' => 'Il tipo di attività selezionato non è valido.',
             ]
         );
 
@@ -149,7 +153,7 @@ class MaintenanceRecordController extends Controller
                 'provider_id' => 'required|exists:providers,id',
                 'appointment_date' => 'required|date',
                 'return_date' => 'nullable|date|after_or_equal:appointment_date',
-                'activity_type' => 'nullable|string|max:255',
+                'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
                 'issue_resolved' => 'nullable|boolean',
             ],
             [
@@ -165,6 +169,7 @@ class MaintenanceRecordController extends Controller
                 'return_date.after_or_equal' => 'La data di completamento deve essere uguale o successiva alla data dell\'appuntamento.',
                 'activity_type.string' => 'Il tipo di attività deve essere una stringa.',
                 'activity_type.max' => 'Il tipo di attività non può superare i 255 caratteri.',
+                'activity_type.in' => 'Il tipo di attività selezionato non è valido.',
                 'issue_resolved.boolean' => 'Il valore selezionato per la risoluzione del guasto non è valido.',
             ]
         );
@@ -199,7 +204,17 @@ class MaintenanceRecordController extends Controller
 
         return redirect()->route('admin.maintenancerecords.show', $maintenanceRecord->id)->with('status', 'Intervento aggiornato con successo.');
     }
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(MaintenanceRecord $maintenanceRecord)
+    {
+        $maintenanceRecord->delete();
+        return redirect()->route('admin.maintenancerecords.index')->with('status', 'Intervento eliminato con successo.');
+    }
 
+    // --- CUSTOM METHOD ---
+    // Metodo per completare un intervento e aggiornare lo stato del guasto associato
     public function complete(Request $request, MaintenanceRecord $maintenanceRecord)
     {
         $data = $request->validate(
@@ -212,31 +227,60 @@ class MaintenanceRecordController extends Controller
             ]
         );
 
-        $maintenanceRecord->loadMissing('issue');
-        $maintenanceRecord->return_date = Carbon::today();
-        $maintenanceRecord->save();
+        $maintenanceRecord->loadMissing(['issue', 'deadline', 'vehicle.vehicleType']);
 
-        if ($maintenanceRecord->issue) {
-            if ((bool) $data['issue_resolved']) {
-                $maintenanceRecord->issue->status = 'closed';
-                $maintenanceRecord->issue->save();
-            } else {
-                $maintenanceRecord->issue->status = 'in_progress';
-                $maintenanceRecord->issue->save();
+        // Se la manutenzione è legata a una scadenza ministeriale, aggiorna lo stato in base alla risoluzione del guasto
+        DB::transaction(function () use ($maintenanceRecord, $data) {
+            // 1) complete maintenance
+            $maintenanceRecord->return_date = Carbon::today();
+            $maintenanceRecord->save();
+
+            // 2) update issue
+            if ($maintenanceRecord->issue) {
+                if ((bool) $data['issue_resolved']) {
+                    $maintenanceRecord->issue->status = 'closed';
+                    $maintenanceRecord->issue->save();
+                } else {
+                    $maintenanceRecord->issue->status = 'in_progress';
+                    $maintenanceRecord->issue->save();
+                }
             }
-        }
+
+            // 3) update current deadline + create next one
+            if ($maintenanceRecord->deadline && in_array($maintenanceRecord->deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true)) {
+
+                if ((bool) $data['issue_resolved']) {
+                    $maintenanceRecord->deadline->status = 'renewed';
+                    $maintenanceRecord->deadline->save();
+                    $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
+                    $nextDueDate = null;
+                    if ($maintenanceRecord->deadline->type === Deadline::TYPE_MINISTERIAL && $maintenanceRecord->vehicle->vehicleType->regular_inspection_months > 0) {
+                        $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType->regular_inspection_months;
+                        $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
+                    } elseif ($maintenanceRecord->deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
+                        $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
+                    }
+                    if ($nextDueDate) {
+                        Deadline::firstOrCreate(
+                            [
+                                'vehicle_id' => $maintenanceRecord->vehicle_id,
+                                'type' => $maintenanceRecord->deadline->type,
+                                'due_date' => $nextDueDate->toDateString(),
+                            ],
+                            [
+                                'status' => 'pending',
+                            ]
+                        );
+                    }
+                } else {
+                    $maintenanceRecord->deadline->status = 'pending';
+                    $maintenanceRecord->deadline->save();
+                }
+            }
+        });
 
         return redirect()
             ->route('admin.maintenancerecords.show', $maintenanceRecord->id)
             ->with('status', 'Intervento completato con successo.');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(MaintenanceRecord $maintenanceRecord)
-    {
-        $maintenanceRecord->delete();
-        return redirect()->route('admin.maintenancerecords.index')->with('status', 'Intervento eliminato con successo.');
     }
 }

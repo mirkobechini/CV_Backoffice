@@ -6,7 +6,22 @@ use Illuminate\Database\Eloquent\Model;
 
 class MaintenanceRecord extends Model
 {
-    protected $table = 'maintenancerecords';
+    
+    public const ACTIVITY_TAGLIANDO = 'Tagliando';
+    public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';
+    public const ACTIVITY_REVISION_OXYGEN = 'Revisione Impianto Ossigeno';
+    
+    public const ACTIVITY_TYPES = [
+        self::ACTIVITY_TAGLIANDO,
+        'Riparazione',
+        self::ACTIVITY_REVISION_MINISTERIAL,
+        self::ACTIVITY_REVISION_OXYGEN,
+        'Lavaggio',
+        'Cambio Gomme',
+        'Altro',
+    ];
+    
+protected $table = 'maintenancerecords';
 
     protected $casts = [
         'appointment_date' => 'date',
@@ -20,6 +35,7 @@ class MaintenanceRecord extends Model
         'appointment_date',
         'return_date',
         'activity_type',
+        'deadline_id',
     ];
 
     public function vehicle()
@@ -35,6 +51,11 @@ class MaintenanceRecord extends Model
     public function issue()
     {
         return $this->belongsTo(Issue::class);
+    }
+
+    public function deadline()
+    {
+        return $this->belongsTo(Deadline::class);
     }
 
     public function getAppointmentDateFormattedAttribute(): ?string
