@@ -82,7 +82,7 @@ Un mezzo può avere più guasti nel tempo.
 - Vehicle 1 : N MaintenanceRecord
   Un mezzo entra in manutenzione più volte.
 
-- Issue 0/1 : 1 MaintenanceRecord
+- Issue 1 : N MaintenanceRecord
   Un intervento di manutenzione può nascere da un guasto specifico.
 
 
@@ -110,7 +110,7 @@ Un mezzo può avere più guasti nel tempo.
 - [] Equipment model & migration
 - [X] Vehicle seed
 - [X] Provider seed
-- [] Issue seed
+- [X] Issue seed
 - [] MaintenanceRecord seed
 - [] Deadline seed
 - [] MileageLog seed

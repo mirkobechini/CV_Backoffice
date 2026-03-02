@@ -36,7 +36,7 @@ class ProviderController extends Controller
                 'name' => 'required|string|max:255',
                 'address' => 'nullable|string|max:255',
                 'contact_info' => 'nullable|string|max:255',
-                'type' => 'nullable|string|max:255',
+                'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',
             ],
             [
                 'name.required' => 'Il nome è obbligatorio.',
@@ -46,8 +46,8 @@ class ProviderController extends Controller
                 'address.max' => 'L\'indirizzo non può superare i 255 caratteri.',
                 'contact_info.string' => 'Le informazioni di contatto devono essere una stringa.',
                 'contact_info.max' => 'Le informazioni di contatto non possono superare i 255 caratteri.',
-                'type.string' => 'Il tipo deve essere una stringa.',
-                'type.max' => 'Il tipo non può superare i 255 caratteri.',
+                'type.required' => 'Il tipo è obbligatorio.',
+                'type.in' => 'Il tipo selezionato non è valido.',
             ]
         );
 
@@ -120,7 +120,7 @@ class ProviderController extends Controller
                 'name' => 'required|string|max:255',
                 'address' => 'nullable|string|max:255',
                 'contact_info' => 'nullable|string|max:255',
-                'type' => 'nullable|string|max:255',
+                'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',
             ],
             [
                 'name.required' => 'Il nome è obbligatorio.',
@@ -130,8 +130,8 @@ class ProviderController extends Controller
                 'address.max' => 'L\'indirizzo non può superare i 255 caratteri.',
                 'contact_info.string' => 'Le informazioni di contatto devono essere una stringa.',
                 'contact_info.max' => 'Le informazioni di contatto non possono superare i 255 caratteri.',
-                'type.string' => 'Il tipo deve essere una stringa.',
-                'type.max' => 'Il tipo non può superare i 255 caratteri.',
+                'type.required' => 'Il tipo è obbligatorio.',
+                'type.in' => 'Il tipo selezionato non è valido.',
             ]
         );
 

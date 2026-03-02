@@ -7,6 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 
 class Vehicle extends Model
 {
+    protected $fillable = [
+        'license_plate',
+        'internal_code',
+        'brand',
+        'model',
+        'fuel_type',
+        'vehicle_type_id',
+        'immatricolation_date',
+        'registration_card_path',
+        'warranty_expiration_date',
+        'has_warranty_extension',
+        'warranty_extension_duration',
+    ];
+
     protected $casts = [
         'immatricolation_date' => 'date',
         'warranty_expiration_date' => 'date',

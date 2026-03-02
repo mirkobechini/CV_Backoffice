@@ -6,6 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 
 class Issue extends Model
 {
+    protected $fillable = [
+        'vehicle_id',
+        'description',
+        'status',
+        'photo',
+        'event_date',
+    ];
+
     protected $casts = [
         'event_date' => 'date',
     ];
