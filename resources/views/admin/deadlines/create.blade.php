@@ -22,6 +22,7 @@
                                 <option value="">Seleziona un veicolo</option>
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
+                                        data-needs-oxygen-check="{{ $vehicle->vehicleType?->needs_oxygen_check ? '1' : '0' }}"
                                         {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
                                         {{ $vehicle->internal_code }} - {{ $vehicle->brand }} {{ $vehicle->model }}
                                     </option>
@@ -41,7 +42,7 @@
                                 <option value="Revisione Ministeriale"
                                     {{ old('type') == 'Revisione Ministeriale' ? 'selected' : '' }}>Revisione Ministeriale
                                 </option>
-                                <option value="Revisione Impianto Ossigeno"
+                                <option id="oxygen-type-option" value="Revisione Impianto Ossigeno"
                                     {{ old('type') == 'Revisione Impianto Ossigeno' ? 'selected' : '' }}>Revisione Impianto
                                     Ossigeno</option>
                             </select>
@@ -53,8 +54,9 @@
                             <label for="due_date" class="form-label">Data di scadenza</label>
                             <input type="date" class="form-control @error('due_date') is-invalid @enderror"
                                 id="due_date" name="due_date" value="{{ old('due_date') }}">
-                            <small class="text-muted">Per "Revisione Ministeriale" la data viene calcolata
-                                automaticamente.</small>
+                            <small class="text-muted">Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno"
+                                la data viene calcolata automaticamente. La revisione ossigeno è disponibile solo per
+                                le ambulanze.</small>
                             @error('due_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -82,15 +84,37 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const vehicleSelect = document.getElementById('vehicle_id');
             const typeSelect = document.getElementById('type');
+            const oxygenOption = document.getElementById('oxygen-type-option');
             const dueDateGroup = document.getElementById('due-date-group');
             const dueDateInput = document.getElementById('due_date');
             const ministerialType = 'Revisione Ministeriale';
+            const oxygenType = 'Revisione Impianto Ossigeno';
+
+            const selectedVehicleNeedsOxygenCheck = () => {
+                const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+
+                if (!selectedOption) {
+                    return false;
+                }
+
+                return selectedOption.getAttribute('data-needs-oxygen-check') === '1';
+            };
+
+            const syncOxygenTypeAvailability = () => {
+                const canUseOxygenType = selectedVehicleNeedsOxygenCheck();
+                oxygenOption.disabled = !canUseOxygenType;
+
+                if (!canUseOxygenType && typeSelect.value === oxygenType) {
+                    typeSelect.value = '';
+                }
+            };
 
             const toggleDueDateVisibility = () => {
-                const isMinisterial = typeSelect.value === ministerialType;
+                const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
 
-                if (isMinisterial) {
+                if (isAutoCalculated) {
                     dueDateGroup.style.display = 'none';
                     dueDateInput.disabled = true;
                     dueDateInput.value = '';
@@ -100,7 +124,12 @@
                 }
             };
 
+            syncOxygenTypeAvailability();
             toggleDueDateVisibility();
+            vehicleSelect.addEventListener('change', () => {
+                syncOxygenTypeAvailability();
+                toggleDueDateVisibility();
+            });
             typeSelect.addEventListener('change', toggleDueDateVisibility);
         });
     </script>

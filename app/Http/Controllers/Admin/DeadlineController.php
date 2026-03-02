@@ -25,7 +25,7 @@ class DeadlineController extends Controller
      */
     public function create()
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::with('vehicleType')->get();
         return view('admin.deadlines.create', compact('vehicles'));
     }
 
@@ -38,7 +38,7 @@ class DeadlineController extends Controller
             [
                 'vehicle_id' => 'required|exists:vehicles,id',
                 'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'due_date' => 'nullable|date|required_unless:type,Revisione Ministeriale',
+                'due_date' => 'nullable|date|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
                 'mark_as_renewed' => 'nullable|boolean',
             ],
             [
@@ -54,11 +54,18 @@ class DeadlineController extends Controller
         );
 
         $vehicle = Vehicle::with('vehicleType')->findOrFail($data['vehicle_id']);
+
+        if ($data['type'] === Deadline::TYPE_OXYGEN && !Deadline::supportsOxygenCheckForVehicle($vehicle)) {
+            return back()
+            ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
+            ->withInput();
+        }
+
         $dueDate = $this->resolveDueDate($data, $vehicle);
 
         if (!$dueDate) {
             return back()
-                ->withErrors(['due_date' => 'Impossibile calcolare la data di revisione ministeriale: controlla immatricolazione e configurazione tipo veicolo.'])
+            ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
                 ->withInput();
         }
 
@@ -88,7 +95,7 @@ class DeadlineController extends Controller
      */
     public function edit(Deadline $deadline)
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::with('vehicleType')->get();
         return view('admin.deadlines.edit', compact('deadline', 'vehicles'));
     }
 
@@ -101,7 +108,7 @@ class DeadlineController extends Controller
             [
                 'vehicle_id' => 'required|exists:vehicles,id',
                 'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'due_date' => 'nullable|date|required_unless:type,Revisione Ministeriale',
+                'due_date' => 'nullable|date|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
                 'mark_as_renewed' => 'nullable|boolean',
             ],
             [
@@ -117,11 +124,18 @@ class DeadlineController extends Controller
         );
 
         $vehicle = Vehicle::with('vehicleType')->findOrFail($data['vehicle_id']);
+
+        if ($data['type'] === Deadline::TYPE_OXYGEN && !Deadline::supportsOxygenCheckForVehicle($vehicle)) {
+            return back()
+            ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
+            ->withInput();
+        }
+
         $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
 
         if (!$dueDate) {
             return back()
-                ->withErrors(['due_date' => 'Impossibile calcolare la data di revisione ministeriale: controlla immatricolazione e configurazione tipo veicolo.'])
+            ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
                 ->withInput();
         }
 
@@ -149,6 +163,10 @@ class DeadlineController extends Controller
     {
         if ($data['type'] === Deadline::TYPE_MINISTERIAL) {
             return Deadline::calculateMinisterialDueDateForVehicle($vehicle, $excludeDeadlineId);
+        }
+
+        if ($data['type'] === Deadline::TYPE_OXYGEN) {
+            return Deadline::calculateOxygenDueDateForVehicle($vehicle, $excludeDeadlineId);
         }
 
         return isset($data['due_date']) ? Carbon::parse($data['due_date']) : null;

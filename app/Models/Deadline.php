@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Deadline extends Model
 {
     public const TYPE_MINISTERIAL = 'Revisione Ministeriale';
+    public const TYPE_OXYGEN = 'Revisione Impianto Ossigeno';
+    public const OXYGEN_CHECK_INTERVAL_MONTHS = 12;
 
     protected $fillable = [
         'vehicle_id',
@@ -85,6 +87,38 @@ class Deadline extends Model
 
         $monthsToAdd = (int) $vehicle->vehicleType->first_inspection_months;
         return Carbon::parse($vehicle->immatricolation_date)->addMonthsNoOverflow($monthsToAdd);
+    }
+
+    public static function calculateOxygenDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
+    {
+        if (!$vehicle->immatricolation_date || !self::supportsOxygenCheckForVehicle($vehicle)) {
+            return null;
+        }
+
+        $query = self::query()
+            ->where('vehicle_id', $vehicle->id)
+            ->where('type', self::TYPE_OXYGEN)
+            ->where('status', 'renewed')
+            ->orderByDesc('due_date');
+
+        if ($excludeDeadlineId !== null) {
+            $query->where('id', '!=', $excludeDeadlineId);
+        }
+
+        $lastRenewedDeadline = $query->first();
+
+        if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
+            return Carbon::parse($lastRenewedDeadline->due_date)
+                ->addMonthsNoOverflow(self::OXYGEN_CHECK_INTERVAL_MONTHS);
+        }
+
+        return Carbon::parse($vehicle->immatricolation_date)
+            ->addMonthsNoOverflow(self::OXYGEN_CHECK_INTERVAL_MONTHS);
+    }
+
+    public static function supportsOxygenCheckForVehicle(Vehicle $vehicle): bool
+    {
+        return (bool) optional($vehicle->vehicleType)->needs_oxygen_check;
     }
 
     public function vehicle()
