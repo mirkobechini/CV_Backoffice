@@ -20,7 +20,7 @@
                             {{ $deadline->vehicle->model }}</p>
                         <p><strong>Data di scadenza:</strong> {{ $deadline->due_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Stato:</strong>
-                            @switch($deadline->status)
+                            @switch($deadline->automatic_status)
                                 @case('renewed')
                                     <span class="badge bg-success">Rinnovata</span>
                                 @break

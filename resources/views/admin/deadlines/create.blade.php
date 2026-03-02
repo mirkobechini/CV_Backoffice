@@ -10,8 +10,8 @@
         <h1 class="mb-4">Aggiungi nuova scadenza</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form id="deadline-form" method="POST" action="{{ route('admin.deadlines.store') }}" enctype="multipart/form-data"
-                    data-single-submit="true">
+                <form id="deadline-form" method="POST" action="{{ route('admin.deadlines.store') }}"
+                    enctype="multipart/form-data" data-single-submit="true">
                     @csrf
                     <section class="mb-3 row">
                         <h2>Dettagli Scadenza</h2>
@@ -36,33 +36,40 @@
                             <select class="form-select @error('type') is-invalid @enderror" id="type" name="type"
                                 required>
                                 <option value="">Seleziona una tipologia</option>
-                                <option value="Assicurazione" {{ old('type') == 'Assicurazione' ? 'selected' : '' }}>Assicurazione</option>
-                                <option value="Revisione Ministeriale" {{ old('type') == 'Revisione Ministeriale' ? 'selected' : '' }}>Revisione Ministeriale</option>
-                                <option value="Revisione Impianto Ossigeno" {{ old('type') == 'Revisione Impianto Ossigeno' ? 'selected' : '' }}>Revisione Impianto Ossigeno</option>
+                                <option value="Assicurazione" {{ old('type') == 'Assicurazione' ? 'selected' : '' }}>
+                                    Assicurazione</option>
+                                <option value="Revisione Ministeriale"
+                                    {{ old('type') == 'Revisione Ministeriale' ? 'selected' : '' }}>Revisione Ministeriale
+                                </option>
+                                <option value="Revisione Impianto Ossigeno"
+                                    {{ old('type') == 'Revisione Impianto Ossigeno' ? 'selected' : '' }}>Revisione Impianto
+                                    Ossigeno</option>
                             </select>
                             @error('type')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3" id="due-date-group">
                             <label for="due_date" class="form-label">Data di scadenza</label>
                             <input type="date" class="form-control @error('due_date') is-invalid @enderror"
-                                id="due_date" name="due_date" value="{{ old('due_date') }}" required>
+                                id="due_date" name="due_date" value="{{ old('due_date') }}">
+                            <small class="text-muted">Per "Revisione Ministeriale" la data viene calcolata
+                                automaticamente.</small>
                             @error('due_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="status" class="form-label">Stato</label>
-                            <select class="form-select @error('status') is-invalid @enderror" id="status" name="status"
-                                required>
-                                <option value="">Seleziona uno stato</option>
-                                <option value="renewed" {{ old('status') == 'renewed' ? 'selected' : '' }}>Rinnovata</option>
-                                <option value="pending" {{ old('status') == 'pending' ? 'selected' : '' }}>In scadenza</option>
-                                <option value="expired" {{ old('status') == 'expired' ? 'selected' : '' }}>Scaduta</option>
-                            </select>
-                            @error('status')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input @error('mark_as_renewed') is-invalid @enderror"
+                                    type="checkbox" value="1" id="mark_as_renewed" name="mark_as_renewed"
+                                    {{ old('mark_as_renewed') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="mark_as_renewed">
+                                    Segna subito come rinnovata
+                                </label>
+                            </div>
+                            @error('mark_as_renewed')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
                     </section>
@@ -72,4 +79,29 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const typeSelect = document.getElementById('type');
+            const dueDateGroup = document.getElementById('due-date-group');
+            const dueDateInput = document.getElementById('due_date');
+            const ministerialType = 'Revisione Ministeriale';
+
+            const toggleDueDateVisibility = () => {
+                const isMinisterial = typeSelect.value === ministerialType;
+
+                if (isMinisterial) {
+                    dueDateGroup.style.display = 'none';
+                    dueDateInput.disabled = true;
+                    dueDateInput.value = '';
+                } else {
+                    dueDateGroup.style.display = '';
+                    dueDateInput.disabled = false;
+                }
+            };
+
+            toggleDueDateVisibility();
+            typeSelect.addEventListener('change', toggleDueDateVisibility);
+        });
+    </script>
 @endsection

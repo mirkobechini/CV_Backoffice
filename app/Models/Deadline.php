@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Deadline extends Model
 {
+    public const TYPE_MINISTERIAL = 'Revisione Ministeriale';
+
     protected $fillable = [
         'vehicle_id',
         'type',
@@ -20,6 +23,68 @@ class Deadline extends Model
     public function getDueDateFormattedAttribute(): ?string
     {
         return $this->due_date?->format('d/m/Y');
+    }
+
+    public function getAutomaticStatusAttribute(): string
+    {
+        if ($this->status === 'renewed') {
+            return 'renewed';
+        }
+
+        if (!$this->due_date) {
+            return 'pending';
+        }
+
+        $today = Carbon::today();
+
+        if ($this->due_date->isBefore($today)) {
+            return 'expired';
+        }
+
+        return 'pending';
+    }
+
+    public function syncStatusFromRules(): void
+    {
+        if ($this->status === 'renewed') {
+            return;
+        }
+
+        $newStatus = $this->due_date && $this->due_date->isBefore(Carbon::today())
+            ? 'expired'
+            : 'pending';
+
+        if ($this->status !== $newStatus) {
+            $this->status = $newStatus;
+            $this->save();
+        }
+    }
+
+    public static function calculateMinisterialDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
+    {
+        if (!$vehicle->immatricolation_date || !$vehicle->vehicleType) {
+            return null;
+        }
+
+        $query = self::query()
+            ->where('vehicle_id', $vehicle->id)
+            ->where('type', self::TYPE_MINISTERIAL)
+            ->where('status', 'renewed')
+            ->orderByDesc('due_date');
+
+        if ($excludeDeadlineId !== null) {
+            $query->where('id', '!=', $excludeDeadlineId);
+        }
+
+        $lastRenewedDeadline = $query->first();
+
+        if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
+            $monthsToAdd = (int) $vehicle->vehicleType->regular_inspection_months;
+            return Carbon::parse($lastRenewedDeadline->due_date)->addMonthsNoOverflow($monthsToAdd);
+        }
+
+        $monthsToAdd = (int) $vehicle->vehicleType->first_inspection_months;
+        return Carbon::parse($vehicle->immatricolation_date)->addMonthsNoOverflow($monthsToAdd);
     }
 
     public function vehicle()
