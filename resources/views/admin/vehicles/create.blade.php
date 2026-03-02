@@ -143,7 +143,7 @@
                             <h4>Assicurazione</h4>
                             <div class="mb-3">
                                 <label for="insurance_due_date" class="form-label">Data di scadenza</label>
-                                <input type="date"
+                                <input type="month"
                                     class="form-control @error('insurance_due_date') is-invalid @enderror"
                                     id="insurance_due_date" name="insurance_due_date"
                                     value="{{ old('insurance_due_date') }}">

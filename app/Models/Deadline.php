@@ -24,7 +24,7 @@ class Deadline extends Model
 
     public function getDueDateFormattedAttribute(): ?string
     {
-        return $this->due_date?->format('d/m/Y');
+        return $this->due_date?->format('m/Y');
     }
 
     public function getAutomaticStatusAttribute(): string

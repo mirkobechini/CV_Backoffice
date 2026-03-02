@@ -38,7 +38,7 @@ class DeadlineController extends Controller
             [
                 'vehicle_id' => 'required|exists:vehicles,id',
                 'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'due_date' => 'nullable|date|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
+                'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
                 'mark_as_renewed' => 'nullable|boolean',
             ],
             [
@@ -48,7 +48,7 @@ class DeadlineController extends Controller
                 'type.in' => 'La tipologia selezionata non è valida.',
                 'due_date.required' => 'La data di scadenza è obbligatoria.',
                 'due_date.required_unless' => 'La data di scadenza è obbligatoria per questa tipologia.',
-                'due_date.date' => 'La data di scadenza deve essere una data valida.',
+                'due_date.date_format' => 'La data di scadenza deve essere nel formato mese/anno valido.',
                 'mark_as_renewed.boolean' => 'Il valore di rinnovo non è valido.',
             ]
         );
@@ -108,7 +108,7 @@ class DeadlineController extends Controller
             [
                 'vehicle_id' => 'required|exists:vehicles,id',
                 'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'due_date' => 'nullable|date|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
+                'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
                 'mark_as_renewed' => 'nullable|boolean',
             ],
             [
@@ -118,7 +118,7 @@ class DeadlineController extends Controller
                 'type.in' => 'La tipologia selezionata non è valida.',
                 'due_date.required' => 'La data di scadenza è obbligatoria.',
                 'due_date.required_unless' => 'La data di scadenza è obbligatoria per questa tipologia.',
-                'due_date.date' => 'La data di scadenza deve essere una data valida.',
+                'due_date.date_format' => 'La data di scadenza deve essere nel formato mese/anno valido.',
                 'mark_as_renewed.boolean' => 'Il valore di rinnovo non è valido.',
             ]
         );
@@ -169,7 +169,22 @@ class DeadlineController extends Controller
             return Deadline::calculateOxygenDueDateForVehicle($vehicle, $excludeDeadlineId);
         }
 
-        return isset($data['due_date']) ? Carbon::parse($data['due_date']) : null;
+        return $this->resolveManualDueDate($data['due_date'] ?? null);
+    }
+
+    private function resolveManualDueDate(?string $dueDate): ?Carbon
+    {
+        if (!$dueDate) {
+            return null;
+        }
+
+        $parsedDate = Carbon::createFromFormat('Y-m', $dueDate);
+
+        if (!$parsedDate) {
+            return null;
+        }
+
+        return $parsedDate->endOfMonth();
     }
 
     private function resolveStatus(Carbon $dueDate, bool $markAsRenewed): string
