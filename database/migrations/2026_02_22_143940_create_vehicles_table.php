@@ -28,17 +28,19 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        DB::statement("
-        ALTER TABLE vehicles
-        ADD CONSTRAINT chk_vehicles_license_plate
-        CHECK (license_plate REGEXP '^[A-Z]{2}[0-9]{3}[A-Z]{2}$')
-        ");
+        if (in_array(DB::getDriverName(), ['mysql', 'mariadb'], true)) {
+            DB::statement(" 
+            ALTER TABLE vehicles
+            ADD CONSTRAINT chk_vehicles_license_plate
+            CHECK (license_plate REGEXP '^[A-Z]{2}[0-9]{3}[A-Z]{2}$')
+            ");
 
-        DB::statement("
-        ALTER TABLE vehicles
-        ADD CONSTRAINT chk_vehicles_internal_code
-        CHECK (internal_code IS NULL OR internal_code REGEXP '^[0-9]{4}$')
-        ");
+            DB::statement(" 
+            ALTER TABLE vehicles
+            ADD CONSTRAINT chk_vehicles_internal_code
+            CHECK (internal_code IS NULL OR internal_code REGEXP '^[0-9]{4}$')
+            ");
+        }
     }
 
     /**

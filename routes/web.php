@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
@@ -27,6 +28,7 @@ Route::middleware(['auth', 'verified'])
         Route::resource("vehicles", VehicleController::class);
         Route::resource("providers", ProviderController::class);
         Route::resource("issues", IssueController::class);
+        Route::resource("deadlines", DeadlineController::class);
         Route::patch('maintenancerecords/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
             ->name('maintenancerecords.complete');
         Route::resource("maintenancerecords", MaintenanceRecordController::class)

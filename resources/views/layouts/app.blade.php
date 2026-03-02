@@ -29,6 +29,18 @@
 <body>
     @include('admin.partials.header')
     <main>
+        @if ($errors->any())
+            <div class="container pt-3">
+                <div class="alert alert-danger" role="alert">
+                    <strong>Controlla i dati inseriti:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
         @yield('content')
     </main>
 </body>

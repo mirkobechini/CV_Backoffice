@@ -1,7 +1,11 @@
 # 🛠 Database Schema - Gestione Parco Mezzi
+
 Questo documento descrive la struttura del database, le entità principali e le loro relazioni.
+
 ## 1. Entità Principali (Anagrafica)
+
 ### Vehicle (Mezzo): Il cuore del sistema:
+
     license_plate string unique Targa,
     internal_code string nullable Sigla interna,
     brand string Marca,
@@ -15,6 +19,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
     warranty_expiration_date string nullable Data di scadenza della garanzia.
 
 ### VehicleType (Configurazione Categorie): Tabella di configurazione che definisce le regole di business per ogni categoria di mezzo.
+
     name string Nome della tipologia,
     needs_oxygen_check (booleano) per attivare la gestione impianto ossigeno.
     extinguishers_required (intero) per definire il numero minimo di estintori a bordo.
@@ -22,29 +27,35 @@ Questo documento descrive la struttura del database, le entità principali e le 
     regular_inspection_months: intervallo per le successive (es. 24 per auto, 12 per ambulanze).
 
 ### Provider (Officina/Luogo): Fornitori esterni:
+
     name string Nome,
     contact_info string nullable Contatti (telefono, email),
     address string nullable Indirizzo/Posizione,
     type string Tipologia (Meccanico, Carrozziere, Gommista, Lavaggio, Allestitore).
 
 ## 2. Eventi e Manutenzione
+
 ### Issue (Guasto): Segnalazione di un problema tecnico:
+
     description string Descrizione,
     status string (open, in_progress, closed) Stato del guasto.
     photo string nullable Foto del guasto,
     event_date string default CURRENT_DATE Data dell'avvenimento.
-    
+
     Relazione: Appartiene a un Vehicle
 
 ### MaintenanceRecord (Appuntamento/Intervento): Tracciamento dei lavori effettuati o programmati:
+
     appointment_date string Data appuntamento,
     return_date string nullable Data restituzione (per disponibilità mezzo),
     activity_type string Tipo attività (Tagliando, Revisione, Riparazione, Lavaggio).
-    
+
     Relazione: Collega un Vehicle con un Provider. Può essere collegato a una specifica Issue.
 
 ## 3. Monitoraggio e Scadenze
+
 ### Deadline (Scadenza): Gestione di tutte le date critiche ricorrenti:
+
     type string Tipologia (Assicurazione, Revisione Ministeriale, Revisione Impianto Ossigeno),
     due_date string Data scadenza,
     status string (expired, renewed, pending) Stato.
@@ -52,11 +63,13 @@ Questo documento descrive la struttura del database, le entità principali e le 
     Relazione: Ogni record è collegato a un Vehicle.
 
 ### MileageLog (Registro Chilometri): Storico dei chilometri per reportistica e avvisi:
+
     reading integer Lettura contachilometri,
     log_date string Data rilevazione.
     Relazione: Molteplici record per ogni Vehicle.
 
 ### Equipment (Attrezzatura/Estintori): Oggetti specifici a bordo del mezzo:
+
     name string Nome,
     serial_number string nullable Codice Seriale,
     revision_date string nullable Data revisione,
@@ -64,8 +77,9 @@ Questo documento descrive la struttura del database, le entità principali e le 
     Relazione: Ogni attrezzatura è assegnata a un Vehicle.
 
 ## 🔗 Relazioni (Entity-Relationship)
+
 - Vehicle 1 : N Issue
-Un mezzo può avere più guasti nel tempo.
+  Un mezzo può avere più guasti nel tempo.
 
 - Vehicle 1 : N Deadline
   Un mezzo ha diverse scadenze (Assicurazione, Revisione, ecc.).
@@ -85,99 +99,112 @@ Un mezzo può avere più guasti nel tempo.
 - Issue 1 : N MaintenanceRecord
   Un intervento di manutenzione può nascere da un guasto specifico.
 
-
 ## Legenda
+
 ✅ completato
 🔄 in corso
 ⏳ in attesa/bloccato
 ⬜ da fare
 
 ## Todos:
+
 ### Setup ✅
-- [X] Install laravel
-- [X] Install breeze
-- [X] Set database in .env
-- [X] Set storage filesystem in .env
-- [X] Set storage symlink
+
+- [x] Install laravel
+- [x] Install breeze
+- [x] Set database in .env
+- [x] Set storage filesystem in .env
+- [x] Set storage symlink
 
 ### Database 🔄
-- [X] Vehicle model & migration
-- [X] Provider model & migration
-- [X] Issue model & migration
-- [X] MaintenanceRecord model & migration
-- [] Deadline model & migration
+
+- [x] Vehicle model & migration
+- [x] Provider model & migration
+- [x] Issue model & migration
+- [x] MaintenanceRecord model & migration
+- [x] Deadline model & migration
 - [] MileageLog model & migration
 - [] Equipment model & migration
-- [X] Vehicle seed
-- [X] Provider seed
-- [X] Issue seed
+- [x] Vehicle seed
+- [x] Provider seed
+- [x] Issue seed
 - [] MaintenanceRecord seed
 - [] Deadline seed
 - [] MileageLog seed
 - [] Equipment seed
 
-### UI 🔄
-#### Commons 🔄
-- [X] partials/Header
-- [X] layouts/app
+### UI ⏳
+
+#### Commons ⏳
+
+- [x] partials/Header
+- [x] layouts/app
 - [] welcomePage
 
-
 #### Vehicle ✅
-- [X] index
-- [X] show
-- [X] create
-- [X] store
-- [X] edit
-- [X] update
-- [X] destroy
+
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
 
 #### VehicleType ✅
-- [X] index
-- [X] show
-- [X] create
-- [X] store
-- [X] edit
-- [X] update
-- [X] destroy
+
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
 
 #### Provider ✅
-- [X] index
-- [X] show
-- [X] create
-- [X] store
-- [X] edit
-- [X] update
-- [X] destroy
+
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
 
 #### Issue ✅
-- [X] index
-- [X] show
-- [X] create
-- [X] store
-- [X] edit
-- [X] update
-- [X] destroy
+
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
+- [] show: pulsante per prendere appuntamento manutenzione dal guasto
+- [] validazione: errore se appointment_date < event_date del guasto
 
 #### MaintenanceRecord ✅
-- [X] index
-- [X] show
-- [X] create
-- [X] store
-- [X] edit
-- [X] update
-- [X] destroy
 
-#### Deadline ⬜
-- [] index
-- [] show
-- [] create
-- [] store
-- [] edit
-- [] update
-- [] destroy
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
+
+#### Deadline 🔄
+
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
 
 #### MileageLog ⬜
+
 - [] index
 - [] show
 - [] create
@@ -187,6 +214,7 @@ Un mezzo può avere più guasti nel tempo.
 - [] destroy
 
 #### Equipment ⬜
+
 - [] index
 - [] show
 - [] create
@@ -196,28 +224,33 @@ Un mezzo può avere più guasti nel tempo.
 - [] destroy
 
 ### Admin 🔄
+
 #### Controllers 🔄
-- [X] admin/VehicleController (CRUD)
-- [X] admin/VehicleTypeController (CRUD)
-- [X] admin/ProviderController (CRUD)
-- [X] admin/IssueController (CRUD)
-- [X] admin/MaintenanceRecordController (CRUD)
+
+- [x] admin/VehicleController (CRUD)
+- [x] admin/VehicleTypeController (CRUD)
+- [x] admin/ProviderController (CRUD)
+- [x] admin/IssueController (CRUD)
+- [x] admin/MaintenanceRecordController (CRUD)
 - [] admin/DeadlineController (CRUD)
 - [] admin/MileageLogController (CRUD)
 - [] admin/EquipmentController (CRUD)
 
 #### Routes 🔄
-- [X] admin/VehicleController route (web)
-- [X] admin/VehicleTypeController route (web)
-- [X] admin/ProviderController route (web)
-- [X] admin/IssueController route (web)
-- [X] admin/MaintenanceRecordController route (web)
-- [] admin/DeadlineController route (web)
+
+- [x] admin/VehicleController route (web)
+- [x] admin/VehicleTypeController route (web)
+- [x] admin/ProviderController route (web)
+- [x] admin/IssueController route (web)
+- [x] admin/MaintenanceRecordController route (web)
+- [x] admin/DeadlineController route (web)
 - [] admin/MileageLogController route (web)
 - [] admin/EquipmentController route (web)
 
 ### API ⬜
+
 #### Controllers ⬜
+
 - [] api/VehicleController (R)
 - [] api/VehicleTypeController (R)
 - [] api/ProviderController (R)
@@ -228,6 +261,7 @@ Un mezzo può avere più guasti nel tempo.
 - [] api/EquipmentController (R)
 
 #### Routes ⬜
+
 - [] api/VehicleController route (api)
 - [] api/VehicleTypeController route (api)
 - [] api/ProviderController route (api)
