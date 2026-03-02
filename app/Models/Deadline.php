@@ -43,18 +43,29 @@ class Deadline extends Model
             return 'expired';
         }
 
-        return 'pending';
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
+        $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
+
+        return $today->gte($warningStartDate) ? 'pending' : 'renewed';
     }
 
     public function syncStatusFromRules(): void
     {
-        if ($this->status === 'renewed') {
+        if (!$this->due_date) {
             return;
         }
 
-        $newStatus = $this->due_date && $this->due_date->isBefore(Carbon::today())
-            ? 'expired'
-            : 'pending';
+        $today = Carbon::today();
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
+        $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
+
+        if ($this->due_date->isBefore($today)) {
+            $newStatus = 'expired';
+        } elseif ($today->gte($warningStartDate)) {
+            $newStatus = 'pending';
+        } else {
+            $newStatus = 'renewed';
+        }
 
         if ($this->status !== $newStatus) {
             $this->status = $newStatus;

@@ -27,23 +27,12 @@ class VehicleObserver
         $dueDate = Carbon::parse($vehicle->immatricolation_date)->addMonthsNoOverflow($firstInspectionMonths);
 
         while ($dueDate->lte($today)) {
-            $alreadyExists = Deadline::query()
-                ->where('vehicle_id', $vehicle->id)
-                ->where('type', Deadline::TYPE_MINISTERIAL)
-                ->whereDate('due_date', $dueDate->toDateString())
-                ->exists();
-
-            if (!$alreadyExists) {
-                Deadline::create([
-                    'vehicle_id' => $vehicle->id,
-                    'type' => Deadline::TYPE_MINISTERIAL,
-                    'due_date' => $dueDate->toDateString(),
-                    'status' => 'renewed',
-                ]);
-            }
+            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, 'renewed');
 
             $dueDate->addMonthsNoOverflow($regularInspectionMonths);
         }
+
+        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, 'pending');
 
         if (!Deadline::supportsOxygenCheckForVehicle($vehicle)) {
             return;
@@ -53,22 +42,31 @@ class VehicleObserver
             ->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
 
         while ($oxygenDueDate->lte($today)) {
-            $alreadyExists = Deadline::query()
-                ->where('vehicle_id', $vehicle->id)
-                ->where('type', Deadline::TYPE_OXYGEN)
-                ->whereDate('due_date', $oxygenDueDate->toDateString())
-                ->exists();
-
-            if (!$alreadyExists) {
-                Deadline::create([
-                    'vehicle_id' => $vehicle->id,
-                    'type' => Deadline::TYPE_OXYGEN,
-                    'due_date' => $oxygenDueDate->toDateString(),
-                    'status' => 'renewed',
-                ]);
-            }
+            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, 'renewed');
 
             $oxygenDueDate->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
         }
+
+        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, 'pending');
+    }
+
+    private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, string $status): void
+    {
+        $alreadyExists = Deadline::query()
+            ->where('vehicle_id', $vehicle->id)
+            ->where('type', $type)
+            ->whereDate('due_date', $dueDate->toDateString())
+            ->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => $type,
+            'due_date' => $dueDate->toDateString(),
+            'status' => $status,
+        ]);
     }
 }
