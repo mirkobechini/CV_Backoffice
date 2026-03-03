@@ -28,7 +28,7 @@
                             </div>
                             <div class="col-12 col-md-4 mb-4 mb-md-0">
                                 <h5 class="mb-0 mb-md-3">Documenti</h5>
-                                <span class="card-text d-block"><strong>Data immatricolazione:</strong>
+                                <span class="card-text d-block"><strong>Immatricolazione:</strong>
                                     {{ $vehicle->immatricolation_date_formatted ?? 'N/A' }}</span>
                                 <span class="card-text d-block"><strong>Carta di circolazione:</strong>
                                     @if ($vehicle->registration_card_path)
