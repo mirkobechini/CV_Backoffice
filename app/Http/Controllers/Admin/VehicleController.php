@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Carbon\Carbon;
@@ -128,7 +129,17 @@ class VehicleController extends Controller
             ->with('issue', 'provider')
             ->orderByDesc('appointment_date')
             ->get();
-        return view('admin.vehicles.show', compact('vehicle', 'vehicleAppointments'));
+
+        $deadlines = Deadline::query()
+            ->where('vehicle_id', $vehicle->id)
+            ->orderByDesc('due_date')
+            ->orderByDesc('id')
+            ->get()
+            ->groupBy('type')
+            ->map(fn ($typeDeadlines) => $typeDeadlines->first());
+        $deadlinesTypes = ["revisione"=>Deadline::TYPE_MINISTERIAL, "ossigeno"=>Deadline::TYPE_OXYGEN];
+
+        return view('admin.vehicles.show', compact('vehicle', 'vehicleAppointments', 'deadlines', 'deadlinesTypes'));
     }
 
     /**

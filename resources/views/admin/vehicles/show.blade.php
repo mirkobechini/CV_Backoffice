@@ -7,17 +7,18 @@
                     precedente</a>
             </div>
         </div>
-        <div class="row">
-            <div class="col-3 align-middle text-center">
+        <div class="row row-cols-1">
+            <div class="col-md-3 align-middle text-center">
                 <h1 class="display-1 fw-bold text-center align-middle pt-3">{{ $vehicle->internal_code }}</h1>
                 <h5>{{ $vehicle->vehicleType->name ?? 'N/A' }}</h5>
 
             </div>
-            <div class="col-8">
+            <div class="col-md-8">
                 <div class="card border-0 mb-3">
                     <div class="card-body">
-                        <div class="row row-cols-1 row-cols-md-3">
-                            <div class="col">
+                        <div class="row">
+                            <div class="col-12 col-md-3 mb-4 mb-md-0">
+                                <h5 class="mb-0 mb-md-3">Anagrafica</h5>
                                 <span class="card-text d-block"><strong>Targa:</strong> {{ $vehicle->license_plate }}</span>
                                 <span class="card-text d-block"><strong>Marca:</strong> {{ $vehicle->brand }}</span>
                                 <span class="card-text d-block"><strong>Modello:</strong> {{ $vehicle->model }}</span>
@@ -25,7 +26,8 @@
                                     {{ $vehicle->fuel_type }}</span>
                                 <span class="card-text d-block"><strong>Chilometri:</strong> {{ $vehicle->mileage }}</span>
                             </div>
-                            <div class="col">
+                            <div class="col-12 col-md-4 mb-4 mb-md-0">
+                                <h5 class="mb-0 mb-md-3">Documenti</h5>
                                 <span class="card-text d-block"><strong>Data immatricolazione:</strong>
                                     {{ $vehicle->immatricolation_date_formatted ?? 'N/A' }}</span>
                                 <span class="card-text d-block"><strong>Carta di circolazione:</strong>
@@ -44,11 +46,25 @@
                                         : '<i class="fa-solid fa-check text-success"></i>' !!}
                                 </span>
                             </div>
-                            <div class="col">
-                                <span class="card-text d-block"><strong>Revisione:</strong> {{ $vehicle->revision }}</span>
-                                <span class="card-text d-block"><strong>Tagliando:</strong> {{ $vehicle->service }}</span>
+                            <div class="col-12 col-md-5 mb-4 mb-md-0">
+                                <h5 class="mb-0 mb-md-3">Scadenze</h5>
+                                <span class="card-text d-block"><strong>Revisione:</strong>
+                                    {{ $deadlines->get($deadlinesTypes['revisione'])?->due_date_formatted ?? 'N/A' }}
+                                    {!! $deadlines->get($deadlinesTypes['revisione'])?->getAutomaticStatusAttribute() === 'expired'
+                                        ? '<i class="fa-solid fa-times text-danger"></i>'
+                                        : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                </span>
+                                @if ($vehicle->vehicleType?->needs_oxygen_check)
+                                    <span class="card-text d-block"><strong>Revisione Ossigeno:</strong>
+                                        {{ $deadlines->get($deadlinesTypes['ossigeno'])?->due_date_formatted ?? 'N/A' }}
+                                        {!! $deadlines->get($deadlinesTypes['ossigeno'])?->getAutomaticStatusAttribute() === 'expired'
+                                            ? '<i class="fa-solid fa-times text-danger"></i>'
+                                            : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                    </span>
+                                @endif
+                                <span class="card-text d-block"><strong>Tagliando:</strong> </span>
                                 <span class="card-text d-block"><strong>Assicurazione:</strong>
-                                    {{ $vehicle->insurance }}</span>
+                                    {{ $deadlines->get('Assicurazione')?->due_date_formatted ?? 'N/A' }}</span>
 
                             </div>
                         </div>
