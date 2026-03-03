@@ -13,11 +13,67 @@ class DeadlineController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $validated = $request->validate([
+            'group_by' => 'nullable|in:type,status,vehicle,date',
+            'sort_by' => 'nullable|in:type,status,vehicle,date',
+            'sort_dir' => 'nullable|in:asc,desc',
+            'latest_revision_only' => 'nullable|in:0,1',
+        ]);
+
+        $groupBy = $validated['group_by'] ?? null;
+        $sortBy = $validated['sort_by'] ?? 'date';
+        $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
+        $latestRevisionOnly = ($validated['latest_revision_only'] ?? '0') === '1';
+
         $deadlines = Deadline::with('vehicle')->get();
         $deadlines->each->syncStatusFromRules();
-        return view('admin.deadlines.index', compact('deadlines'));
+
+        if ($latestRevisionOnly) {
+            $deadlines = $deadlines
+                ->filter(fn(Deadline $deadline) => in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true))
+                ->sortByDesc(fn(Deadline $deadline) => $deadline->due_date?->format('Y-m-d') ?? '')
+                ->unique(fn(Deadline $deadline) => ($deadline->vehicle_id ?? 'N/A') . '|' . ($deadline->type ?? 'N/A'))
+                ->values();
+        }
+
+        $deadlines = $sortDir === 'desc'
+            ? $deadlines->sortByDesc(function (Deadline $deadline) use ($sortBy) {
+                return match ($sortBy) {
+                    'type' => $deadline->type,
+                    'status' => $deadline->automatic_status,
+                    'vehicle' => $deadline->vehicle?->internal_code ?? '',
+                    'date' => $deadline->due_date?->format('Y-m-d') ?? '',
+                };
+            })->values()
+            : $deadlines->sortBy(function (Deadline $deadline) use ($sortBy) {
+                return match ($sortBy) {
+                    'type' => $deadline->type,
+                    'status' => $deadline->automatic_status,
+                    'vehicle' => $deadline->vehicle?->internal_code ?? '',
+                    'date' => $deadline->due_date?->format('Y-m-d') ?? '',
+                };
+            })->values();
+
+        $groupedDeadlines = null;
+        if ($groupBy !== null) {
+            $groupedDeadlines = $deadlines->groupBy(function (Deadline $deadline) use ($groupBy) {
+                return match ($groupBy) {
+                    'type' => $deadline->type ?? 'N/A',
+                    'status' => match ($deadline->automatic_status) {
+                        'renewed' => 'Rinnovata',
+                        'pending' => 'In scadenza',
+                        'expired' => 'Scaduta',
+                        default => 'Sconosciuto',
+                    },
+                    'vehicle' => $deadline->vehicle?->internal_code ?? 'N/A',
+                    'date' => $deadline->due_date_formatted ?? 'N/A',
+                };
+            });
+        }
+
+        return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly'));
     }
 
     /**
@@ -57,15 +113,15 @@ class DeadlineController extends Controller
 
         if ($data['type'] === Deadline::TYPE_OXYGEN && !Deadline::supportsOxygenCheckForVehicle($vehicle)) {
             return back()
-            ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
-            ->withInput();
+                ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
+                ->withInput();
         }
 
         $dueDate = $this->resolveDueDate($data, $vehicle);
 
         if (!$dueDate) {
             return back()
-            ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
+                ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
                 ->withInput();
         }
 
@@ -127,15 +183,15 @@ class DeadlineController extends Controller
 
         if ($data['type'] === Deadline::TYPE_OXYGEN && !Deadline::supportsOxygenCheckForVehicle($vehicle)) {
             return back()
-            ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
-            ->withInput();
+                ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
+                ->withInput();
         }
 
         $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
 
         if (!$dueDate) {
             return back()
-            ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
+                ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
                 ->withInput();
         }
 

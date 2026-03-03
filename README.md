@@ -193,7 +193,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] update
 - [x] destroy
 
-#### Deadline 🔄
+#### Deadline ✅
 
 - [x] index
 - [x] show

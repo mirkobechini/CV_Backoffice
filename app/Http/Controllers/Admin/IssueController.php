@@ -54,7 +54,9 @@ class IssueController extends Controller
                         'closed' => 'Risolto',
                         default => 'Sconosciuto',
                     },
-                    'date' => $issue->event_date_formatted ?? 'N/A',
+                    'date' => $issue->event_date
+                        ? ucfirst($issue->event_date->locale('it')->translatedFormat('F Y'))
+                        : 'N/A',
                 };
             });
         }

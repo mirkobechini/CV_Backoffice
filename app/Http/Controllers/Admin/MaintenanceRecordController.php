@@ -18,10 +18,50 @@ class MaintenanceRecordController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $validated = $request->validate([
+            'group_by' => 'nullable|in:vehicle,description,date',
+            'sort_by' => 'nullable|in:vehicle,description,date',
+            'sort_dir' => 'nullable|in:asc,desc',
+        ]);
+
+        $groupBy = $validated['group_by'] ?? null;
+        $sortBy = $validated['sort_by'] ?? 'date';
+        $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
+
         $maintenanceRecords = MaintenanceRecord::with(['vehicle', 'provider', 'issue'])->get();
-        return view('admin.maintenancerecords.index', compact('maintenanceRecords'));
+
+        $maintenanceRecords = $sortDir === 'desc'
+            ? $maintenanceRecords->sortByDesc(function (MaintenanceRecord $record) use ($sortBy) {
+                return match ($sortBy) {
+                    'vehicle' => $record->vehicle?->internal_code ?? '',
+                    'description' => $record->issue?->description ?? ($record->activity_type ?? ''),
+                    'date' => $record->appointment_date?->format('Y-m-d') ?? '',
+                };
+            })->values()
+            : $maintenanceRecords->sortBy(function (MaintenanceRecord $record) use ($sortBy) {
+                return match ($sortBy) {
+                    'vehicle' => $record->vehicle?->internal_code ?? '',
+                    'description' => $record->issue?->description ?? ($record->activity_type ?? ''),
+                    'date' => $record->appointment_date?->format('Y-m-d') ?? '',
+                };
+            })->values();
+
+        $groupedMaintenanceRecords = null;
+        if ($groupBy !== null) {
+            $groupedMaintenanceRecords = $maintenanceRecords->groupBy(function (MaintenanceRecord $record) use ($groupBy) {
+                return match ($groupBy) {
+                    'vehicle' => $record->vehicle?->internal_code ?? 'N/A',
+                    'description' => $record->issue?->description ?? ($record->activity_type ?? 'N/A'),
+                    'date' => $record->appointment_date
+                        ? ucfirst($record->appointment_date->locale('it')->translatedFormat('F Y'))
+                        : 'N/A',
+                };
+            });
+        }
+
+        return view('admin.maintenancerecords.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords'));
     }
 
     /**
