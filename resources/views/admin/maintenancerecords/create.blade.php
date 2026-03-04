@@ -22,7 +22,7 @@
                                 <option value="">Seleziona un veicolo</option>
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
-                                        {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
+                                        {{ (string) old('vehicle_id', $preselectedVehicleId ?? '') === (string) $vehicle->id ? 'selected' : '' }}>
                                         {{ $vehicle->internal_code }}</option>
                                 @endforeach
                             </select>
@@ -37,7 +37,7 @@
                                 <option value="">Seleziona un guasto</option>
                                 @foreach ($openIssues as $issue)
                                     <option value="{{ $issue->id }}" data-vehicle-id="{{ $issue->vehicle_id }}"
-                                        {{ old('issue_id') == $issue->id ? 'selected' : '' }}>
+                                        {{ (string) old('issue_id', $preselectedIssueId ?? '') === (string) $issue->id ? 'selected' : '' }}>
                                         {{ $issue->description }}</option>
                                 @endforeach
                             </select>
@@ -48,7 +48,7 @@
 
                         <div class="mb-3" id="no-issue-cta" style="display: none;">
                             <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
-                                <span>Nessun guasto aperto per il veicolo selezionato.</span>
+                                <span>Nessun guasto disponibile per il veicolo selezionato.</span>
                                 <a id="create-issue-link" class="btn btn-sm btn-primary"
                                     href="{{ route('admin.issues.create', ['back' => url()->full()]) }}">
                                     Crea guasto
@@ -90,7 +90,7 @@
                             <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
                                 name="activity_type" value="{{ old('activity_type') }}">
                                 <option value="">Seleziona una tipologia</option>
-                                @foreach (MaintenanceRecord::ACTIVITY_TYPES as $item)
+                                @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
                                     <option value="{{ $item }}" {{ old('activity_type') == $item ? 'selected' : '' }}>
                                         {{ $item }}
                                     </option>

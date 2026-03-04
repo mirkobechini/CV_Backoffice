@@ -11,8 +11,13 @@
             <div class="col-12">
                 <div class="card mb-4">
 
-                    <div class="card-header">
+                    <div class="card-header d-flex gap-4 align-items-center">
                         <h1>{{ $issue->description }}</h1>
+                        @if ($issue->status != 'closed')
+                            <a class="btn btn-primary"
+                                href="{{ route('admin.maintenancerecords.create', ['issue_id' => $issue->id, 'vehicle_id' => $issue->vehicle_id, 'back' => url()->full()]) }}">Prenota
+                                appuntamento</a>
+                        @endif
                     </div>
                     <div class="card-body">
                         <p><strong>Veicolo:</strong> {{ $issue->vehicle->internal_code }} - {{ $issue->vehicle->brand }}

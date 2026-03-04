@@ -93,7 +93,7 @@
                             <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
                                 name="activity_type" value="{{ old('activity_type', $maintenanceRecord->activity_type) }}">
                                 <option value="">Seleziona una tipologia</option>
-                                @foreach (MaintenanceRecord::ACTIVITY_TYPES as $item)
+                                @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
                                     <option value="{{ $item }}" {{ old('activity_type',$maintenanceRecord->activity_type) == $item ? 'selected' : '' }}>
                                         {{ $item }}
                                     </option>

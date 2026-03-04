@@ -11,6 +11,7 @@ use App\Models\Vehicle;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class MaintenanceRecordController extends Controller
@@ -67,12 +68,50 @@ class MaintenanceRecordController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
+        // Default: nessuna preselezione, utile quando apro la create manualmente.
+        $preselectedIssueId = null;
+        $preselectedVehicleId = null;
+
+        // Accettiamo sia i nuovi parametri (issue_id, vehicle_id)
+        // sia i vecchi alias (issue, vehicle) per retrocompatibilità.
+        $rawIssueId = $request->query('issue_id', $request->query('issue'));
+        $rawVehicleId = $request->query('vehicle_id', $request->query('vehicle'));
+
+        // Sanitizzazione minima: consideriamo validi solo ID numerici.
+        $issueId = is_scalar($rawIssueId) && ctype_digit((string) $rawIssueId)
+            ? (int) $rawIssueId
+            : null;
+
+        $vehicleId = is_scalar($rawVehicleId) && ctype_digit((string) $rawVehicleId)
+            ? (int) $rawVehicleId
+            : null;
+
+        // Se arriva un issue_id, il guasto è la fonte di verità:
+        // ricarichiamo dal DB e preselezioniamo anche il veicolo collegato.
+        if ($issueId !== null) {
+            $issue = Issue::query()
+                ->where('id', $issueId)
+                ->whereIn('status', ['open', 'in_progress'])
+                ->first();
+
+            if ($issue) {
+                $preselectedIssueId = $issue->id;
+                $preselectedVehicleId = $issue->vehicle_id;
+            }
+            // Se non c'è un guasto valido, possiamo comunque preimpostare il veicolo.
+        } elseif ($vehicleId !== null && Vehicle::where('id', $vehicleId)->exists()) {
+            $preselectedVehicleId = $vehicleId;
+        }
+
         $vehicles = Vehicle::all();
         $providers = Provider::all();
-        $openIssues = Issue::where('status', 'open')->get(['id', 'vehicle_id', 'description']);
-        return view('admin.maintenancerecords.create', compact('vehicles', 'providers', 'openIssues'));
+        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])->get(['id', 'vehicle_id', 'description']);
+
+        // La view usa old(..., $preselected...) così old() ha priorità
+        // dopo un errore validazione, altrimenti usa le preselezioni.
+        return view('admin.maintenancerecords.create', compact('vehicles', 'providers', 'openIssues', 'preselectedIssueId', 'preselectedVehicleId'));
     }
 
     /**
@@ -80,7 +119,9 @@ class MaintenanceRecordController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->validate(
+        // 1) Validazione base dei campi (formato, presenza, esistenza FK).
+        $validator = Validator::make(
+            $request->all(),
             [
                 'vehicle_id' => 'required|exists:vehicles,id',
                 'issue_id' => 'required|exists:issues,id',
@@ -98,6 +139,7 @@ class MaintenanceRecordController extends Controller
                 'provider_id.exists' => 'L\'officina selezionata non esiste.',
                 'appointment_date.required' => 'La data dell\'appuntamento è obbligatoria.',
                 'appointment_date.date' => 'La data dell\'appuntamento deve essere una data valida.',
+                'appointment_date.after_or_equal' => 'La data dell\'appuntamento non può essere precedente alla data del guasto.',
                 'return_date.date' => 'La data di completamento deve essere una data valida.',
                 'return_date.after_or_equal' => 'La data di completamento deve essere uguale o successiva alla data dell\'appuntamento.',
                 'activity_type.string' => 'Il tipo di attività deve essere una stringa.',
@@ -105,6 +147,11 @@ class MaintenanceRecordController extends Controller
                 'activity_type.in' => 'Il tipo di attività selezionato non è valido.',
             ]
         );
+
+        // 2) Validazione di business: la data appuntamento non può precedere la data del guasto.
+        $this->addAppointmentDateIssueConstraint($validator, $request);
+
+        $data = $validator->validate();
 
         $issueBelongsToVehicle = Issue::where('id', $data['issue_id'])
             ->where('vehicle_id', $data['vehicle_id'])
@@ -186,7 +233,9 @@ class MaintenanceRecordController extends Controller
      */
     public function update(Request $request, MaintenanceRecord $maintenanceRecord)
     {
-        $data = $request->validate(
+        // 1) Validazione base dei campi in update.
+        $validator = Validator::make(
+            $request->all(),
             [
                 'vehicle_id' => 'required|exists:vehicles,id',
                 'issue_id' => 'required|exists:issues,id',
@@ -205,6 +254,7 @@ class MaintenanceRecordController extends Controller
                 'provider_id.exists' => 'L\'officina selezionata non esiste.',
                 'appointment_date.required' => 'La data dell\'appuntamento è obbligatoria.',
                 'appointment_date.date' => 'La data dell\'appuntamento deve essere una data valida.',
+                'appointment_date.after_or_equal' => 'La data dell\'appuntamento non può essere precedente alla data del guasto.',
                 'return_date.date' => 'La data di completamento deve essere una data valida.',
                 'return_date.after_or_equal' => 'La data di completamento deve essere uguale o successiva alla data dell\'appuntamento.',
                 'activity_type.string' => 'Il tipo di attività deve essere una stringa.',
@@ -213,6 +263,11 @@ class MaintenanceRecordController extends Controller
                 'issue_resolved.boolean' => 'Il valore selezionato per la risoluzione del guasto non è valido.',
             ]
         );
+
+        // 2) Validazione cross-model: confronto appointment_date con issue.event_date.
+        $this->addAppointmentDateIssueConstraint($validator, $request);
+
+        $data = $validator->validate();
 
         $issueBelongsToVehicle = Issue::where('id', $data['issue_id'])
             ->where('vehicle_id', $data['vehicle_id'])
@@ -322,5 +377,23 @@ class MaintenanceRecordController extends Controller
         return redirect()
             ->route('admin.maintenancerecords.show', $maintenanceRecord->id)
             ->with('status', 'Intervento completato con successo.');
+    }
+
+    private function addAppointmentDateIssueConstraint($validator, Request $request): void
+    {
+        $validator->after(function ($validator) use ($request) {
+            $issueId = $request->input('issue_id');
+            $appointmentDate = $request->input('appointment_date');
+
+            if (!$issueId || !$appointmentDate) {
+                return;
+            }
+
+            $issue = Issue::find($issueId);
+
+            if ($issue && $issue->event_date && Carbon::parse($appointmentDate)->lt(Carbon::parse($issue->event_date))) {
+                $validator->errors()->add('appointment_date', 'La data dell\'appuntamento non può essere precedente alla data del guasto.');
+            }
+        });
     }
 }

@@ -180,8 +180,8 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] edit
 - [x] update
 - [x] destroy
-- [] show: pulsante per prendere appuntamento manutenzione dal guasto
-- [] validazione: errore se appointment_date < event_date del guasto
+- [x] show: pulsante per prendere appuntamento manutenzione dal guasto
+- [x] validazione: errore se appointment_date < event_date del guasto
 
 #### MaintenanceRecord ✅
 
@@ -232,7 +232,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/ProviderController (CRUD)
 - [x] admin/IssueController (CRUD)
 - [x] admin/MaintenanceRecordController (CRUD)
-- [] admin/DeadlineController (CRUD)
+- [x] admin/DeadlineController (CRUD)
 - [] admin/MileageLogController (CRUD)
 - [] admin/EquipmentController (CRUD)
 
