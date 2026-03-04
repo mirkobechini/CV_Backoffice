@@ -40,6 +40,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.mileagelogs.index') }}">{{ __('Chilometraggi') }}</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.equipment.index') }}">{{ __('Attrezzature') }}</a>
+                    </li>
                     
                 </ul>
 

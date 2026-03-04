@@ -67,4 +67,9 @@ class Vehicle extends Model
     {
         return $this->hasMany(MileageLog::class);
     }
+
+    public function equipment()
+    {
+        return $this->hasMany(Equipment::class);
+    }
 }

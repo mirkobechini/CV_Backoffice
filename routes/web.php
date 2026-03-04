@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DeadlineController;
+use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
@@ -30,6 +31,7 @@ Route::middleware(['auth', 'verified'])
         Route::resource("providers", ProviderController::class);
         Route::resource("issues", IssueController::class);
         Route::resource("deadlines", DeadlineController::class);
+        Route::resource("equipments", EquipmentController::class);
         Route::resource("mileagelogs", MileageLogController::class)
             ->parameters(['mileagelogs' => 'mileageLog']);
         Route::patch('maintenancerecords/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])

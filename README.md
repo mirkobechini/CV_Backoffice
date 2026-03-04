@@ -216,19 +216,19 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [] report: ultimo chilometraggio registrato per ogni mese (per singolo mezzo)
 - [] report: filtro per mezzo + range mese/anno
 
-#### Equipment ⬜
+#### Equipment ✅
 
-- [] index
-- [] show
-- [] create
-- [] store
-- [] edit
-- [] update
-- [] destroy
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
 
 ### Admin 🔄
 
-#### Controllers 🔄
+#### Controllers ✅
 
 - [x] admin/VehicleController (CRUD)
 - [x] admin/VehicleTypeController (CRUD)
@@ -237,9 +237,9 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/MaintenanceRecordController (CRUD)
 - [x] admin/DeadlineController (CRUD)
 - [x] admin/MileageLogController (CRUD)
-- [] admin/EquipmentController (CRUD)
+- [x] admin/EquipmentController (CRUD)
 
-#### Routes 🔄
+#### Routes ✅
 
 - [x] admin/VehicleController route (web)
 - [x] admin/VehicleTypeController route (web)
@@ -248,7 +248,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/MaintenanceRecordController route (web)
 - [x] admin/DeadlineController route (web)
 - [x] admin/MileageLogController route (web)
-- [] admin/EquipmentController route (web)
+- [x] admin/EquipmentController route (web)
 
 #### Best Practices ✅
 
