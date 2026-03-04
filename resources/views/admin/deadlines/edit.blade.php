@@ -54,9 +54,9 @@
                         </div>
                         <div class="mb-3" id="due-date-group">
                             <label for="due_date" class="form-label">Data di scadenza</label>
-                            <input type="date" class="form-control @error('due_date') is-invalid @enderror"
+                            <input type="month" class="form-control @error('due_date') is-invalid @enderror"
                                 id="due_date" name="due_date"
-                                value="{{ old('due_date', optional($deadline->due_date)->format('Y-m-d')) }}">
+                                value="{{ old('due_date', optional($deadline->due_date)->format('Y-m')) }}">
                             <small class="text-muted">Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno"
                                 la data viene calcolata automaticamente. La revisione ossigeno è disponibile solo per
                                 le ambulanze.</small>
@@ -95,6 +95,7 @@
             const ministerialType = 'Revisione Ministeriale';
             const oxygenType = 'Revisione Impianto Ossigeno';
 
+            // Abilita revisione ossigeno solo per tipologie mezzo che la prevedono.
             const selectedVehicleNeedsOxygenCheck = () => {
                 const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
 
@@ -114,6 +115,7 @@
                 }
             };
 
+            // La data manuale è richiesta solo per scadenze non auto-calcolate.
             const toggleDueDateVisibility = () => {
                 const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
 

@@ -167,10 +167,12 @@
             const warrantyExpirationDateInput = document.getElementById('warranty_expiration_date');
             const warrantyExtensionDurationInput = document.getElementById('warranty_extension_duration');
 
+            // Mantiene lato client il formato targa coerente con le regole server.
             function uppercaseLicensePlate() {
                 licensePlateInput.value = licensePlateInput.value.toUpperCase().replace(/\s+/g, '');
             }
 
+            // I campi garanzia diventano obbligatori solo con estensione attiva.
             function toggleWarrantyRequiredFields() {
                 const isChecked = warrantyExtensionCheckbox.checked;
 

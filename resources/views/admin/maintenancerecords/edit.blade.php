@@ -94,7 +94,8 @@
                                 name="activity_type" value="{{ old('activity_type', $maintenanceRecord->activity_type) }}">
                                 <option value="">Seleziona una tipologia</option>
                                 @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
-                                    <option value="{{ $item }}" {{ old('activity_type',$maintenanceRecord->activity_type) == $item ? 'selected' : '' }}>
+                                    <option value="{{ $item }}"
+                                        {{ old('activity_type', $maintenanceRecord->activity_type) == $item ? 'selected' : '' }}>
                                         {{ $item }}
                                     </option>
                                 @endforeach
@@ -164,6 +165,7 @@
             const noIssueCta = document.getElementById('no-issue-cta');
             const createIssueLink = document.getElementById('create-issue-link');
 
+            // Filtra i guasti in base al veicolo selezionato e gestisce CTA alternativa.
             const filterIssuesByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
 
