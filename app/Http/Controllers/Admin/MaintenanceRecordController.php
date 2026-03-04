@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\Vehicle;
+use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -222,7 +223,8 @@ class MaintenanceRecordController extends Controller
 
         $vehicles = Vehicle::all();
         $providers = Provider::all();
-        $openIssues = Issue::where('status', 'open')
+        // In edit rendiamo selezionabili i guasti attivi + quello già collegato al record.
+        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])
             ->orWhere('id', $maintenanceRecord->issue_id)
             ->get(['id', 'vehicle_id', 'description', 'status']);
 
@@ -324,7 +326,7 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecord->loadMissing(['issue', 'deadline', 'vehicle.vehicleType']);
 
-        // Se la manutenzione è legata a una scadenza ministeriale, aggiorna lo stato in base alla risoluzione del guasto
+        // Transazione unica: aggiornamento intervento/guasto/scadenza deve essere atomico.
         DB::transaction(function () use ($maintenanceRecord, $data) {
             // 1) complete maintenance
             $maintenanceRecord->return_date = Carbon::today();
@@ -356,6 +358,7 @@ class MaintenanceRecordController extends Controller
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
                     }
                     if ($nextDueDate) {
+                        // Evita duplicati della stessa scadenza (stesso mezzo, tipo, data).
                         Deadline::firstOrCreate(
                             [
                                 'vehicle_id' => $maintenanceRecord->vehicle_id,
@@ -379,7 +382,9 @@ class MaintenanceRecordController extends Controller
             ->with('status', 'Intervento completato con successo.');
     }
 
-    private function addAppointmentDateIssueConstraint($validator, Request $request): void
+    // Regola di business condivisa tra store/update:
+    // l'appuntamento non può essere precedente alla data evento del guasto selezionato.
+    private function addAppointmentDateIssueConstraint(ValidatorContract $validator, Request $request): void
     {
         $validator->after(function ($validator) use ($request) {
             $issueId = $request->input('issue_id');

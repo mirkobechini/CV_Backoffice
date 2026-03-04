@@ -34,6 +34,7 @@ class DeadlineController extends Controller
             $deadlines = $deadlines
                 ->filter(fn(Deadline $deadline) => in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true))
                 ->sortByDesc(fn(Deadline $deadline) => $deadline->due_date?->format('Y-m-d') ?? '')
+                // Teniamo una sola scadenza per coppia (mezzo + tipo revisione): la più recente.
                 ->unique(fn(Deadline $deadline) => ($deadline->vehicle_id ?? 'N/A') . '|' . ($deadline->type ?? 'N/A'))
                 ->values();
         }
@@ -217,6 +218,8 @@ class DeadlineController extends Controller
 
     private function resolveDueDate(array $data, Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
+        // Le revisioni (ministeriale/ossigeno) vengono calcolate automaticamente,
+        // mentre per gli altri tipi la data arriva dal campo manuale YYYY-MM.
         if ($data['type'] === Deadline::TYPE_MINISTERIAL) {
             return Deadline::calculateMinisterialDueDateForVehicle($vehicle, $excludeDeadlineId);
         }

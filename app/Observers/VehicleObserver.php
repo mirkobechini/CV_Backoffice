@@ -26,12 +26,14 @@ class VehicleObserver
         $today = Carbon::today();
         $dueDate = Carbon::parse($vehicle->immatricolation_date)->addMonthsNoOverflow($firstInspectionMonths);
 
+        // Backfill storico: tutte le scadenze già passate vengono marcate renewed.
         while ($dueDate->lte($today)) {
             $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, 'renewed');
 
             $dueDate->addMonthsNoOverflow($regularInspectionMonths);
         }
 
+        // Prima scadenza futura/aperta.
         $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, 'pending');
 
         if (!Deadline::supportsOxygenCheckForVehicle($vehicle)) {
@@ -41,6 +43,7 @@ class VehicleObserver
         $oxygenDueDate = Carbon::parse($vehicle->immatricolation_date)
             ->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
 
+        // Stesso approccio per revisione ossigeno, solo per mezzi che la supportano.
         while ($oxygenDueDate->lte($today)) {
             $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, 'renewed');
 

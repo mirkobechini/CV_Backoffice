@@ -43,6 +43,8 @@ class VehicleController extends Controller
      */
     public function store(Request $request)
     {
+        // Normalizzazione input prima della validate:
+        // targa in formato canonico e checkbox in booleano reale.
         $request->merge([
             'license_plate' => strtoupper(str_replace(' ', '', (string) $request->input('license_plate'))),
             'has_warranty_extension' => $request->boolean('has_warranty_extension'),
@@ -91,6 +93,7 @@ class VehicleController extends Controller
         $warrantyExtensionDuration = $hasWarrantyExtension ? (int) ($data['warranty_extension_duration'] ?? 0) : null;
         $warrantyEffectiveExpirationDate = $warrantyOriginalExpirationDate;
 
+        // Se è presente estensione, salviamo la scadenza effettiva già estesa.
         if ($hasWarrantyExtension && $warrantyOriginalExpirationDate && $warrantyExtensionDuration) {
             $warrantyEffectiveExpirationDate = Carbon::parse($warrantyOriginalExpirationDate)
                 ->addMonths($warrantyExtensionDuration)
@@ -135,6 +138,7 @@ class VehicleController extends Controller
             ->orderByDesc('due_date')
             ->orderByDesc('id')
             ->get()
+            // Mostra in dettaglio solo la scadenza più recente per ogni tipologia.
             ->groupBy('type')
             ->map(fn ($typeDeadlines) => $typeDeadlines->first());
         $deadlinesTypes = ["revisione"=>Deadline::TYPE_MINISTERIAL, "ossigeno"=>Deadline::TYPE_OXYGEN];

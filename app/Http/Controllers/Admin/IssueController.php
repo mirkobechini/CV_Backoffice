@@ -70,6 +70,7 @@ class IssueController extends Controller
     public function create()
     {
         $vehicles = Vehicle::all();
+        // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
 
         return view('admin.issues.create', compact('vehicles', 'selectedVehicleId'));

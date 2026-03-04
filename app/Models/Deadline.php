@@ -38,6 +38,7 @@ class Deadline extends Model
 
     public function getAutomaticStatusAttribute(): string
     {
+        // Se marcata manualmente come rinnovata, preserviamo quel valore.
         if ($this->status === 'renewed') {
             return 'renewed';
         }
@@ -60,6 +61,7 @@ class Deadline extends Model
 
     public function syncStatusFromRules(): void
     {
+        // Sincronizza lo stato persistito con le regole temporali correnti.
         if (!$this->due_date) {
             return;
         }
@@ -100,6 +102,8 @@ class Deadline extends Model
 
         $lastRenewedDeadline = $query->first();
 
+        // Se c'è una revisione rinnovata precedente, calcoliamo la successiva da quella;
+        // altrimenti partiamo dalla data di immatricolazione con intervallo iniziale.
         if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
             $monthsToAdd = (int) $vehicle->vehicleType->regular_inspection_months;
             return Carbon::parse($lastRenewedDeadline->due_date)->addMonthsNoOverflow($monthsToAdd);
