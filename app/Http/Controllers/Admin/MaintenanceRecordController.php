@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreMaintenanceRecordRequest;
+use App\Http\Requests\UpdateMaintenanceRecordRequest;
 use App\Models\Deadline;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\Vehicle;
-use Illuminate\Contracts\Validation\Validator as ValidatorContract;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class MaintenanceRecordController extends Controller
 {
@@ -118,41 +117,9 @@ class MaintenanceRecordController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreMaintenanceRecordRequest $request)
     {
-        // 1) Validazione base dei campi (formato, presenza, esistenza FK).
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'issue_id' => 'required|exists:issues,id',
-                'provider_id' => 'required|exists:providers,id',
-                'appointment_date' => 'required|date',
-                'return_date' => 'nullable|date|after_or_equal:appointment_date',
-                'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
-            ],
-            [
-                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
-                'issue_id.required' => 'Il guasto è obbligatorio.',
-                'issue_id.exists' => 'Il guasto selezionato non esiste.',
-                'provider_id.required' => 'L\'officina è obbligatoria.',
-                'provider_id.exists' => 'L\'officina selezionata non esiste.',
-                'appointment_date.required' => 'La data dell\'appuntamento è obbligatoria.',
-                'appointment_date.date' => 'La data dell\'appuntamento deve essere una data valida.',
-                'appointment_date.after_or_equal' => 'La data dell\'appuntamento non può essere precedente alla data del guasto.',
-                'return_date.date' => 'La data di completamento deve essere una data valida.',
-                'return_date.after_or_equal' => 'La data di completamento deve essere uguale o successiva alla data dell\'appuntamento.',
-                'activity_type.string' => 'Il tipo di attività deve essere una stringa.',
-                'activity_type.max' => 'Il tipo di attività non può superare i 255 caratteri.',
-                'activity_type.in' => 'Il tipo di attività selezionato non è valido.',
-            ]
-        );
-
-        // 2) Validazione di business: la data appuntamento non può precedere la data del guasto.
-        $this->addAppointmentDateIssueConstraint($validator, $request);
-
-        $data = $validator->validate();
+        $data = $request->validated();
 
         $issueBelongsToVehicle = Issue::where('id', $data['issue_id'])
             ->where('vehicle_id', $data['vehicle_id'])
@@ -233,43 +200,9 @@ class MaintenanceRecordController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, MaintenanceRecord $maintenanceRecord)
+    public function update(UpdateMaintenanceRecordRequest $request, MaintenanceRecord $maintenanceRecord)
     {
-        // 1) Validazione base dei campi in update.
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'issue_id' => 'required|exists:issues,id',
-                'provider_id' => 'required|exists:providers,id',
-                'appointment_date' => 'required|date',
-                'return_date' => 'nullable|date|after_or_equal:appointment_date',
-                'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
-                'issue_resolved' => 'nullable|boolean',
-            ],
-            [
-                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
-                'issue_id.required' => 'Il guasto è obbligatorio.',
-                'issue_id.exists' => 'Il guasto selezionato non esiste.',
-                'provider_id.required' => 'L\'officina è obbligatoria.',
-                'provider_id.exists' => 'L\'officina selezionata non esiste.',
-                'appointment_date.required' => 'La data dell\'appuntamento è obbligatoria.',
-                'appointment_date.date' => 'La data dell\'appuntamento deve essere una data valida.',
-                'appointment_date.after_or_equal' => 'La data dell\'appuntamento non può essere precedente alla data del guasto.',
-                'return_date.date' => 'La data di completamento deve essere una data valida.',
-                'return_date.after_or_equal' => 'La data di completamento deve essere uguale o successiva alla data dell\'appuntamento.',
-                'activity_type.string' => 'Il tipo di attività deve essere una stringa.',
-                'activity_type.max' => 'Il tipo di attività non può superare i 255 caratteri.',
-                'activity_type.in' => 'Il tipo di attività selezionato non è valido.',
-                'issue_resolved.boolean' => 'Il valore selezionato per la risoluzione del guasto non è valido.',
-            ]
-        );
-
-        // 2) Validazione cross-model: confronto appointment_date con issue.event_date.
-        $this->addAppointmentDateIssueConstraint($validator, $request);
-
-        $data = $validator->validate();
+        $data = $request->validated();
 
         $issueBelongsToVehicle = Issue::where('id', $data['issue_id'])
             ->where('vehicle_id', $data['vehicle_id'])
@@ -380,25 +313,5 @@ class MaintenanceRecordController extends Controller
         return redirect()
             ->route('admin.maintenancerecords.show', $maintenanceRecord->id)
             ->with('status', 'Intervento completato con successo.');
-    }
-
-    // Regola di business condivisa tra store/update:
-    // l'appuntamento non può essere precedente alla data evento del guasto selezionato.
-    private function addAppointmentDateIssueConstraint(ValidatorContract $validator, Request $request): void
-    {
-        $validator->after(function ($validator) use ($request) {
-            $issueId = $request->input('issue_id');
-            $appointmentDate = $request->input('appointment_date');
-
-            if (!$issueId || !$appointmentDate) {
-                return;
-            }
-
-            $issue = Issue::find($issueId);
-
-            if ($issue && $issue->event_date && Carbon::parse($appointmentDate)->lt(Carbon::parse($issue->event_date))) {
-                $validator->errors()->add('appointment_date', 'La data dell\'appuntamento non può essere precedente alla data del guasto.');
-            }
-        });
     }
 }
