@@ -64,7 +64,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 
 ### MileageLog (Registro Chilometri): Storico dei chilometri per reportistica e avvisi:
 
-    reading integer Lettura contachilometri,
+    mileage integer Lettura contachilometri,
     log_date string Data rilevazione.
     Relazione: Molteplici record per ogni Vehicle.
 
@@ -123,7 +123,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] Issue model & migration
 - [x] MaintenanceRecord model & migration
 - [x] Deadline model & migration
-- [] MileageLog model & migration
+- [x] MileageLog model & migration
 - [] Equipment model & migration
 - [x] Vehicle seed
 - [x] Provider seed
@@ -203,15 +203,18 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] update
 - [x] destroy
 
-#### MileageLog ⬜
+#### MileageLog 🔄
 
-- [] index
-- [] show
-- [] create
-- [] store
-- [] edit
-- [] update
-- [] destroy
+- [x] index
+- [x] show
+- [x] create
+- [x] store
+- [x] edit
+- [x] update
+- [x] destroy
+- [] report: storico chilometri per singolo mezzo (timeline ordinata per data)
+- [] report: ultimo chilometraggio registrato per ogni mese (per singolo mezzo)
+- [] report: filtro per mezzo + range mese/anno
 
 #### Equipment ⬜
 
@@ -233,7 +236,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/IssueController (CRUD)
 - [x] admin/MaintenanceRecordController (CRUD)
 - [x] admin/DeadlineController (CRUD)
-- [] admin/MileageLogController (CRUD)
+- [x] admin/MileageLogController (CRUD)
 - [] admin/EquipmentController (CRUD)
 
 #### Routes 🔄
@@ -244,7 +247,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/IssueController route (web)
 - [x] admin/MaintenanceRecordController route (web)
 - [x] admin/DeadlineController route (web)
-- [] admin/MileageLogController route (web)
+- [x] admin/MileageLogController route (web)
 - [] admin/EquipmentController route (web)
 
 #### Best Practices ✅

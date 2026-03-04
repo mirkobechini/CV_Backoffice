@@ -37,6 +37,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.deadlines.index') }}">{{ __('Scadenze') }}</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.mileagelogs.index') }}">{{ __('Chilometraggi') }}</a>
+                    </li>
                     
                 </ul>
 

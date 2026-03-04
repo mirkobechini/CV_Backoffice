@@ -62,4 +62,9 @@ class Vehicle extends Model
     {
         return $this->hasMany(MaintenanceRecord::class);
     }
+
+    public function mileageLogs()
+    {
+        return $this->hasMany(MileageLog::class);
+    }
 }
