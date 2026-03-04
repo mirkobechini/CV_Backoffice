@@ -247,6 +247,14 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [] admin/MileageLogController route (web)
 - [] admin/EquipmentController route (web)
 
+#### Best Practices ✅
+
+- [x] Refactor validazioni CRUD in FormRequest (Store/Update) per Vehicle, VehicleType, Provider, Issue, MaintenanceRecord, Deadline
+- [x] Controller alleggeriti con uso di `$request->validated()`
+- [x] Normalizzazione targa e checkbox garanzia spostata in `prepareForValidation()` dei Request Vehicle
+- [x] Validazione business su MaintenanceRecord (appointment_date >= event_date del guasto) centralizzata nei Request
+- [x] Commenti aggiunti nelle sezioni di logica complessa (deadline automation, observer, filtri/prefill create)
+
 ### API ⬜
 
 #### Controllers ⬜

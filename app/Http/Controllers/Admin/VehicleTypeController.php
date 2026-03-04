@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreVehicleTypeRequest;
+use App\Http\Requests\UpdateVehicleTypeRequest;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
 
@@ -28,35 +30,13 @@ class VehicleTypeController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreVehicleTypeRequest $request)
     {
         $request->merge([
             'needs_oxygen_check' => $request->boolean('needs_oxygen_check'),
         ]);
 
-        $data = $request->validate([
-            'name' => 'required|string|max:255|unique:vehicle_types,name',
-            'needs_oxygen_check' => 'boolean',
-            'extinguishers_required' => 'required|integer|min:0',
-            'first_inspection_months' => 'required|integer|min:0',
-            'regular_inspection_months' => 'required|integer|min:0',
-        ],
-        [
-            'name.required' => 'Il nome è obbligatorio.',
-            'name.string' => 'Il nome deve essere una stringa.',
-            'name.max' => 'Il nome non può superare i 255 caratteri.',
-            'name.unique' => 'Esiste già un tipo di veicolo con questo nome.',
-            'needs_oxygen_check.boolean' => 'Il campo revisione ossigeno deve essere true o false.',
-            'extinguishers_required.required' => 'Il numero di estintori è obbligatorio.',
-            'extinguishers_required.integer' => 'Il numero di estintori deve essere un intero.',
-            'extinguishers_required.min' => 'Il numero di estintori non può essere negativo.',
-            'first_inspection_months.required' => 'La durata della prima revisione è obbligatoria.',
-            'first_inspection_months.integer' => 'La durata della prima revisione deve essere un intero.',
-            'first_inspection_months.min' => 'La durata della prima revisione non può essere negativa.',
-            'regular_inspection_months.required' => 'La durata delle revisioni successive è obbligatoria.',
-            'regular_inspection_months.integer' => 'La durata delle revisioni successive deve essere un intero.',
-            'regular_inspection_months.min' => 'La durata delle revisioni successive non può essere negativa.',
-        ]);
+        $data = $request->validated();
 
         $newVehicleType = new VehicleType();
         $newVehicleType->name = $data['name'];
@@ -90,37 +70,13 @@ class VehicleTypeController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, VehicleType $vehicleType)
+    public function update(UpdateVehicleTypeRequest $request, VehicleType $vehicleType)
     {
         $request->merge([
             'needs_oxygen_check' => $request->boolean('needs_oxygen_check'),
         ]);
 
-        $data = $request->validate(
-            [
-                'name' => 'required|string|max:255|unique:vehicle_types,name,' . $vehicleType->id,
-                'needs_oxygen_check' => 'boolean',
-                'extinguishers_required' => 'required|integer|min:0',
-                'first_inspection_months' => 'required|integer|min:0',
-                'regular_inspection_months' => 'required|integer|min:0',
-            ],
-            [
-                'name.required' => 'Il nome è obbligatorio.',
-                'name.string' => 'Il nome deve essere una stringa.',
-                'name.max' => 'Il nome non può superare i 255 caratteri.',
-                'name.unique' => 'Esiste già un tipo di veicolo con questo nome.',
-                'needs_oxygen_check.boolean' => 'Il campo revisione ossigeno deve essere true o false.',
-                'extinguishers_required.required' => 'Il numero di estintori è obbligatorio.',
-                'extinguishers_required.integer' => 'Il numero di estintori deve essere un intero.',
-                'extinguishers_required.min' => 'Il numero di estintori non può essere negativo.',
-                'first_inspection_months.required' => 'La durata della prima revisione è obbligatoria.',
-                'first_inspection_months.integer' => 'La durata della prima revisione deve essere un intero.',
-                'first_inspection_months.min' => 'La durata della prima revisione non può essere negativa.',
-                'regular_inspection_months.required' => 'La durata delle revisioni successive è obbligatoria.',
-                'regular_inspection_months.integer' => 'La durata delle revisioni successive deve essere un intero.',
-                'regular_inspection_months.min' => 'La durata delle revisioni successive non può essere negativa.',
-            ]
-        );
+        $data = $request->validated();
         $vehicleType->name = $data['name'];
         $vehicleType->needs_oxygen_check = $data['needs_oxygen_check'] ?? false;
         $vehicleType->extinguishers_required = $data['extinguishers_required'];

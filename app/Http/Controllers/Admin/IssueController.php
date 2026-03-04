@@ -7,6 +7,8 @@ use App\Models\Issue;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use App\Http\Requests\StoreIssueRequest;
+use App\Http\Requests\UpdateIssueRequest;
 
 class IssueController extends Controller
 {
@@ -79,29 +81,9 @@ class IssueController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreIssueRequest $request)
     {
-        $data = $request->validate(
-            [
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'description' => 'required|string',
-                'event_date' => 'required|date',
-                'status' => 'required|in:open,in_progress,closed',
-                'image' => 'nullable|image|max:2048', // Optional image upload
-            ],
-            [
-                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
-                'description.required' => 'La descrizione è obbligatoria.',
-                'description.string' => 'La descrizione deve essere una stringa.',
-                'event_date.required' => 'La data di segnalazione è obbligatoria.',
-                'event_date.date' => 'La data di segnalazione deve essere una data valida.',
-                'status.required' => 'Lo stato è obbligatorio.',
-                'status.in' => 'Lo stato selezionato non è valido.',
-                'image.image' => 'Il file caricato deve essere un\'immagine.',
-                'image.max' => 'L\'immagine non può superare i 2MB.',
-            ]
-        );
+        $data = $request->validated();
 
         $duplicateIssue = Issue::query()
             ->where('vehicle_id', $data['vehicle_id'])
@@ -154,29 +136,9 @@ class IssueController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Issue $issue)
+    public function update(UpdateIssueRequest $request, Issue $issue)
     {
-        $data = $request->validate(
-            [
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'description' => 'required|string',
-                'event_date' => 'required|date',
-                'status' => 'required|in:open,in_progress,closed',
-                'image' => 'nullable|image|max:2048', // Optional image upload
-            ],
-            [
-                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
-                'description.required' => 'La descrizione è obbligatoria.',
-                'description.string' => 'La descrizione deve essere una stringa.',
-                'event_date.required' => 'La data di segnalazione è obbligatoria.',
-                'event_date.date' => 'La data di segnalazione deve essere una data valida.',
-                'status.required' => 'Lo stato è obbligatorio.',
-                'status.in' => 'Lo stato selezionato non è valido.',
-                'image.image' => 'Il file caricato deve essere un\'immagine.',
-                'image.max' => 'L\'immagine non può superare i 2MB.',
-            ]
-        );
+        $data = $request->validated();
         $issue->vehicle_id = $data['vehicle_id'];
         $issue->description = $data['description'];
         $issue->event_date = $data['event_date'];

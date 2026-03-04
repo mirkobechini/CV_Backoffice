@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreProviderRequest;
+use App\Http\Requests\UpdateProviderRequest;
 use App\Models\Provider;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
 class ProviderController extends Controller
@@ -29,27 +30,9 @@ class ProviderController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProviderRequest $request)
     {
-        $data = $request->validate(
-            [
-                'name' => 'required|string|max:255',
-                'address' => 'nullable|string|max:255',
-                'contact_info' => 'nullable|string|max:255',
-                'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',
-            ],
-            [
-                'name.required' => 'Il nome è obbligatorio.',
-                'name.string' => 'Il nome deve essere una stringa.',
-                'name.max' => 'Il nome non può superare i 255 caratteri.',
-                'address.string' => 'L\'indirizzo deve essere una stringa.',
-                'address.max' => 'L\'indirizzo non può superare i 255 caratteri.',
-                'contact_info.string' => 'Le informazioni di contatto devono essere una stringa.',
-                'contact_info.max' => 'Le informazioni di contatto non possono superare i 255 caratteri.',
-                'type.required' => 'Il tipo è obbligatorio.',
-                'type.in' => 'Il tipo selezionato non è valido.',
-            ]
-        );
+        $data = $request->validated();
 
         $duplicateProvider = Provider::query()
             ->where('name', $data['name'])
@@ -113,27 +96,9 @@ class ProviderController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Provider $provider)
+    public function update(UpdateProviderRequest $request, Provider $provider)
     {
-        $data = $request->validate(
-            [
-                'name' => 'required|string|max:255',
-                'address' => 'nullable|string|max:255',
-                'contact_info' => 'nullable|string|max:255',
-                'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',
-            ],
-            [
-                'name.required' => 'Il nome è obbligatorio.',
-                'name.string' => 'Il nome deve essere una stringa.',
-                'name.max' => 'Il nome non può superare i 255 caratteri.',
-                'address.string' => 'L\'indirizzo deve essere una stringa.',
-                'address.max' => 'L\'indirizzo non può superare i 255 caratteri.',
-                'contact_info.string' => 'Le informazioni di contatto devono essere una stringa.',
-                'contact_info.max' => 'Le informazioni di contatto non possono superare i 255 caratteri.',
-                'type.required' => 'Il tipo è obbligatorio.',
-                'type.in' => 'Il tipo selezionato non è valido.',
-            ]
-        );
+        $data = $request->validated();
 
         $provider->name = $data['name'];
         $provider->address = $data['address'] ?? null;

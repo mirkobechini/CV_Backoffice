@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreDeadlineRequest;
+use App\Http\Requests\UpdateDeadlineRequest;
 use Carbon\Carbon;
 use App\Models\Deadline;
 use App\Models\Vehicle;
@@ -89,26 +91,9 @@ class DeadlineController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreDeadlineRequest $request)
     {
-        $data = $request->validate(
-            [
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'mark_as_renewed' => 'nullable|boolean',
-            ],
-            [
-                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
-                'type.required' => 'La tipologia è obbligatoria.',
-                'type.in' => 'La tipologia selezionata non è valida.',
-                'due_date.required' => 'La data di scadenza è obbligatoria.',
-                'due_date.required_unless' => 'La data di scadenza è obbligatoria per questa tipologia.',
-                'due_date.date_format' => 'La data di scadenza deve essere nel formato mese/anno valido.',
-                'mark_as_renewed.boolean' => 'Il valore di rinnovo non è valido.',
-            ]
-        );
+        $data = $request->validated();
 
         $vehicle = Vehicle::with('vehicleType')->findOrFail($data['vehicle_id']);
 
@@ -159,26 +144,9 @@ class DeadlineController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Deadline $deadline)
+    public function update(UpdateDeadlineRequest $request, Deadline $deadline)
     {
-        $data = $request->validate(
-            [
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
-                'mark_as_renewed' => 'nullable|boolean',
-            ],
-            [
-                'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-                'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
-                'type.required' => 'La tipologia è obbligatoria.',
-                'type.in' => 'La tipologia selezionata non è valida.',
-                'due_date.required' => 'La data di scadenza è obbligatoria.',
-                'due_date.required_unless' => 'La data di scadenza è obbligatoria per questa tipologia.',
-                'due_date.date_format' => 'La data di scadenza deve essere nel formato mese/anno valido.',
-                'mark_as_renewed.boolean' => 'Il valore di rinnovo non è valido.',
-            ]
-        );
+        $data = $request->validated();
 
         $vehicle = Vehicle::with('vehicleType')->findOrFail($data['vehicle_id']);
 
