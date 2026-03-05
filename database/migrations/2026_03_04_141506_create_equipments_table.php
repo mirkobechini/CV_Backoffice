@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('equipments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('vehicle_id')->constrained()->onDelete('cascade');
+            $table->foreignId('vehicle_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
-            $table->string('serial_number')->nullable();
+            $table->string('serial_number')->unique()->nullable();
             $table->date('revision_date')->nullable();
             $table->date('expiration_date')->nullable();
             $table->timestamps();

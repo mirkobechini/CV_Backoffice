@@ -25,7 +25,7 @@ class UpdateEquipmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_id' => 'required|exists:vehicles,id',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
             'name' => 'required|string|max:255',
             'serial_number' => 'nullable|string|max:255',
             'revision_date' => 'nullable|date',
@@ -36,7 +36,6 @@ class UpdateEquipmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'vehicle_id.required' => 'Il campo veicolo è obbligatorio.',
             'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'name.required' => 'Il campo nome è obbligatorio.',
             'name.string' => 'Il campo nome deve essere una stringa.',

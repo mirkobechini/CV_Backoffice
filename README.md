@@ -76,6 +76,14 @@ Questo documento descrive la struttura del database, le entità principali e le 
     expiration_date string nullable Data scadenza.
     Relazione: Ogni attrezzatura è assegnata a un Vehicle.
 
+### EquipmentType (Tipologia Attrezzatura/Estintori): Definisce le categorie di attrezzature a bordo del mezzo:
+
+    name string Nome,
+    first_inspection_months: intervallo per la prima revisione (es. 6 per estintori, 12 per barelle).
+    regular_inspection_months: intervallo per le successive (es. 6 per estintori, 12 per barelle),
+    expiration_date string nullable Data scadenza.
+    Relazione: Ogni attrezzatura ha un tipo assegnato.
+
 ## 🔗 Relazioni (Entity-Relationship)
 
 - Vehicle 1 : N Issue
@@ -124,7 +132,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] MaintenanceRecord model & migration
 - [x] Deadline model & migration
 - [x] MileageLog model & migration
-- [] Equipment model & migration
+- [x] Equipment model & migration
 - [x] Vehicle seed
 - [x] Provider seed
 - [x] Issue seed
@@ -226,9 +234,19 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] update
 - [x] destroy
 
+#### EquipmentType 🔄
+
+- [] index
+- [] show
+- [] create
+- [] store
+- [] edit
+- [] update
+- [] destroy
+
 ### Admin 🔄
 
-#### Controllers ✅
+#### Controllers 🔄
 
 - [x] admin/VehicleController (CRUD)
 - [x] admin/VehicleTypeController (CRUD)
@@ -238,8 +256,9 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/DeadlineController (CRUD)
 - [x] admin/MileageLogController (CRUD)
 - [x] admin/EquipmentController (CRUD)
+- [] admin/EquipmentTypeController (CRUD)
 
-#### Routes ✅
+#### Routes 🔄
 
 - [x] admin/VehicleController route (web)
 - [x] admin/VehicleTypeController route (web)
@@ -249,6 +268,8 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/DeadlineController route (web)
 - [x] admin/MileageLogController route (web)
 - [x] admin/EquipmentController route (web)
+- [] admin/EquipmentTypeController route (web)
+
 
 #### Best Practices ✅
 
@@ -270,7 +291,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [] api/DeadlineController (R)
 - [] api/MileageLogController (R)
 - [] api/EquipmentController (R)
-
+- [] api/EquipmentTypeController (R)
 #### Routes ⬜
 
 - [] api/VehicleController route (api)
@@ -281,3 +302,4 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [] api/DeadlineController route (api)
 - [] api/MileageLogController route (api)
 - [] api/EquipmentController route (api)
+- [] api/EquipmentTypeController route (api)

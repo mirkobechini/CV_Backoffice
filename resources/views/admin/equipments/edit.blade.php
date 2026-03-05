@@ -25,6 +25,14 @@
                             @enderror
                         </div>
                         <div class="mb-3">
+                            <label for="serial_number" class="form-label">Numero di serie</label>
+                            <input type="text" class="form-control @error('serial_number') is-invalid @enderror" id="serial_number"
+                                name="serial_number" value="{{ old('serial_number') }}" required>
+                            @error('serial_number')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
                             <label for="revision_date" class="form-label">Data revisione</label>
                             <input type="date" class="form-control @error('revision_date') is-invalid @enderror"
                                 id="revision_date" name="revision_date" value="{{ old('revision_date', $equipment->revision_date) }}" >
@@ -46,8 +54,8 @@
                         <div class="mb-3">
                             <label for="vehicle_id" class="form-label">Veicolo</label>
                             <select class="form-select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
-                                name="vehicle_id" required>
-                                <option value="">Seleziona un veicolo</option>
+                                name="vehicle_id">
+                                <option value="">Nessun veicolo associato</option>
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         data-needs-oxygen-check="{{ $vehicle->vehicleType?->needs_oxygen_check ? '1' : '0' }}"

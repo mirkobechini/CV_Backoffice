@@ -16,8 +16,8 @@
         <x-slot:rows>
             @foreach ($equipments as $equipment)
                 <tr>
-                    <td>{{ $equipment->vehicle->internal_code }}</td>
-                    <td>{{ $equipment->vehicle->license_plate }}</td>
+                    <td>{{ $equipment->vehicle?->internal_code ?? 'N/A' }}</td>
+                    <td>{{ $equipment->vehicle?->license_plate ?? 'N/A' }}</td>
                     <td>{{ $equipment->name }}</td>
                     <td>{{ $equipment->revision_date }}</td>
                     <x-admin.row-actions :showUrl="route('admin.equipments.show', $equipment->id)" :editUrl="route('admin.equipments.edit', $equipment->id)" :deleteTarget="'#confirmDeleteModal-' . $equipment->id" :label="'attrezzatura ' . $equipment->id" />

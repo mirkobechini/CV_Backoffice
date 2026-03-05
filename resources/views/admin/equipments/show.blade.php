@@ -17,7 +17,13 @@
                     <div class="card-body">
                         <p><strong>Data revisione:</strong> {{ $equipment->revision_date }}</p>
                         <p><strong>Data scadenza:</strong> {{ $equipment->expiration_date }}</p>
-                        <p><strong>Veicolo associato:</strong> {{ $equipment->vehicle->internal_code }} - {{ $equipment->vehicle->brand }} {{ $equipment->vehicle->model }}</p>
+                        <p><strong>Veicolo associato:</strong>
+                            @if ($equipment->vehicle)
+                                {{ $equipment->vehicle->internal_code }} - {{ $equipment->vehicle->brand }} {{ $equipment->vehicle->model }}
+                            @else
+                                N/A
+                            @endif
+                        </p>
                     </div>
                 </div>
             </div>
