@@ -8,7 +8,7 @@ class Equipment extends Model
 {
     protected $fillable = [
         'vehicle_id',
-        'equipmenttype_id',
+        'equipment_type_id',
         'name',
         'serial_number',
         'revision_date',
@@ -27,6 +27,6 @@ class Equipment extends Model
 
     public function equipmentType()
     {
-        return $this->belongsTo(EquipmentType::class, 'equipmenttype_id');
+        return $this->belongsTo(EquipmentType::class, 'equipment_type_id');
     }
 }

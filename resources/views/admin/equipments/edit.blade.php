@@ -26,31 +26,34 @@
                         </div>
                         <div class="mb-3">
                             <label for="serial_number" class="form-label">Numero di serie</label>
-                            <input type="text" class="form-control @error('serial_number') is-invalid @enderror" id="serial_number"
-                                name="serial_number" value="{{ old('serial_number', $equipment->serial_number) }}" required>
+                            <input type="text" class="form-control @error('serial_number') is-invalid @enderror"
+                                id="serial_number" name="serial_number"
+                                value="{{ old('serial_number', $equipment->serial_number) }}" required>
                             @error('serial_number')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="equipmenttype_id" class="form-label">Tipo di attrezzatura</label>
-                            <select class="form-select @error('equipmenttype_id') is-invalid @enderror" id="equipmenttype_id"
-                                name="equipmenttype_id" required>
+                            <label for="equipment_type_id" class="form-label">Tipo di attrezzatura</label>
+                            <select class="form-select @error('equipment_type_id') is-invalid @enderror"
+                                id="equipment_type_id" name="equipment_type_id" required>
                                 <option value="">Seleziona un tipo di attrezzatura</option>
                                 @foreach ($equipmentTypes as $type)
-                                    <option value="{{ $type->id }}" {{ old('equipmenttype_id', $equipment->equipmenttype_id) == $type->id ? 'selected' : '' }}>
+                                    <option value="{{ $type->id }}"
+                                        {{ old('equipment_type_id', $equipment->equipment_type_id) == $type->id ? 'selected' : '' }}>
                                         {{ $type->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('equipmenttype_id')
+                            @error('equipment_type_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="mb-3">
                             <label for="revision_date" class="form-label">Data revisione</label>
                             <input type="date" class="form-control @error('revision_date') is-invalid @enderror"
-                                id="revision_date" name="revision_date" value="{{ old('revision_date', $equipment->revision_date) }}" >
+                                id="revision_date" name="revision_date"
+                                value="{{ old('revision_date', $equipment->revision_date) }}">
                             @error('revision_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -58,7 +61,8 @@
                         <div class="mb-3">
                             <label for="expiration_date" class="form-label">Data scadenza</label>
                             <input type="date" class="form-control @error('expiration_date') is-invalid @enderror"
-                                id="expiration_date" name="expiration_date" value="{{ old('expiration_date', $equipment->expiration_date) }}" >
+                                id="expiration_date" name="expiration_date"
+                                value="{{ old('expiration_date', $equipment->expiration_date) }}">
                             @error('expiration_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

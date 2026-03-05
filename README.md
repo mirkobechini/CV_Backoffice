@@ -1,24 +1,24 @@
 # 🛠 Database Schema - Gestione Parco Mezzi
 
-Questo documento descrive la struttura del database, le entità principali e le loro relazioni.
+Questo documento descrive la struttura del database, le entità principali e le relazioni effettive implementate nel progetto Laravel.
 
 ## 1. Entità Principali (Anagrafica)
 
-### Vehicle (Mezzo): Il cuore del sistema:
+### Vehicle (Mezzo): Il cuore del sistema
 
-    license_plate string unique Targa,
-    internal_code string nullable Sigla interna,
-    brand string Marca,
-    model string Modello,
-    fuel_type string nullable Alimentazione,
-    vehicle_type_id string Tipologia (es. ambulanza, auto),
-    immatricolation_date string Data immatricolazione,
-    registration_card_path string nullable Percorso file carta circolazione.
-    warranty_original_expiration_date string nullable Data di scadenza originale della garanzia (per confronto).
-    has_warranty_extension boolean default false Flag per estensione garanzia,
-    warranty_expiration_date string nullable Data di scadenza della garanzia.
+license_plate string(7) unique Targa,
+internal_code string(4) nullable Sigla interna,
+brand string Marca,
+model string Modello,
+fuel_type enum nullable Alimentazione,
+vehicle_type_id foreignId nullable Tipologia (es. ambulanza, auto),
+immatricolation_date date Data immatricolazione,
+registration_card_path string nullable Percorso file carta circolazione,
+has_warranty_extension boolean default false Flag per estensione garanzia,
+warranty_extension_duration integer nullable Durata estensione garanzia,
+warranty_expiration_date date nullable Data scadenza garanzia.
 
-### VehicleType (Configurazione Categorie): Tabella di configurazione che definisce le regole di business per ogni categoria di mezzo.
+### VehicleType (Configurazione Categorie): Tabella di configurazione che definisce le regole di business per ogni categoria di mezzo
 
     name string Nome della tipologia,
     needs_oxygen_check (booleano) per attivare la gestione impianto ossigeno.
@@ -26,7 +26,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
     first_inspection_months: intervallo per la prima revisione (es. 48 per auto, 12 per ambulanze).
     regular_inspection_months: intervallo per le successive (es. 24 per auto, 12 per ambulanze).
 
-### Provider (Officina/Luogo): Fornitori esterni:
+### Provider (Officina/Luogo): Fornitori esterni
 
     name string Nome,
     contact_info string nullable Contatti (telefono, email),
@@ -35,48 +35,50 @@ Questo documento descrive la struttura del database, le entità principali e le 
 
 ## 2. Eventi e Manutenzione
 
-### Issue (Guasto): Segnalazione di un problema tecnico:
+### Issue (Guasto): Segnalazione di un problema tecnico
 
-    description string Descrizione,
+    description text Descrizione,
     status string (open, in_progress, closed) Stato del guasto.
     photo string nullable Foto del guasto,
-    event_date string default CURRENT_DATE Data dell'avvenimento.
+    event_date date default CURRENT_DATE Data dell'avvenimento.
 
     Relazione: Appartiene a un Vehicle
 
-### MaintenanceRecord (Appuntamento/Intervento): Tracciamento dei lavori effettuati o programmati:
+### MaintenanceRecord (Appuntamento/Intervento): Tracciamento dei lavori effettuati o programmati
 
-    appointment_date string Data appuntamento,
-    return_date string nullable Data restituzione (per disponibilità mezzo),
-    activity_type string Tipo attività (Tagliando, Revisione, Riparazione, Lavaggio).
+appointment_date date Data appuntamento,
+return_date date nullable Data restituzione (per disponibilità mezzo),
+activity_type string nullable Tipo attività (Tagliando, Revisione, Riparazione, Lavaggio),
+deadline_id foreignId nullable unique collegamento opzionale alla scadenza.
 
-    Relazione: Collega un Vehicle con un Provider. Può essere collegato a una specifica Issue.
+Relazione: Collega un Vehicle con un Provider. È collegato a una specifica Issue.
 
 ## 3. Monitoraggio e Scadenze
 
-### Deadline (Scadenza): Gestione di tutte le date critiche ricorrenti:
+### Deadline (Scadenza): Gestione di tutte le date critiche ricorrenti
 
     type string Tipologia (Assicurazione, Revisione Ministeriale, Revisione Impianto Ossigeno),
-    due_date string Data scadenza,
+    due_date date Data scadenza,
     status string (expired, renewed, pending) Stato.
 
     Relazione: Ogni record è collegato a un Vehicle.
 
-### MileageLog (Registro Chilometri): Storico dei chilometri per reportistica e avvisi:
+### MileageLog (Registro Chilometri): Storico dei chilometri per reportistica e avvisi
 
     mileage integer Lettura contachilometri,
-    log_date string Data rilevazione.
+    log_date date Data rilevazione.
     Relazione: Molteplici record per ogni Vehicle.
 
-### Equipment (Attrezzatura/Estintori): Oggetti specifici a bordo del mezzo:
+### Equipment (Attrezzatura/Estintori): Oggetti specifici a bordo del mezzo
 
     name string Nome,
     serial_number string nullable Codice Seriale,
-    revision_date string nullable Data revisione,
-    expiration_date string nullable Data scadenza.
-    Relazione: Ogni attrezzatura è assegnata a un Vehicle.
+    revision_date date nullable Data revisione,
+    expiration_date date nullable Data scadenza,
+    equipment_type_id foreignId Tipo di attrezzatura.
+    Relazione: può essere assegnata a un Vehicle (nullable) e appartiene a un EquipmentType.
 
-### EquipmentType (Tipologia Attrezzatura/Estintori): Definisce le categorie di attrezzature a bordo del mezzo:
+### EquipmentType (Tipologia Attrezzatura/Estintori): Definisce le categorie di attrezzature a bordo del mezzo
 
     name string Nome,
     first_inspection_months: intervallo per la prima revisione (es. 6 per estintori, 12 per barelle).
@@ -104,7 +106,10 @@ Questo documento descrive la struttura del database, le entità principali e le 
   Un mezzo entra in manutenzione più volte.
 
 - Issue 1 : N MaintenanceRecord
-  Un intervento di manutenzione può nascere da un guasto specifico.
+  Un guasto può avere più interventi di manutenzione.
+
+- EquipmentType 1 : N Equipment
+  Ogni tipologia può essere associata a più attrezzature.
 
 ## Legenda
 
@@ -134,15 +139,16 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] MileageLog model & migration
 - [x] Equipment model & migration
 - [x] EquipmentType model & migration
+- [ ] Rivedere VehicleType per gestire l'equipaggiamento per ogni tipo di veicolo
 - [x] Vehicle seed
 - [x] VehicleType seed
 - [x] Provider seed
 - [x] Issue seed
-- [] MaintenanceRecord seed
-- [] Deadline seed
-- [] MileageLog seed
-- [] Equipment seed
-- [] EquipmentType seed
+- [ ] MaintenanceRecord seed
+- [ ] Deadline seed
+- [ ] MileageLog seed
+- [ ] Equipment seed
+- [ ] EquipmentType seed
 
 ### UI ⏳
 
@@ -150,7 +156,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 
 - [x] partials/Header
 - [x] layouts/app
-- [] welcomePage
+- [ ] welcomePage
 
 #### Vehicle ✅
 
@@ -158,6 +164,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] show
 - [x] create
 - [x] edit
+- [ ] show: rimando agli equipaggiamenti del mezzo + stato conformità di ogni equipaggiamento
 
 #### VehicleType ✅
 
@@ -202,9 +209,9 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] show
 - [x] create
 - [x] edit
-- [] report: storico chilometri per singolo mezzo (timeline ordinata per data)
-- [] report: ultimo chilometraggio registrato per ogni mese (per singolo mezzo)
-- [] report: filtro per mezzo + range mese/anno
+- [ ] report: storico chilometri per singolo mezzo (timeline ordinata per data)
+- [ ] report: ultimo chilometraggio registrato per ogni mese (per singolo mezzo)
+- [ ] report: filtro per mezzo + range mese/anno
 
 #### Equipment ✅
 
@@ -246,7 +253,6 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/EquipmentController route (web)
 - [x] admin/EquipmentTypeController route (web)
 
-
 #### Best Practices ✅
 
 - [x] Refactor validazioni CRUD in FormRequest (Store/Update) per Vehicle, VehicleType, Provider, Issue, MaintenanceRecord, Deadline
@@ -259,23 +265,24 @@ Questo documento descrive la struttura del database, le entità principali e le 
 
 #### Controllers ⬜
 
-- [] api/VehicleController (R)
-- [] api/VehicleTypeController (R)
-- [] api/ProviderController (R)
-- [] api/IssueController (R)
-- [] api/MaintenanceRecordController (R)
-- [] api/DeadlineController (R)
-- [] api/MileageLogController (R)
-- [] api/EquipmentController (R)
-- [] api/EquipmentTypeController (R)
+- [ ] api/VehicleController (R)
+- [ ] api/VehicleTypeController (R)
+- [ ] api/ProviderController (R)
+- [ ] api/IssueController (R)
+- [ ] api/MaintenanceRecordController (R)
+- [ ] api/DeadlineController (R)
+- [ ] api/MileageLogController (R)
+- [ ] api/EquipmentController (R)
+- [ ] api/EquipmentTypeController (R)
+
 #### Routes ⬜
 
-- [] api/VehicleController route (api)
-- [] api/VehicleTypeController route (api)
-- [] api/ProviderController route (api)
-- [] api/IssueController route (api)
-- [] api/MaintenanceRecordController route (api)
-- [] api/DeadlineController route (api)
-- [] api/MileageLogController route (api)
-- [] api/EquipmentController route (api)
-- [] api/EquipmentTypeController route (api)
+- [ ] api/VehicleController route (api)
+- [ ] api/VehicleTypeController route (api)
+- [ ] api/ProviderController route (api)
+- [ ] api/IssueController route (api)
+- [ ] api/MaintenanceRecordController route (api)
+- [ ] api/DeadlineController route (api)
+- [ ] api/MileageLogController route (api)
+- [ ] api/EquipmentController route (api)
+- [ ] api/EquipmentTypeController route (api)

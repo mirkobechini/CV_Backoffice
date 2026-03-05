@@ -30,7 +30,7 @@ class UpdateEquipmentRequest extends FormRequest
             'serial_number' => 'nullable|string|max:255',
             'revision_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after_or_equal:revision_date',
-            'equipmenttype_id' => 'required|exists:equipment_types,id',
+            'equipment_type_id' => 'required|exists:equipment_types,id',
         ];
     }
 
@@ -46,12 +46,12 @@ class UpdateEquipmentRequest extends FormRequest
             'revision_date.date' => 'Il campo data di revisione deve essere una data valida.',
             'expiration_date.date' => 'Il campo data di scadenza deve essere una data valida.',
             'expiration_date.after_or_equal' => 'Il campo data di scadenza deve essere successivo o uguale alla data di revisione.',
-            'equipmenttype_id.required' => 'Il campo tipo di attrezzatura è obbligatorio.',
-            'equipmenttype_id.exists' => 'Il tipo di attrezzatura selezionato non esiste.',
+            'equipment_type_id.required' => 'Il campo tipo di attrezzatura è obbligatorio.',
+            'equipment_type_id.exists' => 'Il tipo di attrezzatura selezionato non esiste.',
         ];
     }
 
-    public function withValidator(Validator $validator):void
+    public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
             $expirationDate = $this->input('expiration_date');
