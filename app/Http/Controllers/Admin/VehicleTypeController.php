@@ -38,13 +38,13 @@ class VehicleTypeController extends Controller
 
         $data = $request->validated();
 
-        $newVehicleType = new VehicleType();
-        $newVehicleType->name = $data['name'];
-        $newVehicleType->needs_oxygen_check = $data['needs_oxygen_check'] ?? false;
-        $newVehicleType->extinguishers_required = $data['extinguishers_required'];
-        $newVehicleType->first_inspection_months = $data['first_inspection_months'];
-        $newVehicleType->regular_inspection_months = $data['regular_inspection_months'];
-        $newVehicleType->save();
+        $newVehicleType = VehicleType::create([
+            'name' => $data['name'],
+            'needs_oxygen_check' => $data['needs_oxygen_check'] ?? false,
+            'extinguishers_required' => $data['extinguishers_required'],
+            'first_inspection_months' => $data['first_inspection_months'],
+            'regular_inspection_months' => $data['regular_inspection_months'],
+        ]);
 
         return redirect()
             ->route('admin.vehicletypes.index')
@@ -77,12 +77,13 @@ class VehicleTypeController extends Controller
         ]);
 
         $data = $request->validated();
-        $vehicleType->name = $data['name'];
-        $vehicleType->needs_oxygen_check = $data['needs_oxygen_check'] ?? false;
-        $vehicleType->extinguishers_required = $data['extinguishers_required'];
-        $vehicleType->first_inspection_months = $data['first_inspection_months'];
-        $vehicleType->regular_inspection_months = $data['regular_inspection_months'];
-        $vehicleType->update();
+        $vehicleType->update([
+            'name' => $data['name'],
+            'needs_oxygen_check' => $data['needs_oxygen_check'] ?? false,
+            'extinguishers_required' => $data['extinguishers_required'],
+            'first_inspection_months' => $data['first_inspection_months'],
+            'regular_inspection_months' => $data['regular_inspection_months'],
+        ]);
 
         return redirect()
             ->route('admin.vehicletypes.show', $vehicleType->id)

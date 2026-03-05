@@ -113,12 +113,12 @@ class DeadlineController extends Controller
 
         $markAsRenewed = (bool) ($data['mark_as_renewed'] ?? false);
 
-        $deadline = new Deadline();
-        $deadline->vehicle_id = $vehicle->id;
-        $deadline->type = $data['type'];
-        $deadline->due_date = $dueDate->toDateString();
-        $deadline->status = $this->resolveStatus($dueDate, $markAsRenewed);
-        $deadline->save();
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => $data['type'],
+            'due_date' => $dueDate->toDateString(),
+            'status' => $this->resolveStatus($dueDate, $markAsRenewed),
+        ]);
 
         return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza creata con successo.');
     }
@@ -166,11 +166,12 @@ class DeadlineController extends Controller
 
         $markAsRenewed = (bool) ($data['mark_as_renewed'] ?? false);
 
-        $deadline->vehicle_id = $vehicle->id;
-        $deadline->type = $data['type'];
-        $deadline->due_date = $dueDate->toDateString();
-        $deadline->status = $this->resolveStatus($dueDate, $markAsRenewed);
-        $deadline->update();
+        $deadline->update([
+            'vehicle_id' => $vehicle->id,
+            'type' => $data['type'],
+            'due_date' => $dueDate->toDateString(),
+            'status' => $this->resolveStatus($dueDate, $markAsRenewed),
+        ]);
 
         return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza aggiornata con successo.');
     }

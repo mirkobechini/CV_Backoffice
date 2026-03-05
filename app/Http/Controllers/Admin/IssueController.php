@@ -100,18 +100,19 @@ class IssueController extends Controller
                 ->with('status', 'Guasto già registrato: creazione duplicata bloccata.');
         }
 
-        $newIssue = new Issue();
-        $newIssue->vehicle_id = $data['vehicle_id'];
-        $newIssue->description = $data['description'];
-        $newIssue->event_date = $data['event_date'];
-        $newIssue->status = $data['status'];
+        $issueData = [
+            'vehicle_id' => $data['vehicle_id'],
+            'description' => $data['description'],
+            'event_date' => $data['event_date'],
+            'status' => $data['status'],
+        ];
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('issue_images', 'public');
-            $newIssue->photo = $path;
+            $issueData['photo'] = $path;
         }
 
-        $newIssue->save();
+        $newIssue = Issue::create($issueData);
 
         return redirect()->route('admin.issues.show', $newIssue->id)->with('status', 'Guasto aggiunto con successo.');
     }
@@ -139,15 +140,21 @@ class IssueController extends Controller
     public function update(UpdateIssueRequest $request, Issue $issue)
     {
         $data = $request->validated();
-        $issue->vehicle_id = $data['vehicle_id'];
-        $issue->description = $data['description'];
-        $issue->event_date = $data['event_date'];
-        $issue->status = $data['status'];
+
+        $issueData = [
+            'vehicle_id' => $data['vehicle_id'],
+            'description' => $data['description'],
+            'event_date' => $data['event_date'],
+            'status' => $data['status'],
+        ];
+
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('issue_images', 'public');
-            $issue->photo = $path;
+            $issueData['photo'] = $path;
         }
-        $issue->update();
+
+        $issue->update($issueData);
+
         return redirect()->route('admin.issues.show', $issue->id)->with('status', 'Guasto aggiornato con successo.');
     }
 

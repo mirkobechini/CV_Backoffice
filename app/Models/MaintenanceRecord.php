@@ -6,11 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class MaintenanceRecord extends Model
 {
-    
+
     public const ACTIVITY_TAGLIANDO = 'Tagliando';
     public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';
     public const ACTIVITY_REVISION_OXYGEN = 'Revisione Impianto Ossigeno';
-    
+
     public const ACTIVITY_TYPES = [
         self::ACTIVITY_TAGLIANDO,
         'Riparazione',
@@ -20,8 +20,6 @@ class MaintenanceRecord extends Model
         'Cambio Gomme',
         'Altro',
     ];
-    
-protected $table = 'maintenancerecords';
 
     protected $casts = [
         'appointment_date' => 'date',

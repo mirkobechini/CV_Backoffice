@@ -67,12 +67,12 @@ class ProviderController extends Controller
                 ->with('status', 'Struttura già registrata: creazione duplicata bloccata.');
         }
 
-        $newProvider = new Provider();
-        $newProvider->name = $data['name'];
-        $newProvider->address = $data['address'] ?? null;
-        $newProvider->contact_info = $data['contact_info'] ?? null;
-        $newProvider->type = $data['type'] ?? null;
-        $newProvider->save();
+        $newProvider = Provider::create([
+            'name' => $data['name'],
+            'address' => $data['address'] ?? null,
+            'contact_info' => $data['contact_info'] ?? null,
+            'type' => $data['type'] ?? null,
+        ]);
 
         return redirect()->route('admin.providers.show', $newProvider->id)->with('status', 'Struttura aggiunta con successo.');
     }
@@ -100,11 +100,12 @@ class ProviderController extends Controller
     {
         $data = $request->validated();
 
-        $provider->name = $data['name'];
-        $provider->address = $data['address'] ?? null;
-        $provider->contact_info = $data['contact_info'] ?? null;
-        $provider->type = $data['type'] ?? null;
-        $provider->update();
+        $provider->update([
+            'name' => $data['name'],
+            'address' => $data['address'] ?? null,
+            'contact_info' => $data['contact_info'] ?? null,
+            'type' => $data['type'] ?? null,
+        ]);
 
         return redirect()->route('admin.providers.show', $provider->id)->with('status', 'Struttura aggiornata con successo.');
     }

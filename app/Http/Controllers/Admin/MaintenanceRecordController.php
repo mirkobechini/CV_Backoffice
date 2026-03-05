@@ -160,14 +160,14 @@ class MaintenanceRecordController extends Controller
                 ->with('status', 'Intervento già registrato: creazione duplicata bloccata.');
         }
 
-        $newRecord = new MaintenanceRecord();
-        $newRecord->vehicle_id = $data['vehicle_id'];
-        $newRecord->issue_id = $data['issue_id'];
-        $newRecord->provider_id = $data['provider_id'];
-        $newRecord->appointment_date = $data['appointment_date'];
-        $newRecord->return_date = $data['return_date'] ?? null;
-        $newRecord->activity_type = $data['activity_type'] ?? null;
-        $newRecord->save();
+        $newRecord = MaintenanceRecord::create([
+            'vehicle_id' => $data['vehicle_id'],
+            'issue_id' => $data['issue_id'],
+            'provider_id' => $data['provider_id'],
+            'appointment_date' => $data['appointment_date'],
+            'return_date' => $data['return_date'] ?? null,
+            'activity_type' => $data['activity_type'] ?? null,
+        ]);
 
         return redirect()->route('admin.maintenancerecords.show', $newRecord->id)->with('status', 'Intervento aggiunto con successo.');
     }
@@ -214,13 +214,14 @@ class MaintenanceRecordController extends Controller
                 ->withInput();
         }
 
-        $maintenanceRecord->vehicle_id = $data['vehicle_id'];
-        $maintenanceRecord->issue_id = $data['issue_id'];
-        $maintenanceRecord->provider_id = $data['provider_id'];
-        $maintenanceRecord->appointment_date = $data['appointment_date'];
-        $maintenanceRecord->return_date = $data['return_date'] ?? null;
-        $maintenanceRecord->activity_type = $data['activity_type'] ?? null;
-        $maintenanceRecord->update();
+        $maintenanceRecord->update([
+            'vehicle_id' => $data['vehicle_id'],
+            'issue_id' => $data['issue_id'],
+            'provider_id' => $data['provider_id'],
+            'appointment_date' => $data['appointment_date'],
+            'return_date' => $data['return_date'] ?? null,
+            'activity_type' => $data['activity_type'] ?? null,
+        ]);
 
         if ($maintenanceRecord->issue && array_key_exists('issue_resolved', $data)) {
             if ((bool) $data['issue_resolved']) {

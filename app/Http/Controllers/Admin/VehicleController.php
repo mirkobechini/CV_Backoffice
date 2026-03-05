@@ -36,7 +36,7 @@ class VehicleController extends Controller
     public function create()
     {
         $vehicleTypes = VehicleType::all();
-  
+
         return view('admin.vehicles.create', compact('vehicleTypes'));
     }
 
@@ -60,25 +60,26 @@ class VehicleController extends Controller
                 ->toDateString();
         }
 
-        $newVehicle = new Vehicle();
-        $newVehicle->license_plate = $data['license_plate'];
-        $newVehicle->vehicle_type_id = $data['vehicle_type_id'];
-        $newVehicle->internal_code = $data['internal_code'];
-        $newVehicle->brand = $data['brand'];
-        $newVehicle->model = $data['model'];
-        $newVehicle->fuel_type = $data['fuel_type'] ?? null;
-        $newVehicle->immatricolation_date = $data['immatricolation_date'];
-        $newVehicle->has_warranty_extension = $hasWarrantyExtension;
-        $newVehicle->warranty_extension_duration = $warrantyExtensionDuration;
-        $newVehicle->warranty_expiration_date = $warrantyEffectiveExpirationDate;
+        $vehicleData = [
+            'license_plate' => $data['license_plate'],
+            'vehicle_type_id' => $data['vehicle_type_id'],
+            'internal_code' => $data['internal_code'],
+            'brand' => $data['brand'],
+            'model' => $data['model'],
+            'fuel_type' => $data['fuel_type'] ?? null,
+            'immatricolation_date' => $data['immatricolation_date'],
+            'has_warranty_extension' => $hasWarrantyExtension,
+            'warranty_extension_duration' => $warrantyExtensionDuration,
+            'warranty_expiration_date' => $warrantyEffectiveExpirationDate,
+        ];
 
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');
             $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
-            $newVehicle->registration_card_path = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
+            $vehicleData['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
         }
 
-        $newVehicle->save();
+        $newVehicle = Vehicle::create($vehicleData);
 
         return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo creato con successo.');
     }
@@ -100,8 +101,8 @@ class VehicleController extends Controller
             ->get()
             // Mostra in dettaglio solo la scadenza più recente per ogni tipologia.
             ->groupBy('type')
-            ->map(fn ($typeDeadlines) => $typeDeadlines->first());
-        $deadlinesTypes = ["revisione"=>Deadline::TYPE_MINISTERIAL, "ossigeno"=>Deadline::TYPE_OXYGEN];
+            ->map(fn($typeDeadlines) => $typeDeadlines->first());
+        $deadlinesTypes = ["revisione" => Deadline::TYPE_MINISTERIAL, "ossigeno" => Deadline::TYPE_OXYGEN];
 
         return view('admin.vehicles.show', compact('vehicle', 'vehicleAppointments', 'deadlines', 'deadlinesTypes'));
     }
@@ -142,21 +143,20 @@ class VehicleController extends Controller
                 ->toDateString();
         }
 
-        $vehicle->license_plate = $data['license_plate'];
-        $vehicle->vehicle_type_id = $data['vehicle_type_id'];
-        $vehicle->internal_code = $data['internal_code'];
-        $vehicle->brand = $data['brand'];
-        $vehicle->model = $data['model'];
-        $vehicle->fuel_type = $data['fuel_type'] ?? null;
-        $vehicle->immatricolation_date = $data['immatricolation_date'];
-        $vehicle->warranty_expiration_date = $warrantyEffectiveExpirationDate;
-        $vehicle->has_warranty_extension = $hasWarrantyExtension;
-        $vehicle->warranty_extension_duration = $warrantyExtensionDuration;
-
-        $vehicle->update();
+        $vehicle->update([
+            'license_plate' => $data['license_plate'],
+            'vehicle_type_id' => $data['vehicle_type_id'],
+            'internal_code' => $data['internal_code'],
+            'brand' => $data['brand'],
+            'model' => $data['model'],
+            'fuel_type' => $data['fuel_type'] ?? null,
+            'immatricolation_date' => $data['immatricolation_date'],
+            'warranty_expiration_date' => $warrantyEffectiveExpirationDate,
+            'has_warranty_extension' => $hasWarrantyExtension,
+            'warranty_extension_duration' => $warrantyExtensionDuration,
+        ]);
 
         return redirect()->route('admin.vehicles.show', $vehicle->id)->with('status', 'Veicolo aggiornato con successo.');
-
     }
 
     /**

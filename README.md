@@ -1,145 +1,175 @@
-# 🛠 Database Schema - Gestione Parco Mezzi
+# 🚑 CV Backoffice - Gestione Parco Mezzi
 
-Questo documento descrive la struttura del database, le entità principali e le relazioni effettive implementate nel progetto Laravel.
+Applicazione Laravel per la gestione di mezzi, guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo.
 
-## 1. Entità Principali (Anagrafica)
+## Panoramica
 
-### Vehicle (Mezzo): Il cuore del sistema
+Il progetto copre:
 
-license_plate string(7) unique Targa,
-internal_code string(4) nullable Sigla interna,
-brand string Marca,
-model string Modello,
-fuel_type enum nullable Alimentazione,
-vehicle_type_id foreignId nullable Tipologia (es. ambulanza, auto),
-immatricolation_date date Data immatricolazione,
-registration_card_path string nullable Percorso file carta circolazione,
-has_warranty_extension boolean default false Flag per estensione garanzia,
-warranty_extension_duration integer nullable Durata estensione garanzia,
-warranty_expiration_date date nullable Data scadenza garanzia.
+- anagrafiche mezzi e tipologie mezzo
+- gestione guasti e interventi manutentivi
+- gestione scadenze periodiche
+- gestione chilometraggi
+- gestione attrezzature e tipologie attrezzature
 
-### VehicleType (Configurazione Categorie): Tabella di configurazione che definisce le regole di business per ogni categoria di mezzo
+## Stack
 
-    name string Nome della tipologia,
-    needs_oxygen_check (booleano) per attivare la gestione impianto ossigeno.
-    extinguishers_required (intero) per definire il numero minimo di estintori a bordo.
-    first_inspection_months: intervallo per la prima revisione (es. 48 per auto, 12 per ambulanze).
-    regular_inspection_months: intervallo per le successive (es. 24 per auto, 12 per ambulanze).
+- Laravel (Breeze)
+- PHP + Eloquent ORM
+- Blade
+- MySQL/MariaDB (supportato anche SQLite per sviluppo)
 
-### Provider (Officina/Luogo): Fornitori esterni
+## Avvio rapido
 
-    name string Nome,
-    contact_info string nullable Contatti (telefono, email),
-    address string nullable Indirizzo/Posizione,
-    type string Tipologia (Meccanico, Carrozziere, Gommista, Lavaggio, Allestitore).
+1. Installazione dipendenze
 
-## 2. Eventi e Manutenzione
+- `composer install`
+- `npm install`
 
-### Issue (Guasto): Segnalazione di un problema tecnico
+2. Configurazione ambiente
 
-    description text Descrizione,
-    status string (open, in_progress, closed) Stato del guasto.
-    photo string nullable Foto del guasto,
-    event_date date default CURRENT_DATE Data dell'avvenimento.
+- copia `.env.example` in `.env`
+- configura DB e filesystem
+- `php artisan key:generate`
 
-    Relazione: Appartiene a un Vehicle
+3. Database
 
-### MaintenanceRecord (Appuntamento/Intervento): Tracciamento dei lavori effettuati o programmati
+- `php artisan migrate`
+- `php artisan db:seed`
 
-appointment_date date Data appuntamento,
-return_date date nullable Data restituzione (per disponibilità mezzo),
-activity_type string nullable Tipo attività (Tagliando, Revisione, Riparazione, Lavaggio),
-deadline_id foreignId nullable unique collegamento opzionale alla scadenza.
+4. Storage + frontend
 
-Relazione: Collega un Vehicle con un Provider. È collegato a una specifica Issue.
+- `php artisan storage:link`
+- `npm run dev`
 
-## 3. Monitoraggio e Scadenze
+## Modello dati (stato attuale)
 
-### Deadline (Scadenza): Gestione di tutte le date critiche ricorrenti
+### Vehicle
 
-    type string Tipologia (Assicurazione, Revisione Ministeriale, Revisione Impianto Ossigeno),
-    due_date date Data scadenza,
-    status string (expired, renewed, pending) Stato.
+- `license_plate` string(7) unique
+- `internal_code` string(4) nullable
+- `brand`, `model`
+- `fuel_type` enum nullable
+- `vehicle_type_id` foreignId nullable
+- `immatricolation_date` date
+- `registration_card_path` nullable
+- `has_warranty_extension` boolean
+- `warranty_extension_duration` integer nullable
+- `warranty_expiration_date` date nullable
 
-    Relazione: Ogni record è collegato a un Vehicle.
+### VehicleType
 
-### MileageLog (Registro Chilometri): Storico dei chilometri per reportistica e avvisi
+- `name` unique
+- `needs_oxygen_check` boolean
+- `extinguishers_required` integer
+- `first_inspection_months` integer
+- `regular_inspection_months` integer
 
-    mileage integer Lettura contachilometri,
-    log_date date Data rilevazione.
-    Relazione: Molteplici record per ogni Vehicle.
+### Provider
 
-### Equipment (Attrezzatura/Estintori): Oggetti specifici a bordo del mezzo
+- `name`
+- `contact_info` nullable
+- `address` nullable
+- `type` enum (`Meccanico`, `Carrozziere`, `Gommista`, `Lavaggio`, `Allestitore`)
 
-    name string Nome,
-    serial_number string nullable Codice Seriale,
-    revision_date date nullable Data revisione,
-    expiration_date date nullable Data scadenza,
-    equipment_type_id foreignId Tipo di attrezzatura.
-    Relazione: può essere assegnata a un Vehicle (nullable) e appartiene a un EquipmentType.
+### Issue
 
-### EquipmentType (Tipologia Attrezzatura/Estintori): Definisce le categorie di attrezzature a bordo del mezzo
+- `vehicle_id`
+- `description` text
+- `status` enum (`open`, `in_progress`, `closed`)
+- `photo` nullable
+- `event_date` date
 
-    name string Nome,
-    first_inspection_months: intervallo per la prima revisione (es. 6 per estintori, 12 per barelle).
-    regular_inspection_months: intervallo per le successive (es. 6 per estintori, 12 per barelle),
-    Relazione: Ogni attrezzatura ha un tipo assegnato.
+### MaintenanceRecord
 
-## 🔗 Relazioni (Entity-Relationship)
+- tabella attuale: `maintenance_records`
+- `vehicle_id`, `provider_id`, `issue_id`
+- `deadline_id` nullable unique
+- `appointment_date` date
+- `return_date` date nullable
+- `activity_type` string nullable
 
-- Vehicle 1 : N Issue
-  Un mezzo può avere più guasti nel tempo.
+### Deadline
 
-- Vehicle 1 : N Deadline
-  Un mezzo ha diverse scadenze (Assicurazione, Revisione, ecc.).
+- `vehicle_id`
+- `type` enum (`Assicurazione`, `Revisione Ministeriale`, `Revisione Impianto Ossigeno`)
+- `due_date` date
+- `status` enum (`expired`, `renewed`, `pending`)
 
-- Vehicle 1 : N MileageLog
-  Storico periodico dei chilometri per ogni mezzo.
+### MileageLog
 
-- Vehicle 1 : N Equipment
-  Un mezzo può avere più estintori o dotazioni specifiche.
+- `vehicle_id`
+- `log_date` date
+- `mileage` unsigned integer
 
-- Provider 1 : N MaintenanceRecord
-  Un'officina può gestire più appuntamenti/lavori.
+### Equipment
 
-- Vehicle 1 : N MaintenanceRecord
-  Un mezzo entra in manutenzione più volte.
+- `vehicle_id` nullable (`nullOnDelete`)
+- `equipment_type_id`
+- `name`
+- `serial_number` unique nullable
+- `revision_date` nullable
+- `expiration_date` nullable
 
-- Issue 1 : N MaintenanceRecord
-  Un guasto può avere più interventi di manutenzione.
+### EquipmentType
 
-- EquipmentType 1 : N Equipment
-  Ogni tipologia può essere associata a più attrezzature.
+- `name` unique
+- `first_inspection_months` nullable
+- `regular_inspection_months` nullable
 
-## Legenda
+## Relazioni principali
 
-✅ completato
-🔄 in corso
-⏳ in attesa/bloccato
-⬜ da fare
+- Vehicle `1:N` Issue
+- Vehicle `1:N` Deadline
+- Vehicle `1:N` MileageLog
+- Vehicle `1:N` Equipment
+- Vehicle `1:N` MaintenanceRecord
+- Provider `1:N` MaintenanceRecord
+- Issue `1:N` MaintenanceRecord
+- Deadline `1:1` (opzionale) MaintenanceRecord
+- EquipmentType `1:N` Equipment
 
-## Todos:
+## Convenzioni Laravel
+
+Allineamento automatismi Eloquent:
+
+- `equipment_type_id` usato come FK standard
+- `maintenance_records` usato come nome tabella convenzionale
+- relation methods e mass-assignment allineati nei controller CRUD
+
+Nota storica:
+
+- alcune migration meno recenti mantengono nomi file legacy (`maintenancerecords`) ma lo schema runtime è coerente.
+
+## Stato attività (TODO)
+
+Legenda:
+
+- ✅ completato
+- 🔄 in corso
+- ⏳ in attesa/bloccato
+- ⬜ da fare
 
 ### Setup ✅
 
-- [x] Install laravel
-- [x] Install breeze
-- [x] Set database in .env
-- [x] Set storage filesystem in .env
-- [x] Set storage symlink
+- [x] Install Laravel
+- [x] Install Breeze
+- [x] Configurare database in `.env`
+- [x] Configurare filesystem in `.env`
+- [x] Creare symlink storage
 
 ### Database 🔄
 
-- [x] Vehicle model & migration
-- [x] VehicleType model & migration
-- [x] Provider model & migration
-- [x] Issue model & migration
-- [x] MaintenanceRecord model & migration
-- [x] Deadline model & migration
-- [x] MileageLog model & migration
-- [x] Equipment model & migration
-- [x] EquipmentType model & migration
-- [ ] Rivedere VehicleType per gestire l'equipaggiamento per ogni tipo di veicolo
+- [x] Vehicle model + migration
+- [x] VehicleType model + migration
+- [x] Provider model + migration
+- [x] Issue model + migration
+- [x] MaintenanceRecord model + migration
+- [x] Deadline model + migration
+- [x] MileageLog model + migration
+- [x] Equipment model + migration
+- [x] EquipmentType model + migration
+- [ ] Rivedere VehicleType per gestione equipaggiamento per tipologia mezzo
 - [x] Vehicle seed
 - [x] VehicleType seed
 - [x] Provider seed
@@ -154,17 +184,17 @@ Relazione: Collega un Vehicle con un Provider. È collegato a una specifica Issu
 
 #### Commons ⏳
 
-- [x] partials/Header
-- [x] layouts/app
-- [ ] welcomePage
+- [x] Header
+- [x] Layout app
+- [ ] Welcome page
 
-#### Vehicle ✅
+#### Vehicle 🔄
 
 - [x] index
 - [x] show
 - [x] create
 - [x] edit
-- [ ] show: rimando agli equipaggiamenti del mezzo + stato conformità di ogni equipaggiamento
+- [ ] show: link agli equipaggiamenti del mezzo + stato conformità per equipaggiamento
 
 #### VehicleType ✅
 
@@ -186,22 +216,23 @@ Relazione: Collega un Vehicle con un Provider. È collegato a una specifica Issu
 - [x] show
 - [x] create
 - [x] edit
-- [x] show: pulsante per prendere appuntamento manutenzione dal guasto
-- [x] validazione: errore se appointment_date < event_date del guasto
+- [x] show: pulsante prenotazione manutenzione dal guasto
+- [x] validazione: errore se `appointment_date < event_date`
 
 #### MaintenanceRecord ✅
 
 - [x] index
 - [x] show
-- [x] store
+- [x] create/store
 - [x] edit
 
-#### Deadline ✅
+#### Deadline 🔄
 
 - [x] index
 - [x] show
 - [x] create
 - [x] edit
+- [ ] implementare tagliandi in scadenze: oltre alla data, soglia km per prossimo tagliando
 
 #### MileageLog 🔄
 
@@ -209,9 +240,9 @@ Relazione: Collega un Vehicle con un Provider. È collegato a una specifica Issu
 - [x] show
 - [x] create
 - [x] edit
-- [ ] report: storico chilometri per singolo mezzo (timeline ordinata per data)
-- [ ] report: ultimo chilometraggio registrato per ogni mese (per singolo mezzo)
-- [ ] report: filtro per mezzo + range mese/anno
+- [ ] report storico chilometri per singolo mezzo (timeline)
+- [ ] report ultimo chilometraggio per mese (singolo mezzo)
+- [ ] filtro per mezzo + range mese/anno
 
 #### Equipment ✅
 
@@ -229,60 +260,60 @@ Relazione: Collega un Vehicle con un Provider. È collegato a una specifica Issu
 
 ### Admin ✅
 
-#### Controllers ✅
+#### Controllers
 
-- [x] admin/VehicleController (CRUD)
-- [x] admin/VehicleTypeController (CRUD)
-- [x] admin/ProviderController (CRUD)
-- [x] admin/IssueController (CRUD)
-- [x] admin/MaintenanceRecordController (CRUD)
-- [x] admin/DeadlineController (CRUD)
-- [x] admin/MileageLogController (CRUD)
-- [x] admin/EquipmentController (CRUD)
-- [x] admin/EquipmentTypeController (CRUD)
+- [x] Vehicle
+- [x] VehicleType
+- [x] Provider
+- [x] Issue
+- [x] MaintenanceRecord
+- [x] Deadline
+- [x] MileageLog
+- [x] Equipment
+- [x] EquipmentType
 
-#### Routes ✅
+#### Routes (web)
 
-- [x] admin/VehicleController route (web)
-- [x] admin/VehicleTypeController route (web)
-- [x] admin/ProviderController route (web)
-- [x] admin/IssueController route (web)
-- [x] admin/MaintenanceRecordController route (web)
-- [x] admin/DeadlineController route (web)
-- [x] admin/MileageLogController route (web)
-- [x] admin/EquipmentController route (web)
-- [x] admin/EquipmentTypeController route (web)
+- [x] Vehicle
+- [x] VehicleType
+- [x] Provider
+- [x] Issue
+- [x] MaintenanceRecord
+- [x] Deadline
+- [x] MileageLog
+- [x] Equipment
+- [x] EquipmentType
 
-#### Best Practices ✅
+#### Best practices
 
-- [x] Refactor validazioni CRUD in FormRequest (Store/Update) per Vehicle, VehicleType, Provider, Issue, MaintenanceRecord, Deadline
-- [x] Controller alleggeriti con uso di `$request->validated()`
-- [x] Normalizzazione targa e checkbox garanzia spostata in `prepareForValidation()` dei Request Vehicle
-- [x] Validazione business su MaintenanceRecord (appointment_date >= event_date del guasto) centralizzata nei Request
-- [x] Commenti aggiunti nelle sezioni di logica complessa (deadline automation, observer, filtri/prefill create)
+- [x] Validazioni CRUD in FormRequest
+- [x] Controller alleggeriti con `$request->validated()`
+- [x] Normalizzazione dati Vehicle in request
+- [x] Regole business MaintenanceRecord centralizzate nei request
+- [x] Commenti nelle aree con logica complessa
 
 ### API ⬜
 
-#### Controllers ⬜
+#### Controllers
 
-- [ ] api/VehicleController (R)
-- [ ] api/VehicleTypeController (R)
-- [ ] api/ProviderController (R)
-- [ ] api/IssueController (R)
-- [ ] api/MaintenanceRecordController (R)
-- [ ] api/DeadlineController (R)
-- [ ] api/MileageLogController (R)
-- [ ] api/EquipmentController (R)
-- [ ] api/EquipmentTypeController (R)
+- [ ] Vehicle
+- [ ] VehicleType
+- [ ] Provider
+- [ ] Issue
+- [ ] MaintenanceRecord
+- [ ] Deadline
+- [ ] MileageLog
+- [ ] Equipment
+- [ ] EquipmentType
 
-#### Routes ⬜
+#### Routes
 
-- [ ] api/VehicleController route (api)
-- [ ] api/VehicleTypeController route (api)
-- [ ] api/ProviderController route (api)
-- [ ] api/IssueController route (api)
-- [ ] api/MaintenanceRecordController route (api)
-- [ ] api/DeadlineController route (api)
-- [ ] api/MileageLogController route (api)
-- [ ] api/EquipmentController route (api)
-- [ ] api/EquipmentTypeController route (api)
+- [ ] Route API Vehicle
+- [ ] Route API VehicleType
+- [ ] Route API Provider
+- [ ] Route API Issue
+- [ ] Route API MaintenanceRecord
+- [ ] Route API Deadline
+- [ ] Route API MileageLog
+- [ ] Route API Equipment
+- [ ] Route API EquipmentType
