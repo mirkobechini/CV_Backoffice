@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
+use App\Models\EquipmentType;
 use App\Models\Vehicle;
 
 class EquipmentController extends Controller
@@ -15,7 +16,8 @@ class EquipmentController extends Controller
      */
     public function index()
     {
-        $equipments = Equipment::with('vehicle')->get();
+        $equipments = Equipment::with('vehicle', 'equipmentType')->get();
+        
         return view('admin.equipments.index', compact('equipments'));
     }
 
@@ -25,7 +27,8 @@ class EquipmentController extends Controller
     public function create()
     {
         $vehicles = Vehicle::all();
-        return view('admin.equipments.create', compact('vehicles'));
+        $equipmentTypes = EquipmentType::all();
+        return view('admin.equipments.create', compact('vehicles', 'equipmentTypes'));
     }
 
     /**
@@ -45,7 +48,7 @@ class EquipmentController extends Controller
      */
     public function show(Equipment $equipment)
     {
-        $equipment->load('vehicle');
+        $equipment->load('vehicle', 'equipmentType');
         return view('admin.equipments.show', compact('equipment'));
     }
 
@@ -55,7 +58,8 @@ class EquipmentController extends Controller
     public function edit(Equipment $equipment)
     {
         $vehicles = Vehicle::all();
-        return view('admin.equipments.edit', compact('equipment', 'vehicles'));
+        $equipmentTypes = EquipmentType::all();
+        return view('admin.equipments.edit', compact('equipment', 'vehicles', 'equipmentTypes'));
     }
 
     /**

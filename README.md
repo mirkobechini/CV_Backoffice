@@ -81,7 +81,6 @@ Questo documento descrive la struttura del database, le entità principali e le 
     name string Nome,
     first_inspection_months: intervallo per la prima revisione (es. 6 per estintori, 12 per barelle).
     regular_inspection_months: intervallo per le successive (es. 6 per estintori, 12 per barelle),
-    expiration_date string nullable Data scadenza.
     Relazione: Ogni attrezzatura ha un tipo assegnato.
 
 ## 🔗 Relazioni (Entity-Relationship)
@@ -127,19 +126,23 @@ Questo documento descrive la struttura del database, le entità principali e le 
 ### Database 🔄
 
 - [x] Vehicle model & migration
+- [x] VehicleType model & migration
 - [x] Provider model & migration
 - [x] Issue model & migration
 - [x] MaintenanceRecord model & migration
 - [x] Deadline model & migration
 - [x] MileageLog model & migration
 - [x] Equipment model & migration
+- [x] EquipmentType model & migration
 - [x] Vehicle seed
+- [x] VehicleType seed
 - [x] Provider seed
 - [x] Issue seed
 - [] MaintenanceRecord seed
 - [] Deadline seed
 - [] MileageLog seed
 - [] Equipment seed
+- [] EquipmentType seed
 
 ### UI ⏳
 
@@ -154,40 +157,28 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] index
 - [x] show
 - [x] create
-- [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 
 #### VehicleType ✅
 
 - [x] index
 - [x] show
 - [x] create
-- [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 
 #### Provider ✅
 
 - [x] index
 - [x] show
 - [x] create
-- [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 
 #### Issue ✅
 
 - [x] index
 - [x] show
 - [x] create
-- [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 - [x] show: pulsante per prendere appuntamento manutenzione dal guasto
 - [x] validazione: errore se appointment_date < event_date del guasto
 
@@ -195,31 +186,22 @@ Questo documento descrive la struttura del database, le entità principali e le 
 
 - [x] index
 - [x] show
-- [x] create
 - [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 
 #### Deadline ✅
 
 - [x] index
 - [x] show
 - [x] create
-- [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 
 #### MileageLog 🔄
 
 - [x] index
 - [x] show
 - [x] create
-- [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 - [] report: storico chilometri per singolo mezzo (timeline ordinata per data)
 - [] report: ultimo chilometraggio registrato per ogni mese (per singolo mezzo)
 - [] report: filtro per mezzo + range mese/anno
@@ -229,24 +211,18 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] index
 - [x] show
 - [x] create
-- [x] store
 - [x] edit
-- [x] update
-- [x] destroy
 
-#### EquipmentType 🔄
+#### EquipmentType ✅
 
-- [] index
-- [] show
-- [] create
-- [] store
-- [] edit
-- [] update
-- [] destroy
+- [x] index
+- [x] show
+- [x] create
+- [x] edit
 
-### Admin 🔄
+### Admin ✅
 
-#### Controllers 🔄
+#### Controllers ✅
 
 - [x] admin/VehicleController (CRUD)
 - [x] admin/VehicleTypeController (CRUD)
@@ -256,9 +232,9 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/DeadlineController (CRUD)
 - [x] admin/MileageLogController (CRUD)
 - [x] admin/EquipmentController (CRUD)
-- [] admin/EquipmentTypeController (CRUD)
+- [x] admin/EquipmentTypeController (CRUD)
 
-#### Routes 🔄
+#### Routes ✅
 
 - [x] admin/VehicleController route (web)
 - [x] admin/VehicleTypeController route (web)
@@ -268,7 +244,7 @@ Questo documento descrive la struttura del database, le entità principali e le 
 - [x] admin/DeadlineController route (web)
 - [x] admin/MileageLogController route (web)
 - [x] admin/EquipmentController route (web)
-- [] admin/EquipmentTypeController route (web)
+- [x] admin/EquipmentTypeController route (web)
 
 
 #### Best Practices ✅

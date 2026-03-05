@@ -32,6 +32,21 @@
                             @enderror
                         </div>
                         <div class="mb-3">
+                            <label for="equipmenttype_id" class="form-label">Tipo di attrezzatura</label>
+                            <select class="form-select @error('equipmenttype_id') is-invalid @enderror" id="equipmenttype_id"
+                                name="equipmenttype_id" required>
+                                <option value="">Seleziona un tipo di attrezzatura</option>
+                                @foreach ($equipmentTypes as $type)
+                                    <option value="{{ $type->id }}" {{ old('equipmenttype_id') == $type->id ? 'selected' : '' }}>
+                                        {{ $type->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('equipmenttype_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
                             <label for="revision_date" class="form-label">Data revisione</label>
                             <input type="date" class="form-control @error('revision_date') is-invalid @enderror"
                                 id="revision_date" name="revision_date" value="{{ old('revision_date') }}" >

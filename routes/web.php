@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VehicleTypeController;
 use App\Http\Controllers\Admin\MileageLogController;
+use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -34,12 +35,14 @@ Route::middleware(['auth', 'verified'])
         Route::resource("equipments", EquipmentController::class);
         Route::resource("mileagelogs", MileageLogController::class)
             ->parameters(['mileagelogs' => 'mileageLog']);
-        Route::patch('maintenancerecords/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
-            ->name('maintenancerecords.complete');
         Route::resource("maintenancerecords", MaintenanceRecordController::class)
             ->parameters(['maintenancerecords' => 'maintenanceRecord']);
         Route::resource("vehicletypes", VehicleTypeController::class)
             ->parameters(['vehicletypes' => 'vehicleType']);
+        Route::resource("equipmenttypes", EquipmentTypeController::class)
+            ->parameters(['equipmenttypes' => 'equipmentType']);
+        Route::patch('maintenancerecords/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
+            ->name('maintenancerecords.complete');
     });
 
 
