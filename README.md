@@ -1,4 +1,5 @@
 # 🚑 CV Backoffice - Gestione Parco Mezzi
+![Anteprima Tabella Veicoli](vehicle-preview.png)
 
 Applicazione Laravel per la gestione di mezzi, guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo.
 
@@ -12,12 +13,24 @@ Il progetto copre:
 - gestione chilometraggi
 - gestione attrezzature e tipologie attrezzature
 
+## Funzionalità Principali
+
+- Monitoraggio Scadenze: Sistema automatico per Revisioni, Assicurazioni e controlli Ossigeno.
+- Lifecycle Manutenzioni: Flusso completo dalla segnalazione del guasto alla prenotazione dell'intervento fino alla chiusura.
+- Gestione Dotazioni: Inventario dinamico delle attrezzature di bordo con scadenze indipendenti.
+- Log Chilometrico: Storico delle letture per monitoraggio usura e tagliandi.
+
 ## Stack
 
 - Laravel (Breeze)
 - PHP + Eloquent ORM
 - Blade
 - MySQL/MariaDB (supportato anche SQLite per sviluppo)
+
+## 🛠️ Approccio Tecnico
+- Clean Code: Utilizzo di FormRequests per separare la logica di validazione dai Controller.
+- Mass Assignment: Protezione dei dati tramite proprietà $fillable nei Model.
+- UX/UI: Interfaccia costruita con Blade e Bootstrap (tramite Breeze) per una gestione fluida lato admin.
 
 ## Avvio rapido
 
