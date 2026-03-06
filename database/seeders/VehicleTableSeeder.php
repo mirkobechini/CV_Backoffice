@@ -15,7 +15,7 @@ class VehicleTableSeeder extends Seeder
     {
         $vehicles = [
             [
-                'license_plate' => 'GP365YL',
+                'license_plate' => 'GT368ZL',
                 'internal_code' => '1726',
                 'brand' => 'Fiat',
                 'model' => 'Ducato',
@@ -28,7 +28,7 @@ class VehicleTableSeeder extends Seeder
                 'warranty_extension_duration' => null,
             ],
             [
-                'license_plate' => 'GP366YL',
+                'license_plate' => 'GT668ZP',
                 'internal_code' => '1727',
                 'brand' => 'Fiat',
                 'model' => 'Ducato',
@@ -41,7 +41,7 @@ class VehicleTableSeeder extends Seeder
                 'warranty_extension_duration' => null,
             ],
             [
-                'license_plate' => 'GF297MR',
+                'license_plate' => 'GU368MM',
                 'internal_code' => '1744',
                 'brand' => 'Ford',
                 'model' => 'Transit',
@@ -54,7 +54,7 @@ class VehicleTableSeeder extends Seeder
                 'warranty_extension_duration' => null,
             ],
             [
-                'license_plate' => 'GN806AD',
+                'license_plate' => 'GT558RE',
                 'internal_code' => '1745',
                 'brand' => 'Ford',
                 'model' => 'Transit custom',
@@ -67,7 +67,7 @@ class VehicleTableSeeder extends Seeder
                 'warranty_extension_duration' => null,
             ],
             [
-                'license_plate' => 'GD393CN',
+                'license_plate' => 'AA009DD',
                 'internal_code' => '1746',
                 'brand' => 'Fiat',
                 'model' => 'Panda',
@@ -80,7 +80,7 @@ class VehicleTableSeeder extends Seeder
                 'warranty_extension_duration' => null,
             ],
             [
-                'license_plate' => 'GL620YA',
+                'license_plate' => 'RR446TR',
                 'internal_code' => '1747',
                 'brand' => 'Fiat',
                 'model' => 'Doblo XL',
@@ -93,7 +93,7 @@ class VehicleTableSeeder extends Seeder
                 'warranty_extension_duration' => null,
             ],
             [
-                'license_plate' => 'FB753LG',
+                'license_plate' => 'XX888VV',
                 'internal_code' => '1748',
                 'brand' => 'Fiat',
                 'model' => 'Doblo',
@@ -106,7 +106,7 @@ class VehicleTableSeeder extends Seeder
                 'warranty_extension_duration' => null,
             ],
             [
-                'license_plate' => 'GK034AW',
+                'license_plate' => 'TT654FR',
                 'internal_code' => '1749',
                 'brand' => 'Dacia',
                 'model' => 'Sandero',
