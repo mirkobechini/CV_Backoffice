@@ -11,14 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('maintenancerecords', function (Blueprint $table) {
+        Schema::create('maintenance_records', function (Blueprint $table) {
             $table->id();
             $table->foreignId('vehicle_id')->constrained()->cascadeOnDelete();
             $table->foreignId('provider_id')->constrained()->cascadeOnDelete();
             $table->foreignId('issue_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('deadline_id')->nullable()->unique()->constrained()->nullOnDelete();
             $table->date('appointment_date');
             $table->date('return_date')->nullable();
-            $table->string('activity_type');
+            $table->string('activity_type')->nullable();
             $table->index(['vehicle_id', 'provider_id']);
             $table->index(['issue_id', 'appointment_date']);
             $table->timestamps();
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('maintenancerecords');
+        Schema::dropIfExists('maintenance_records');
     }
 };
