@@ -3,7 +3,7 @@
     <x-admin.index-table title="Tipi di attrezzature"
         tableClass="table table-striped table-hover my-0 align-middle text-center">
         <x-slot:headingActions>
-            <x-admin.create-button :href="route('admin.equipmenttypes.create')" label="tipo di attrezzatura" />
+            <x-admin.create-button :href="route('admin.equipment-types.create')" label="tipo di attrezzatura" />
         </x-slot:headingActions>
 
         <x-slot:head>
@@ -19,7 +19,7 @@
                     <td>{{ $equipmentType->name ?? 'N/A' }}</td>
                     <td>{{ $equipmentType->first_inspection_months ? $equipmentType->first_inspection_months . ' mesi' : 'N/A' }}</td>
                     <td>{{ $equipmentType->regular_inspection_months ? $equipmentType->regular_inspection_months . ' mesi' : 'N/A' }}</td>
-                    <x-admin.row-actions :showUrl="route('admin.equipmenttypes.show', $equipmentType->id)" :editUrl="route('admin.equipmenttypes.edit', $equipmentType->id)" :deleteTarget="'#confirmDeleteModal-' . $equipmentType->id" :label="'tipo di attrezzatura ' . $equipmentType->id" />
+                    <x-admin.row-actions :showUrl="route('admin.equipment-types.show', $equipmentType->id)" :editUrl="route('admin.equipment-types.edit', $equipmentType->id)" :deleteTarget="'#confirmDeleteModal-' . $equipmentType->id" :label="'tipo di attrezzatura ' . $equipmentType->id" />
                 </tr>
                 <x-admin.delete-modal type="equipmentType" :object="$equipmentType" />
             @endforeach

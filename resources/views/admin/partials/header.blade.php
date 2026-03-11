@@ -18,7 +18,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link"
-                            href="{{ route('admin.vehicletypes.index') }}">{{ __('Tipi di veicoli') }}</a>
+                            href="{{ route('admin.vehicle-types.index') }}">{{ __('Tipi di veicoli') }}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.vehicles.index') }}">{{ __('Veicoli') }}</a>
@@ -32,19 +32,19 @@
                     
                     <li class="nav-item">
                         <a class="nav-link"
-                            href="{{ route('admin.maintenancerecords.index') }}">{{ __('Appuntamenti') }}</a>
+                            href="{{ route('admin.maintenance-records.index') }}">{{ __('Appuntamenti') }}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.deadlines.index') }}">{{ __('Scadenze') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.mileagelogs.index') }}">{{ __('Chilometraggi') }}</a>
+                        <a class="nav-link" href="{{ route('admin.mileage-logs.index') }}">{{ __('Chilometraggi') }}</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.equipments.index') }}">{{ __('Attrezzature') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.equipmenttypes.index') }}">{{ __('Tipi di Attrezzature') }}</a>
+                        <a class="nav-link" href="{{ route('admin.equipment-types.index') }}">{{ __('Tipi di Attrezzature') }}</a>
                     </li>
                 </ul>
 

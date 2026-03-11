@@ -3,14 +3,14 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ request('back', route('admin.mileagelogs.index')) }}" class="btn btn-secondary">Torna alla pagina
+                <a href="{{ request('back', route('admin.mileage-logs.index')) }}" class="btn btn-secondary">Torna alla pagina
                     precedente</a>
             </div>
         </div>
         <h1 class="mb-4">Aggiungi nuovo registro chilometri</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form id="mileage-log-form" method="POST" action="{{ route('admin.mileagelogs.store') }}"
+                <form id="mileage-log-form" method="POST" action="{{ route('admin.mileage-logs.store') }}"
                     enctype="multipart/form-data" data-single-submit="true">
                     @csrf
                     <section class="mb-3 row">

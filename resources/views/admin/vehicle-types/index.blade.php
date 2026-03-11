@@ -2,7 +2,7 @@
 @section('content')
     <x-admin.index-table title="Tipi di veicoli" tableClass="table table-striped table-hover my-0 align-middle text-center">
         <x-slot:headingActions>
-            <x-admin.create-button :href="route('admin.vehicletypes.create')" label="tipo di veicolo" />
+            <x-admin.create-button :href="route('admin.vehicle-types.create')" label="tipo di veicolo" />
         </x-slot:headingActions>
 
         <x-slot:head>
@@ -16,7 +16,7 @@
                 <tr>
                     <td>{{ $vehicleType->name }}</td>
                     <td>{{ $vehicleType->extinguishers_required }}</td>
-                    <x-admin.row-actions :showUrl="route('admin.vehicletypes.show', $vehicleType->id)" :editUrl="route('admin.vehicletypes.edit', $vehicleType->id)" :deleteTarget="'#confirmDeleteModal-' . $vehicleType->id" :label="'tipo di veicolo ' . $vehicleType->name" />
+                    <x-admin.row-actions :showUrl="route('admin.vehicle-types.show', $vehicleType->id)" :editUrl="route('admin.vehicle-types.edit', $vehicleType->id)" :deleteTarget="'#confirmDeleteModal-' . $vehicleType->id" :label="'tipo di veicolo ' . $vehicleType->name" />
                 </tr>
                 <x-admin.delete-modal type="vehicleType" :object="$vehicleType" />
             @endforeach

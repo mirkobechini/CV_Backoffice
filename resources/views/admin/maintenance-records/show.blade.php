@@ -3,7 +3,7 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ request('back', route('admin.maintenancerecords.index')) }}" class="btn btn-secondary">Torna alla
+                <a href="{{ request('back', route('admin.maintenance-records.index')) }}" class="btn btn-secondary">Torna alla
                     pagina precedente</a>
             </div>
         </div>
@@ -30,7 +30,7 @@
                     <x-admin.complete-maintenance-modal :maintenanceRecord="$maintenanceRecord" />
                 @endif
                 @if ($maintenanceRecord?->getKey())
-                    <a href="{{ route('admin.maintenancerecords.edit', ['maintenanceRecord' => $maintenanceRecord->getKey(), 'back' => url()->full()]) }}"
+                    <a href="{{ route('admin.maintenance-records.edit', ['maintenanceRecord' => $maintenanceRecord->getKey(), 'back' => url()->full()]) }}"
                         class="btn btn-primary">Modifica</a>
                 @endif
                 <button type="button" class="btn btn-danger" data-bs-toggle="modal"

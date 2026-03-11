@@ -16,7 +16,7 @@ class EquipmentTypeController extends Controller
     public function index()
     {
         $equipmentTypes = EquipmentType::all();
-        return view('admin.equipmenttypes.index', compact('equipmentTypes'));
+        return view('admin.equipment-types.index', compact('equipmentTypes'));
     }
 
     /**
@@ -24,7 +24,7 @@ class EquipmentTypeController extends Controller
      */
     public function create()
     {
-        return view('admin.equipmenttypes.create');
+        return view('admin.equipment-types.create');
     }
 
     /**
@@ -36,7 +36,7 @@ class EquipmentTypeController extends Controller
 
         EquipmentType::create($validatedData);
 
-        return redirect()->route('admin.equipmenttypes.index')->with('status', 'Tipo di attrezzatura creato con successo.');
+        return redirect()->route('admin.equipment-types.index')->with('status', 'Tipo di attrezzatura creato con successo.');
     }
 
     /**
@@ -45,7 +45,7 @@ class EquipmentTypeController extends Controller
     public function show(EquipmentType $equipmentType)
     {
         $equipmentType->load('equipments');
-        return view('admin.equipmenttypes.show', compact('equipmentType'));
+        return view('admin.equipment-types.show', compact('equipmentType'));
     }
 
     /**
@@ -53,7 +53,7 @@ class EquipmentTypeController extends Controller
      */
     public function edit(EquipmentType $equipmentType)
     {
-        return view('admin.equipmenttypes.edit', compact('equipmentType'));
+        return view('admin.equipment-types.edit', compact('equipmentType'));
     }
 
     /**
@@ -65,7 +65,7 @@ class EquipmentTypeController extends Controller
 
         $equipmentType->update($validatedData);
 
-        return redirect()->route('admin.equipmenttypes.show', $equipmentType)->with('status', 'Tipo di attrezzatura aggiornato con successo.');
+        return redirect()->route('admin.equipment-types.show', $equipmentType)->with('status', 'Tipo di attrezzatura aggiornato con successo.');
     }
 
     /**
@@ -74,6 +74,6 @@ class EquipmentTypeController extends Controller
     public function destroy(EquipmentType $equipmentType)
     {
         $equipmentType->delete();
-        return redirect()->route('admin.equipmenttypes.index')->with('status', 'Tipo di attrezzatura eliminato con successo.');
+        return redirect()->route('admin.equipment-types.index')->with('status', 'Tipo di attrezzatura eliminato con successo.');
     }
 }

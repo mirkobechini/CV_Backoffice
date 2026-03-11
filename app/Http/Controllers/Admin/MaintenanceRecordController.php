@@ -62,7 +62,7 @@ class MaintenanceRecordController extends Controller
             });
         }
 
-        return view('admin.maintenancerecords.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords'));
+        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords'));
     }
 
     /**
@@ -111,7 +111,7 @@ class MaintenanceRecordController extends Controller
 
         // La view usa old(..., $preselected...) così old() ha priorità
         // dopo un errore validazione, altrimenti usa le preselezioni.
-        return view('admin.maintenancerecords.create', compact('vehicles', 'providers', 'openIssues', 'preselectedIssueId', 'preselectedVehicleId'));
+        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'preselectedIssueId', 'preselectedVehicleId'));
     }
 
     /**
@@ -156,7 +156,7 @@ class MaintenanceRecordController extends Controller
 
         if ($duplicateRecord) {
             return redirect()
-                ->route('admin.maintenancerecords.show', $duplicateRecord->id)
+                ->route('admin.maintenance-records.show', $duplicateRecord->id)
                 ->with('status', 'Intervento già registrato: creazione duplicata bloccata.');
         }
 
@@ -169,7 +169,7 @@ class MaintenanceRecordController extends Controller
             'activity_type' => $data['activity_type'] ?? null,
         ]);
 
-        return redirect()->route('admin.maintenancerecords.show', $newRecord->id)->with('status', 'Intervento aggiunto con successo.');
+        return redirect()->route('admin.maintenance-records.show', $newRecord->id)->with('status', 'Intervento aggiunto con successo.');
     }
 
     /**
@@ -178,7 +178,7 @@ class MaintenanceRecordController extends Controller
     public function show(MaintenanceRecord $maintenanceRecord)
     {
         $maintenanceRecord->load(['vehicle', 'provider', 'issue']);
-        return view('admin.maintenancerecords.show', compact('maintenanceRecord'));
+        return view('admin.maintenance-records.show', compact('maintenanceRecord'));
     }
 
     /**
@@ -195,7 +195,7 @@ class MaintenanceRecordController extends Controller
             ->orWhere('id', $maintenanceRecord->issue_id)
             ->get(['id', 'vehicle_id', 'description', 'status']);
 
-        return view('admin.maintenancerecords.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues'));
+        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues'));
     }
     /**
      * Update the specified resource in storage.
@@ -233,7 +233,7 @@ class MaintenanceRecordController extends Controller
             }
         }
 
-        return redirect()->route('admin.maintenancerecords.show', $maintenanceRecord->id)->with('status', 'Intervento aggiornato con successo.');
+        return redirect()->route('admin.maintenance-records.show', $maintenanceRecord->id)->with('status', 'Intervento aggiornato con successo.');
     }
     /**
      * Remove the specified resource from storage.
@@ -241,7 +241,7 @@ class MaintenanceRecordController extends Controller
     public function destroy(MaintenanceRecord $maintenanceRecord)
     {
         $maintenanceRecord->delete();
-        return redirect()->route('admin.maintenancerecords.index')->with('status', 'Intervento eliminato con successo.');
+        return redirect()->route('admin.maintenance-records.index')->with('status', 'Intervento eliminato con successo.');
     }
 
     // --- CUSTOM METHOD ---
@@ -312,7 +312,7 @@ class MaintenanceRecordController extends Controller
         });
 
         return redirect()
-            ->route('admin.maintenancerecords.show', $maintenanceRecord->id)
+            ->route('admin.maintenance-records.show', $maintenanceRecord->id)
             ->with('status', 'Intervento completato con successo.');
     }
 }

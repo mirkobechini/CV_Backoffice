@@ -20,7 +20,7 @@ class MileageLogController extends Controller
             ->orderByDesc('log_date')
             ->get();
 
-        return view('admin.mileagelogs.index', compact('mileageLogs'));
+        return view('admin.mileage-logs.index', compact('mileageLogs'));
     }
 
     /**
@@ -29,7 +29,7 @@ class MileageLogController extends Controller
     public function create()
     {
         $vehicles = Vehicle::all();
-        return view('admin.mileagelogs.create', compact('vehicles'));
+        return view('admin.mileage-logs.create', compact('vehicles'));
     }
 
     /**
@@ -38,7 +38,7 @@ class MileageLogController extends Controller
     public function store(StoreMileageLogRequest $request)
     {
         MileageLog::create($request->validated());
-        return redirect()->route('admin.mileagelogs.index')->with('status', 'Chilometraggio creato con successo.');
+        return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio creato con successo.');
     }
 
     /**
@@ -47,7 +47,7 @@ class MileageLogController extends Controller
     public function show(MileageLog $mileageLog)
     {
         $mileageLog->load('vehicle');
-        return view('admin.mileagelogs.show', compact('mileageLog'));
+        return view('admin.mileage-logs.show', compact('mileageLog'));
     }
 
     /**
@@ -56,7 +56,7 @@ class MileageLogController extends Controller
     public function edit(MileageLog $mileageLog)
     {
         $vehicles = Vehicle::all();
-        return view('admin.mileagelogs.edit', compact('mileageLog', 'vehicles'));
+        return view('admin.mileage-logs.edit', compact('mileageLog', 'vehicles'));
     }
 
     /**
@@ -65,7 +65,7 @@ class MileageLogController extends Controller
     public function update(UpdateMileageLogRequest $request, MileageLog $mileageLog)
     {
         $mileageLog->update($request->validated());
-        return redirect()->route('admin.mileagelogs.index')->with('status', 'Chilometraggio aggiornato con successo.');
+        return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio aggiornato con successo.');
     }
 
     /**
@@ -74,6 +74,6 @@ class MileageLogController extends Controller
     public function destroy(MileageLog $mileageLog)
     {
         $mileageLog->delete();
-        return redirect()->route('admin.mileagelogs.index')->with('status', 'Chilometraggio eliminato con successo.');
+        return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio eliminato con successo.');
     }
 }

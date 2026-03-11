@@ -44,7 +44,7 @@
                                 {{ $record->issue?->description ?? ($record->activity_type ?? 'N/A') }}
                                 ({{ $record->appointment_date_formatted ?? 'N/A' }})
                             </p>
-                            <a href="{{ route('admin.maintenancerecords.show', ['maintenanceRecord' => $record->id, 'back' => url()->full()]) }}"
+                            <a href="{{ route('admin.maintenance-records.show', ['maintenanceRecord' => $record->id, 'back' => url()->full()]) }}"
                                 class="btn btn-sm btn-primary rounded-pill "><i class="bi bi-eye"></i></a>
                         </li>
                     @endforeach

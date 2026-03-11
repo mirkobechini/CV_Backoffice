@@ -14,7 +14,7 @@
                 $query['group_by'] = $field;
             }
 
-            return route('admin.maintenancerecords.index', $query);
+            return route('admin.maintenance-records.index', $query);
         };
 
         $sortToggleUrl = function (string $field) use ($sortBy, $sortDir) {
@@ -24,7 +24,7 @@
             $query['sort_by'] = $field;
             $query['sort_dir'] = $nextDirection;
 
-            return route('admin.maintenancerecords.index', $query);
+            return route('admin.maintenance-records.index', $query);
         };
 
         $sortIcon = function (string $field) use ($sortBy, $sortDir) {
@@ -38,7 +38,7 @@
 
     <x-admin.index-table title="Manutenzioni">
         <x-slot:headingActions>
-            <x-admin.create-button :href="route('admin.maintenancerecords.create')" label="manutenzione" />
+            <x-admin.create-button :href="route('admin.maintenance-records.create')" label="manutenzione" />
         </x-slot:headingActions>
 
         <x-slot:head>
@@ -98,7 +98,7 @@
                         <td>{{ $record->vehicle->internal_code }}</td>
                         <td>{{ $record->issue?->description ?? ($record->activity_type ?? 'N/A') }}</td>
                         <td>{{ $record->appointment_date_formatted ?? 'N/A' }}</td>
-                        <x-admin.row-actions :showUrl="route('admin.maintenancerecords.show', $record->id)" :editUrl="route('admin.maintenancerecords.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' .
+                        <x-admin.row-actions :showUrl="route('admin.maintenance-records.show', $record->id)" :editUrl="route('admin.maintenance-records.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' .
                             ($record->issue?->description ?? ($record->activity_type ?? $record->id))" />
                     </tr>
                     <x-admin.delete-modal type="maintenanceRecord" :object="$record" />

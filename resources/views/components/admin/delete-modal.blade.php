@@ -6,12 +6,12 @@
         'vehicle' => ['label' => 'veicolo', 'route' => 'admin.vehicles.destroy', 'parameter' => 'vehicle'],
         'provider' => ['label' => 'officina', 'route' => 'admin.providers.destroy', 'parameter' => 'provider'],
         'issue' => ['label' => 'guasto', 'route' => 'admin.issues.destroy', 'parameter' => 'issue'],
-        'maintenancerecord' => ['label' => 'manutenzione', 'route' => 'admin.maintenancerecords.destroy', 'parameter' => 'maintenanceRecord'],
-        'vehicletype' => ['label' => 'tipo veicolo', 'route' => 'admin.vehicletypes.destroy', 'parameter' => 'vehicleType'],
-        'equipmenttype' => ['label' => 'tipo di attrezzatura', 'route' => 'admin.equipmenttypes.destroy', 'parameter' => 'equipmentType'],
+        'maintenancerecord' => ['label' => 'manutenzione', 'route' => 'admin.maintenance-records.destroy', 'parameter' => 'maintenanceRecord'],
+        'vehicletype' => ['label' => 'tipo veicolo', 'route' => 'admin.vehicle-types.destroy', 'parameter' => 'vehicleType'],
+        'equipmenttype' => ['label' => 'tipo di attrezzatura', 'route' => 'admin.equipment-types.destroy', 'parameter' => 'equipmentType'],
         'equipment' => ['label' => 'attrezzatura', 'route' => 'admin.equipments.destroy', 'parameter' => 'equipment'],
         'deadline' => ['label' => 'scadenza', 'route' => 'admin.deadlines.destroy', 'parameter' => 'deadline'],
-        'mileagelog' => ['label' => 'registro chilometrico', 'route' => 'admin.mileagelogs.destroy', 'parameter' => 'mileageLog'],
+        'mileagelog' => ['label' => 'registro chilometrico', 'route' => 'admin.mileage-logs.destroy', 'parameter' => 'mileageLog'],
     ];
 
     $config = $resourceConfig[$normalizedType] ?? [

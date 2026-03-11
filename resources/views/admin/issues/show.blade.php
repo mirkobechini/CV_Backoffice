@@ -15,7 +15,7 @@
                         <h1>{{ $issue->description }}</h1>
                         @if ($issue->status != 'closed')
                             <a class="btn btn-primary"
-                                href="{{ route('admin.maintenancerecords.create', ['issue_id' => $issue->id, 'vehicle_id' => $issue->vehicle_id, 'back' => url()->full()]) }}">Prenota
+                                href="{{ route('admin.maintenance-records.create', ['issue_id' => $issue->id, 'vehicle_id' => $issue->vehicle_id, 'back' => url()->full()]) }}">Prenota
                                 appuntamento</a>
                         @endif
                     </div>

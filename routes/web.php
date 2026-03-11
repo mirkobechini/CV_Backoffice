@@ -33,16 +33,16 @@ Route::middleware(['auth', 'verified'])
         Route::resource("issues", IssueController::class);
         Route::resource("deadlines", DeadlineController::class);
         Route::resource("equipments", EquipmentController::class);
-        Route::resource("mileagelogs", MileageLogController::class)
-            ->parameters(['mileagelogs' => 'mileageLog']);
-        Route::resource("maintenancerecords", MaintenanceRecordController::class)
-            ->parameters(['maintenancerecords' => 'maintenanceRecord']);
-        Route::resource("vehicletypes", VehicleTypeController::class)
-            ->parameters(['vehicletypes' => 'vehicleType']);
-        Route::resource("equipmenttypes", EquipmentTypeController::class)
-            ->parameters(['equipmenttypes' => 'equipmentType']);
-        Route::patch('maintenancerecords/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
-            ->name('maintenancerecords.complete');
+        Route::resource("mileage-logs", MileageLogController::class)
+            ->parameters(['mileage-logs' => 'mileageLog']);
+        Route::resource("maintenance-records", MaintenanceRecordController::class)
+            ->parameters(['maintenance-records' => 'maintenanceRecord']);
+        Route::resource("vehicle-types", VehicleTypeController::class)
+            ->parameters(['vehicle-types' => 'vehicleType']);
+        Route::resource("equipment-types", EquipmentTypeController::class)
+            ->parameters(['equipment-types' => 'equipmentType']);
+        Route::patch('maintenance-records/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
+            ->name('maintenance-records.complete');
     });
 
 

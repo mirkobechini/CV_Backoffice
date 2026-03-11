@@ -3,14 +3,14 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ request('back', route('admin.equipmenttypes.index')) }}" class="btn btn-secondary">Torna alla pagina
+                <a href="{{ request('back', route('admin.equipment-types.index')) }}" class="btn btn-secondary">Torna alla pagina
                     precedente</a>
             </div>
         </div>
         <h1 class="mb-4">Modifica tipologia di attrezzatura</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form id="equipmenttype-form" method="POST" action="{{ route('admin.equipmenttypes.update', $equipmentType->id) }}"
+                <form id="equipmenttype-form" method="POST" action="{{ route('admin.equipment-types.update', $equipmentType->id) }}"
                     enctype="multipart/form-data" data-single-submit="true">
                     @csrf
                     @method('PUT')

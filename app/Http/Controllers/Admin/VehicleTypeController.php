@@ -16,7 +16,7 @@ class VehicleTypeController extends Controller
     public function index()
     {
         $vehicleTypes = VehicleType::all();
-        return view('admin.vehicletypes.index', compact('vehicleTypes'));
+        return view('admin.vehicle-types.index', compact('vehicleTypes'));
     }
 
     /**
@@ -24,7 +24,7 @@ class VehicleTypeController extends Controller
      */
     public function create()
     {
-        return view('admin.vehicletypes.create');
+        return view('admin.vehicle-types.create');
     }
 
     /**
@@ -47,7 +47,7 @@ class VehicleTypeController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.vehicletypes.index')
+            ->route('admin.vehicle-types.index')
             ->with('status', 'Tipo di veicolo creato con successo.');
     }
 
@@ -56,7 +56,7 @@ class VehicleTypeController extends Controller
      */
     public function show(VehicleType $vehicleType)
     {
-        return view('admin.vehicletypes.show', compact('vehicleType'));
+        return view('admin.vehicle-types.show', compact('vehicleType'));
     }
 
     /**
@@ -64,7 +64,7 @@ class VehicleTypeController extends Controller
      */
     public function edit(VehicleType $vehicleType)
     {
-        return view('admin.vehicletypes.edit', compact('vehicleType'));
+        return view('admin.vehicle-types.edit', compact('vehicleType'));
     }
 
     /**
@@ -86,7 +86,7 @@ class VehicleTypeController extends Controller
         ]);
 
         return redirect()
-            ->route('admin.vehicletypes.show', $vehicleType->id)
+            ->route('admin.vehicle-types.show', $vehicleType->id)
             ->with('status', 'Tipo di veicolo aggiornato con successo.');
     }
 
@@ -98,7 +98,7 @@ class VehicleTypeController extends Controller
         $vehicleType->delete();
 
         return redirect()
-            ->route('admin.vehicletypes.index')
+            ->route('admin.vehicle-types.index')
             ->with('status', 'Tipo di veicolo eliminato con successo.');
     }
 }

@@ -15,7 +15,7 @@
         aria-labelledby="completeMaintenanceModalLabel-{{ $modalIdSuffix }}" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                <form action="{{ route('admin.maintenancerecords.complete', $routeParameterValue) }}" method="POST">
+                <form action="{{ route('admin.maintenance-records.complete', $routeParameterValue) }}" method="POST">
                     @csrf
                     @method('PATCH')
 

@@ -3,7 +3,7 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ request('back', route('admin.vehicletypes.index')) }}" class="btn btn-secondary">Torna alla pagina
+                <a href="{{ request('back', route('admin.vehicle-types.index')) }}" class="btn btn-secondary">Torna alla pagina
                     precedente</a>
             </div>
         </div>
@@ -35,7 +35,7 @@
             </div>
         </div>
         <div class="col-12">
-            <a href="{{ route('admin.vehicletypes.edit', ['vehicleType' => $vehicleType->id, 'back' => url()->full()]) }}"
+            <a href="{{ route('admin.vehicle-types.edit', ['vehicleType' => $vehicleType->id, 'back' => url()->full()]) }}"
                 class="btn btn-primary">Modifica</a>
             <button type="button" class="btn btn-danger" data-bs-toggle="modal"
                 data-bs-target="#confirmDeleteModal-{{ $vehicleType->id }}">

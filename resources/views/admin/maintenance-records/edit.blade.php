@@ -3,16 +3,18 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ request('back', route('admin.maintenancerecords.index')) }}" class="btn btn-secondary">Torna alla
+                <a href="{{ request('back', route('admin.maintenance-records.index')) }}" class="btn btn-secondary">Torna alla
                     pagina precedente</a>
             </div>
         </div>
-        <h1 class="mb-4">Aggiungi nuovo appuntamento</h1>
+        <h1 class="mb-4">Modifica appuntamento</h1>
         <div class="card my-0">
             <div class="card-body">
-                <form id="maintenance-record-form" method="POST" action="{{ route('admin.maintenancerecords.store') }}"
+                <form id="maintenance-record-form" method="POST"
+                    action="{{ route('admin.maintenance-records.update', $maintenanceRecord->id) }}"
                     enctype="multipart/form-data" data-single-submit="true">
                     @csrf
+                    @method('PUT')
                     <section class="mb-3 row">
                         <h2>Dettagli veicolo</h2>
                         <div class="mb-3">
@@ -22,7 +24,7 @@
                                 <option value="">Seleziona un veicolo</option>
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
-                                        {{ (string) old('vehicle_id', $preselectedVehicleId ?? '') === (string) $vehicle->id ? 'selected' : '' }}>
+                                        {{ old('vehicle_id', $maintenanceRecord->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
                                         {{ $vehicle->internal_code }}</option>
                                 @endforeach
                             </select>
@@ -37,7 +39,7 @@
                                 <option value="">Seleziona un guasto</option>
                                 @foreach ($openIssues as $issue)
                                     <option value="{{ $issue->id }}" data-vehicle-id="{{ $issue->vehicle_id }}"
-                                        {{ (string) old('issue_id', $preselectedIssueId ?? '') === (string) $issue->id ? 'selected' : '' }}>
+                                        {{ old('issue_id', $maintenanceRecord->issue_id) == $issue->id ? 'selected' : '' }}>
                                         {{ $issue->description }}</option>
                                 @endforeach
                             </select>
@@ -48,7 +50,7 @@
 
                         <div class="mb-3" id="no-issue-cta" style="display: none;">
                             <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
-                                <span>Nessun guasto disponibile per il veicolo selezionato.</span>
+                                <span>Nessun guasto aperto per il veicolo selezionato.</span>
                                 <a id="create-issue-link" class="btn btn-sm btn-primary"
                                     href="{{ route('admin.issues.create', ['back' => url()->full()]) }}">
                                     Crea guasto
@@ -65,7 +67,7 @@
                                 <option value="">Seleziona un'officina</option>
                                 @foreach ($providers as $provider)
                                     <option value="{{ $provider->id }}"
-                                        {{ old('provider_id') == $provider->id ? 'selected' : '' }}>
+                                        {{ old('provider_id', $maintenanceRecord->provider_id) == $provider->id ? 'selected' : '' }}>
                                         {{ $provider->name }}</option>
                                 @endforeach
                             </select>
@@ -79,7 +81,8 @@
                         <div class="mb-3">
                             <label for="appointment_date" class="form-label">Data Appuntamento</label>
                             <input type="date" class="form-control @error('appointment_date') is-invalid @enderror"
-                                id="appointment_date" name="appointment_date" value="{{ old('appointment_date') }}"
+                                id="appointment_date" name="appointment_date"
+                                value="{{ old('appointment_date', $maintenanceRecord->appointment_date?->format('Y-m-d')) }}"
                                 required>
                             @error('appointment_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -88,11 +91,11 @@
                         <div class="mb-3">
                             <label for="activity_type" class="form-label">Tipo attività</label>
                             <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
-                                name="activity_type" value="{{ old('activity_type') }}">
+                                name="activity_type" value="{{ old('activity_type', $maintenanceRecord->activity_type) }}">
                                 <option value="">Seleziona una tipologia</option>
                                 @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
                                     <option value="{{ $item }}"
-                                        {{ old('activity_type') == $item ? 'selected' : '' }}>
+                                        {{ old('activity_type', $maintenanceRecord->activity_type) == $item ? 'selected' : '' }}>
                                         {{ $item }}
                                     </option>
                                 @endforeach
@@ -104,15 +107,52 @@
                         <div class="mb-3">
                             <label for="return_date" class="form-label">Data restituzione veicolo</label>
                             <input type="date" class="form-control @error('return_date') is-invalid @enderror"
-                                id="return_date" name="return_date" value="{{ old('return_date') }}">
+                                id="return_date" name="return_date"
+                                value="{{ old('return_date', $maintenanceRecord->return_date?->format('Y-m-d')) }}">
                             @error('return_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </section>
-                    <button id="maintenance-submit-btn" type="submit" class="btn btn-primary"
-                        data-loading-text="Salvataggio...">Aggiungi</button>
+                    <button id="maintenance-submit-btn" type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#confirmMaintenanceUpdateModal" data-loading-text="Salvataggio...">Salva
+                        modifiche</button>
                 </form>
+            </div>
+        </div>
+
+        <div class="modal fade" id="confirmMaintenanceUpdateModal" tabindex="-1"
+            aria-labelledby="confirmMaintenanceUpdateModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="confirmMaintenanceUpdateModalLabel">Conferma aggiornamento intervento
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <p class="mb-2"><strong>Il guasto è stato aggiustato?</strong></p>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="issue_resolved"
+                                id="edit_issue_resolved_yes" value="1" form="maintenance-record-form">
+                            <label class="form-check-label" for="edit_issue_resolved_yes">Sì</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="issue_resolved"
+                                id="edit_issue_resolved_no" value="0" form="maintenance-record-form">
+                            <label class="form-check-label" for="edit_issue_resolved_no">No</label>
+                        </div>
+                        <small class="text-muted d-block mt-2">Se non selezioni nulla, lo stato del guasto resta
+                            invariato.</small>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
+                        <button type="submit" class="btn btn-primary" form="maintenance-record-form">Conferma e
+                            salva</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
