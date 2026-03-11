@@ -35,8 +35,9 @@
                         </div>
                         <div class="mb-3">
                             <label for="log_date" class="form-label">Data del registro</label>
-                            <input type="date" class="form-control @error('log_date') is-invalid @enderror" id="log_date"
-                                name="log_date" value="{{ old('log_date', $mileageLog->log_date) }}" required>
+                            <input type="date" class="form-control @error('log_date') is-invalid @enderror"
+                                id="log_date" name="log_date"
+                                value="{{ old('log_date', optional($mileageLog->log_date)->format('Y-m-d')) }}" required>
                             @error('log_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

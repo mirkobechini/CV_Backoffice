@@ -53,7 +53,7 @@
                             <label for="revision_date" class="form-label">Data revisione</label>
                             <input type="date" class="form-control @error('revision_date') is-invalid @enderror"
                                 id="revision_date" name="revision_date"
-                                value="{{ old('revision_date', $equipment->revision_date) }}">
+                                value="{{ old('revision_date', optional($equipment->revision_date)->format('Y-m-d')) }}">
                             @error('revision_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -62,7 +62,7 @@
                             <label for="expiration_date" class="form-label">Data scadenza</label>
                             <input type="date" class="form-control @error('expiration_date') is-invalid @enderror"
                                 id="expiration_date" name="expiration_date"
-                                value="{{ old('expiration_date', $equipment->expiration_date) }}">
+                                value="{{ old('expiration_date', optional($equipment->expiration_date)->format('Y-m-d')) }}">
                             @error('expiration_date')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

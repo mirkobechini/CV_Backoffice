@@ -114,7 +114,7 @@ class VehicleController extends Controller
     {
         $vehicleTypes = VehicleType::all();
 
-        $warrantyOriginalExpirationDate = $vehicle->warranty_expiration_date;
+        $warrantyOriginalExpirationDate = $vehicle->warranty_expiration_date?->toDateString();
         if ($vehicle->has_warranty_extension && $vehicle->warranty_expiration_date && $vehicle->warranty_extension_duration) {
             $warrantyOriginalExpirationDate = Carbon::parse($vehicle->warranty_expiration_date)
                 ->subMonths((int) $vehicle->warranty_extension_duration)
