@@ -51,15 +51,10 @@
                             @enderror
                         </div>
                         <div class="mb-3" id="due-date-group">
-                            <label for="due_date" class="form-label">Data di scadenza</label>
-                            <input type="month" class="form-control @error('due_date') is-invalid @enderror"
-                                id="due_date" name="due_date" value="{{ old('due_date') }}">
+                            <x-form.month-input name="due_date" id="due_date" label="Data di scadenza" />
                             <small class="text-muted">Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno"
                                 la data viene calcolata automaticamente. La revisione ossigeno è disponibile solo per
                                 le ambulanze.</small>
-                            @error('due_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         </div>
                         <div class="mb-3">
                             <div class="form-check mt-2">

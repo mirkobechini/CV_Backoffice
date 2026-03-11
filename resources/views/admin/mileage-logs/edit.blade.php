@@ -33,7 +33,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <x-form.date-input name="log_date" label="Data del registro" :model="$mileageLog" required />
+                        <x-form.date-input name="log_date" label="Data della registrazione" :model="$mileageLog" required />
                         <div class="mb-3">
                             <label for="mileage" class="form-label">Chilometraggio</label>
                             <input type="number" class="form-control @error('mileage') is-invalid @enderror" id="mileage"
