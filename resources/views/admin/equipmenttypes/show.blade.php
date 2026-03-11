@@ -32,5 +32,5 @@
         </div>
 
     </div>
-    <x-admin.delete-modal type="equipmenttype" :object="$equipmentType" />
+    <x-admin.delete-modal type="equipmentType" :object="$equipmentType" />
 @endsection

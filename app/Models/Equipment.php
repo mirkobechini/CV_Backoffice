@@ -20,6 +20,16 @@ class Equipment extends Model
         'expiration_date' => 'date',
     ];
 
+    public function getRevisionDateFormattedAttribute(): ?string
+    {
+        return $this->revision_date?->format('m/Y');
+    }
+
+    public function getExpirationDateFormattedAttribute(): ?string
+    {
+        return $this->expiration_date?->format('m/Y');
+    }
+
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);

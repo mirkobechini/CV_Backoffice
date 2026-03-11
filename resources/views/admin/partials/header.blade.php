@@ -43,7 +43,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.equipments.index') }}">{{ __('Attrezzature') }}</a>
                     </li>
-                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ route('admin.equipmenttypes.index') }}">{{ __('Tipi di Attrezzature') }}</a>
+                    </li>
                 </ul>
 
                 <!-- Right Side Of Navbar -->

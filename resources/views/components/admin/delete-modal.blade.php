@@ -1,34 +1,35 @@
 @props(['type', 'object'])
 
 @php
-    $entityLabel = match ($type) {
-        'vehicle' => 'veicolo',
-        'provider' => 'officina',
-        'issue' => 'guasto',
-        'maintenanceRecord' => 'manutenzione',
-        default => $type,
-    };
+    $normalizedType = strtolower($type);
+    $resourceConfig = [
+        'vehicle' => ['label' => 'veicolo', 'route' => 'admin.vehicles.destroy', 'parameter' => 'vehicle'],
+        'provider' => ['label' => 'officina', 'route' => 'admin.providers.destroy', 'parameter' => 'provider'],
+        'issue' => ['label' => 'guasto', 'route' => 'admin.issues.destroy', 'parameter' => 'issue'],
+        'maintenancerecord' => ['label' => 'manutenzione', 'route' => 'admin.maintenancerecords.destroy', 'parameter' => 'maintenanceRecord'],
+        'vehicletype' => ['label' => 'tipo veicolo', 'route' => 'admin.vehicletypes.destroy', 'parameter' => 'vehicleType'],
+        'equipmenttype' => ['label' => 'tipo di attrezzatura', 'route' => 'admin.equipmenttypes.destroy', 'parameter' => 'equipmentType'],
+        'equipment' => ['label' => 'attrezzatura', 'route' => 'admin.equipments.destroy', 'parameter' => 'equipment'],
+        'deadline' => ['label' => 'scadenza', 'route' => 'admin.deadlines.destroy', 'parameter' => 'deadline'],
+        'mileagelog' => ['label' => 'registro chilometrico', 'route' => 'admin.mileagelogs.destroy', 'parameter' => 'mileageLog'],
+    ];
 
-    $destroyRouteName = match ($type) {
-        'vehicle' => 'admin.vehicles.destroy',
-        'provider' => 'admin.providers.destroy',
-        'issue' => 'admin.issues.destroy',
-        'maintenanceRecord' => 'admin.maintenancerecords.destroy',
-        default => 'admin.' . strtolower($type) . 's.destroy',
-    };
+    $config = $resourceConfig[$normalizedType] ?? [
+        'label' => $type,
+        'route' => 'admin.' . $normalizedType . 's.destroy',
+        'parameter' => $type,
+    ];
 
-    $routeParameterName = match ($type) {
-        'maintenanceRecord' => 'maintenanceRecord',
-        default => $type,
-    };
+    $entityLabel = $config['label'];
+    $destroyRouteName = $config['route'];
+    $routeParameterName = $config['parameter'];
     $routeParameterValue = $object?->getRouteKey();
-    $modalIdSuffix = $routeParameterValue ?? 'missing-' . $type;
+    $modalIdSuffix = $routeParameterValue ?? 'missing-' . $normalizedType;
 
-    $displayValue = match ($type) {
+    $displayValue = match ($normalizedType) {
         'vehicle' => $object->internal_code ?? ($object->license_plate ?? (string) $object->id),
-        'provider' => $object->name ?? (string) $object->id,
         'issue' => $object->description ?? (string) $object->id,
-        'maintenanceRecord' => $object->activity_type ?? (string) $object->id,
+        'maintenancerecord' => $object->activity_type ?? (string) $object->id,
         default => $object->name ?? ($object->title ?? (string) $object->id),
     };
 @endphp
@@ -44,7 +45,7 @@
             </div>
             <div class="modal-body">
                 Sei sicuro di voler eliminare "{{ $displayValue }}"
-                @if ($type === 'vehicle')
+                @if ($normalizedType === 'vehicle')
                     , tutti i guasti e le manutenzioni associate
                 @endif
                 ?

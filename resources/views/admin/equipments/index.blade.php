@@ -6,20 +6,22 @@
         </x-slot:headingActions>
 
         <x-slot:head>
+            <th scope="col">Nome</th>
+            <th scope="col">Numero Seriale</th>
+            <th scope="col">Data di revisione</th>
             <th scope="col">Sigla</th>
             <th scope="col">Targa</th>
-            <th scope="col">Nome</th>
-            <th scope="col">Data di revisione</th>
             <th scope="col">Azioni</th>
         </x-slot:head>
 
         <x-slot:rows>
             @foreach ($equipments as $equipment)
                 <tr>
+                    <td>{{ $equipment->name }}</td>
+                    <td>{{ $equipment->serial_number }}</td>
+                    <td>{{ $equipment->revision_date_formatted }}</td>
                     <td>{{ $equipment->vehicle?->internal_code ?? 'N/A' }}</td>
                     <td>{{ $equipment->vehicle?->license_plate ?? 'N/A' }}</td>
-                    <td>{{ $equipment->name }}</td>
-                    <td>{{ $equipment->revision_date }}</td>
                     <x-admin.row-actions :showUrl="route('admin.equipments.show', $equipment->id)" :editUrl="route('admin.equipments.edit', $equipment->id)" :deleteTarget="'#confirmDeleteModal-' . $equipment->id" :label="'attrezzatura ' . $equipment->id" />
                 </tr>
                 <x-admin.delete-modal type="equipment" :object="$equipment" />

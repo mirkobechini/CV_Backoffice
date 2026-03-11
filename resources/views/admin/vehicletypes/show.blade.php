@@ -28,8 +28,8 @@
                                 mesi
                             @endif
                         </p>
-                        <p><strong>Numero di estintori richiesti:</strong> {{ $vehicleType->extinguishers_required }}</p>
                         <p><strong>Revisione ossigeno:</strong> {{ $vehicleType->needs_oxygen_check ? 'Sì' : 'No' }}</p>
+                        <p><strong>Equipaggiamento:</strong> {{ $vehicleType->extinguishers_required }}</p>
                     </div>
                 </div>
             </div>
