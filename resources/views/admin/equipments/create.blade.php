@@ -47,22 +47,8 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
-                            <label for="revision_date" class="form-label">Data revisione</label>
-                            <input type="date" class="form-control @error('revision_date') is-invalid @enderror"
-                                id="revision_date" name="revision_date" value="{{ old('revision_date') }}">
-                            @error('revision_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="expiration_date" class="form-label">Data scadenza</label>
-                            <input type="date" class="form-control @error('expiration_date') is-invalid @enderror"
-                                id="expiration_date" name="expiration_date" value="{{ old('expiration_date') }}">
-                            @error('expiration_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <x-form.date-input name="revision_date" label="Data revisione" />
+                        <x-form.date-input name="expiration_date" label="Data scadenza" />
                     </section>
                     <section class="mb-3 row">
                         <h2>Dettagli Veicolo</h2>

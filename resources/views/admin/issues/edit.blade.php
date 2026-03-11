@@ -32,15 +32,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
-                            <label for="event_date" class="form-label">Data del guasto</label>
-                            <input type="date" class="form-control @error('event_date') is-invalid @enderror"
-                                id="event_date" name="event_date"
-                                value="{{ old('event_date', $issue->event_date?->format('Y-m-d')) }}" required>
-                            @error('event_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <x-form.date-input name="event_date" label="Data del guasto" :model="$issue" required />
                         <div class="mb-3">
                             <label for="status" class="form-label">Stato</label>
                             <select class="form-select @error('status') is-invalid @enderror" id="status" name="status"

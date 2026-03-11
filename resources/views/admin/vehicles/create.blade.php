@@ -79,15 +79,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
-                            <label for="immatricolation_date" class="form-label">Data immatricolazione</label>
-                            <input type="date" class="form-control @error('immatricolation_date') is-invalid @enderror"
-                                id="immatricolation_date" name="immatricolation_date"
-                                value="{{ old('immatricolation_date') }}" required>
-                            @error('immatricolation_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <x-form.date-input name="immatricolation_date" label="Data immatricolazione" required />
                         <div class="mb-3">
                             <label for="registration_card" class="form-label">Carta di circolazione</label>
                             <input type="file" class="form-control @error('registration_card') is-invalid @enderror"
@@ -101,17 +93,8 @@
                         <h3>Dettagli aggiuntivi</h3>
                         <section class="col mb-3 card p-3">
                             <h4>Garanzia</h4>
-                            <div class="mb-3">
-                                <label for="warranty_expiration_date" class="form-label">Data di scadenza originale</label>
-                                <input type="date"
-                                    class="form-control @error('warranty_expiration_date') is-invalid @enderror"
-                                    id="warranty_expiration_date" name="warranty_expiration_date"
-                                    value="{{ old('warranty_expiration_date') }}"
-                                    @if (old('has_warranty_extension')) required @endif>
-                                @error('warranty_expiration_date')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            <x-form.date-input name="warranty_expiration_date" label="Data di scadenza originale"
+                                :required="old('has_warranty_extension')" />
                             <div class="mb-3">
                                 <div class="form-check">
                                     <label for="has_warranty_extension" class="form-check-label">Estensione

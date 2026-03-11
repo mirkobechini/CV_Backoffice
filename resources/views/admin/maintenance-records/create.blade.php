@@ -76,15 +76,7 @@
                     </section>
                     <section class="mb-3 row">
                         <h2>Dettagli Appuntamento</h2>
-                        <div class="mb-3">
-                            <label for="appointment_date" class="form-label">Data Appuntamento</label>
-                            <input type="date" class="form-control @error('appointment_date') is-invalid @enderror"
-                                id="appointment_date" name="appointment_date" value="{{ old('appointment_date') }}"
-                                required>
-                            @error('appointment_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <x-form.date-input name="appointment_date" label="Data Appuntamento" required />
                         <div class="mb-3">
                             <label for="activity_type" class="form-label">Tipo attività</label>
                             <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
@@ -101,14 +93,7 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
-                            <label for="return_date" class="form-label">Data restituzione veicolo</label>
-                            <input type="date" class="form-control @error('return_date') is-invalid @enderror"
-                                id="return_date" name="return_date" value="{{ old('return_date') }}">
-                            @error('return_date')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <x-form.date-input name="return_date" label="Data restituzione veicolo" />
                     </section>
                     <button id="maintenance-submit-btn" type="submit" class="btn btn-primary"
                         data-loading-text="Salvataggio...">Aggiungi</button>
