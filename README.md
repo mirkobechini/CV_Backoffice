@@ -1,332 +1,154 @@
-# 🚑 CV Backoffice - Gestione Parco Mezzi
-![Anteprima Tabella Veicoli](vehicle-preview.png)
+# 🚀 CV Backoffice
 
-Applicazione Laravel per la gestione di mezzi, guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo.
+> Applicazione web per gestire in modo centralizzato mezzi, guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo.
 
-## Panoramica
+![Banner o Screenshot](vehicle-preview.png)
 
-Il progetto copre:
+![GitHub stars](https://img.shields.io/github/stars/mirkobechini/CV_Backoffice?style=flat-square)
+![GitHub forks](https://img.shields.io/github/forks/mirkobechini/CV_Backoffice?style=flat-square)
+![GitHub license](https://img.shields.io/github/license/mirkobechini/CV_Backoffice)
+![Version](https://img.shields.io/badge/version-1.0.0-blue)
 
-- anagrafiche mezzi e tipologie mezzo
-- gestione guasti e interventi manutentivi
-- gestione scadenze periodiche
-- gestione chilometraggi
-- gestione attrezzature e tipologie attrezzature
+---
 
-## Funzionalità Principali
+## 🌍 Demo
 
-- Monitoraggio Scadenze: Sistema automatico per Revisioni, Assicurazioni e controlli Ossigeno.
-- Lifecycle Manutenzioni: Flusso completo dalla segnalazione del guasto alla prenotazione dell'intervento fino alla chiusura.
-- Gestione Dotazioni: Inventario dinamico delle attrezzature di bordo con scadenze indipendenti.
-- Log Chilometrico: Storico delle letture per monitoraggio usura e tagliandi.
+<!-- Inserisci qui i link reali: URL del sito live e una demo video o GIF del flusso principale. -->
+- Live: https://tuo-link-demo.com
+- Video/GIF: https://tuo-link-demo-video.com
 
-## Stack
+---
 
-- Laravel (Breeze)
-- PHP + Eloquent ORM
-- Blade
-- MySQL/MariaDB (supportato anche SQLite per sviluppo)
+## 🌟 Caratteristiche principali
 
-## 🛠️ Approccio Tecnico
-- Clean Code: Utilizzo di FormRequests per separare la logica di validazione dai Controller.
-- Mass Assignment: Protezione dei dati tramite proprietà $fillable nei Model.
-- UX/UI: Interfaccia costruita con Blade e Bootstrap (tramite Breeze) per una gestione fluida lato admin.
+- **Gestione completa del parco mezzi**: anagrafica veicoli, tipologie, provider e storico operativo in un unico pannello.
+- **Flusso guasti e manutenzioni**: dalla segnalazione problema alla chiusura intervento con tracciamento date e stato.
+- **Controllo scadenze e dotazioni**: monitoraggio revisioni, assicurazioni, ossigeno e attrezzature con visione centralizzata.
 
-## Avvio rapido
+---
 
-1. Installazione dipendenze
+## 🛠️ Tech Stack
 
-- `composer install`
-- `npm install`
+| Tecnologia | Scopo |
+| :--------- | :---- |
+| **Laravel (PHP)** | Core applicativo e logica backend |
+| **Blade + Bootstrap (Laravel Breeze)** | Interfaccia amministrativa |
+| **MySQL/MariaDB (SQLite in sviluppo)** | Persistenza dati |
 
-2. Configurazione ambiente
+---
 
-- copia `.env.example` in `.env`
-- configura DB e filesystem
-- `php artisan key:generate`
+## 🚀 Quick Start
 
-3. Database
+### Requisiti
 
-- `php artisan migrate`
-- `php artisan db:seed`
+Prima di iniziare, assicurati di avere installato:
 
-4. Storage + frontend
+- PHP 8.2+
+- Composer
+- Node.js 18+ e npm
+- MySQL/MariaDB (oppure SQLite per sviluppo locale)
 
-- `php artisan storage:link`
-- `npm run dev`
+### Installazione
 
-## Modello dati (stato attuale)
+```bash
+# Clona il repository
+git clone https://github.com/mirkobechini/CV_Backoffice.git
 
-### Vehicle
+# Entra nella cartella del progetto
+cd CV_Backoffice
 
-- `license_plate` string(7) unique
-- `internal_code` string(4) nullable
-- `brand`, `model`
-- `fuel_type` enum nullable
-- `vehicle_type_id` foreignId nullable
-- `immatricolation_date` date
-- `registration_card_path` nullable
-- `has_warranty_extension` boolean
-- `warranty_extension_duration` integer nullable
-- `warranty_expiration_date` date nullable
+# Installa le dipendenze backend e frontend
+composer install
+npm install
+```
 
-### VehicleType
+### Avvio
 
-- `name` unique
-- `needs_oxygen_check` boolean
-- `extinguishers_required` integer
-- `first_inspection_months` integer
-- `regular_inspection_months` integer
+```bash
+# Configura ambiente
+cp .env.example .env
+php artisan key:generate
 
-### Provider
+# Configura e popola il database
+php artisan migrate --seed
 
-- `name`
-- `contact_info` nullable
-- `address` nullable
-- `type` enum (`Meccanico`, `Carrozziere`, `Gommista`, `Lavaggio`, `Allestitore`)
+# Collega lo storage pubblico
+php artisan storage:link
 
-### Issue
+# Avvia frontend e backend (in due terminali separati)
+npm run dev
+php artisan serve
+```
 
-- `vehicle_id`
-- `description` text
-- `status` enum (`open`, `in_progress`, `closed`)
-- `photo` nullable
-- `event_date` date
+Apri il browser su `http://127.0.0.1:8000`.
 
-### MaintenanceRecord
+---
 
-- tabella attuale: `maintenance_records`
-- `vehicle_id`, `provider_id`, `issue_id`
-- `deadline_id` nullable unique
-- `appointment_date` date
-- `return_date` date nullable
-- `activity_type` string nullable
+## 📂 Struttura del progetto
 
-### Deadline
+```text
+.
+|-- app/
+|-- bootstrap/
+|-- config/
+|-- database/
+|-- public/
+|-- resources/
+|-- routes/
+|-- tests/
+|-- README.md
+|-- composer.json
+|-- package.json
+```
 
-- `vehicle_id`
-- `type` enum (`Assicurazione`, `Revisione Ministeriale`, `Revisione Impianto Ossigeno`)
-- `due_date` date
-- `status` enum (`expired`, `renewed`, `pending`)
+---
 
-### MileageLog
+## 🗺️ Roadmap
 
-- `vehicle_id`
-- `log_date` date
-- `mileage` unsigned integer
+- [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
+- [ ] Report chilometraggi per periodo e per singolo mezzo
+- [ ] Modulo API REST per integrazione esterna
+- [ ] Test end-to-end sui flussi critici
 
-### Equipment
+### Backlog funzionale dettagliato
 
-- `vehicle_id` nullable (`nullOnDelete`)
-- `equipment_type_id`
-- `name`
-- `serial_number` unique nullable
-- `revision_date` nullable
-- `expiration_date` nullable
+#### Vehicle / Equipment
 
-### EquipmentType
-
-- `name` unique
-- `first_inspection_months` nullable
-- `regular_inspection_months` nullable
-
-## Relazioni principali
-
-- Vehicle `1:N` Issue
-- Vehicle `1:N` Deadline
-- Vehicle `1:N` MileageLog
-- Vehicle `1:N` Equipment
-- Vehicle `1:N` MaintenanceRecord
-- Provider `1:N` MaintenanceRecord
-- Issue `1:N` MaintenanceRecord
-- Deadline `1:1` (opzionale) MaintenanceRecord
-- EquipmentType `1:N` Equipment
-
-## Convenzioni Laravel
-
-Allineamento automatismi Eloquent:
-
-- `equipment_type_id` usato come FK standard
-- `maintenance_records` usato come nome tabella convenzionale
-- relation methods e mass-assignment allineati nei controller CRUD
-
-Nota storica:
-
-- alcune migration meno recenti mantengono nomi file legacy (`maintenancerecords`) ma lo schema runtime è coerente.
-
-## Stato attività (TODO)
-
-Legenda:
-
-- ✅ completato
-- 🔄 in corso
-- ⏳ in attesa/bloccato
-- ⬜ da fare
-
-### Setup ✅
-
-- [x] Install Laravel
-- [x] Install Breeze
-- [x] Configurare database in `.env`
-- [x] Configurare filesystem in `.env`
-- [x] Creare symlink storage
-
-### Database 🔄
-
-- [x] Vehicle model + migration
-- [x] VehicleType model + migration
-- [x] Provider model + migration
-- [x] Issue model + migration
-- [x] MaintenanceRecord model + migration
-- [x] Deadline model + migration
-- [x] MileageLog model + migration
-- [x] Equipment model + migration
-- [x] EquipmentType model + migration
 - [ ] Rivedere VehicleType per gestione equipaggiamento per tipologia mezzo
-- [x] Vehicle seed
-- [x] VehicleType seed
-- [x] Provider seed
-- [x] Issue seed
-- [ ] MaintenanceRecord seed
-- [ ] Deadline seed
-- [ ] MileageLog seed
-- [ ] Equipment seed
-- [ ] EquipmentType seed
+- [ ] View veicolo: link agli equipaggiamenti del mezzo + stato conformita per equipaggiamento
 
-### UI ⏳
+#### Deadlines / Tagliandi
 
-#### Commons ⏳
+- [ ] Implementare tagliandi in scadenze: oltre alla data, soglia km per prossimo tagliando
 
-- [x] Header
-- [x] Layout app
-- [ ] Welcome page
+#### MileageLog / Report
 
-#### Vehicle 🔄
+- [ ] Report storico chilometri per singolo mezzo (timeline)
+- [ ] Report ultimo chilometraggio per mese (singolo mezzo)
+- [ ] Filtro per mezzo + range mese/anno
 
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
-- [ ] show: link agli equipaggiamenti del mezzo + stato conformità per equipaggiamento
+---
 
-#### VehicleType ✅
+## 🤝 Contribuire
 
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
+Le contribuzioni migliorano il progetto. Per contribuire:
 
-#### Provider ✅
+1. Fai fork del repository
+2. Crea un branch: `git checkout -b feature/NomeFeature`
+3. Esegui commit: `git commit -m "Add NomeFeature"`
+4. Fai push del branch: `git push origin feature/NomeFeature`
+5. Apri una Pull Request
 
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
+---
 
-#### Issue ✅
+## 📄 Licenza
 
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
-- [x] show: pulsante prenotazione manutenzione dal guasto
-- [x] validazione: errore se `appointment_date < event_date`
+Distribuito sotto licenza MIT. Vedi il file `LICENSE` per i dettagli.
 
-#### MaintenanceRecord ✅
+---
 
-- [x] index
-- [x] show
-- [x] create/store
-- [x] edit
+## 📧 Contatti
 
-#### Deadline 🔄
+Mirko Bechini - LinkedIn: https://www.linkedin.com/in/mirko-bechini-892202252 - mirkobechini@gmail.com
 
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
-- [ ] implementare tagliandi in scadenze: oltre alla data, soglia km per prossimo tagliando
-
-#### MileageLog 🔄
-
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
-- [ ] report storico chilometri per singolo mezzo (timeline)
-- [ ] report ultimo chilometraggio per mese (singolo mezzo)
-- [ ] filtro per mezzo + range mese/anno
-
-#### Equipment ✅
-
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
-
-#### EquipmentType ✅
-
-- [x] index
-- [x] show
-- [x] create
-- [x] edit
-
-### Admin ✅
-
-#### Controllers
-
-- [x] Vehicle
-- [x] VehicleType
-- [x] Provider
-- [x] Issue
-- [x] MaintenanceRecord
-- [x] Deadline
-- [x] MileageLog
-- [x] Equipment
-- [x] EquipmentType
-
-#### Routes (web)
-
-- [x] Vehicle
-- [x] VehicleType
-- [x] Provider
-- [x] Issue
-- [x] MaintenanceRecord
-- [x] Deadline
-- [x] MileageLog
-- [x] Equipment
-- [x] EquipmentType
-
-#### Best practices
-
-- [x] Validazioni CRUD in FormRequest
-- [x] Controller alleggeriti con `$request->validated()`
-- [x] Normalizzazione dati Vehicle in request
-- [x] Regole business MaintenanceRecord centralizzate nei request
-- [x] Commenti nelle aree con logica complessa
-
-### API ⬜
-
-#### Controllers
-
-- [ ] Vehicle
-- [ ] VehicleType
-- [ ] Provider
-- [ ] Issue
-- [ ] MaintenanceRecord
-- [ ] Deadline
-- [ ] MileageLog
-- [ ] Equipment
-- [ ] EquipmentType
-
-#### Routes
-
-- [ ] Route API Vehicle
-- [ ] Route API VehicleType
-- [ ] Route API Provider
-- [ ] Route API Issue
-- [ ] Route API MaintenanceRecord
-- [ ] Route API Deadline
-- [ ] Route API MileageLog
-- [ ] Route API Equipment
-- [ ] Route API EquipmentType
+Link progetto: https://github.com/mirkobechini/CV_Backoffice
