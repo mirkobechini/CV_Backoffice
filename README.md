@@ -7,8 +7,6 @@
 ![GitHub stars](https://img.shields.io/github/stars/mirkobechini/CV_Backoffice?style=flat-square)
 ![GitHub forks](https://img.shields.io/github/forks/mirkobechini/CV_Backoffice?style=flat-square)
 ![GitHub license](https://img.shields.io/github/license/mirkobechini/CV_Backoffice)
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-
 ---
 
 ## 🌍 Demo
@@ -105,6 +103,8 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ## 🗺️ Roadmap
 
+- [ ] Rivedere nelle scadenze lo status rinnovata/scaduta
+- [ ] API per modelli e brand veicoli
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo
 - [ ] Modulo API REST per integrazione esterna
@@ -115,7 +115,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 #### Vehicle / Equipment
 
 - [ ] Rivedere VehicleType per gestione equipaggiamento per tipologia mezzo
-- [ ] View veicolo: link agli equipaggiamenti del mezzo + stato conformita per equipaggiamento
+- [ ] View veicolo: link agli equipaggiamenti del mezzo + stato conformità per equipaggiamento
 
 #### Deadlines / Tagliandi
 

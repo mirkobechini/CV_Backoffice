@@ -5,45 +5,22 @@ namespace Database\Seeders;
 use App\Models\EquipmentType;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Faker\Generator as Faker;
 
 class EquipmentTypeTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run(Faker $faker): void
     {
-        $equipmentTypes = [
-            [
-                'name' => 'Estintore',
-                'first_inspection_months' => 6,
-                'regular_inspection_months' => 6
-            ],
 
-            [
-                'name' => 'Barella',
-                'first_inspection_months' => 12,
-                'regular_inspection_months' => 12
-            ],
-            [
-                'name' => 'Sedia scendiscale',
-                'first_inspection_months' => 12,
-                'regular_inspection_months' => 12
-            ],
-            [
-                'name' => 'Sedia motorizzata scendiscale',
-                'first_inspection_months' => 12,
-                'regular_inspection_months' => 12
-            ],
-            [
-                'name' => 'Sedia scendiscale cingolata',
-                'first_inspection_months' => 12,
-                'regular_inspection_months' => 12
-            ],
-        ];
-
-        foreach ($equipmentTypes as $type) {
-            EquipmentType::create($type);
+        for ($i = 0; $i < 5; $i++) {
+            EquipmentType::create([
+                'name' => $faker->word(),
+                'first_inspection_months' => $faker->numberBetween(6, 24),
+                'regular_inspection_months' => $faker->numberBetween(6, 24),
+            ]);
         }
     }
 }
