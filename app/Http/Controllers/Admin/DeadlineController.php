@@ -111,13 +111,14 @@ class DeadlineController extends Controller
                 ->withInput();
         }
 
-        $markAsRenewed = (bool) ($data['mark_as_renewed'] ?? false);
+        $markAsRenewed = (bool) ($data['is_renewed'] ?? false);
 
         $deadline = Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
             'status' => $this->resolveStatus($dueDate, $markAsRenewed),
+            'is_renewed' => $markAsRenewed,
         ]);
 
         return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza creata con successo.');
@@ -144,6 +145,7 @@ class DeadlineController extends Controller
     /**
      * Update the specified resource in storage.
      */
+    //TODO: lo status è sbagliato, se la scadenza è in scadenza o scaduta e spunto "mark as renewed" dovrebbe diventare "rinnovata" e creare quella successiva chiedendo la data di rinnovo(se non inserita viene calcolata in automatico), se invece è già lontana dovrebbe rimanere "rinnovata"
     public function update(UpdateDeadlineRequest $request, Deadline $deadline)
     {
         $data = $request->validated();
@@ -164,13 +166,14 @@ class DeadlineController extends Controller
                 ->withInput();
         }
 
-        $markAsRenewed = (bool) ($data['mark_as_renewed'] ?? false);
+        $markAsRenewed = (bool) ($data['is_renewed'] ?? false);
 
         $deadline->update([
             'vehicle_id' => $vehicle->id,
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
             'status' => $this->resolveStatus($dueDate, $markAsRenewed),
+            'is_renewed' => $markAsRenewed,
         ]);
 
         return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza aggiornata con successo.');
@@ -217,10 +220,25 @@ class DeadlineController extends Controller
 
     private function resolveStatus(Carbon $dueDate, bool $markAsRenewed): string
     {
-        if ($markAsRenewed) {
-            return 'renewed';
-        }
+        $today = Carbon::today();
+        $monthDiff = $today->diffInMonths($dueDate, false);    
 
-        return $dueDate->isBefore(Carbon::today()) ? 'expired' : 'pending';
+        if ($markAsRenewed) {
+            if ($monthDiff > 3) {
+                return 'renewed';
+            } else if ($monthDiff <= 3 && $dueDate->isAfter($today)) {
+                return 'pending';
+            } else {
+                return 'expired';
+            }
+        }else {
+            if ($dueDate->isAfter($today->addMonths(3))) {
+                return 'renewed';
+            } else if ($dueDate->isAfter($today)) {
+                return 'pending';
+            } else {
+                return 'expired';
+            }
+        }
     }
 }

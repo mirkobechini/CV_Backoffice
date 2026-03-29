@@ -103,7 +103,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ## 🗺️ Roadmap
 
-- [ ] Rivedere nelle scadenze lo status rinnovata/scaduta
+- [ ] Rivedere nelle scadenze lo status rinnovata/scaduta (added is_renewed boolean in migration) se rinnovata, non mostrare più come scaduta e spostare in fondo alla lista(aggiungere attuale/valida a status?)
 - [ ] API per modelli e brand veicoli
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo

@@ -25,7 +25,7 @@ class UpdateDeadlineRequest extends FormRequest
             'vehicle_id' => 'required|exists:vehicles,id',
             'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
             'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
-            'mark_as_renewed' => 'nullable|boolean',
+            'is_renewed' => 'nullable|boolean',
         ];
     }
 
@@ -39,7 +39,7 @@ class UpdateDeadlineRequest extends FormRequest
             'due_date.required' => 'La data di scadenza è obbligatoria.',
             'due_date.required_unless' => 'La data di scadenza è obbligatoria per questa tipologia.',
             'due_date.date_format' => 'La data di scadenza deve essere nel formato mese/anno valido.',
-            'mark_as_renewed.boolean' => 'Il valore di rinnovo non è valido.',
+            'is_renewed.boolean' => 'Il valore di rinnovo non è valido.',
         ];
     }
 }

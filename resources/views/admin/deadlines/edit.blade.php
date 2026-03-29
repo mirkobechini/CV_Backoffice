@@ -61,14 +61,14 @@
                         </div>
                         <div class="mb-3">
                             <div class="form-check mt-2">
-                                <input class="form-check-input @error('mark_as_renewed') is-invalid @enderror"
-                                    type="checkbox" value="1" id="mark_as_renewed" name="mark_as_renewed"
-                                    {{ old('mark_as_renewed', $deadline->status === 'renewed') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="mark_as_renewed">
+                                <input class="form-check-input @error('is_renewed') is-invalid @enderror"
+                                    type="checkbox" value="1" id="is_renewed" name="is_renewed"
+                                    {{ old('is_renewed', $deadline->status === 'renewed') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_renewed">
                                     Segna come rinnovata
                                 </label>
                             </div>
-                            @error('mark_as_renewed')
+                            @error('is_renewed')
                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>

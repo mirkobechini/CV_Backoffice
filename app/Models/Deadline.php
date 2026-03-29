@@ -16,10 +16,12 @@ class Deadline extends Model
         'type',
         'due_date',
         'status',
+        'is_renewed',
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'is_renewed' => 'boolean',
     ];
 
     
@@ -39,7 +41,7 @@ class Deadline extends Model
     public function getAutomaticStatusAttribute(): string
     {
         // Se marcata manualmente come rinnovata, preserviamo quel valore.
-        if ($this->status === 'renewed') {
+        if ($this->is_renewed) {
             return 'renewed';
         }
 
