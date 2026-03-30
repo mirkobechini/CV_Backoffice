@@ -28,13 +28,15 @@ class VehicleObserver
 
         // Backfill storico: tutte le scadenze già passate vengono marcate renewed.
         while ($dueDate->lte($today)) {
-            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, 'renewed');
+            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate);
+
+             $dueDate->addMonthsNoOverflow($regularInspectionMonths);
 
             $dueDate->addMonthsNoOverflow($regularInspectionMonths);
         }
 
         // Prima scadenza futura/aperta.
-        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, 'pending');
+        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate);
 
         if (!Deadline::supportsOxygenCheckForVehicle($vehicle)) {
             return;
@@ -45,15 +47,15 @@ class VehicleObserver
 
         // Stesso approccio per revisione ossigeno, solo per mezzi che la supportano.
         while ($oxygenDueDate->lte($today)) {
-            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, 'renewed');
+            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate);
 
             $oxygenDueDate->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
         }
 
-        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, 'pending');
+        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate);
     }
 
-    private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, string $status): void
+    private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate): void
     {
         $alreadyExists = Deadline::query()
             ->where('vehicle_id', $vehicle->id)
@@ -65,11 +67,11 @@ class VehicleObserver
             return;
         }
 
-        Deadline::create([
+        $deadline = Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => $type,
             'due_date' => $dueDate->toDateString(),
-            'status' => $status,
         ]);
+        $deadline->syncStatusFromRules();
     }
 }

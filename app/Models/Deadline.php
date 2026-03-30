@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class Deadline extends Model
 {
+    //status
+    public const STATUS_PENDING = 'pending';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_RENEWED = 'renewed';
+    public const STATUS_VALID = 'valid';
+    //type
     public const TYPE_MINISTERIAL = 'Revisione Ministeriale';
     public const TYPE_OXYGEN = 'Revisione Impianto Ossigeno';
     public const OXYGEN_CHECK_INTERVAL_MONTHS = 12;
@@ -24,15 +30,15 @@ class Deadline extends Model
         'is_renewed' => 'boolean',
     ];
 
-    
+
     public function maintenanceRecord()
     {
         return $this->hasOne(MaintenanceRecord::class);
     }
 
 
-    
-    
+
+
     public function getDueDateFormattedAttribute(): ?string
     {
         return $this->due_date?->format('m/Y');
@@ -42,23 +48,27 @@ class Deadline extends Model
     {
         // Se marcata manualmente come rinnovata, preserviamo quel valore.
         if ($this->is_renewed) {
-            return 'renewed';
+            return self::STATUS_RENEWED;
         }
 
         if (!$this->due_date) {
-            return 'pending';
+            return self::STATUS_PENDING;
         }
 
         $today = Carbon::today();
 
         if ($this->due_date->isBefore($today)) {
-            return 'expired';
+            return self::STATUS_EXPIRED;
+        }
+
+        if ($this->due_date->isAfter($today)) {
+            return self::STATUS_VALID;
         }
 
         $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
         $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
 
-        return $today->gte($warningStartDate) ? 'pending' : 'renewed';
+        return $today->gte($warningStartDate) ? self::STATUS_PENDING : self::STATUS_RENEWED;
     }
 
     public function syncStatusFromRules(): void
@@ -73,15 +83,18 @@ class Deadline extends Model
         $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
 
         if ($this->due_date->isBefore($today)) {
-            $newStatus = 'expired';
+            $newStatus = self::STATUS_EXPIRED;
+        } elseif ($this->due_date->isAfter($today)) {
+            $newStatus = self::STATUS_VALID;
         } elseif ($today->gte($warningStartDate)) {
-            $newStatus = 'pending';
+            $newStatus = self::STATUS_PENDING;
         } else {
-            $newStatus = 'renewed';
+            $newStatus = self::STATUS_RENEWED;
         }
 
         if ($this->status !== $newStatus) {
             $this->status = $newStatus;
+            $this->is_renewed = ($newStatus === self::STATUS_RENEWED);
             $this->save();
         }
     }
@@ -95,7 +108,7 @@ class Deadline extends Model
         $query = self::query()
             ->where('vehicle_id', $vehicle->id)
             ->where('type', self::TYPE_MINISTERIAL)
-            ->where('status', 'renewed')
+            ->where('status', self::STATUS_RENEWED)
             ->orderByDesc('due_date');
 
         if ($excludeDeadlineId !== null) {
@@ -124,7 +137,7 @@ class Deadline extends Model
         $query = self::query()
             ->where('vehicle_id', $vehicle->id)
             ->where('type', self::TYPE_OXYGEN)
-            ->where('status', 'renewed')
+            ->where('status', self::STATUS_RENEWED)
             ->orderByDesc('due_date');
 
         if ($excludeDeadlineId !== null) {

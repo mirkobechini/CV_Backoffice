@@ -65,9 +65,10 @@ class DeadlineController extends Controller
                 return match ($groupBy) {
                     'type' => $deadline->type ?? 'N/A',
                     'status' => match ($deadline->automatic_status) {
-                        'renewed' => 'Rinnovata',
-                        'pending' => 'In scadenza',
-                        'expired' => 'Scaduta',
+                        Deadline::STATUS_RENEWED => 'Rinnovata',
+                        Deadline::STATUS_PENDING => 'In scadenza',
+                        Deadline::STATUS_EXPIRED => 'Scaduta',
+                        Deadline::STATUS_VALID => 'Valida',
                         default => 'Sconosciuto',
                     },
                     'vehicle' => $deadline->vehicle?->internal_code ?? 'N/A',
@@ -221,24 +222,22 @@ class DeadlineController extends Controller
     private function resolveStatus(Carbon $dueDate, bool $markAsRenewed): string
     {
         $today = Carbon::today();
-        $monthDiff = $today->diffInMonths($dueDate, false);    
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
+        $warningStartDate = $dueDate->copy()->subMonthsNoOverflow($warningMonths);
+
+
 
         if ($markAsRenewed) {
-            if ($monthDiff > 3) {
-                return 'renewed';
-            } else if ($monthDiff <= 3 && $dueDate->isAfter($today)) {
-                return 'pending';
-            } else {
-                return 'expired';
-            }
-        }else {
-            if ($dueDate->isAfter($today->addMonths(3))) {
-                return 'renewed';
-            } else if ($dueDate->isAfter($today)) {
-                return 'pending';
-            } else {
-                return 'expired';
-            }
+            return Deadline::STATUS_RENEWED;
         }
+        if ($dueDate->isBefore($today)) {
+            return Deadline::STATUS_EXPIRED;
+        }
+
+        if ($today->gte($warningStartDate)) {
+            return Deadline::STATUS_PENDING;
+        }
+
+        return Deadline::STATUS_VALID;
     }
 }
