@@ -19,9 +19,9 @@ class DatabaseSeeder extends Seeder
             EquipmentTypeTableSeeder::class,
             VehicleTypeTableSeeder::class,
             VehicleTableSeeder::class,
+            EquipmentTableSeeder::class,
             ProviderTableSeeder::class,
             IssueTableSeeder::class,
-            
         ]);
     }
 }
