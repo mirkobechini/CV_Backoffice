@@ -30,8 +30,6 @@ class VehicleObserver
         while ($dueDate->lte($today)) {
             $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate);
 
-             $dueDate->addMonthsNoOverflow($regularInspectionMonths);
-
             $dueDate->addMonthsNoOverflow($regularInspectionMonths);
         }
 
