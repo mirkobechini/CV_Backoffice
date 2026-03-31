@@ -25,6 +25,10 @@
                                     <span class="badge bg-success">Rinnovata</span>
                                 @break
 
+                                @case('valid')
+                                    <span class="badge bg-success">Valida</span>
+                                @break
+
                                 @case('pending')
                                     <span class="badge bg-warning text-dark">In scadenza</span>
                                 @break

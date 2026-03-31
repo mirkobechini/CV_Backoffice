@@ -28,13 +28,13 @@ class VehicleObserver
 
         // Backfill storico: tutte le scadenze già passate vengono marcate renewed.
         while ($dueDate->lte($today)) {
-            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate);
+            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, true);
 
             $dueDate->addMonthsNoOverflow($regularInspectionMonths);
         }
 
         // Prima scadenza futura/aperta.
-        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate);
+        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, false);
 
         if (!Deadline::supportsOxygenCheckForVehicle($vehicle)) {
             return;
@@ -45,15 +45,15 @@ class VehicleObserver
 
         // Stesso approccio per revisione ossigeno, solo per mezzi che la supportano.
         while ($oxygenDueDate->lte($today)) {
-            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate);
+            $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, true);
 
             $oxygenDueDate->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
         }
 
-        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate);
+        $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, false);
     }
 
-    private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate): void
+    private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, bool $renewed): void
     {
         $alreadyExists = Deadline::query()
             ->where('vehicle_id', $vehicle->id)
@@ -64,11 +64,12 @@ class VehicleObserver
         if ($alreadyExists) {
             return;
         }
-
+        
         $deadline = Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => $type,
             'due_date' => $dueDate->toDateString(),
+            'is_renewed' => $renewed,
         ]);
         $deadline->syncStatusFromRules();
     }

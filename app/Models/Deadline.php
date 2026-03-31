@@ -94,7 +94,6 @@ class Deadline extends Model
 
         if ($this->status !== $newStatus) {
             $this->status = $newStatus;
-            $this->is_renewed = ($newStatus === self::STATUS_RENEWED);
             $this->save();
         }
     }

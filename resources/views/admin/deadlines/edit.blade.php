@@ -63,7 +63,7 @@
                             <div class="form-check mt-2">
                                 <input class="form-check-input @error('is_renewed') is-invalid @enderror"
                                     type="checkbox" value="1" id="is_renewed" name="is_renewed"
-                                    {{ old('is_renewed', $deadline->status === 'renewed') ? 'checked' : '' }}>
+                                    {{ old('is_renewed', $deadline->is_renewed) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_renewed">
                                     Segna come rinnovata
                                 </label>
