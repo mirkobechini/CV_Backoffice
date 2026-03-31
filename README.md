@@ -104,6 +104,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 ## 🗺️ Roadmap
 
 - [x] Rivedere nelle scadenze lo status rinnovata/scaduta (added is_renewed boolean in migration) se rinnovata, non mostrare più come scaduta e spostare in fondo alla lista(aggiungere attuale/valida (ok) a status?)
+- [ ] Rivedere la creazione automatica delle scadenze ( valutare se mettere tutte a scadute e far andare ad una pagina di modifica)
 - [ ] Modificare status che di default va a scaduta e non rinnovata
 - [ ] Gestione dotazioni di bordo (ossigeno, estintori, attrezzature) con scadenze e revisioni
 - [ ] API per modelli e brand veicoli
