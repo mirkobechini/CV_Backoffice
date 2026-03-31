@@ -20,7 +20,7 @@ class IssueTableSeeder extends Seeder
                 'description' => $faker->sentence(),
                 'status' => $faker->randomElement(['open', 'in_progress', 'closed']),
                 'event_date' => $faker->date(),
-                'vehicle_id' => $faker->numberBetween(1, 10),
+                'vehicle_id' => $faker->numberBetween(1, 5),
             ]);
         }
     }

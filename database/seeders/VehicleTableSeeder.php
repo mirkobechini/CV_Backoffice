@@ -14,7 +14,7 @@ class VehicleTableSeeder extends Seeder
      */
     public function run(Faker $faker): void
     {
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 5; $i++) {
              Vehicle::create([
                 'license_plate' => $faker->unique()->regexify('[A-Z]{2}[0-9]{3}[A-Z]{2}'),
                 'internal_code' => $faker->unique()->numberBetween(1000, 9999),
