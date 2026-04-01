@@ -122,6 +122,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 #### Deadlines / Tagliandi
 
+- [ ] In index visualizzare solo scadenze attive (non rinnovate) e scadute, escludendo quelle rinnovate
 - [ ] Implementare tagliandi in scadenze: oltre alla data, soglia km per prossimo tagliando
 
 #### MileageLog / Report
