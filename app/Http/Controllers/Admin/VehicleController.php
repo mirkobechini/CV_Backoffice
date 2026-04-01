@@ -5,12 +5,15 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
+use App\Models\Brand;
+use App\Models\CarModel;
 use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 
 class VehicleController extends Controller
 {
@@ -36,8 +39,9 @@ class VehicleController extends Controller
     public function create()
     {
         $vehicleTypes = VehicleType::all();
-
-        return view('admin.vehicles.create', compact('vehicleTypes'));
+        $vehicleBrands = Brand::pluck('name')->toArray();
+        $vehicleModels = CarModel::pluck('name')->toArray();
+        return view('admin.vehicles.create', compact('vehicleTypes', 'vehicleBrands', 'vehicleModels'));
     }
 
     /**
@@ -167,4 +171,5 @@ class VehicleController extends Controller
         $vehicle->delete();
         return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo eliminato con successo.');
     }
+
 }

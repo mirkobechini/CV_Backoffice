@@ -10,8 +10,8 @@ class Vehicle extends Model
     protected $fillable = [
         'license_plate',
         'internal_code',
-        'brand',
-        'model',
+        'brand_id',
+        'car_model_id',
         'fuel_type',
         'vehicle_type_id',
         'immatricolation_date',
@@ -50,6 +50,16 @@ class Vehicle extends Model
     {
         // Un mezzo appartiene a (belongsTo) un tipo
         return $this->belongsTo(VehicleType::class, 'vehicle_type_id');
+    }
+
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
+    public function carModel()
+    {
+        return $this->belongsTo(CarModel::class);
     }
 
 

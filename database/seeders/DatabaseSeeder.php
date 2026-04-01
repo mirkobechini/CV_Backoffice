@@ -18,10 +18,10 @@ class DatabaseSeeder extends Seeder
             UsersTableSeeder::class,
             EquipmentTypeTableSeeder::class,
             VehicleTypeTableSeeder::class,
-            VehicleTableSeeder::class,
-            EquipmentTableSeeder::class,
+            //VehicleTableSeeder::class,
+            //EquipmentTableSeeder::class,
             ProviderTableSeeder::class,
-            IssueTableSeeder::class,
+            //IssueTableSeeder::class,
         ]);
     }
 }
