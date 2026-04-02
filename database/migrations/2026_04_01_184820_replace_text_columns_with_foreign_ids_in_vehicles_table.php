@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('vehicles', function (Blueprint $table) {
             $table->dropColumn(['brand', 'model']);
-            $table->foreignId('brand_id')->nullable()->constrained()->onDelete('set null')->after('internal_code');
-            $table->foreignId('car_model_id')->nullable()->constrained()->onDelete('set null')->after('brand_id');
+            $table->foreignId('brand_id')->after('internal_code')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('car_model_id')->after('brand_id')->nullable()->constrained()->onDelete('set null');
         });
     }
 

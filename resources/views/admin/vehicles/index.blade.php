@@ -18,7 +18,7 @@
             @foreach ($vehicles as $vehicle)
                 <tr>
                     <td>{{ $vehicle->internal_code }}</td>
-                    <td>{{ $vehicle->model }}</td>
+                    <td>{{ $vehicle->brand->name ?? 'N/A' }} {{ $vehicle->carModel->name ?? 'N/A' }}</td>
                     <td>
                         {{ preg_replace('/^([A-Z]{2})(\d{3})([A-Z]{2})$/', '$1 $2 $3', strtoupper($vehicle->license_plate)) }}
                     </td>

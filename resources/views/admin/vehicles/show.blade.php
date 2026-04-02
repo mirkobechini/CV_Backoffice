@@ -20,8 +20,8 @@
                             <div class="col-12 col-md-3 mb-4 mb-md-0">
                                 <h5 class="mb-0 mb-md-3">Anagrafica</h5>
                                 <span class="card-text d-block"><strong>Targa:</strong> {{ $vehicle->license_plate }}</span>
-                                <span class="card-text d-block"><strong>Marca:</strong> {{ $vehicle->brand }}</span>
-                                <span class="card-text d-block"><strong>Modello:</strong> {{ $vehicle->model }}</span>
+                                <span class="card-text d-block"><strong>Marca:</strong> {{ $vehicle->brand->name ?? 'N/A' }}</span>
+                                <span class="card-text d-block"><strong>Modello:</strong> {{ $vehicle->carModel->name ?? 'N/A' }}</span>
                                 <span class="card-text d-block"><strong>Carburante:</strong>
                                     {{ $vehicle->fuel_type }}</span>
                                 <span class="card-text d-block"><strong>Chilometri:</strong> {{ $vehicle->mileage }}</span>

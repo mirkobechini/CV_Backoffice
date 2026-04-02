@@ -124,7 +124,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [x] Rivedere la creazione automatica delle scadenze ( valutare se mettere tutte a scadute e far andare ad una pagina di modifica)
 - [x] Modificare status che di default va a scaduta e non rinnovata
 - [ ] Gestione dotazioni di bordo (ossigeno, estintori, attrezzature) con scadenze e revisioni
-- [ ] Salva in database Models e Brands veicoli da API  (https://api.api-ninjas.com/v1/carmakes e https://api.api-ninjas.com/v1/carmodels)
+- [x] Salva in database Models e Brands veicoli da API  (https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json)
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo
 - [ ] Modulo API REST per integrazione esterna

@@ -18,8 +18,8 @@ class VehicleTableSeeder extends Seeder
              Vehicle::create([
                 'license_plate' => $faker->unique()->regexify('[A-Z]{2}[0-9]{3}[A-Z]{2}'),
                 'internal_code' => $faker->unique()->numberBetween(1000, 9999),
-                'brand' => $faker->randomElement(['Fiat', 'Ford', 'Dacia']),
-                'model' => $faker->randomElement(['Ducato', 'Transit', 'Sandero']),
+                'brand_id' => $faker->numberBetween(1, 10), // Assumendo che ci siano 39 brand importati
+                'car_model_id' => $faker->numberBetween(1, 17), // Assumendo che ci siano 1137 modelli importati
                 'fuel_type' => $faker->randomElement(['diesel', 'benzina']),
                 'vehicle_type_id' => $faker->numberBetween(1, 3),
                 'immatricolation_date' => $faker->date(),

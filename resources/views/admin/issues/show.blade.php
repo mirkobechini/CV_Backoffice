@@ -20,8 +20,8 @@
                         @endif
                     </div>
                     <div class="card-body">
-                        <p><strong>Veicolo:</strong> {{ $issue->vehicle->internal_code }} - {{ $issue->vehicle->brand }}
-                            {{ $issue->vehicle->model }}</p>
+                        <p><strong>Veicolo:</strong> {{ $issue->vehicle->internal_code }} - {{ $issue->vehicle->brand->name ?? 'N/A' }}
+                            {{ $issue->vehicle->carModel->name ?? 'N/A' }}</p>
                         <p><strong>Data del guasto:</strong> {{ $issue->event_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Stato:</strong>
                             @switch($issue->status)

@@ -22,8 +22,9 @@ class VehicleController extends Controller
      */
     public function index()
     {
+        
         $vehicles = Vehicle::query()
-            ->with('vehicleType')
+            ->with('vehicleType', 'brand', 'carModel')
             ->withCount([
                 'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
                 'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
@@ -66,8 +67,8 @@ class VehicleController extends Controller
             'license_plate' => $data['license_plate'],
             'vehicle_type_id' => $data['vehicle_type_id'],
             'internal_code' => $data['internal_code'],
-            'brand' => $data['brand'],
-            'model' => $data['model'],
+            'brand_id' => $data['brand_id'],
+            'car_model_id' => $data['car_model_id'],
             'fuel_type' => $data['fuel_type'] ?? null,
             'immatricolation_date' => $data['immatricolation_date'],
             'has_warranty_extension' => $hasWarrantyExtension,
@@ -149,8 +150,8 @@ class VehicleController extends Controller
             'license_plate' => $data['license_plate'],
             'vehicle_type_id' => $data['vehicle_type_id'],
             'internal_code' => $data['internal_code'],
-            'brand' => $data['brand'],
-            'model' => $data['model'],
+            'brand_id' => $data['brand_id'],
+            'car_model_id' => $data['car_model_id'],
             'fuel_type' => $data['fuel_type'] ?? null,
             'immatricolation_date' => $data['immatricolation_date'],
             'warranty_expiration_date' => $warrantyEffectiveExpirationDate,
