@@ -33,6 +33,22 @@
 | **Blade + Bootstrap (Laravel Breeze)** | Interfaccia amministrativa |
 | **MySQL/MariaDB (SQLite in sviluppo)** | Persistenza dati |
 
+### 🔌 API utilizzate
+
+- **Car List JSON dataset**: `https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json`
+  - usata per importare **brand** e **modelli** veicolo tramite il comando `php artisan import:car-data`
+
+### ⚙️ Funzionalità Laravel utilizzate
+
+- **Eloquent ORM** per modelli, relazioni e query applicative
+- **Migrations e Seeders** per struttura e popolamento iniziale del database
+- **Form Requests** per la validazione dei dati lato backend
+- **Laravel Breeze** per autenticazione e gestione sessione utente
+- **Livewire** per componenti dinamici come `VehicleSelect`
+- **Observers** per automatizzare logiche su entità legate ai veicoli
+- **Artisan Commands** personalizzati, come `php artisan import:car-data` per importare dati da API esterne
+- **Filesystem / Storage pubblico** per la gestione degli upload documentali
+
 ---
 
 ## 🚀 Quick Start
@@ -66,6 +82,7 @@ npm install
 # Configura ambiente
 cp .env.example .env
 php artisan key:generate
+php artisan import:car-data
 
 # Configura e popola il database
 php artisan migrate --seed
@@ -107,7 +124,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [x] Rivedere la creazione automatica delle scadenze ( valutare se mettere tutte a scadute e far andare ad una pagina di modifica)
 - [x] Modificare status che di default va a scaduta e non rinnovata
 - [ ] Gestione dotazioni di bordo (ossigeno, estintori, attrezzature) con scadenze e revisioni
-- [ ] API per modelli e brand veicoli (https://api.api-ninjas.com/v1/carmakes e https://api.api-ninjas.com/v1/carmodels)
+- [ ] Salva in database Models e Brands veicoli da API  (https://api.api-ninjas.com/v1/carmakes e https://api.api-ninjas.com/v1/carmodels)
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo
 - [ ] Modulo API REST per integrazione esterna
@@ -122,7 +139,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 #### Deadlines / Tagliandi
 
-- [ ] In index visualizzare solo scadenze attive (non rinnovate) e scadute, escludendo quelle rinnovate
+- [x] In index visualizzare solo scadenze attive (non rinnovate) e scadute, escludendo quelle rinnovate
 - [ ] Implementare tagliandi in scadenze: oltre alla data, soglia km per prossimo tagliando
 
 #### MileageLog / Report

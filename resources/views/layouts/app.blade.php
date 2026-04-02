@@ -24,6 +24,8 @@
 
     <!-- Usando Vite -->
     @vite(['resources/js/app.js'])
+
+    @livewireStyles
 </head>
 
 <body>
@@ -43,6 +45,7 @@
         @endif
         @yield('content')
     </main>
+    @livewireScripts
 </body>
 
 </html>

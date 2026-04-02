@@ -28,29 +28,29 @@ class ImportCarData extends Command
      */
     public function handle()
     {
-        $brandsNeeded = ['FIAT', 'FORD', 'RENAULT', 'MERCEDES-BENZ', 'DACIA', 'VOLKSWAGEN'];
-
         $this->info('Inizio importazione dati...');
 
+        $res = Http::get("https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json");
+
+        if(!$res->successful()) {
+            $this->error("Impossibile scaricare i dati.");
+            return;
+        }
+
+        $brandsData = $res->json();
         //Crea o aggiorna i brand necessari
-        foreach ($brandsNeeded as $brandName) {
-            $this->info("Importando brand: $brandName");
+        foreach ($brandsData as $brandItem) {
+
+            $brandName = $brandItem['brand'];
+            $models = $brandItem['models'];
+
+            $this->info("Importazione brand: $brandName...");
+
             $brand = Brand::updateOrCreate(['name' => $brandName]);
-
-            //Chiama API per modelli del brand
-            $res = Http::get("https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformake/$brandName?format=json");
-            if ($res->successful()) {
-                $carModels = $res->json()['Results'];
-
-                foreach ($carModels as $carModelData) {
-                    CarModel::updateOrCreate([
-                        'brand_id' => $brand->id,
-                        'name' => $carModelData['Model_Name']
-                    ]);
-                }
-                $this->info("Completato: $brandName (" . count($carModels) . " modelli aggiunti)");
-            } else {
-                $this->error("Errore durante il recupero dei modelli per $brandName");
+            foreach ($models as $modelName) {
+                CarModel::firstOrCreate(
+                    ['name' => $modelName, 'brand_id' => $brand->id]
+                );
             }
         }
         $this->info('Importazione terminata con successo!');

@@ -39,9 +39,7 @@ class VehicleController extends Controller
     public function create()
     {
         $vehicleTypes = VehicleType::all();
-        $vehicleBrands = Brand::pluck('name')->toArray();
-        $vehicleModels = CarModel::pluck('name')->toArray();
-        return view('admin.vehicles.create', compact('vehicleTypes', 'vehicleBrands', 'vehicleModels'));
+        return view('admin.vehicles.create', compact('vehicleTypes'));
     }
 
     /**

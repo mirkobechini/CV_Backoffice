@@ -24,22 +24,9 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
-                            <label for="brand" class="form-label">Marca</label>
-                            <input type="text" class="form-control @error('brand') is-invalid @enderror" id="brand"
-                                name="brand" value="{{ old('brand') }}" required>
-                            @error('brand')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="model" class="form-label">Modello</label>
-                            <input type="text" class="form-control @error('model') is-invalid @enderror" id="model"
-                                name="model" value="{{ old('model') }}" required>
-                            @error('model')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        <!-- Sezione dinamica con Livewire per marca e modello -->
+                        @livewire('vehicle-select')
+                        <!-- Fine sezione dinamica con Livewire per marca e modello -->
                         <div class="mb-3">
                             <label for="fuel_type" class="form-label">Carburante</label>
                             <select class="form-select @error('fuel_type') is-invalid @enderror" id="fuel_type"
