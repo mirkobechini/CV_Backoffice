@@ -3,7 +3,8 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ request('back', route('admin.vehicle-types.index')) }}" class="btn btn-secondary">Torna alla pagina
+                <a href="{{ request('back', route('admin.vehicle-types.index')) }}" class="btn btn-secondary">Torna alla
+                    pagina
                     precedente</a>
             </div>
         </div>
@@ -22,15 +23,6 @@
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
                                 name="name" value="{{ old('name', $vehicleType->name) }}" required>
                             @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="extinguishers_required" class="form-label">Numero di estintori necessari</label>
-                            <input type="text" class="form-control @error('extinguishers_required') is-invalid @enderror"
-                                id="extinguishers_required" name="extinguishers_required"
-                                value="{{ old('extinguishers_required', $vehicleType->extinguishers_required) }}" required>
-                            @error('extinguishers_required')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -71,6 +63,70 @@
                                 @enderror
                             </div>
                         </div>
+                        <fieldset class="mb-3">
+                            <legend class="mb-3">Equipaggiamento necessario</legend>
+
+                            @php
+                                $selectedEquipmentTypes = old(
+                                    'required_equipment_types',
+                                    $equipmentTypeRequirements->pluck('id')->all(),
+                                );
+                                $requiredEquipmentQty = old(
+                                    'required_equipment_types_qty',
+                                    $equipmentTypeRequirements->pluck('pivot.required_quantity')->all(),
+                                );
+                                $rowsCount = max(count($selectedEquipmentTypes), count($requiredEquipmentQty), 1);
+                                $equipmentOptions = $equipmentTypes
+                                    ->map(function ($type) {
+                                        return [
+                                            'id' => $type->id,
+                                            'name' => $type->name,
+                                        ];
+                                    })
+                                    ->values();
+                            @endphp
+
+                            <div id="equipment-rows" data-equipment-options='@json($equipmentOptions)'>
+                                @for ($i = 0; $i < $rowsCount; $i++)
+                                    <div class="equipment-row d-flex gap-2 mb-2">
+                                        <select
+                                            class="form-select {{ $errors->has('required_equipment_types') || $errors->has('required_equipment_types.*') ? 'is-invalid' : '' }}"
+                                            id="required_equipment_types_{{ $i }}"
+                                            name="required_equipment_types[]">
+                                            <option value="" disabled
+                                                {{ ($selectedEquipmentTypes[$i] ?? '') === '' ? 'selected' : '' }}>
+                                                Seleziona equipaggiamento</option>
+                                            @foreach ($equipmentTypes as $type)
+                                                <option value="{{ $type->id }}"
+                                                    {{ (string) ($selectedEquipmentTypes[$i] ?? '') === (string) $type->id ? 'selected' : '' }}>
+                                                    {{ $type->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="number"
+                                            class="form-control {{ $errors->has('required_equipment_types_qty') || $errors->has('required_equipment_types_qty.*') ? 'is-invalid' : '' }}"
+                                            name="required_equipment_types_qty[]"
+                                            value="{{ $requiredEquipmentQty[$i] ?? 1 }}" min="0">
+                                        <button type="button"
+                                            class="btn btn-outline-danger remove-equipment-btn">Rimuovi</button>
+                                    </div>
+                                @endfor
+                            </div>
+
+                            @if ($errors->has('required_equipment_types') || $errors->has('required_equipment_types.*'))
+                                <div class="invalid-feedback d-block">
+                                    {{ $errors->first('required_equipment_types') ?: $errors->first('required_equipment_types.*') }}
+                                </div>
+                            @endif
+                            @if ($errors->has('required_equipment_types_qty') || $errors->has('required_equipment_types_qty.*'))
+                                <div class="invalid-feedback d-block">
+                                    {{ $errors->first('required_equipment_types_qty') ?: $errors->first('required_equipment_types_qty.*') }}
+                                </div>
+                            @endif
+
+                            <button type="button" class="btn btn-link mt-2 px-0" id="add-equipment-btn">+ Aggiungi altro
+                                equipaggiamento</button>
+                        </fieldset>
                     </section>
                     <button id="issue-submit-btn" type="submit" class="btn btn-primary"
                         data-loading-text="Salvataggio...">Salva modifiche</button>

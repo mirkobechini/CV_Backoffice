@@ -25,9 +25,12 @@ class UpdateVehicleTypeRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', Rule::unique('vehicle_types', 'name')->ignore($this->route('vehicleType')->id)],
             'needs_oxygen_check' => 'boolean',
-            'extinguishers_required' => 'required|integer|min:0',
             'first_inspection_months' => 'required|integer|min:0',
             'regular_inspection_months' => 'required|integer|min:0',
+            'required_equipment_types' => 'nullable|array',
+            'required_equipment_types.*' => 'nullable|integer|exists:equipment_types,id',
+            'required_equipment_types_qty' => 'nullable|array',
+            'required_equipment_types_qty.*' => 'nullable|integer|min:0',
         ];
     }
 
@@ -39,9 +42,10 @@ class UpdateVehicleTypeRequest extends FormRequest
             'name.max' => 'Il nome non può superare i 255 caratteri.',
             'name.unique' => 'Esiste già un tipo di veicolo con questo nome.',
             'needs_oxygen_check.boolean' => 'Il campo revisione ossigeno deve essere true o false.',
-            'extinguishers_required.required' => 'Il numero di estintori è obbligatorio.',
-            'extinguishers_required.integer' => 'Il numero di estintori deve essere un intero.',
-            'extinguishers_required.min' => 'Il numero di estintori non può essere negativo.',
+            'required_equipment_types.*.integer' => 'L\'ID dell\'equipaggiamento deve essere un intero.',
+            'required_equipment_types.*.exists' => 'L\'equipaggiamento selezionato non esiste.',
+            'required_equipment_types_qty.*.integer' => 'La quantità di equipaggiamento deve essere un intero.',
+            'required_equipment_types_qty.*.min' => 'La quantità di equipaggiamento non può essere negativa.',
             'first_inspection_months.required' => 'La durata della prima revisione è obbligatoria.',
             'first_inspection_months.integer' => 'La durata della prima revisione deve essere un intero.',
             'first_inspection_months.min' => 'La durata della prima revisione non può essere negativa.',

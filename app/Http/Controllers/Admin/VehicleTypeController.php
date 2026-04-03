@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVehicleTypeRequest;
 use App\Http\Requests\UpdateVehicleTypeRequest;
+use App\Models\EquipmentType;
 use App\Models\VehicleType;
-use Illuminate\Http\Request;
 
 class VehicleTypeController extends Controller
 {
@@ -24,7 +24,8 @@ class VehicleTypeController extends Controller
      */
     public function create()
     {
-        return view('admin.vehicle-types.create');
+        $equipmentTypes = EquipmentType::all();
+        return view('admin.vehicle-types.create', compact('equipmentTypes'));
     }
 
     /**
@@ -32,19 +33,17 @@ class VehicleTypeController extends Controller
      */
     public function store(StoreVehicleTypeRequest $request)
     {
-        $request->merge([
-            'needs_oxygen_check' => $request->boolean('needs_oxygen_check'),
-        ]);
-
         $data = $request->validated();
+        $data['needs_oxygen_check'] = $request->boolean('needs_oxygen_check');
 
         $newVehicleType = VehicleType::create([
             'name' => $data['name'],
-            'needs_oxygen_check' => $data['needs_oxygen_check'] ?? false,
-            'extinguishers_required' => $data['extinguishers_required'],
+            'needs_oxygen_check' => $data['needs_oxygen_check'],
             'first_inspection_months' => $data['first_inspection_months'],
             'regular_inspection_months' => $data['regular_inspection_months'],
         ]);
+
+        $this->syncEquipmentRequirements($newVehicleType, $data);
 
         return redirect()
             ->route('admin.vehicle-types.index')
@@ -64,7 +63,10 @@ class VehicleTypeController extends Controller
      */
     public function edit(VehicleType $vehicleType)
     {
-        return view('admin.vehicle-types.edit', compact('vehicleType'));
+        $equipmentTypes = EquipmentType::all();
+        $equipmentTypeRequirements = $vehicleType->equipmentTypes()->withPivot('required_quantity')->get();
+
+        return view('admin.vehicle-types.edit', compact('vehicleType', 'equipmentTypes', 'equipmentTypeRequirements'));
     }
 
     /**
@@ -72,22 +74,50 @@ class VehicleTypeController extends Controller
      */
     public function update(UpdateVehicleTypeRequest $request, VehicleType $vehicleType)
     {
-        $request->merge([
-            'needs_oxygen_check' => $request->boolean('needs_oxygen_check'),
-        ]);
-
         $data = $request->validated();
+        $data['needs_oxygen_check'] = $request->boolean('needs_oxygen_check');
+
         $vehicleType->update([
             'name' => $data['name'],
-            'needs_oxygen_check' => $data['needs_oxygen_check'] ?? false,
-            'extinguishers_required' => $data['extinguishers_required'],
+            'needs_oxygen_check' => $data['needs_oxygen_check'],
             'first_inspection_months' => $data['first_inspection_months'],
             'regular_inspection_months' => $data['regular_inspection_months'],
         ]);
 
+        $this->syncEquipmentRequirements($vehicleType, $data);
+
         return redirect()
             ->route('admin.vehicle-types.show', $vehicleType->id)
             ->with('status', 'Tipo di veicolo aggiornato con successo.');
+    }
+
+    /// Sincronizza le relazioni tra il tipo di veicolo e i tipi di equipaggiamento richiesti
+    private function syncEquipmentRequirements(VehicleType $vehicleType, array $data): void
+    {
+        $equipmentTypeIds = $data['required_equipment_types'] ?? [];
+        $requiredQuantities = $data['required_equipment_types_qty'] ?? [];
+
+        if (!is_array($equipmentTypeIds)) {
+            $equipmentTypeIds = [$equipmentTypeIds];
+        }
+
+        if (!is_array($requiredQuantities)) {
+            $requiredQuantities = [$requiredQuantities];
+        }
+
+        $syncData = [];
+
+        foreach ($equipmentTypeIds as $index => $equipmentTypeId) {
+            if (blank($equipmentTypeId)) {
+                continue;
+            }
+
+            $syncData[$equipmentTypeId] = [
+                'required_quantity' => (int) ($requiredQuantities[$index] ?? 1),
+            ];
+        }
+
+        $vehicleType->equipmentTypes()->sync($syncData);
     }
 
     /**
