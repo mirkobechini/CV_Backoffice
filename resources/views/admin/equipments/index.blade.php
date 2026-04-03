@@ -17,7 +17,7 @@
         <x-slot:rows>
             @foreach ($equipments as $equipment)
                 <tr>
-                    <td>{{ $equipment->name }}</td>
+                    <td>{{ $equipment->equipmentType->name ?? 'N/A' }}</td>
                     <td>{{ $equipment->serial_number }}</td>
                     <td>{{ $equipment->revision_date_formatted }}</td>
                     <td>{{ $equipment->vehicle?->internal_code ?? 'N/A' }}</td>

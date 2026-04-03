@@ -12,7 +12,7 @@
                 <div class="card mb-4">
 
                     <div class="card-header">
-                        <h1>{{ $equipment->name }}</h1>
+                        <h1>{{ $equipment->equipmentType->name ?? 'N/A' }}</h1>
                     </div>
                     <div class="card-body">
                         <p><strong>Data revisione:</strong> {{ $equipment->revision_date_formatted  ?? 'N/A' }}</p>
