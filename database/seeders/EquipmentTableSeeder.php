@@ -16,7 +16,7 @@ class EquipmentTableSeeder extends Seeder
     {
         for ($i = 0; $i < 10; $i++) {
             Equipment::create([
-                'equipment_type_id' => $faker->numberBetween(1, 5),
+                'equipment_type_id' => $faker->numberBetween(1, 3),
                 'vehicle_id' => $faker->numberBetween(1, 5),
                 'name' => $faker->word(),
                 'serial_number' => $faker->unique()->regexify('[A-Z0-9]{10}'),

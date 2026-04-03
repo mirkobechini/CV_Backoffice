@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             UsersTableSeeder::class,
             EquipmentTypeTableSeeder::class,
             VehicleTypeTableSeeder::class,
+            VehicleTypeEquipmentRequirementSeeder::class,
             VehicleTableSeeder::class,
             EquipmentTableSeeder::class,
             ProviderTableSeeder::class,

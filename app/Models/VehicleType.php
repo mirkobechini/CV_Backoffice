@@ -19,4 +19,9 @@ class VehicleType extends Model
         // Un tipo ha molti (hasMany) mezzi
         return $this->hasMany(Vehicle::class);
     }
+
+    public function equipmentTypes(){
+        return $this->belongsToMany(EquipmentType::class, 'vehicle_type_equipment_requirements', 'vehicle_type_id', 'equipment_type_id')
+        ->withPivot('required_quantity');
+    }
 }

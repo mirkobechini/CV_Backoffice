@@ -17,21 +17,18 @@ class VehicleTypeTableSeeder extends Seeder
             [
                 'name' => 'Ambulanza',
                 'needs_oxygen_check' => true,
-                'extinguishers_required' => 2,
                 'first_inspection_months' => 12,
                 'regular_inspection_months' => 12,
             ],
             [
                 'name' => 'Mezzo Attrezzato',
                 'needs_oxygen_check' => false,
-                'extinguishers_required' => 1,
                 'first_inspection_months' => 48,
                 'regular_inspection_months' => 24,
             ],
             [
                 'name' => 'Auto',
                 'needs_oxygen_check' => false,
-                'extinguishers_required' => 1,
                 'first_inspection_months' => 48,
                 'regular_inspection_months' => 24,
             ],

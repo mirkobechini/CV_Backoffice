@@ -27,4 +27,9 @@ class EquipmentType extends Model
     {
         return $this->hasMany(Equipment::class, 'equipment_type_id');
     }
+
+    public function vehicleTypes(){
+        return $this->belongsToMany(VehicleType::class, 'vehicle_type_equipment_requirements', 'equipment_type_id', 'vehicle_type_id')
+        ->withPivot('required_quantity');
+    }
 }
