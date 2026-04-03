@@ -19,7 +19,7 @@
                         <p><strong>Data scadenza:</strong> {{ $equipment->expiration_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Veicolo associato:</strong>
                             @if ($equipment->vehicle)
-                                {{ $equipment->vehicle->internal_code }} - {{ $equipment->vehicle->brand }} {{ $equipment->vehicle->model }}
+                                {{ $equipment->vehicle->internal_code }} - {{ $equipment->vehicle->brand->name }} {{ $equipment->vehicle->carModel->name }}
                             @else
                                 N/A
                             @endif

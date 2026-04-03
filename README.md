@@ -128,6 +128,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo
 - [ ] Modulo API REST per integrazione esterna
+- [ ] Style e UX migliorati, con focus su usabilità e accessibilità
 - [ ] Test end-to-end sui flussi critici
 
 ### Backlog funzionale dettagliato
