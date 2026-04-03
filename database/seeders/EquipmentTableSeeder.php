@@ -14,6 +14,7 @@ class EquipmentTableSeeder extends Seeder
      */
     public function run(Faker $faker): void
     {
+        //creare observers per aggiornare stato conformità in base a scadenze
         for ($i = 0; $i < 10; $i++) {
             Equipment::create([
                 'equipment_type_id' => $faker->numberBetween(1, 3),

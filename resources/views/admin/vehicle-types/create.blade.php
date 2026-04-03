@@ -24,13 +24,7 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="extinguishers_required" class="form-label">Numero di estintori necessari</label>
-                            <input type="text" class="form-control @error('extinguishers_required') is-invalid @enderror"
-                                id="extinguishers_required" name="extinguishers_required"
-                                value="{{ old('extinguishers_required') }}" required>
-                            @error('extinguishers_required')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            coming soon: gestione equipaggiamento per tipologia mezzo <!-- TODO -->
                         </div>
                         <div class="mb-3">
                             <label for="first_inspection_months" class="form-label">Dopo quanti mesi la prima

@@ -54,6 +54,7 @@
                         <h2>Dettagli Veicolo</h2>
                         <div class="mb-3">
                             <label for="vehicle_id" class="form-label">Veicolo</label>
+                            <!-- TODO: se veicolo ha gia equipaggiamento necessario chiedere eventuale swap -->
                             <select class="form-select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
                                 name="vehicle_id">
                                 <option value="">Nessun veicolo associato</option>
