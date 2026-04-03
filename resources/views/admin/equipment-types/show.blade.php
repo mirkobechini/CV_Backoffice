@@ -16,8 +16,8 @@
                         <h1>{{ $equipmentType->name }}</h1>
                     </div>
                     <div class="card-body">
-                        <p><strong>Prima revisione (mesi):</strong> {{ $equipmentType->first_inspection_months_formatted }}</p>
-                        <p><strong>Revisione regolare (mesi):</strong> {{ $equipmentType->regular_inspection_months_formatted }}</p>
+                        <p><strong>Prima revisione:</strong> {{ $equipmentType->first_inspection_months_formatted }}</p>
+                        <p><strong>Revisione regolare:</strong> {{ $equipmentType->regular_inspection_months_formatted }}</p>
                     </div>
                 </div>
             </div>

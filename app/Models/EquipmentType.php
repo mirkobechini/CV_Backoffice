@@ -15,12 +15,16 @@ class EquipmentType extends Model
 
     public function getFirstInspectionMonthsFormattedAttribute(): ?string
     {
-        return $this->first_inspection_months?->format('m/Y');
+        return $this->first_inspection_months !== null
+            ? $this->first_inspection_months . ' mesi'
+            : null;
     }
 
     public function getRegularInspectionMonthsFormattedAttribute(): ?string
     {
-        return $this->regular_inspection_months?->format('m/Y');
+        return $this->regular_inspection_months !== null
+            ? $this->regular_inspection_months . ' mesi'
+            : null;
     }
 
     public function equipments()
@@ -28,8 +32,9 @@ class EquipmentType extends Model
         return $this->hasMany(Equipment::class, 'equipment_type_id');
     }
 
-    public function vehicleTypes(){
+    public function vehicleTypes()
+    {
         return $this->belongsToMany(VehicleType::class, 'vehicle_type_equipment_requirements', 'equipment_type_id', 'vehicle_type_id')
-        ->withPivot('required_quantity');
+            ->withPivot('required_quantity');
     }
 }
