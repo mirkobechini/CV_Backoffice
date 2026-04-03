@@ -3,7 +3,8 @@
     <div class="container py-4">
         <div class="row mb-3">
             <div class="col-12">
-                <a href="{{ request('back', route('admin.vehicle-types.index')) }}" class="btn btn-secondary">Torna alla pagina
+                <a href="{{ request('back', route('admin.vehicle-types.index')) }}" class="btn btn-secondary">Torna alla
+                    pagina
                     precedente</a>
             </div>
         </div>
@@ -29,7 +30,15 @@
                             @endif
                         </p>
                         <p><strong>Revisione ossigeno:</strong> {{ $vehicleType->needs_oxygen_check ? 'Sì' : 'No' }}</p>
-                        <p><strong>Equipaggiamento:</strong> {{ $vehicleType->extinguishers_required }}</p>
+                        <fieldset>
+
+                            <strong>Equipaggiamento:</strong> {{ $vehicleType->extinguishers_required }}
+                            <ul class="list-unstyled ps-2">
+                                @foreach ($vehicleType->equipmentTypes as $equipmentType)
+                                    <li>{{ $equipmentType->name }}: {{ $equipmentType->pivot->required_quantity }}</li>
+                                @endforeach
+                            </ul>
+                        </fieldset>
                     </div>
                 </div>
             </div>

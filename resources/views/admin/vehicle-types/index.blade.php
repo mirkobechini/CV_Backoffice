@@ -7,7 +7,7 @@
 
         <x-slot:head>
             <th scope="col">Nome</th>
-            <th scope="col">Estintori</th>
+            <th scope="col">Revisione Ossigeno</th>
             <th scope="col">Azioni</th>
         </x-slot:head>
 
@@ -15,7 +15,7 @@
             @foreach ($vehicleTypes as $vehicleType)
                 <tr>
                     <td>{{ $vehicleType->name }}</td>
-                    <td>{{ $vehicleType->extinguishers_required }}</td>
+                    <td><i class="fa-solid {{ $vehicleType->needs_oxygen_check ? 'fa-check text-success' : 'fa-times text-danger' }}"></i></td>
                     <x-admin.row-actions :showUrl="route('admin.vehicle-types.show', $vehicleType->id)" :editUrl="route('admin.vehicle-types.edit', $vehicleType->id)" :deleteTarget="'#confirmDeleteModal-' . $vehicleType->id" :label="'tipo di veicolo ' . $vehicleType->name" />
                 </tr>
                 <x-admin.delete-modal type="vehicleType" :object="$vehicleType" />

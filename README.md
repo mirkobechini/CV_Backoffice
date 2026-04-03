@@ -134,7 +134,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 #### Vehicle / Equipment
 
-- [ ] Rivedere VehicleType per gestione equipaggiamento per tipologia mezzo
+- [x] Rivedere VehicleType per gestione equipaggiamento per tipologia mezzo
 - [ ] View veicolo: link agli equipaggiamenti del mezzo + stato conformità per equipaggiamento
 
 #### Deadlines / Tagliandi
