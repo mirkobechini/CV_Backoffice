@@ -79,7 +79,9 @@ class EquipmentTypeCrudTest extends TestCase
             'regular_inspection_months' => 6,
         ]);
 
-        $response->assertRedirect(route('admin.equipment-types.index'));
+        $equipmentType = EquipmentType::first();
+
+        $response->assertRedirect(route('admin.equipment-types.show', $equipmentType));
 
         $this->assertDatabaseHas('equipment_types', [
             'name' => 'Estintore',

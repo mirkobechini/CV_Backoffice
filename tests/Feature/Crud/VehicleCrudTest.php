@@ -123,7 +123,9 @@ class VehicleCrudTest extends TestCase
             'has_warranty_extension' => 0,
         ]);
 
-        $response->assertRedirect(route('admin.vehicles.index'));
+        $vehicle = Vehicle::first();
+
+        $response->assertRedirect(route('admin.vehicles.show', $vehicle));
 
         $this->assertDatabaseHas('vehicles', [
             'license_plate' => 'AB123CD',

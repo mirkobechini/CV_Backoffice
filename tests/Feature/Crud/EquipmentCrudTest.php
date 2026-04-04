@@ -97,7 +97,9 @@ class EquipmentCrudTest extends TestCase
             'expiration_date' => '2024-01-01',
         ]);
 
-        $response->assertRedirect(route('admin.equipments.index'));
+        $equipment = Equipment::first();
+
+        $response->assertRedirect(route('admin.equipments.show', $equipment));
 
         $this->assertDatabaseHas('equipment', [
             'equipment_type_id' => $equipmentType->id,

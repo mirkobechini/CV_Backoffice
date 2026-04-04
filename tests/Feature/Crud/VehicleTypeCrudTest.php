@@ -81,7 +81,9 @@ class VehicleTypeCrudTest extends TestCase
             'regular_inspection_months' => 12,
         ]);
 
-        $response->assertRedirect(route('admin.vehicle-types.index'));
+         $vehicleType = VehicleType::first();
+
+        $response->assertRedirect(route('admin.vehicle-types.show',$vehicleType));
 
         $this->assertDatabaseHas('vehicle_types', [
             'name' => 'Ambulanza',
