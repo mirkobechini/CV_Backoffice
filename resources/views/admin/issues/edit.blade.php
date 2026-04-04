@@ -24,7 +24,7 @@
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         {{ old('vehicle_id', $issue->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand }} {{ $vehicle->model }}
+                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand->name ?? 'N/A' }} {{ $vehicle->carModel->name ?? 'N/A' }}
                                     </option>
                                 @endforeach
                             </select>
