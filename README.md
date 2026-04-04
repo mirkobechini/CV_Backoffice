@@ -125,6 +125,8 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [x] Modificare status che di default va a scaduta e non rinnovata
 - [ ] Gestione dotazioni di bordo (ossigeno, estintori, attrezzature) con scadenze e revisioni
 - [x] Salva in database Models e Brands veicoli da API  (https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json)
+- [ ] Crea test per raggiungimento pagine
+- [ ] Crea test per corretto funzionamento
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo
 - [ ] Modulo API REST per integrazione esterna
