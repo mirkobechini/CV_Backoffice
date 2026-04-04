@@ -80,7 +80,7 @@ class VehicleController extends Controller
 
         $newVehicle = Vehicle::create($vehicleData);
 
-        return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo creato con successo.');
+        return redirect()->route('admin.vehicles.show', $newVehicle)->with('status', 'Veicolo creato con successo.');
     }
 
     /**

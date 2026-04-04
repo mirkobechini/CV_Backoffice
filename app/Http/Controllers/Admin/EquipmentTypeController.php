@@ -34,9 +34,9 @@ class EquipmentTypeController extends Controller
     {
         $validatedData = $request->validated();
 
-        EquipmentType::create($validatedData);
+        $newEquipmentType = EquipmentType::create($validatedData);
 
-        return redirect()->route('admin.equipment-types.index')->with('status', 'Tipo di attrezzatura creato con successo.');
+        return redirect()->route('admin.equipment-types.show', $newEquipmentType)->with('status', 'Tipo di attrezzatura creato con successo.');
     }
 
     /**

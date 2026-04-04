@@ -37,8 +37,8 @@ class MileageLogController extends Controller
      */
     public function store(StoreMileageLogRequest $request)
     {
-        MileageLog::create($request->validated());
-        return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio creato con successo.');
+        $newMileageLog = MileageLog::create($request->validated());
+        return redirect()->route('admin.mileage-logs.show', $newMileageLog)->with('status', 'Chilometraggio creato con successo.');
     }
 
     /**
@@ -65,7 +65,7 @@ class MileageLogController extends Controller
     public function update(UpdateMileageLogRequest $request, MileageLog $mileageLog)
     {
         $mileageLog->update($request->validated());
-        return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio aggiornato con successo.');
+        return redirect()->route('admin.mileage-logs.show',  $mileageLog)->with('status', 'Chilometraggio aggiornato con successo.');
     }
 
     /**

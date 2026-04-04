@@ -46,7 +46,7 @@ class VehicleTypeController extends Controller
         $this->syncEquipmentRequirements($newVehicleType, $data);
 
         return redirect()
-            ->route('admin.vehicle-types.index')
+            ->route('admin.vehicle-types.show', $newVehicleType)
             ->with('status', 'Tipo di veicolo creato con successo.');
     }
 

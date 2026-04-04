@@ -40,9 +40,9 @@ class EquipmentController extends Controller
     {
         $validatedData = $request->validated();
 
-        Equipment::create($validatedData);
+        $newEquipment = Equipment::create($validatedData);
 
-        return redirect()->route('admin.equipments.index')->with('status', 'Attrezzatura creata con successo.');
+        return redirect()->route('admin.equipments.show', $newEquipment)->with('status', 'Attrezzatura creata con successo.');
     }
 
     /**
