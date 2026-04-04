@@ -25,7 +25,10 @@
                             @enderror
                         </div>
                         <!-- Sezione dinamica con Livewire per marca e modello -->
-                        @livewire('vehicle-select')
+                        @livewire('vehicle-select', [
+                            'brand_id' => old('brand_id', $vehicle->brand_id),
+                            'car_model_id' => old('car_model_id', $vehicle->car_model_id),
+                        ])
                         <!-- Fine sezione dinamica con Livewire per marca e modello -->
                         <div class="mb-3">
                             <label for="fuel_type" class="form-label">Carburante</label>

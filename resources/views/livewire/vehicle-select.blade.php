@@ -1,10 +1,3 @@
-<?php
-
-use Livewire\Component;
-
-
-?>
-
 <div>
     <div class="mb-3">
         <label for="brand_id" class="form-label">Marca</label>

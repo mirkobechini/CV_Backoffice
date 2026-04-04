@@ -16,8 +16,8 @@
                     </div>
                     <div class="card-body">
                         <p><strong>Veicolo:</strong> {{ $deadline->vehicle->internal_code }} -
-                            {{ $deadline->vehicle->brand }}
-                            {{ $deadline->vehicle->model }}</p>
+                            {{ $deadline->vehicle->brand?->name ?? 'N/A' }}
+                            {{ $deadline->vehicle->carModel?->name ?? 'N/A' }}</p>
                         <p><strong>Data di scadenza:</strong> {{ $deadline->due_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Stato:</strong>
                             @switch($deadline->automatic_status)

@@ -25,7 +25,7 @@
                                     <option value="{{ $vehicle->id }}"
                                         data-needs-oxygen-check="{{ $vehicle->vehicleType?->needs_oxygen_check ? '1' : '0' }}"
                                         {{ old('vehicle_id', $mileageLog->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand }} {{ $vehicle->model }}
+                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand?->name ?? 'N/A' }} {{ $vehicle->carModel?->name ?? 'N/A' }}
                                     </option>
                                 @endforeach
                             </select>

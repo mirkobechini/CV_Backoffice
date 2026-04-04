@@ -108,8 +108,7 @@ class Deadline extends Model
             return null;
         }
 
-        $query = self::query()
-            ->where('vehicle_id', $vehicle->id)
+        $query = $vehicle->deadlines()
             ->where('type', self::TYPE_MINISTERIAL)
             ->where('status', self::STATUS_RENEWED)
             ->orderByDesc('due_date');
@@ -137,8 +136,7 @@ class Deadline extends Model
             return null;
         }
 
-        $query = self::query()
-            ->where('vehicle_id', $vehicle->id)
+        $query = $vehicle->deadlines()
             ->where('type', self::TYPE_OXYGEN)
             ->where('status', self::STATUS_RENEWED)
             ->orderByDesc('due_date');

@@ -5,15 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
-use App\Models\Brand;
-use App\Models\CarModel;
 use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Http;
 
 class VehicleController extends Controller
 {
@@ -101,7 +97,6 @@ class VehicleController extends Controller
 
         $deadlines = $vehicle->deadlines
             ->sortByDesc('due_date')
-            ->sortByDesc('id')
             ->groupBy('type')
             ->map(fn($typeDeadlines) => $typeDeadlines->first());
         $deadlinesTypes = ["revisione" => Deadline::TYPE_MINISTERIAL, "ossigeno" => Deadline::TYPE_OXYGEN];
