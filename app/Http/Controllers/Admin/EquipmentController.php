@@ -27,8 +27,10 @@ class EquipmentController extends Controller
     public function create()
     {
         $vehicles = Vehicle::all();
+        // Preselezione veicolo quando si arriva dalla create appuntamento.
+        $selectedVehicleId = request('vehicle_id');
         $equipmentTypes = EquipmentType::all();
-        return view('admin.equipments.create', compact('vehicles', 'equipmentTypes'));
+        return view('admin.equipments.create', compact('vehicles', 'equipmentTypes', 'selectedVehicleId'));
     }
 
     /**
