@@ -82,4 +82,36 @@ class Vehicle extends Model
     {
         return $this->hasMany(Equipment::class);
     }
+
+    public function deadlines()
+    {
+        return $this->hasMany(Deadline::class);
+    }
+
+    public function hasAllRequiredEquipment(): bool
+    {
+        return $this->missingRequiredEquipment()->isEmpty();
+    }
+
+    public function missingRequiredEquipment()
+    {
+        $this->loadMissing(['equipment', 'vehicleType.equipmentTypes']);
+
+        $requiredEquipmentTypes = $this->vehicleType?->equipmentTypes ?? collect();
+
+        if ($requiredEquipmentTypes->isEmpty()) {
+            return collect();
+        }
+
+        $availableQuantities = $this->equipment
+            ->groupBy('equipment_type_id')
+            ->map(fn($items) => $items->count());
+
+        return $requiredEquipmentTypes->filter(function ($equipmentType) use ($availableQuantities) {
+            $requiredQuantity = (int) $equipmentType->pivot->required_quantity;
+            $actualQuantity = (int) ($availableQuantities[$equipmentType->id] ?? 0);
+
+            return $actualQuantity < $requiredQuantity;
+        });
+    }
 }

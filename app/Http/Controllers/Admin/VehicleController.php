@@ -22,9 +22,9 @@ class VehicleController extends Controller
      */
     public function index()
     {
-        
+
         $vehicles = Vehicle::query()
-            ->with('vehicleType', 'brand', 'carModel')
+            ->with(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment'])
             ->withCount([
                 'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
                 'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
@@ -92,19 +92,16 @@ class VehicleController extends Controller
      */
     public function show(Vehicle $vehicle)
     {
-        $vehicle->load(['vehicleType', 'brand', 'carModel', 'equipment.equipmentType', 'issues']);
+        $vehicle->load(['vehicleType', 'brand', 'carModel', 'equipment.equipmentType', 'issues', 'deadlines']);
 
         $vehicleAppointments = $vehicle->maintenanceRecords()
             ->with('issue', 'provider')
             ->orderByDesc('appointment_date')
             ->get();
 
-        $deadlines = Deadline::query()
-            ->where('vehicle_id', $vehicle->id)
-            ->orderByDesc('due_date')
-            ->orderByDesc('id')
-            ->get()
-            // Mostra in dettaglio solo la scadenza più recente per ogni tipologia.
+        $deadlines = $vehicle->deadlines
+            ->sortByDesc('due_date')
+            ->sortByDesc('id')
             ->groupBy('type')
             ->map(fn($typeDeadlines) => $typeDeadlines->first());
         $deadlinesTypes = ["revisione" => Deadline::TYPE_MINISTERIAL, "ossigeno" => Deadline::TYPE_OXYGEN];
@@ -172,5 +169,4 @@ class VehicleController extends Controller
         $vehicle->delete();
         return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo eliminato con successo.');
     }
-
 }

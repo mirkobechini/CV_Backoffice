@@ -10,7 +10,8 @@
             <th scope="col">Modello</th>
             <th scope="col">Targa</th>
             <th scope="col">Tipo</th>
-            <th scope="col">Stato</th>
+            <th scope="col">Stato Mezzo</th>
+            <th scope="col">Equipaggiamento</th>
             <th scope="col">Azioni</th>
         </x-slot:head>
 
@@ -23,18 +24,34 @@
                         {{ preg_replace('/^([A-Z]{2})(\d{3})([A-Z]{2})$/', '$1 $2 $3', strtoupper($vehicle->license_plate)) }}
                     </td>
                     <td>{{ $vehicle->vehicleType->name ?? 'N/A' }}</td>
-                        <td>
-                            @if ($vehicle->open_issues_count > 0 && $vehicle->in_progress_issues_count > 0)
-                                <span class="badge bg-danger">Aperti ({{ $vehicle->open_issues_count }}) + In lavorazione
-                                    ({{ $vehicle->in_progress_issues_count }})</span>
-                            @elseif($vehicle->open_issues_count > 0)
-                                <span class="badge bg-danger">Aperti ({{ $vehicle->open_issues_count }})</span>
-                            @elseif($vehicle->in_progress_issues_count > 0)
-                                <span class="badge bg-warning text-dark">In lavorazione
-                                    ({{ $vehicle->in_progress_issues_count }})</span>
-                            @else
-                                <span class="badge bg-success">Nessun guasto attivo</span>
-                            @endif
+                    <td>
+                        @if ($vehicle->open_issues_count > 0 && $vehicle->in_progress_issues_count > 0)
+                            <span class="badge bg-danger">Aperti ({{ $vehicle->open_issues_count }}) + In
+                                lavorazione
+                                ({{ $vehicle->in_progress_issues_count }})
+                            </span>
+                        @elseif($vehicle->open_issues_count > 0)
+                            <span class="badge bg-danger">Aperti ({{ $vehicle->open_issues_count }})</span>
+                        @elseif($vehicle->in_progress_issues_count > 0)
+                            <span class="badge bg-warning text-dark">In lavorazione
+                                ({{ $vehicle->in_progress_issues_count }})</span>
+                        @else
+                            <span class="badge bg-success">Nessun guasto attivo</span>
+                        @endif
+                    </td>
+                    <td>
+                        @php($missingEquipment = $vehicle->missingRequiredEquipment())
+
+                        @if (!$vehicle->vehicleType)
+                            <span class="badge bg-secondary">Tipo non assegnato</span>
+                        @elseif ($missingEquipment->isEmpty())
+                            <span class="badge bg-success">Completo</span>
+                        @else
+                            <span class="badge bg-danger"
+                                title="Manca: {{ $missingEquipment->pluck('name')->join(', ') }}">
+                                Da integrare
+                            </span>
+                        @endif
                     </td>
                     <x-admin.row-actions :showUrl="route('admin.vehicles.show', $vehicle->id)" :editUrl="route('admin.vehicles.edit', $vehicle->id)" :deleteTarget="'#confirmDeleteModal-' . $vehicle->id" :label="'veicolo ' . $vehicle->internal_code" />
                 </tr>

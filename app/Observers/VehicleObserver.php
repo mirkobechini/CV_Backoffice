@@ -55,8 +55,7 @@ class VehicleObserver
 
     private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, bool $renewed): void
     {
-        $alreadyExists = Deadline::query()
-            ->where('vehicle_id', $vehicle->id)
+        $alreadyExists = $vehicle->deadlines()
             ->where('type', $type)
             ->whereDate('due_date', $dueDate->toDateString())
             ->exists();

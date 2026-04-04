@@ -36,6 +36,10 @@ class Deadline extends Model
         return $this->hasOne(MaintenanceRecord::class);
     }
 
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
 
 
 
@@ -159,8 +163,4 @@ class Deadline extends Model
         return (bool) optional($vehicle->vehicleType)->needs_oxygen_check;
     }
 
-    public function vehicle()
-    {
-        return $this->belongsTo(Vehicle::class);
-    }
 }
