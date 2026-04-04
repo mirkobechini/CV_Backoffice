@@ -11,14 +11,14 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class MaintenanceRecordCrudTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function createUser(): User{
+    private function createUser(): User
+    {
         return User::factory()->create();
     }
 
@@ -49,7 +49,6 @@ class MaintenanceRecordCrudTest extends TestCase
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
         ]);
-
     }
 
     private function createProvider(): Provider
@@ -62,7 +61,8 @@ class MaintenanceRecordCrudTest extends TestCase
         ]);
     }
 
-    private function createIssue() : array  {
+    private function createIssue(): array
+    {
         $vehicle = $this->createVehicle();
 
         $issue = Issue::create([
@@ -77,17 +77,18 @@ class MaintenanceRecordCrudTest extends TestCase
 
     private function createMaintenance(): array
     {
-        
+
         $data = $this->createIssue();
         $vehicle = $data['vehicle'];
         $issue = $data['issue'];
         $provider = $this->createProvider();
 
-        $maintenance = MaintenanceRecord::create([
-            'vehicle_id' => $vehicle->id,
-            'provider_id' => $provider->id,
-            'issue_id' => $issue->id,
-            'appointment_date' => '2025/01/03'
+        $maintenance = MaintenanceRecord::create(
+            [
+                'vehicle_id' => $vehicle->id,
+                'provider_id' => $provider->id,
+                'issue_id' => $issue->id,
+                'appointment_date' => '2025/01/03'
             ]
         );
 
@@ -154,12 +155,18 @@ class MaintenanceRecordCrudTest extends TestCase
         $maintenance = MaintenanceRecord::first();
 
         $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
+        $this->assertDatabaseHas('maintenance_records', [
+            'id' => $maintenance->id,
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'issue_id' => $issue->id,
+        ]);
     }
 
 
     public function test_maintenance_can_be_updated(): void
     {
-       $user = $this->createUser();
+        $user = $this->createUser();
         $data = $this->createMaintenance();
         $maintenance = $data['maintenance'];
         $vehicle = $data['vehicle'];
@@ -174,12 +181,17 @@ class MaintenanceRecordCrudTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
-
+        $this->assertDatabaseHas('maintenance_records', [
+            'id' => $maintenance->id,
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'issue_id' => $issue->id,
+        ]);
     }
 
     public function test_maintenance_can_be_deleted(): void
     {
-       $user = $this->createUser();
+        $user = $this->createUser();
 
         $maintenance = $this->createMaintenance()['maintenance'];
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Crud;
 
 //Per via della middleware auth
 use App\Models\User;

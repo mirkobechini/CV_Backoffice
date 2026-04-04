@@ -9,7 +9,6 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class DeadlineCrudTest extends TestCase
@@ -50,7 +49,8 @@ class DeadlineCrudTest extends TestCase
         ]);
     }
 
-    private function createDeadline()   {
+    private function createDeadline()
+    {
         $vehicle = $this->createVehicle();
 
         $deadline = Deadline::create([
@@ -120,7 +120,11 @@ class DeadlineCrudTest extends TestCase
         $deadline = Deadline::latest('id')->first();
 
         $response->assertRedirect(route('admin.deadlines.show', $deadline));
-
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $deadline->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+        ]);
     }
 
 
@@ -139,7 +143,11 @@ class DeadlineCrudTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.deadlines.show', $deadline));
-
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $deadline->id,
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+        ]);
     }
 
     public function test_deadline_can_be_deleted(): void

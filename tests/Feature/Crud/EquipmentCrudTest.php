@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\Crud;
 
 use App\Models\User;
 use App\Models\Equipment;

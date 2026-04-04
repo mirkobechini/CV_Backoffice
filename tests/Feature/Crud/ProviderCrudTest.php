@@ -83,7 +83,13 @@ class ProviderCrudTest extends TestCase
         $provider = Provider::first();
 
         $response->assertRedirect(route('admin.providers.show', $provider));
-
+        $this->assertDatabaseHas('providers', [
+            'id' => $provider->id,
+            'name' => 'boh',
+            'contact_info' => '+39 3885245',
+            'address' => 'Via roma 2, Milano',
+            'type' => 'Meccanico',
+        ]);
     }
 
 
@@ -100,6 +106,13 @@ class ProviderCrudTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.providers.show', $provider));
+        $this->assertDatabaseHas('providers', [
+            'id' => $provider->id,
+            'name' => 'mah',
+            'contact_info' => '+39 3885245',
+            'address' => 'Via milano 2, Napoli',
+            'type' => 'Carrozziere',
+        ]);
     }
 
     public function test_provider_can_be_deleted(): void

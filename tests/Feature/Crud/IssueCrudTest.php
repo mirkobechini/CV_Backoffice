@@ -49,7 +49,8 @@ class IssueCrudTest extends TestCase
         ]);
     }
 
-    private function createIssue()   {
+    private function createIssue()
+    {
         $vehicle = $this->createVehicle();
 
         $issue = Issue::create([
@@ -116,10 +117,16 @@ class IssueCrudTest extends TestCase
             'event_date' => '2025-01-02',
         ]);
 
-        $issue = issue::first();
+        $issue = Issue::first();
 
         $response->assertRedirect(route('admin.issues.show', $issue));
-
+        $this->assertDatabaseHas('issues', [
+            'id' => $issue->id,
+            'vehicle_id' => $vehicle->id,
+            'description' => 'something',
+            'status' => 'closed',
+            'event_date' => '2025-01-02 00:00:00',
+        ]);
     }
 
 
@@ -138,7 +145,13 @@ class IssueCrudTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.issues.show', $issue));
-
+        $this->assertDatabaseHas('issues', [
+            'id' => $issue->id,
+            'vehicle_id' => $vehicle->id,
+            'description' => 'something else',
+            'status' => 'open',
+            'event_date' => '2026-01-02 00:00:00',
+        ]);
     }
 
     public function test_issue_can_be_deleted(): void

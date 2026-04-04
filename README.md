@@ -47,6 +47,7 @@
 - **Livewire** per componenti dinamici come `VehicleSelect`
 - **Observers** per automatizzare logiche su entità legate ai veicoli
 - **Artisan Commands** personalizzati, come `php artisan import:car-data` per importare dati da API esterne
+- **Testing** con PHPUnit per garantire stabilità e correttezza delle funzionalità critiche
 - **Filesystem / Storage pubblico** per la gestione degli upload documentali
 
 ---
@@ -125,8 +126,8 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [x] Modificare status che di default va a scaduta e non rinnovata
 - [ ] Gestione dotazioni di bordo (ossigeno, estintori, attrezzature) con scadenze e revisioni
 - [x] Salva in database Models e Brands veicoli da API  (https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json)
-- [ ] Crea test per raggiungimento pagine
-- [ ] Crea test per corretto funzionamento
+- [x] Crea test per raggiungimento pagine entita, creazione entità, validazione form
+- [ ] Crea test per funzioni critiche come creazione scadenze, chiusura guasti, aggiornamento chilometraggio
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo
 - [ ] Modulo API REST per integrazione esterna
@@ -138,7 +139,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 #### Vehicle / Equipment
 
 - [x] Rivedere VehicleType per gestione equipaggiamento per tipologia mezzo
-- [ ] View veicolo: link agli equipaggiamenti del mezzo + stato conformità per equipaggiamento
+- [x] View veicolo: link agli equipaggiamenti del mezzo + stato conformità per equipaggiamento
 
 #### Deadlines / Tagliandi
 

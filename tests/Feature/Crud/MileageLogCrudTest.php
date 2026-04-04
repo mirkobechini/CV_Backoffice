@@ -9,14 +9,14 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 class MileageLogCrudTest extends TestCase
 {
-     use RefreshDatabase;
+    use RefreshDatabase;
 
-    private function createUser(): User{
+    private function createUser(): User
+    {
         return User::factory()->create();
     }
 
@@ -118,6 +118,12 @@ class MileageLogCrudTest extends TestCase
         $mileageLog = MileageLog::first();
 
         $response->assertRedirect(route('admin.mileage-logs.show', $mileageLog));
+        $this->assertDatabaseHas('mileage_logs', [
+            'id' => $mileageLog->id,
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-01-25 00:00:00',
+            'mileage' => 1234,
+        ]);
     }
 
 
@@ -135,7 +141,12 @@ class MileageLogCrudTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.mileage-logs.show', $mileageLog));
-
+        $this->assertDatabaseHas('mileage_logs', [
+            'id' => $mileageLog->id,
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2024-01-25 00:00:00',
+            'mileage' => 5678,
+        ]);
     }
 
     public function test_mileage_log_can_be_deleted(): void
