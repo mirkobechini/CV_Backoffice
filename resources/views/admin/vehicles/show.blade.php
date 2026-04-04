@@ -20,8 +20,10 @@
                             <div class="col-12 col-md-3 mb-4 mb-md-0">
                                 <h5 class="mb-0 mb-md-3">Anagrafica</h5>
                                 <span class="card-text d-block"><strong>Targa:</strong> {{ $vehicle->license_plate }}</span>
-                                <span class="card-text d-block"><strong>Marca:</strong> {{ $vehicle->brand->name ?? 'N/A' }}</span>
-                                <span class="card-text d-block"><strong>Modello:</strong> {{ $vehicle->carModel->name ?? 'N/A' }}</span>
+                                <span class="card-text d-block"><strong>Marca:</strong>
+                                    {{ $vehicle->brand->name ?? 'N/A' }}</span>
+                                <span class="card-text d-block"><strong>Modello:</strong>
+                                    {{ $vehicle->carModel->name ?? 'N/A' }}</span>
                                 <span class="card-text d-block"><strong>Carburante:</strong>
                                     {{ $vehicle->fuel_type }}</span>
                                 <span class="card-text d-block"><strong>Chilometri:</strong> {{ $vehicle->mileage }}</span>
@@ -70,6 +72,48 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 mb-3">
+                <h2 class="display-6 fw-bold">Equipaggiamento<a class="btn btn-success rounded-pill ms-3 py-0 px-2"
+                        href="{{ route('admin.equipments.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"><i
+                            class="fa-solid fa-add text-light"></i></a>
+                </h2>
+                @if ($vehicle->equipment->isEmpty())
+                    <p class="card-text">Nessun equipaggiamento registrato per questo veicolo.</p>
+                @else
+                    <ul class="list-group">
+                        @foreach ($vehicle->equipment as $equipment)
+                            <li class="list-group-item ">
+                                <div class="row row-cols-1 row-cols-md-2 justify-content-between align-items-center">
+                                    <div class="col-md-10">
+                                        <div class="row row-cols-1 row-cols-md-2">
+                                            <div class="col">
+                                                <p>{{ $equipment->equipmentType->name ?? 'N/A' }} - {{ $equipment->serial_number ?? 'N/A' }}</p>
+                                            </div>
+                                            <div class="col">
+                                                <p>Revisione: {{ $equipment->getExpirationDateFormattedAttribute() ?? 'N/A' }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a class="btn btn-primary rounded-pill "
+                                            href="{{ route('admin.equipments.show', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"><i
+                                                class="bi bi-eye"></i></a>
+                                        <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
+                                            class="btn btn-secondary rounded-pill "><i class="bi bi-pencil"></i></a>
+                                        <button type="button" class="btn btn-danger rounded-pill " data-bs-toggle="modal"
+                                            data-bs-target="#confirmDeleteModal-{{ $equipment->id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                        <x-admin.delete-modal type="equipment" :object="$equipment" />
+                                    </div>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                @endif
             </div>
         </div>
         <div class="row">

@@ -92,6 +92,8 @@ class VehicleController extends Controller
      */
     public function show(Vehicle $vehicle)
     {
+        $vehicle->load(['vehicleType', 'brand', 'carModel', 'equipment.equipmentType', 'issues']);
+
         $vehicleAppointments = $vehicle->maintenanceRecords()
             ->with('issue', 'provider')
             ->orderByDesc('appointment_date')
