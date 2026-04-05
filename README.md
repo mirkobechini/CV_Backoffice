@@ -127,6 +127,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [ ] Gestione dotazioni di bordo (ossigeno, estintori, attrezzature) con scadenze e revisioni
 - [x] Salva in database Models e Brands veicoli da API  (https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json)
 - [x] Crea test per raggiungimento pagine entita, creazione entità, validazione form
+- [x] Crea test per univocità su operazioni delle entità
 - [ ] Crea test per funzioni critiche come creazione scadenze, chiusura guasti, aggiornamento chilometraggio
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo

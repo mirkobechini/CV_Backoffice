@@ -17,7 +17,8 @@ class VehicleCrudTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function createUser(): User{
+    private function createUser(): User
+    {
         return User::factory()->create();
     }
 
@@ -61,6 +62,8 @@ class VehicleCrudTest extends TestCase
 
         return compact('brand', 'carModel', 'vehicleType', 'vehicle');
     }
+
+    //RAGGIUNGIBILITA' ROTTE
 
     public function test_vehicle_index_page_is_reachable(): void
     {
@@ -138,7 +141,7 @@ class VehicleCrudTest extends TestCase
 
     public function test_vehicle_can_be_updated(): void
     {
-       $user = $this->createUser();
+        $user = $this->createUser();
         $data = $this->createVehicle();
 
         $vehicle = $data['vehicle'];
@@ -169,7 +172,7 @@ class VehicleCrudTest extends TestCase
 
     public function test_vehicle_can_be_deleted(): void
     {
-       $user = $this->createUser();
+        $user = $this->createUser();
 
         $vehicle = $this->createVehicle()['vehicle'];
 
@@ -179,5 +182,78 @@ class VehicleCrudTest extends TestCase
         $this->assertDatabaseMissing('vehicles', [
             'id' => $vehicle->id,
         ]);
+    }
+
+    //VINCOLI UNIVOCITA'
+
+    public function test_vehicle_cannot_be_stored_with_duplicate_license_plate()
+    {
+        $user = $this->createUser();    //fake user
+        $data = $this->createVehicle();
+
+        $vehicle = $data['vehicle'];
+        $brand = $data['brand'];
+        $carModel = $data['carModel'];
+        $vehicleType = $data['vehicleType'];
+
+        //verifica collegamento torna al form
+        $response = $this->from(route('admin.vehicles.create'))
+            ->actingAs($user)->post(route('admin.vehicles.store'), [
+                'license_plate' => 'AB123CD',
+                'vehicle_type_id' => $vehicleType->id,
+                'internal_code' => '1234',
+                'brand_id' => $brand->id,
+                'car_model_id' => $carModel->id,
+                'fuel_type' => 'diesel',
+                'immatricolation_date' => '2024-01-01',
+                'has_warranty_extension' => 0,
+            ]);
+
+        //verifica univocità targa
+        $response->assertSessionHasErrors(['license_plate']);
+        $this->assertDatabaseCount('vehicles', 1); //verifica che non sia stato creato un secondo veicolo con la solita targa
+
+    }
+
+
+    public function test_vehicle_cannot_be_updated_with_duplicate_license_plate()
+    {
+        $user = $this->createUser();    //fake user
+        $data = $this->createVehicle();
+
+        $vehicleBase = $data['vehicle'];
+        $brand = $data['brand'];
+        $carModel = $data['carModel'];
+        $vehicleType = $data['vehicleType'];
+
+        $vehicle = Vehicle::create([
+            'license_plate' => 'ZZ999YY',
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => '1234',
+            'brand_id' => $brand->id,
+            'car_model_id' => $carModel->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+        ]);
+
+        //verifica collegamento torna al form
+        $response = $this->from(route('admin.vehicles.edit', $vehicle))->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
+                'license_plate' => 'AB123CD',
+                'vehicle_type_id' => $vehicleType->id,
+                'internal_code' => '1234',
+                'brand_id' => $brand->id,
+                'car_model_id' => $carModel->id,
+                'fuel_type' => 'diesel',
+                'immatricolation_date' => '2024-01-01',
+                'has_warranty_extension' => 0,
+            ]);
+
+        //verifica univocità targa
+        $response->assertSessionHasErrors(['license_plate']);
+        $this->assertDatabaseHas('vehicles', [
+            'id'=>$vehicle->id,
+            'license_plate' => 'ZZ999YY'
+        ]); //verifica che non sia stato aggiornato il veicolo con la targa gia esistente
+
     }
 }
