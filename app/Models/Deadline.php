@@ -50,6 +50,8 @@ class Deadline extends Model
 
     public function getAutomaticStatusAttribute(): string
     {
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
+
         // Se marcata manualmente come rinnovata, preserviamo quel valore.
         if ($this->is_renewed) {
             return self::STATUS_RENEWED;
@@ -65,11 +67,10 @@ class Deadline extends Model
             return self::STATUS_EXPIRED;
         }
 
-        if ($this->due_date->isAfter($today)) {
+        if ($this->due_date->isAfter($today) && $this->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
             return self::STATUS_VALID;
         }
 
-        $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
         $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
 
         return $today->gte($warningStartDate) ? self::STATUS_PENDING : self::STATUS_RENEWED;
@@ -88,7 +89,7 @@ class Deadline extends Model
 
         if ($this->due_date->isBefore($today)) {
             $newStatus = self::STATUS_EXPIRED;
-        } elseif ($this->due_date->isAfter($today)) {
+        } elseif ($this->due_date->isAfter($today) && $this->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
             $newStatus = self::STATUS_VALID;
         } elseif ($today->gte($warningStartDate)) {
             $newStatus = self::STATUS_PENDING;
