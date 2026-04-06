@@ -199,7 +199,7 @@ class VehicleCrudTest extends TestCase
         //verifica collegamento torna al form
         $response = $this->from(route('admin.vehicles.create'))
             ->actingAs($user)->post(route('admin.vehicles.store'), [
-                'license_plate' => 'AB123CD',
+                'license_plate' => $vehicle->license_plate,
                 'vehicle_type_id' => $vehicleType->id,
                 'internal_code' => '1234',
                 'brand_id' => $brand->id,
@@ -238,7 +238,7 @@ class VehicleCrudTest extends TestCase
 
         //verifica collegamento torna al form
         $response = $this->from(route('admin.vehicles.edit', $vehicle))->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
-                'license_plate' => 'AB123CD',
+                'license_plate' => $vehicleBase->license_plate,
                 'vehicle_type_id' => $vehicleType->id,
                 'internal_code' => '1234',
                 'brand_id' => $brand->id,
@@ -252,7 +252,7 @@ class VehicleCrudTest extends TestCase
         $response->assertSessionHasErrors(['license_plate']);
         $this->assertDatabaseHas('vehicles', [
             'id'=>$vehicle->id,
-            'license_plate' => 'ZZ999YY'
+            'license_plate' => $vehicle->license_plate
         ]); //verifica che non sia stato aggiornato il veicolo con la targa gia esistente
 
     }

@@ -124,4 +124,52 @@ class EquipmentTypeCrudTest extends TestCase
             'id' => $equipmentType->id,
         ]);
     }
+
+    //VINCOLI UNIVOCITA'
+
+    public function test_equipment_type_cannot_be_stored_with_duplicate_name()
+    {
+        $user = $this->createUser();    //fake user
+        $equipmentType = $this->createEquipmentType();
+
+        //verifica collegamento torna al form
+        $response = $this->from(route('admin.equipment-types.create'))
+            ->actingAs($user)->post(route('admin.equipment-types.store'), [
+                'name' => $equipmentType->name,
+                'first_inspection_months' => 6,
+                'regular_inspection_months' => 6,
+            ]);
+
+        //verifica univocità nome
+        $response->assertSessionHasErrors(['name']);
+        $this->assertDatabaseCount('equipment_types', 1); //verifica che non sia stato creato un secondo tipo di veicolo con lo stesso nome
+
+    }
+
+
+    public function test_equipment_type_cannot_be_updated_with_duplicate_name()
+    {
+        $user = $this->createUser();    //fake user
+        $equipmentTypeBase = $this->createEquipmentType();
+        $equipmentType = EquipmentType::create([
+            'name' => 'Barella',
+            'first_inspection_months' => 12,
+            'regular_inspection_months' => 12,
+        ]);
+
+        //verifica collegamento torna al form
+        $response = $this->from(route('admin.equipment-types.edit', $equipmentType))->actingAs($user)->put(route('admin.equipment-types.update', $equipmentType), [
+                'name' => $equipmentTypeBase->name,
+                'first_inspection_months' => 12,
+                'regular_inspection_months' => 12,
+            ]);
+
+        //verifica univocità nome
+        $response->assertSessionHasErrors(['name']);
+        $this->assertDatabaseHas('equipment_types', [
+            'id'=>$equipmentType->id,
+            'name' => $equipmentType->name
+        ]); //verifica che non sia stato aggiornato il tipo di veicolo con il nome già esistente
+
+    }
 }

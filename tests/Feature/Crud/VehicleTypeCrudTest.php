@@ -129,4 +129,55 @@ class VehicleTypeCrudTest extends TestCase
             'id' => $vehicleType->id,
         ]);
     }
+
+     //VINCOLI UNIVOCITA'
+
+    public function test_vehicle_type_cannot_be_stored_with_duplicate_name()
+    {
+        $user = $this->createUser();    //fake user
+        $vehicleType = $this->createVehicleType();
+
+        //verifica collegamento torna al form
+        $response = $this->from(route('admin.vehicle-types.create'))
+            ->actingAs($user)->post(route('admin.vehicle-types.store'), [
+                'name' => $vehicleType->name,
+                'needs_oxygen_check' => true,
+                'first_inspection_months' => 12,
+                'regular_inspection_months' => 12,
+            ]);
+
+        //verifica univocità nome
+        $response->assertSessionHasErrors(['name']);
+        $this->assertDatabaseCount('vehicle_types', 1); //verifica che non sia stato creato un secondo tipo di veicolo con lo stesso nome
+
+    }
+
+
+    public function test_vehicle_type_cannot_be_updated_with_duplicate_name()
+    {
+        $user = $this->createUser();    //fake user
+        $vehicleTypeBase = $this->createVehicleType();
+        $vehicleType = VehicleType::create([
+            'name' => 'Auto',
+            'needs_oxygen_check' => true,
+            'first_inspection_months' => 12,
+            'regular_inspection_months' => 12,
+        ]);
+
+        //verifica collegamento torna al form
+        $response = $this->from(route('admin.vehicle-types.edit', $vehicleType))->actingAs($user)->put(route('admin.vehicle-types.update', $vehicleType), [
+                'name' => $vehicleTypeBase->name,
+                'needs_oxygen_check' => true,
+                'first_inspection_months' => 12,
+                'regular_inspection_months' => 12,
+            ]);
+
+        //verifica univocità nome
+        $response->assertSessionHasErrors(['name']);
+        $this->assertDatabaseHas('vehicle_types', [
+            'id'=>$vehicleType->id,
+            'name' => $vehicleType->name
+        ]); //verifica che non sia stato aggiornato il tipo di veicolo con il nome già esistente
+
+    }
 }
