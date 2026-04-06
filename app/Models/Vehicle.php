@@ -103,10 +103,14 @@ class Vehicle extends Model
             return collect();
         }
 
+        // Raggruppa gli equipaggiamenti già presenti sul veicolo per equipment_type_id
+        // e calcola quante unità abbiamo per ciascun tipo.
         $availableQuantities = $this->equipment
             ->groupBy('equipment_type_id')
             ->map(fn($items) => $items->count());
 
+        // Restituisce solo i tipi di equipaggiamento per cui la quantità disponibile
+        // sul veicolo è inferiore alla quantità richiesta dal pivot required_quantity.
         return $requiredEquipmentTypes->filter(function ($equipmentType) use ($availableQuantities) {
             $requiredQuantity = (int) $equipmentType->pivot->required_quantity;
             $actualQuantity = (int) ($availableQuantities[$equipmentType->id] ?? 0);
