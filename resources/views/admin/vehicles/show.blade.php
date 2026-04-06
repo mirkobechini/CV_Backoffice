@@ -88,12 +88,15 @@
                             <li class="list-group-item ">
                                 <div class="row row-cols-1 row-cols-md-2 justify-content-between align-items-center">
                                     <div class="col-md-10">
-                                        <div class="row row-cols-1 row-cols-md-2">
+                                        <div class="row row-cols-1 row-cols-md-3">
                                             <div class="col">
                                                 <p>{{ $equipment->equipmentType->name ?? 'N/A' }} - {{ $equipment->serial_number ?? 'N/A' }}</p>
                                             </div>
                                             <div class="col">
-                                                <p>Revisione: {{ $equipment->getExpirationDateFormattedAttribute() ?? 'N/A' }}</p>
+                                                <p>Revisione: {{ $equipment->getRevisionDateFormattedAttribute() ?? 'N/A' }}</p>
+                                            </div>
+                                            <div class="col">
+                                                <p>Scadenza: {{ $equipment->getExpirationDateFormattedAttribute() ?? 'N/A' }}</p>
                                             </div>
                                         </div>
                                     </div>

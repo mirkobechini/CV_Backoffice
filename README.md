@@ -124,11 +124,14 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [x] Rivedere nelle scadenze lo status rinnovata/scaduta (added is_renewed boolean in migration) se rinnovata, non mostrare più come scaduta e spostare in fondo alla lista(aggiungere attuale/valida (ok) a status?)
 - [x] Rivedere la creazione automatica delle scadenze ( valutare se mettere tutte a scadute e far andare ad una pagina di modifica)
 - [x] Modificare status che di default va a scaduta e non rinnovata
-- [ ] Gestione dotazioni di bordo (ossigeno, estintori, attrezzature) con scadenze e revisioni
+- [x] Gestione dotazioni di bordo (estintori, attrezzature in generale) con scadenze e revisioni
 - [x] Salva in database Models e Brands veicoli da API  (https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json)
 - [x] Crea test per raggiungimento pagine entita, creazione entità, validazione form
 - [x] Crea test per univocità su operazioni delle entità
 - [x] Crea test per funzioni critiche come creazione scadenze, chiusura guasti, aggiornamento chilometraggio
+- [ ] Modificare revisione e scadenza attrezzature di bordo (estintori, bombole ossigeno) come deadlines per veicoli
+- [ ] Implementare dimensione attrezzatura di bordo (es. capacità bombole ossigeno, estintori)
+- [ ] Implementare gestione attrezzatura bombole ossigeno con scadenze e revisioni
 - [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
 - [ ] Report chilometraggi per periodo e per singolo mezzo
 - [ ] Modulo API REST per integrazione esterna
