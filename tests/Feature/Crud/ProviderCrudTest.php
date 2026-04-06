@@ -128,4 +128,21 @@ class ProviderCrudTest extends TestCase
             'id' => $provider->id,
         ]);
     }
+
+    // VALIDAZIONE DEI CAMPI OBBLIGATORI
+
+    public function test_provider_name_is_required(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user)->post(route('admin.providers.store'), [
+            'contact_info' => '+39 3885245',
+            'address' => 'Via roma 2, Milano',
+            'type' => 'Meccanico',
+        ]);
+
+        // Verifica che il campo `name` sia obbligatorio.
+        $response->assertSessionHasErrors(['name']);
+        $this->assertDatabaseCount('providers', 0); // Conferma che non venga creato alcun provider senza nome.
+    }
 }

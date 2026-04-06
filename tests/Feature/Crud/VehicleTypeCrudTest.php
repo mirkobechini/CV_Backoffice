@@ -130,14 +130,14 @@ class VehicleTypeCrudTest extends TestCase
         ]);
     }
 
-     //VINCOLI UNIVOCITA'
+    // VALIDAZIONE UNICITÀ
 
     public function test_vehicle_type_cannot_be_stored_with_duplicate_name()
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();
         $vehicleType = $this->createVehicleType();
 
-        //verifica collegamento torna al form
+        // Forza il ritorno alla form in caso di errore di validazione.
         $response = $this->from(route('admin.vehicle-types.create'))
             ->actingAs($user)->post(route('admin.vehicle-types.store'), [
                 'name' => $vehicleType->name,
@@ -146,16 +146,16 @@ class VehicleTypeCrudTest extends TestCase
                 'regular_inspection_months' => 12,
             ]);
 
-        //verifica univocità nome
+        // Verifica che il nome duplicato venga rifiutato.
         $response->assertSessionHasErrors(['name']);
-        $this->assertDatabaseCount('vehicle_types', 1); //verifica che non sia stato creato un secondo tipo di veicolo con lo stesso nome
+        $this->assertDatabaseCount('vehicle_types', 1); // Conferma che non venga creato un secondo tipo di veicolo con lo stesso nome.
 
     }
 
 
     public function test_vehicle_type_cannot_be_updated_with_duplicate_name()
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();
         $vehicleTypeBase = $this->createVehicleType();
         $vehicleType = VehicleType::create([
             'name' => 'Auto',
@@ -164,7 +164,7 @@ class VehicleTypeCrudTest extends TestCase
             'regular_inspection_months' => 12,
         ]);
 
-        //verifica collegamento torna al form
+        // Forza il ritorno alla form di modifica in caso di errore.
         $response = $this->from(route('admin.vehicle-types.edit', $vehicleType))->actingAs($user)->put(route('admin.vehicle-types.update', $vehicleType), [
                 'name' => $vehicleTypeBase->name,
                 'needs_oxygen_check' => true,
@@ -172,12 +172,12 @@ class VehicleTypeCrudTest extends TestCase
                 'regular_inspection_months' => 12,
             ]);
 
-        //verifica univocità nome
+        // Verifica che l'update con nome duplicato venga bloccato.
         $response->assertSessionHasErrors(['name']);
         $this->assertDatabaseHas('vehicle_types', [
-            'id'=>$vehicleType->id,
-            'name' => $vehicleType->name
-        ]); //verifica che non sia stato aggiornato il tipo di veicolo con il nome già esistente
+            'id' => $vehicleTypeBase->id,
+            'name' => $vehicleTypeBase->name
+        ]); // Conferma che il tipo di veicolo mantenga il nome originale.
 
     }
 }

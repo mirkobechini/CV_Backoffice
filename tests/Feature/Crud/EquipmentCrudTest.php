@@ -147,4 +147,23 @@ class EquipmentCrudTest extends TestCase
             'id' => $equipment->id,
         ]);
     }
+
+    // VALIDAZIONE DEI CAMPI OBBLIGATORI
+
+    public function test_equipment_name_is_required(): void
+    {
+        $user = $this->createUser();
+        $equipmentType = $this->createEquipmentType();
+
+        $response = $this->actingAs($user)->post(route('admin.equipments.store'), [
+            'equipment_type_id' => $equipmentType->id,
+            'serial_number' => '111111',
+            'revision_date' => '2023-01-01',
+            'expiration_date' => '2024-01-01',
+        ]);
+
+        // Verifica che il campo `name` sia obbligatorio.
+        $response->assertSessionHasErrors(['name']);
+        $this->assertDatabaseCount('equipment', 0); // Conferma che non venga creato alcun equipaggiamento senza nome.
+    }
 }

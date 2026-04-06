@@ -167,4 +167,22 @@ class IssueCrudTest extends TestCase
             'id' => $issue->id,
         ]);
     }
+
+    // VALIDAZIONE DEI CAMPI OBBLIGATORI
+
+    public function test_issue_description_is_required(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.issues.store'), [
+            'vehicle_id' => $vehicle->id,
+            'status' => 'closed',
+            'event_date' => '2025-01-02',
+        ]);
+
+        // Verifica che il campo `description` sia obbligatorio.
+        $response->assertSessionHasErrors(['description']);
+        $this->assertDatabaseCount('issues', 0); // Conferma che non venga creato alcun issue senza descrizione.
+    }
 }

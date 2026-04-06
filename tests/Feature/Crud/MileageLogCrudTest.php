@@ -162,4 +162,21 @@ class MileageLogCrudTest extends TestCase
             'id' => $mileageLog->id,
         ]);
     }
+
+    // VALIDAZIONE DEI CAMPI OBBLIGATORI
+
+    public function test_mileage_log_mileage_is_required(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.mileage-logs.store'), [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-01-25',
+        ]);
+
+        // Verifica che il campo `mileage` sia obbligatorio.
+        $response->assertSessionHasErrors(['mileage']);
+        $this->assertDatabaseCount('mileage_logs', 0); // Conferma che non venga creato alcun record di log chilometrico senza chilometraggio.
+    }
 }

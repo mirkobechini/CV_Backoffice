@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Crud;
 
-//Per via della middleware auth
 use App\Models\User;
 use App\Models\Brand;
 use App\Models\CarModel;
@@ -63,7 +62,7 @@ class VehicleCrudTest extends TestCase
         return compact('brand', 'carModel', 'vehicleType', 'vehicle');
     }
 
-    //RAGGIUNGIBILITA' ROTTE
+    // TEST DI RAGGIUNGIBILITÀ DELLE PAGINE
 
     public function test_vehicle_index_page_is_reachable(): void
     {
@@ -184,11 +183,11 @@ class VehicleCrudTest extends TestCase
         ]);
     }
 
-    //VINCOLI UNIVOCITA'
+    // VALIDAZIONE UNICITÀ
 
     public function test_vehicle_cannot_be_stored_with_duplicate_license_plate()
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();
         $data = $this->createVehicle();
 
         $vehicle = $data['vehicle'];
@@ -196,7 +195,7 @@ class VehicleCrudTest extends TestCase
         $carModel = $data['carModel'];
         $vehicleType = $data['vehicleType'];
 
-        //verifica collegamento torna al form
+        // Forza il ritorno alla form in caso di errore di validazione.
         $response = $this->from(route('admin.vehicles.create'))
             ->actingAs($user)->post(route('admin.vehicles.store'), [
                 'license_plate' => $vehicle->license_plate,
@@ -209,16 +208,16 @@ class VehicleCrudTest extends TestCase
                 'has_warranty_extension' => 0,
             ]);
 
-        //verifica univocità targa
+        // Verifica che la targa duplicata venga rifiutata.
         $response->assertSessionHasErrors(['license_plate']);
-        $this->assertDatabaseCount('vehicles', 1); //verifica che non sia stato creato un secondo veicolo con la solita targa
+        $this->assertDatabaseCount('vehicles', 1); // Conferma che non venga creato un secondo veicolo con la stessa targa.
 
     }
 
 
     public function test_vehicle_cannot_be_updated_with_duplicate_license_plate()
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();
         $data = $this->createVehicle();
 
         $vehicleBase = $data['vehicle'];
@@ -236,7 +235,7 @@ class VehicleCrudTest extends TestCase
             'immatricolation_date' => '2024-01-01',
         ]);
 
-        //verifica collegamento torna al form
+        // Forza il ritorno alla form di modifica in caso di errore.
         $response = $this->from(route('admin.vehicles.edit', $vehicle))->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
                 'license_plate' => $vehicleBase->license_plate,
                 'vehicle_type_id' => $vehicleType->id,
@@ -248,12 +247,12 @@ class VehicleCrudTest extends TestCase
                 'has_warranty_extension' => 0,
             ]);
 
-        //verifica univocità targa
+        // Verifica che l'update con targa duplicata venga bloccato.
         $response->assertSessionHasErrors(['license_plate']);
         $this->assertDatabaseHas('vehicles', [
-            'id'=>$vehicle->id,
+            'id' => $vehicle->id,
             'license_plate' => $vehicle->license_plate
-        ]); //verifica che non sia stato aggiornato il veicolo con la targa gia esistente
+        ]); // Conferma che il secondo veicolo mantenga la sua targa originale.
 
     }
 }

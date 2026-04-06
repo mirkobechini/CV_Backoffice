@@ -202,4 +202,24 @@ class MaintenanceRecordCrudTest extends TestCase
             'id' => $maintenance->id,
         ]);
     }
+
+    // VALIDAZIONE DEI CAMPI OBBLIGATORI
+
+    public function test_maintenance_provider_id_is_required(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createIssue();
+        $vehicle = $data['vehicle'];
+        $issue = $data['issue'];
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'issue_id' => $issue->id,
+            'appointment_date' => '2025/01/03'
+        ]);
+
+        // Verifica che il campo `provider_id` sia obbligatorio.
+        $response->assertSessionHasErrors(['provider_id']);
+        $this->assertDatabaseCount('maintenance_records', 0); // Conferma che non venga creato alcun record di manutenzione senza provider.
+    }
 }

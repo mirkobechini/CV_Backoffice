@@ -163,4 +163,22 @@ class DeadlineCrudTest extends TestCase
             'id' => $deadline->id,
         ]);
     }
+
+    // VALIDAZIONE DEI CAMPI OBBLIGATORI
+
+    public function test_deadline_type_is_required(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $count = Deadline::count();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'status' => 'renewed',
+        ]);
+
+        // Verifica che il campo `type` sia obbligatorio.
+        $response->assertSessionHasErrors(['type']);
+        $this->assertDatabaseCount('deadlines', $count); // Conferma che non venga creato alcun record di scadenza senza tipo.
+    }
 }
