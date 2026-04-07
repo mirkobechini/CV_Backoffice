@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Issue;
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -20,6 +18,7 @@ class DatabaseSeeder extends Seeder
             VehicleTypeTableSeeder::class,
             VehicleTypeEquipmentRequirementSeeder::class,
             VehicleTableSeeder::class,
+            MileageLogTableSeeder::class,
             EquipmentTableSeeder::class,
             ProviderTableSeeder::class,
             IssueTableSeeder::class,

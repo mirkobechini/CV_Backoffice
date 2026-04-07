@@ -31,7 +31,7 @@
 | :--------- | :---- |
 | **Laravel (PHP)** | Core applicativo e logica backend |
 | **Blade + Bootstrap (Laravel Breeze)** | Interfaccia amministrativa |
-| **MySQL/MariaDB (SQLite in sviluppo)** | Persistenza dati |
+| **MySQL (SQLite in sviluppo)** | Persistenza dati |
 
 ### 🔌 API utilizzate
 
@@ -61,7 +61,7 @@ Prima di iniziare, assicurati di avere installato:
 - PHP 8.2+
 - Composer
 - Node.js 18+ e npm
-- MySQL/MariaDB (oppure SQLite per sviluppo locale)
+- MySQL (oppure SQLite per sviluppo locale)
 
 ### Installazione
 
@@ -154,6 +154,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 - [ ] Report storico chilometri per singolo mezzo (timeline)
 - [ ] Report ultimo chilometraggio per mese (singolo mezzo)
 - [ ] Filtro per mezzo + range mese/anno
+- [ ] Dashboard cards (mensile, mezzi)
 
 ---
 
