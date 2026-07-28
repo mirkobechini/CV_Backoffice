@@ -30,13 +30,14 @@
 **Problema:** L'ultimo `else` restituisce `STATUS_RENEWED` quando la data è prima del periodo di warning. Dovrebbe restituire `STATUS_VALID`. `STATUS_RENEWED` dovrebbe venire SOLO dal flag `is_renewed`.
 **Soluzione:** Sostituito `STATUS_RENEWED` con `STATUS_VALID` in `getAutomaticStatusAttribute()` e `syncStatusFromRules()`.
 
-### B3. Default `warning_months` diverso tra Controller e Model
+### B3. Default `warning_months` diverso tra Controller e Model ✅ FIXATO
 
 **File:** `DeadlineController::resolveStatus()` vs `Deadline::getAutomaticStatusAttribute()`
 
 - Controller: `config('deadlines.warning_months', 3)` → default **3**
-- Model: `config('deadlines.warning_months', 2)` → default **2**
+- Model: `config('deadlines.warning_months', 2)` → default **2** (ora allineato a 3)
   Questo causa incongruenze: lo stato calcolato al momento della creazione può differire da quello calcolato dalle regole automatiche del model.
+  **Soluzione:** Allineato il default a **3** in `getAutomaticStatusAttribute()` e `syncStatusFromRules()`.
 
 ### B4. `$vehicle->mileage` usato in view ma non esiste
 
@@ -199,7 +200,7 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | 🔴 ~~Critico~~ | ~~B1, B2~~     | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                        |
 | **Medio**      | B6             | `VehicleObserver::created()` — ora mitigato dal fix B1, ma verificare se ridondante |
 | 🔴 **Critico** | B4             | `$vehicle->mileage` non esiste — mostra vuoto                                       |
-| 🟡 **Alto**    | B3, D4         | Default warning_months divergenti                                                   |
+| 🟡 **Alto**    | D4             | `DeadlineController::resolveStatus()` duplica logica del Model (collegato a B3)     |
 | 🟡 **Alto**    | B5             | Upload carta circolazione ignorato in edit                                          |
 | 🟡 **Alto**    | M1, M2         | Performance e scalabilità                                                           |
 | 🟢 **Medio**   | D1, D2, D3     | Refactoring duplicazioni                                                            |

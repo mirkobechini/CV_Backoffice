@@ -50,7 +50,7 @@ class Deadline extends Model
 
     public function getAutomaticStatusAttribute(): string
     {
-        $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
 
         // Se marcata manualmente come rinnovata, preserviamo quel valore.
         if ($this->is_renewed) {
@@ -88,7 +88,7 @@ class Deadline extends Model
         }
 
         $today = Carbon::today();
-        $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
         $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
 
         if ($this->due_date->isBefore($today)) {
