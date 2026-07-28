@@ -28,9 +28,7 @@
 
 **File:** `app/Models/Deadline.php`
 **Problema:** L'ultimo `else` restituisce `STATUS_RENEWED` quando la data è prima del periodo di warning. Dovrebbe restituire `STATUS_VALID`. `STATUS_RENEWED` dovrebbe venire SOLO dal flag `is_renewed`.
-**Soluzione:** Sostituito `STATUS_RENEWED` con `STATUS_VALID` in `getAutomaticStatusAttribute()`.
-
-> ⚠️ **Attenzione:** `syncStatusFromRules()` ha ancora lo stesso identico bug (riga ~107: `$newStatus = self::STATUS_RENEWED`). Da fixare anche lì.
+**Soluzione:** Sostituito `STATUS_RENEWED` con `STATUS_VALID` in `getAutomaticStatusAttribute()` e `syncStatusFromRules()`.
 
 ### B3. Default `warning_months` diverso tra Controller e Model
 
@@ -196,18 +194,17 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 
 ## 🎯 Priorità Suggerite
 
-| Priorità       | Cosa                        | Perché                                                                              |
-| -------------- | --------------------------- | ----------------------------------------------------------------------------------- |
-| 🔴 ~~Critico~~ | ~~B1, B2~~                  | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                        |
-| 🟡 **Alto**    | B2 (in syncStatusFromRules) | Stesso bug di B2 ancora presente in `syncStatusFromRules()`                         |
-| 🟢 **Medio**   | B6                          | `VehicleObserver::created()` — ora mitigato dal fix B1, ma verificare se ridondante |
-| 🔴 **Critico** | B4                          | `$vehicle->mileage` non esiste — mostra vuoto                                       |
-| 🟡 **Alto**    | B3, D4                      | Default warning_months divergenti                                                   |
-| 🟡 **Alto**    | B5                          | Upload carta circolazione ignorato in edit                                          |
-| 🟡 **Alto**    | M1, M2                      | Performance e scalabilità                                                           |
-| 🟢 **Medio**   | D1, D2, D3                  | Refactoring duplicazioni                                                            |
-| 🟢 **Medio**   | F1, F2                      | Dashboard e notifiche                                                               |
-| 🔵 **Basso**   | M3-M10, F3-F10              | Migliorie e feature secondarie                                                      |
+| Priorità       | Cosa           | Perché                                                                              |
+| -------------- | -------------- | ----------------------------------------------------------------------------------- |
+| 🔴 ~~Critico~~ | ~~B1, B2~~     | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                        |
+| **Medio**      | B6             | `VehicleObserver::created()` — ora mitigato dal fix B1, ma verificare se ridondante |
+| 🔴 **Critico** | B4             | `$vehicle->mileage` non esiste — mostra vuoto                                       |
+| 🟡 **Alto**    | B3, D4         | Default warning_months divergenti                                                   |
+| 🟡 **Alto**    | B5             | Upload carta circolazione ignorato in edit                                          |
+| 🟡 **Alto**    | M1, M2         | Performance e scalabilità                                                           |
+| 🟢 **Medio**   | D1, D2, D3     | Refactoring duplicazioni                                                            |
+| 🟢 **Medio**   | F1, F2         | Dashboard e notifiche                                                               |
+| 🔵 **Basso**   | M3-M10, F3-F10 | Migliorie e feature secondarie                                                      |
 
 ---
 

@@ -98,7 +98,7 @@ class Deadline extends Model
         } elseif ($today->gte($warningStartDate)) {
             $newStatus = self::STATUS_PENDING;
         } else {
-            $newStatus = self::STATUS_RENEWED;
+            $newStatus = self::STATUS_VALID; // Default fallback, anche se non dovrebbe mai accadere.
         }
 
         if ($this->status !== $newStatus) {
