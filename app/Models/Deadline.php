@@ -83,6 +83,10 @@ class Deadline extends Model
             return;
         }
 
+        if($this->is_renewed){
+            return; // Se è marcata come rinnovata, non cambiamo lo stato.
+        }
+
         $today = Carbon::today();
         $warningMonths = max(0, (int) config('deadlines.warning_months', 2));
         $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
