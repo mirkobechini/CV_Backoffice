@@ -18,31 +18,19 @@
 
 ## 🐛 Bug
 
-### B1. `syncStatusFromRules()` sovrascrive lo stato manuale
+### B1. `syncStatusFromRules()` sovrascrive lo stato manuale ✅ FIXATO
 
 **File:** `app/Models/Deadline.php`
 **Problema:** `syncStatusFromRules()` NON controlla `is_renewed` prima di ricalcolare lo stato. Se una scadenza è marcata come rinnovata (`is_renewed = true`), la chiamata a `syncStatusFromRules()` la sovrascrive. Invece `getAutomaticStatusAttribute()` (usato nelle view) controlla `is_renewed` correttamente.
+**Soluzione:** Aggiunto early return `if ($this->is_renewed) { return; }` all'inizio di `syncStatusFromRules()`.
 
-```php
-// syncStatusFromRules() manca questo check all'inizio:
-if ($this->is_renewed) {
-    return;
-}
-```
-
-### B2. `getAutomaticStatusAttribute()` — Ramo `else` finale sbagliato
+### B2. `getAutomaticStatusAttribute()` — Ramo `else` finale sbagliato ✅ FIXATO
 
 **File:** `app/Models/Deadline.php`
 **Problema:** L'ultimo `else` restituisce `STATUS_RENEWED` quando la data è prima del periodo di warning. Dovrebbe restituire `STATUS_VALID`. `STATUS_RENEWED` dovrebbe venire SOLO dal flag `is_renewed`.
+**Soluzione:** Sostituito `STATUS_RENEWED` con `STATUS_VALID` in `getAutomaticStatusAttribute()`.
 
-```php
-// ERRATO: restituisce 'renewed' per scadenze future ma lontane
-return $today->gte($warningStartDate) ? self::STATUS_PENDING : self::STATUS_RENEWED;
-// CORRETTO:
-return $today->gte($warningStartDate) ? self::STATUS_PENDING : self::STATUS_VALID;
-```
-
-Stesso bug identico in `syncStatusFromRules()`.
+> ⚠️ **Attenzione:** `syncStatusFromRules()` ha ancora lo stesso identico bug (riga ~107: `$newStatus = self::STATUS_RENEWED`). Da fixare anche lì.
 
 ### B3. Default `warning_months` diverso tra Controller e Model
 
@@ -70,7 +58,7 @@ Stesso bug identico in `syncStatusFromRules()`.
 ### B6. `VehicleObserver::created()` chiama `syncStatusFromRules()` su deadline rinnovate
 
 **File:** `app/Observers/VehicleObserver.php`
-**Problema:** Quando crea deadline di backfill con `$renewed = true`, chiama `$deadline->syncStatusFromRules()` che sovrascrive lo stato (vedi B1). Le deadline storiche vengono create come `renewed` ma `syncStatusFromRules()` le trasforma in `expired` (perché la data è passata), perdendo l'informazione che sono state rinnovate.
+**Problema:** Quando crea deadline di backfill con `$renewed = true`, chiama `$deadline->syncStatusFromRules()` che sovrascrive lo stato (vedi B1 — ora fixato, ma il codice nell'observer potrebbe essere ridondante).
 
 ### B7. `internal_code` con `type="number"` perde gli zeri iniziali
 
@@ -208,16 +196,18 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 
 ## 🎯 Priorità Suggerite
 
-| Priorità       | Cosa           | Perché                                         |
-| -------------- | -------------- | ---------------------------------------------- |
-| 🔴 **Critico** | B1, B2, B6     | Bug nella logica scadenze — dati inconsistenti |
-| 🔴 **Critico** | B4             | `$vehicle->mileage` non esiste — mostra vuoto  |
-| 🟡 **Alto**    | B3, D4         | Default warning_months divergenti              |
-| 🟡 **Alto**    | B5             | Upload carta circolazione ignorato in edit     |
-| 🟡 **Alto**    | M1, M2         | Performance e scalabilità                      |
-| 🟢 **Medio**   | D1, D2, D3     | Refactoring duplicazioni                       |
-| 🟢 **Medio**   | F1, F2         | Dashboard e notifiche                          |
-| 🔵 **Basso**   | M3-M10, F3-F10 | Migliorie e feature secondarie                 |
+| Priorità       | Cosa                        | Perché                                                                              |
+| -------------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| 🔴 ~~Critico~~ | ~~B1, B2~~                  | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                        |
+| 🟡 **Alto**    | B2 (in syncStatusFromRules) | Stesso bug di B2 ancora presente in `syncStatusFromRules()`                         |
+| 🟢 **Medio**   | B6                          | `VehicleObserver::created()` — ora mitigato dal fix B1, ma verificare se ridondante |
+| 🔴 **Critico** | B4                          | `$vehicle->mileage` non esiste — mostra vuoto                                       |
+| 🟡 **Alto**    | B3, D4                      | Default warning_months divergenti                                                   |
+| 🟡 **Alto**    | B5                          | Upload carta circolazione ignorato in edit                                          |
+| 🟡 **Alto**    | M1, M2                      | Performance e scalabilità                                                           |
+| 🟢 **Medio**   | D1, D2, D3                  | Refactoring duplicazioni                                                            |
+| 🟢 **Medio**   | F1, F2                      | Dashboard e notifiche                                                               |
+| 🔵 **Basso**   | M3-M10, F3-F10              | Migliorie e feature secondarie                                                      |
 
 ---
 

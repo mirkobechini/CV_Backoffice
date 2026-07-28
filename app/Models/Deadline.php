@@ -73,7 +73,7 @@ class Deadline extends Model
 
         $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
 
-        return $today->gte($warningStartDate) ? self::STATUS_PENDING : self::STATUS_RENEWED;
+        return $today->gte($warningStartDate) ? self::STATUS_PENDING : self::STATUS_VALID;
     }
 
     public function syncStatusFromRules(): void
