@@ -11,6 +11,8 @@ use App\Http\Controllers\Admin\MileageLogController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('welcome');
@@ -52,7 +54,7 @@ require __DIR__ . '/auth.php';
 // ⚠️ Dev only: login rapido per sviluppo (funziona solo in ambiente local)
 if (app()->environment('local')) {
     Route::get('/dev-login', function () {
-        $user = App\Models\User::first();
+        $user = User::first();
         if ($user) {
             Auth::login($user);
             return redirect('/dashboard');
