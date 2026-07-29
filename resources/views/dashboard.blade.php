@@ -123,7 +123,8 @@
                                     </div>
                                 @endforeach
                                 <div class="mt-3 text-center">
-                                    <a href="#" class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte
+                                    <a href="{{ route('admin.deadlines.index') }}"
+                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte
                                         le
                                         scadenze <i class="bi bi-arrow-right ms-1"></i></a>
                                 </div>
@@ -162,8 +163,8 @@
                                     </div>
                                 @endforeach
                                 <div class="mt-3 text-center">
-                                    <a href="#" class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutti
-                                        i guasti
+                                    <a href="{{ route('admin.issues.index') }}"
+                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutti i guasti
                                         <i class="bi bi-arrow-right ms-1"></i></a>
                                 </div>
                             @endif
@@ -203,7 +204,8 @@
                                     </div>
                                 @endforeach
                                 <div class="mt-3 text-center">
-                                    <a href="#" class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutti
+                                    <a href="{{ route('admin.maintenance_records.index') }}"
+                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutti
                                         gli
                                         appuntamenti <i class="bi bi-arrow-right ms-1"></i></a>
                                 </div>
@@ -236,10 +238,11 @@
                         <div class="mt-auto">
                             <div class="alert alert-warning py-2 mb-2 small">
                                 <i class="bi bi-exclamation-triangle me-1"></i>
-                                {{ $incompleteVehicles->count() }} mezzi con equipaggiamento da integrare
+                                {{ $incompleteVehicles->count() }} mezzo/i con equipaggiamento da integrare
                             </div>
                         </div>
-                        <a href="#" class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Dettagli</a>
+                        <a href="{{ route('admin.vehicles.index') }}"
+                            class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Dettagli</a>
                     </div>
                 </div>
             </div>
@@ -270,7 +273,8 @@
                                             integrare</span>
                                     </div>
                                 @endforeach
-                                <a href="#" class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Vedi
+                                <a href="{{ route('admin.vehicles.index') }}"
+                                    class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Vedi
                                     tutti i
                                     veicoli</a>
                             @endif
