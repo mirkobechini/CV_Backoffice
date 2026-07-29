@@ -10,7 +10,7 @@
 
 1. [🐛 Bug](#-bug) ✅
 2. [⚠️ Duplicazioni](#️-duplicazioni) ✅
-3. [💡 Migliorie Consigliate](#-migliorie-consigliate)
+3. [💡 Migliorie Consigliate](#-migliorie-consigliate) ✅
 4. [🏗️ Cosa è Incompleto / Mancante](#️-cosa-è-incompleto--mancante)
 5. [🎯 Priorità Suggerite](#-priorità-suggerite)
 
@@ -92,7 +92,7 @@ La logica di determinazione dello stato è implementata in due posti con leggere
 
 ---
 
-## 💡 Migliorie Consigliate
+## 💡 Migliorie Consigliate ✅
 
 ### M1. Usare `orderBy()` del DB invece di Collection `sortBy()` ✅ FIXATO
 
@@ -141,12 +141,11 @@ La data di scadenza garanzia non può essere prima dell'immatricolazione.
 Quando si inserisce un nuovo chilometraggio, non si controlla che sia maggiore o uguale all'ultimo registrato per lo stesso veicolo.
 **Soluzione:** Aggiunto `withValidator` in `StoreMileageLogRequest` e `UpdateMileageLogRequest` che confronta con l'ultimo chilometraggio dello stesso veicolo. Nell'update esclude il record corrente dal confronto.
 
-### M9. Tema chiaro/scuro non funzionante
+### M9. Tema chiaro/scuro non funzionante ✅ FIXATO
 
 **File:** `resources/views/layouts/app.blade.php`
 Il pulsante theme toggle c'è nell'header ma non c'è lo script JavaScript per gestire il click e salvare la preferenza.
-
----
+**Soluzione:** Aggiunto script JavaScript che gestisce il click, cambia l'attributo `data-bs-theme`, aggiorna l'icona e salva in `localStorage`.
 
 ## 🏗️ Cosa è Incompleto / Mancante
 
