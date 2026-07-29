@@ -27,7 +27,7 @@ class UpdateEquipmentRequest extends FormRequest
         return [
             'vehicle_id' => 'nullable|exists:vehicles,id',
             'name' => 'required|string|max:255',
-            'serial_number' => 'nullable|string|max:255',
+            'serial_number' => 'unique:equipments,serial_number,' . $this->route('equipment') . ',id|nullable|string|max:255',
             'revision_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after_or_equal:revision_date',
             'equipment_type_id' => 'required|exists:equipment_types,id',
@@ -41,6 +41,7 @@ class UpdateEquipmentRequest extends FormRequest
             'name.required' => 'Il campo nome è obbligatorio.',
             'name.string' => 'Il campo nome deve essere una stringa.',
             'name.max' => 'Il campo nome non può superare i 255 caratteri.',
+            'serial_number.unique' => 'Il campo numero di serie deve essere univoco.',
             'serial_number.string' => 'Il campo numero di serie deve essere una stringa.',
             'serial_number.max' => 'Il campo numero di serie non può superare i 255 caratteri.',
             'revision_date.date' => 'Il campo data di revisione deve essere una data valida.',
