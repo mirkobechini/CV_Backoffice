@@ -53,7 +53,7 @@ class VehicleObserver
         $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, false);
     }
 
-    private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, bool $renewed): void
+    private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, bool $renewed = false): void
     {
         $alreadyExists = $vehicle->deadlines()
             ->where('type', $type)

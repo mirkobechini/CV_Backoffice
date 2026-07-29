@@ -56,12 +56,7 @@
 **Problema:** Il metodo `store()` gestisce il caricamento della carta di circolazione, ma `update()` no. Se un utente modifica un veicolo e carica un nuovo file, questo viene ignorato.
 **Soluzione:** Aggiunta la stessa logica di upload di `store()` anche in `update()`.
 
-### B6. `VehicleObserver::created()` chiama `syncStatusFromRules()` su deadline rinnovate
-
-**File:** `app/Observers/VehicleObserver.php`
-**Problema:** Quando crea deadline di backfill con `$renewed = true`, chiama `$deadline->syncStatusFromRules()` che sovrascrive lo stato (vedi B1 — ora fixato, ma il codice nell'observer potrebbe essere ridondante).
-
-### B7. `internal_code` con `type="number"` perde gli zeri iniziali
+### B6. `internal_code` con `type="number"` perde gli zeri iniziali
 
 **File:** `resources/views/admin/vehicles/create.blade.php`
 **Problema:** `<input type="number">` per `internal_code` (che deve essere 4 cifre, es. "0123"). Un input numerico converte "0123" in "123" e la validazione `size:4|regex:/^[0-9]{4}$/` fallisce. Usare `type="text"` con `inputmode="numeric"`.
@@ -197,17 +192,16 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 
 ## 🎯 Priorità Suggerite
 
-| Priorità       | Cosa           | Perché                                                                              |
-| -------------- | -------------- | ----------------------------------------------------------------------------------- |
-| 🔴 ~~Critico~~ | ~~B1, B2~~     | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                        |
-| **Medio**      | B6             | `VehicleObserver::created()` — ora mitigato dal fix B1, ma verificare se ridondante |
-| 🔴 ~~Critico~~ | ~~B4~~         | ~~$vehicle->mileage non esiste — mostra vuoto~~ ✅ Fixato                           |
-| 🟡 **Alto**    | D4             | `DeadlineController::resolveStatus()` duplica logica del Model (collegato a B3)     |
-| 🟡 ~~Alto~~    | ~~B5~~         | ~~Upload carta circolazione ignorato in edit~~ ✅ Fixato                            |
-| 🟡 **Alto**    | M1, M2         | Performance e scalabilità                                                           |
-| 🟢 **Medio**   | D1, D2, D3     | Refactoring duplicazioni                                                            |
-| 🟢 **Medio**   | F1, F2         | Dashboard e notifiche                                                               |
-| 🔵 **Basso**   | M3-M10, F3-F10 | Migliorie e feature secondarie                                                      |
+| Priorità       | Cosa           | Perché                                                                          |
+| -------------- | -------------- | ------------------------------------------------------------------------------- |
+| 🔴 ~~Critico~~ | ~~B1, B2~~     | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                    |
+| 🔴 ~~Critico~~ | ~~B4~~         | ~~$vehicle->mileage non esiste — mostra vuoto~~ ✅ Fixato                       |
+| 🟡 **Alto**    | D4             | `DeadlineController::resolveStatus()` duplica logica del Model (collegato a B3) |
+| 🟡 ~~Alto~~    | ~~B5~~         | ~~Upload carta circolazione ignorato in edit~~ ✅ Fixato                        |
+| 🟡 **Alto**    | M1, M2         | Performance e scalabilità                                                       |
+| 🟢 **Medio**   | D1, D2, D3     | Refactoring duplicazioni                                                        |
+| 🟢 **Medio**   | F1, F2         | Dashboard e notifiche                                                           |
+| 🔵 **Basso**   | M3-M10, F3-F10 | Migliorie e feature secondarie                                                  |
 
 ---
 
