@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\DetectsDuplicates;
 use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\UpdateProviderRequest;
 use App\Models\Provider;
@@ -10,6 +11,7 @@ use Illuminate\Support\Carbon;
 
 class ProviderController extends Controller
 {
+    use DetectsDuplicates;
     /**
      * Display a listing of the resource.
      */
@@ -34,32 +36,12 @@ class ProviderController extends Controller
     {
         $data = $request->validated();
 
-        $duplicateProvider = Provider::query()
-            ->where('name', $data['name'])
-            ->where(function ($query) use ($data) {
-                if (array_key_exists('address', $data) && $data['address'] !== null) {
-                    $query->where('address', $data['address']);
-                } else {
-                    $query->whereNull('address');
-                }
-            })
-            ->where(function ($query) use ($data) {
-                if (array_key_exists('contact_info', $data) && $data['contact_info'] !== null) {
-                    $query->where('contact_info', $data['contact_info']);
-                } else {
-                    $query->whereNull('contact_info');
-                }
-            })
-            ->where(function ($query) use ($data) {
-                if (array_key_exists('type', $data) && $data['type'] !== null) {
-                    $query->where('type', $data['type']);
-                } else {
-                    $query->whereNull('type');
-                }
-            })
-            ->where('created_at', '>=', Carbon::now()->subMinutes(5))
-            ->latest('id')
-            ->first();
+        $duplicateProvider = $this->findDuplicate(Provider::class, [
+            'name' => $data['name'],
+            'address' => $data['address'] ?? null,
+            'contact_info' => $data['contact_info'] ?? null,
+            'type' => $data['type'] ?? null,
+        ]);
 
         if ($duplicateProvider) {
             return redirect()

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\SortableAndGroupable;
+use App\Http\Controllers\Concerns\DetectsDuplicates;
 use App\Http\Requests\StoreMaintenanceRecordRequest;
 use App\Http\Requests\UpdateMaintenanceRecordRequest;
 use App\Models\Deadline;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\DB;
 class MaintenanceRecordController extends Controller
 {
     use SortableAndGroupable;
+    use DetectsDuplicates;
     /**
      * Display a listing of the resource.
      */
@@ -126,28 +128,14 @@ class MaintenanceRecordController extends Controller
                 ->withInput();
         }
 
-        $duplicateRecord = MaintenanceRecord::query()
-            ->where('vehicle_id', $data['vehicle_id'])
-            ->where('issue_id', $data['issue_id'])
-            ->where('provider_id', $data['provider_id'])
-            ->whereDate('appointment_date', $data['appointment_date'])
-            ->where(function ($query) use ($data) {
-                if (array_key_exists('return_date', $data) && $data['return_date'] !== null) {
-                    $query->whereDate('return_date', $data['return_date']);
-                } else {
-                    $query->whereNull('return_date');
-                }
-            })
-            ->where(function ($query) use ($data) {
-                if (array_key_exists('activity_type', $data) && $data['activity_type'] !== null) {
-                    $query->where('activity_type', $data['activity_type']);
-                } else {
-                    $query->whereNull('activity_type');
-                }
-            })
-            ->where('created_at', '>=', Carbon::now()->subMinutes(5))
-            ->latest('id')
-            ->first();
+        $duplicateRecord = $this->findDuplicate(MaintenanceRecord::class, [
+            'vehicle_id' => $data['vehicle_id'],
+            'issue_id' => $data['issue_id'],
+            'provider_id' => $data['provider_id'],
+            'appointment_date' => $data['appointment_date'],
+            'return_date' => $data['return_date'] ?? null,
+            'activity_type' => $data['activity_type'] ?? null,
+        ]);
 
         if ($duplicateRecord) {
             return redirect()

@@ -66,15 +66,17 @@
 
 ## ⚠️ Duplicazioni
 
-### D1. Logica di ordinamento/raggruppamento identica in 3 controller
+### D1. Logica di ordinamento/raggruppamento identica in 3 controller ✅ FIXATO
 
 **File:** `DeadlineController`, `IssueController`, `MaintenanceRecordController`
-Ognuno ha lo stesso pattern di ~50 righe per `$groupBy`, `$sortBy`, `$sortDir`, `$groupToggleUrl`, `$sortToggleUrl`, `$sortIcon`. Da estrarre in un **Trait** o in una **classe base**.
+Ognuno ha lo stesso pattern di ~50 righe per `$groupBy`, `$sortBy`, `$sortDir`, `$groupToggleUrl`, `$sortToggleUrl`, `$sortIcon`.
+**Soluzione:** Creata trait `SortableAndGroupable` in `app/Http/Controllers/Concerns/`. Refactorati tutti e 3 i controller e le relative view.
 
-### D2. Rilevamento duplicati ripetuto in 3 controller
+### D2. Rilevamento duplicati ripetuto in 3 controller ✅ FIXATO
 
 **File:** `IssueController::store()`, `MaintenanceRecordController::store()`, `ProviderController::store()`
-Stesso pattern: query con `where('created_at', '>=', ...subMinutes(5))` per bloccare doppioni. Da estrarre in un **trait** o **request base**.
+Stesso pattern: query con `where('created_at', '>=', ...subMinutes(5))` per bloccare doppioni.
+**Soluzione:** Creata trait `DetectsDuplicates` in `app/Http/Controllers/Concerns/`. Refactorati tutti e 3 i controller.
 
 ### D3. Calcolo estensione garanzia duplicato
 

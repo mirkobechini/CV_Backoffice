@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\SortableAndGroupable;
+use App\Http\Controllers\Concerns\DetectsDuplicates;
 use App\Models\Issue;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use App\Http\Requests\UpdateIssueRequest;
 class IssueController extends Controller
 {
     use SortableAndGroupable;
+    use DetectsDuplicates;
 
     /**
      * Display a listing of the resource.
@@ -81,14 +83,12 @@ class IssueController extends Controller
     {
         $data = $request->validated();
 
-        $duplicateIssue = Issue::query()
-            ->where('vehicle_id', $data['vehicle_id'])
-            ->where('description', $data['description'])
-            ->whereDate('event_date', $data['event_date'])
-            ->where('status', $data['status'])
-            ->where('created_at', '>=', Carbon::now()->subMinutes(5))
-            ->latest('id')
-            ->first();
+        $duplicateIssue = $this->findDuplicate(Issue::class, [
+            'vehicle_id' => $data['vehicle_id'],
+            'description' => $data['description'],
+            'event_date' => $data['event_date'],
+            'status' => $data['status'],
+        ]);
 
         if ($duplicateIssue) {
             return redirect()
