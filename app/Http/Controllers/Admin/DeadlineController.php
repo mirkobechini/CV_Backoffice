@@ -114,9 +114,9 @@ class DeadlineController extends Controller
             'vehicle_id' => $vehicle->id,
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
-            'status' => $this->resolveStatus($dueDate, $markAsRenewed),
             'is_renewed' => $markAsRenewed,
         ]);
+        $deadline->syncStatusFromRules();
 
         return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza creata con successo.');
     }
@@ -142,7 +142,7 @@ class DeadlineController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    //TODO: lo status è sbagliato, se la scadenza è in scadenza o scaduta e spunto "mark as renewed" dovrebbe diventare "rinnovata" e creare quella successiva chiedendo la data di rinnovo(se non inserita viene calcolata in automatico), se invece è già lontana dovrebbe rimanere "rinnovata"
+    //TODO: quando si spunta "mark as renewed" su una scadenza in scadenza/scaduta, creare automaticamente la scadenza successiva con data di rinnovo opzionale (se non inserita, calcolata in automatico).invece è già lontana dovrebbe rimanere "rinnovata"
     public function update(UpdateDeadlineRequest $request, Deadline $deadline)
     {
         $data = $request->validated();
@@ -169,9 +169,9 @@ class DeadlineController extends Controller
             'vehicle_id' => $vehicle->id,
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
-            'status' => $this->resolveStatus($dueDate, $markAsRenewed),
             'is_renewed' => $markAsRenewed,
         ]);
+        $deadline->syncStatusFromRules();
 
         return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza aggiornata con successo.');
     }
@@ -213,27 +213,5 @@ class DeadlineController extends Controller
         }
 
         return $parsedDate->endOfMonth();
-    }
-
-    private function resolveStatus(Carbon $dueDate, bool $markAsRenewed): string
-    {
-        $today = Carbon::today();
-        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
-        $warningStartDate = $dueDate->copy()->subMonthsNoOverflow($warningMonths);
-
-
-
-        if ($markAsRenewed) {
-            return Deadline::STATUS_RENEWED;
-        }
-        if ($dueDate->isBefore($today)) {
-            return Deadline::STATUS_EXPIRED;
-        }
-
-        if ($today->gte($warningStartDate)) {
-            return Deadline::STATUS_PENDING;
-        }
-
-        return Deadline::STATUS_VALID;
     }
 }

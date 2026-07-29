@@ -9,7 +9,7 @@
 ## Indice
 
 1. [🐛 Bug](#-bug) ✅
-2. [⚠️ Duplicazioni](#️-duplicazioni)
+2. [⚠️ Duplicazioni](#️-duplicazioni) ✅
 3. [💡 Migliorie Consigliate](#-migliorie-consigliate)
 4. [🏗️ Cosa è Incompleto / Mancante](#️-cosa-è-incompleto--mancante)
 5. [🎯 Priorità Suggerite](#-priorità-suggerite)
@@ -64,7 +64,7 @@
 
 ---
 
-## ⚠️ Duplicazioni
+## ⚠️ Duplicazioni ✅
 
 ### D1. Logica di ordinamento/raggruppamento identica in 3 controller ✅ FIXATO
 
@@ -78,15 +78,17 @@ Ognuno ha lo stesso pattern di ~50 righe per `$groupBy`, `$sortBy`, `$sortDir`, 
 Stesso pattern: query con `where('created_at', '>=', ...subMinutes(5))` per bloccare doppioni.
 **Soluzione:** Creata trait `DetectsDuplicates` in `app/Http/Controllers/Concerns/`. Refactorati tutti e 3 i controller.
 
-### D3. Calcolo estensione garanzia duplicato
+### D3. Calcolo estensione garanzia duplicato ✅ FIXATO
 
 **File:** `VehicleController::store()` e `VehicleController::update()`
-Stessa logica di `has_warranty_extension` + calcolo `warrantyEffectiveExpirationDate`. Da estrarre in un metodo privato o in un **form request**.
+Stessa logica di `has_warranty_extension` + calcolo `warrantyEffectiveExpirationDate`.
+**Soluzione:** Creata trait `HandlesWarrantyExtension` in `app/Http/Requests/Concerns/`. Integrato in `StoreVehicleRequest` e `UpdateVehicleRequest`. Semplificati entrambi i metodi del controller.
 
-### D4. `resolveStatus()` duplica logica del Model
+### D4. `resolveStatus()` duplica logica del Model ✅ FIXATO
 
 **File:** `DeadlineController::resolveStatus()` e `Deadline::getAutomaticStatusAttribute()`
 La logica di determinazione dello stato è implementata in due posti con leggere differenze (vedi B3).
+**Soluzione:** Rimosso `resolveStatus()` dal controller. Ora `store()` e `update()` non passano più `status`, lasciando che `syncStatusFromRules()` lo calcoli nel Model.
 
 ---
 
