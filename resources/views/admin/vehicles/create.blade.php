@@ -63,7 +63,7 @@
                         </div>
                         <div class="mb-3">
                             <label for="internal_code" class="form-label">Sigla</label>
-                            <input type="number" class="form-control @error('internal_code') is-invalid @enderror"
+                            <input type="text" inputmode="numeric" class="form-control @error('internal_code') is-invalid @enderror"
                                 id="internal_code" name="internal_code" value="{{ old('internal_code') }}">
                             @error('internal_code')
                                 <div class="invalid-feedback">{{ $message }}</div>

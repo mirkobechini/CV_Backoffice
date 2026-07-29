@@ -8,7 +8,7 @@
 
 ## Indice
 
-1. [🐛 Bug](#-bug)
+1. [🐛 Bug](#-bug) ✅
 2. [⚠️ Duplicazioni](#️-duplicazioni)
 3. [💡 Migliorie Consigliate](#-migliorie-consigliate)
 4. [🏗️ Cosa è Incompleto / Mancante](#️-cosa-è-incompleto--mancante)
@@ -16,7 +16,7 @@
 
 ---
 
-## 🐛 Bug
+## 🐛 Bug ✅
 
 ### B1. `syncStatusFromRules()` sovrascrive lo stato manuale ✅ FIXATO
 
@@ -56,10 +56,11 @@
 **Problema:** Il metodo `store()` gestisce il caricamento della carta di circolazione, ma `update()` no. Se un utente modifica un veicolo e carica un nuovo file, questo viene ignorato.
 **Soluzione:** Aggiunta la stessa logica di upload di `store()` anche in `update()`.
 
-### B6. `internal_code` con `type="number"` perde gli zeri iniziali
+### B6. `internal_code` con `type="number"` perde gli zeri iniziali ✅ FIXATO
 
-**File:** `resources/views/admin/vehicles/create.blade.php`
-**Problema:** `<input type="number">` per `internal_code` (che deve essere 4 cifre, es. "0123"). Un input numerico converte "0123" in "123" e la validazione `size:4|regex:/^[0-9]{4}$/` fallisce. Usare `type="text"` con `inputmode="numeric"`.
+**File:** `resources/views/admin/vehicles/create.blade.php` e `edit.blade.php`
+**Problema:** `<input type="number">` per `internal_code` (che deve essere 4 cifre, es. "0123"). Un input numerico converte "0123" in "123" e la validazione `size:4|regex:/^[0-9]{4}$/` fallisce.
+**Soluzione:** Sostituito con `type="text" inputmode="numeric"` in entrambe le view.
 
 ---
 
