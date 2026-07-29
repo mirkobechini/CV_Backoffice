@@ -39,7 +39,7 @@
   Questo causa incongruenze: lo stato calcolato al momento della creazione può differire da quello calcolato dalle regole automatiche del model.
   **Soluzione:** Allineato il default a **3** in `getAutomaticStatusAttribute()` e `syncStatusFromRules()`.
 
-### B4. `$vehicle->mileage` usato in view ma non esiste
+### B4. `$vehicle->mileage` usato in view ma non esiste ✅ FIXATO
 
 **File:** `resources/views/admin/vehicles/show.blade.php`
 
@@ -48,6 +48,7 @@
 ```
 
 `mileage` non è una colonna del DB né un accessor sul model `Vehicle`. I chilometri sono in `mileage_logs`. Questa riga restituirà `null`.
+**Soluzione:** Aggiunto accessor `getMileageAttribute()` su `Vehicle` che restituisce l'ultimo chilometraggio da `mileageLogs`. Aggiunto `'mileageLogs'` alla eager load nel `VehicleController::show()`.
 
 ### B5. `VehicleController::update()` ignora il file `registration_card`
 
@@ -199,7 +200,7 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | -------------- | -------------- | ----------------------------------------------------------------------------------- |
 | 🔴 ~~Critico~~ | ~~B1, B2~~     | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                        |
 | **Medio**      | B6             | `VehicleObserver::created()` — ora mitigato dal fix B1, ma verificare se ridondante |
-| 🔴 **Critico** | B4             | `$vehicle->mileage` non esiste — mostra vuoto                                       |
+| 🔴 ~~Critico~~ | ~~B4~~         | ~~$vehicle->mileage non esiste — mostra vuoto~~ ✅ Fixato                            |
 | 🟡 **Alto**    | D4             | `DeadlineController::resolveStatus()` duplica logica del Model (collegato a B3)     |
 | 🟡 **Alto**    | B5             | Upload carta circolazione ignorato in edit                                          |
 | 🟡 **Alto**    | M1, M2         | Performance e scalabilità                                                           |

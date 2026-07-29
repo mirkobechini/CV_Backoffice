@@ -118,4 +118,14 @@ class Vehicle extends Model
             return $actualQuantity < $requiredQuantity;
         });
     }
+
+    public function getMileageAttribute(): ?int
+    {
+        // Prende l'ultimo log di chilometraggio per questo veicolo
+        $latestLog = $this->mileageLogs()
+            ->orderByDesc('log_date')
+            ->first();
+
+        return $latestLog?->mileage;
+    }
 }
