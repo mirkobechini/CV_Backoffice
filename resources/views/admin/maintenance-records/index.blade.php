@@ -1,41 +1,5 @@
 @extends('layouts.app')
 @section('content')
-    @php
-        $groupBy = $groupBy ?? null;
-        $sortBy = $sortBy ?? null;
-        $sortDir = $sortDir ?? 'asc';
-
-        $groupToggleUrl = function (string $field) use ($groupBy) {
-            $query = request()->query();
-
-            if ($groupBy === $field) {
-                unset($query['group_by']);
-            } else {
-                $query['group_by'] = $field;
-            }
-
-            return route('admin.maintenance-records.index', $query);
-        };
-
-        $sortToggleUrl = function (string $field) use ($sortBy, $sortDir) {
-            $query = request()->query();
-            $nextDirection = $sortBy === $field && $sortDir === 'asc' ? 'desc' : 'asc';
-
-            $query['sort_by'] = $field;
-            $query['sort_dir'] = $nextDirection;
-
-            return route('admin.maintenance-records.index', $query);
-        };
-
-        $sortIcon = function (string $field) use ($sortBy, $sortDir) {
-            if ($sortBy !== $field) {
-                return '↕';
-            }
-
-            return $sortDir === 'asc' ? '↑' : '↓';
-        };
-    @endphp
-
     <x-admin.index-table title="Manutenzioni">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.maintenance-records.create')" label="manutenzione" />

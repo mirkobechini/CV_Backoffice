@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Models\Issue;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
@@ -12,6 +13,8 @@ use App\Http\Requests\UpdateIssueRequest;
 
 class IssueController extends Controller
 {
+    use SortableAndGroupable;
+
     /**
      * Display a listing of the resource.
      */
@@ -29,41 +32,34 @@ class IssueController extends Controller
 
         $issues = Issue::with('vehicle')->get();
 
-        $issues = $sortDir === 'desc'
-            ? $issues->sortByDesc(function (Issue $issue) use ($sortBy) {
-                return match ($sortBy) {
-                    'vehicle' => $issue->vehicle?->internal_code ?? '',
-                    'status' => $issue->status,
-                    'date' => $issue->event_date?->format('Y-m-d') ?? '',
-                };
-            })->values()
-            : $issues->sortBy(function (Issue $issue) use ($sortBy) {
-                return match ($sortBy) {
-                    'vehicle' => $issue->vehicle?->internal_code ?? '',
-                    'status' => $issue->status,
-                    'date' => $issue->event_date?->format('Y-m-d') ?? '',
-                };
-            })->values();
+        $issues = $this->applySorting($issues, $sortBy, $sortDir, function (Issue $issue) use ($sortBy) {
+            return match ($sortBy) {
+                'vehicle' => $issue->vehicle?->internal_code ?? '',
+                'status' => $issue->status,
+                'date' => $issue->event_date?->format('Y-m-d') ?? '',
+            };
+        });
 
-        $groupedIssues = null;
-        if ($groupBy !== null) {
-            $groupedIssues = $issues->groupBy(function (Issue $issue) use ($groupBy) {
-                return match ($groupBy) {
-                    'vehicle' => $issue->vehicle?->internal_code ?? 'N/A',
-                    'status' => match ($issue->status) {
-                        'open' => 'Aperto',
-                        'in_progress' => 'In lavorazione',
-                        'closed' => 'Risolto',
-                        default => 'Sconosciuto',
-                    },
-                    'date' => $issue->event_date
-                        ? ucfirst($issue->event_date->locale('it')->translatedFormat('F Y'))
-                        : 'N/A',
-                };
-            });
-        }
+        $groupedIssues = $this->applyGrouping($issues, $groupBy, function (Issue $issue) use ($groupBy) {
+            return match ($groupBy) {
+                'vehicle' => $issue->vehicle?->internal_code ?? 'N/A',
+                'status' => match ($issue->status) {
+                    'open' => 'Aperto',
+                    'in_progress' => 'In lavorazione',
+                    'closed' => 'Risolto',
+                    default => 'Sconosciuto',
+                },
+                'date' => $issue->event_date
+                    ? ucfirst($issue->event_date->locale('it')->translatedFormat('F Y'))
+                    : 'N/A',
+            };
+        });
 
-        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues'));
+        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues') + [
+            'groupToggleUrl' => fn($f)=> $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
+            'sortToggleUrl' => fn($f)=> $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
+            'sortIcon' => fn($f)=> $this->sortIcon($f, $sortBy, $sortDir),
+        ]);
     }
 
     /**

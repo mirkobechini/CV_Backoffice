@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeadlineRequest;
 use App\Http\Requests\UpdateDeadlineRequest;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 
 class DeadlineController extends Controller
 {
+    use SortableAndGroupable;
     /**
      * Display a listing of the resource.
      */
@@ -41,43 +43,37 @@ class DeadlineController extends Controller
                 ->values();
         }
 
-        $deadlines = $sortDir === 'desc'
-            ? $deadlines->sortByDesc(function (Deadline $deadline) use ($sortBy) {
-                return match ($sortBy) {
-                    'type' => $deadline->type,
-                    'status' => $deadline->automatic_status,
-                    'vehicle' => $deadline->vehicle?->internal_code ?? '',
-                    'date' => $deadline->due_date?->format('Y-m-d') ?? '',
-                };
-            })->values()
-            : $deadlines->sortBy(function (Deadline $deadline) use ($sortBy) {
-                return match ($sortBy) {
-                    'type' => $deadline->type,
-                    'status' => $deadline->automatic_status,
-                    'vehicle' => $deadline->vehicle?->internal_code ?? '',
-                    'date' => $deadline->due_date?->format('Y-m-d') ?? '',
-                };
-            })->values();
+        $deadlines = $this->applySorting($deadlines, $sortBy, $sortDir, function (Deadline $d) use ($sortBy) {
+            return match ($sortBy) {
+                'type' => $d->type,
+                'status' => $d->automatic_status,
+                'vehicle' => $d->vehicle?->internal_code ?? '',
+                'date' => $d->due_date?->format('Y-m-d') ?? '',
+            };
+        });
 
-        $groupedDeadlines = null;
-        if ($groupBy !== null) {
-            $groupedDeadlines = $deadlines->groupBy(function (Deadline $deadline) use ($groupBy) {
-                return match ($groupBy) {
-                    'type' => $deadline->type ?? 'N/A',
-                    'status' => match ($deadline->automatic_status) {
-                        Deadline::STATUS_RENEWED => 'Rinnovata',
-                        Deadline::STATUS_PENDING => 'In scadenza',
-                        Deadline::STATUS_EXPIRED => 'Scaduta',
-                        Deadline::STATUS_VALID => 'Valida',
-                        default => 'Sconosciuto',
-                    },
-                    'vehicle' => $deadline->vehicle?->internal_code ?? 'N/A',
-                    'date' => $deadline->due_date_formatted ?? 'N/A',
-                };
-            });
-        }
 
-        return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly'));
+
+        $groupedDeadlines = $this->applyGrouping($deadlines, $groupBy, function (Deadline $deadline) use ($groupBy) {
+            return match ($groupBy) {
+                'type' => $deadline->type ?? 'N/A',
+                'status' => match ($deadline->automatic_status) {
+                    Deadline::STATUS_RENEWED => 'Rinnovata',
+                    Deadline::STATUS_PENDING => 'In scadenza',
+                    Deadline::STATUS_EXPIRED => 'Scaduta',
+                    Deadline::STATUS_VALID => 'Valida',
+                    default => 'Sconosciuto',
+                },
+                'vehicle' => $deadline->vehicle?->internal_code ?? 'N/A',
+                'date' => $deadline->due_date_formatted ?? 'N/A',
+            };
+        });
+
+        return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly') + [
+            'groupToggleUrl' => fn($f)=> $this->groupToggleUrl($f, $groupBy, 'admin.deadlines.index'),
+            'sortToggleUrl' => fn($f)=> $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
+            'sortIcon' => fn($f)=> $this->sortIcon($f, $sortBy, $sortDir),
+        ]);
     }
 
     /**

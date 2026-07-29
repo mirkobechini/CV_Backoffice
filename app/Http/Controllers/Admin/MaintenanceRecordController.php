@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Requests\StoreMaintenanceRecordRequest;
 use App\Http\Requests\UpdateMaintenanceRecordRequest;
 use App\Models\Deadline;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\DB;
 
 class MaintenanceRecordController extends Controller
 {
+    use SortableAndGroupable;
     /**
      * Display a listing of the resource.
      */
@@ -33,36 +35,29 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecords = MaintenanceRecord::with(['vehicle', 'provider', 'issue'])->get();
 
-        $maintenanceRecords = $sortDir === 'desc'
-            ? $maintenanceRecords->sortByDesc(function (MaintenanceRecord $record) use ($sortBy) {
-                return match ($sortBy) {
-                    'vehicle' => $record->vehicle?->internal_code ?? '',
-                    'description' => $record->issue?->description ?? ($record->activity_type ?? ''),
-                    'date' => $record->appointment_date?->format('Y-m-d') ?? '',
-                };
-            })->values()
-            : $maintenanceRecords->sortBy(function (MaintenanceRecord $record) use ($sortBy) {
-                return match ($sortBy) {
-                    'vehicle' => $record->vehicle?->internal_code ?? '',
-                    'description' => $record->issue?->description ?? ($record->activity_type ?? ''),
-                    'date' => $record->appointment_date?->format('Y-m-d') ?? '',
-                };
-            })->values();
+        $maintenanceRecords = $this->applySorting($maintenanceRecords, $sortBy, $sortDir, function (MaintenanceRecord $record) use ($sortBy) {
+            return match ($sortBy) {
+                'vehicle' => $record->vehicle?->internal_code ?? '',
+                'description' => $record->issue?->description ?? ($record->activity_type ?? ''),
+                'date' => $record->appointment_date?->format('Y-m-d') ?? '',
+            };
+        });
 
-        $groupedMaintenanceRecords = null;
-        if ($groupBy !== null) {
-            $groupedMaintenanceRecords = $maintenanceRecords->groupBy(function (MaintenanceRecord $record) use ($groupBy) {
-                return match ($groupBy) {
-                    'vehicle' => $record->vehicle?->internal_code ?? 'N/A',
-                    'description' => $record->issue?->description ?? ($record->activity_type ?? 'N/A'),
-                    'date' => $record->appointment_date
-                        ? ucfirst($record->appointment_date->locale('it')->translatedFormat('F Y'))
-                        : 'N/A',
-                };
-            });
-        }
+        $groupedMaintenanceRecords = $this->applyGrouping($maintenanceRecords, $groupBy, function (MaintenanceRecord $record) use ($groupBy) {
+            return match ($groupBy) {
+                'vehicle' => $record->vehicle?->internal_code ?? 'N/A',
+                'description' => $record->issue?->description ?? ($record->activity_type ?? 'N/A'),
+                'date' => $record->appointment_date
+                    ? ucfirst($record->appointment_date->locale('it')->translatedFormat('F Y'))
+                    : 'N/A',
+            };
+        });
 
-        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords'));
+        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords') + [
+            'groupToggleUrl' => fn($f)=> $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
+            'sortToggleUrl' => fn($f)=> $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
+            'sortIcon' => fn($f)=> $this->sortIcon($f, $sortBy, $sortDir),
+        ]);
     }
 
     /**
