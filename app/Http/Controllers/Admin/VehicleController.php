@@ -25,7 +25,7 @@ class VehicleController extends Controller
                 'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
                 'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
             ])
-            ->get();
+            ->paginate(20);
 
         return view('admin.vehicles.index', compact('vehicles'));
     }

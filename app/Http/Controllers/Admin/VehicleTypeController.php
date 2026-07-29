@@ -15,7 +15,7 @@ class VehicleTypeController extends Controller
      */
     public function index()
     {
-        $vehicleTypes = VehicleType::all();
+        $vehicleTypes = VehicleType::paginate(20);
         return view('admin.vehicle-types.index', compact('vehicleTypes'));
     }
 

@@ -18,7 +18,7 @@ class MileageLogController extends Controller
         $mileageLogs = MileageLog::query()
             ->with('vehicle')
             ->orderByDesc('log_date')
-            ->get();
+            ->paginate(20);
 
         return view('admin.mileage-logs.index', compact('mileageLogs'));
     }

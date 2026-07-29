@@ -1,4 +1,4 @@
-@props(['title', 'tableClass' => 'table table-striped table-hover my-0'])
+@props(['title', 'tableClass' => 'table table-striped table-hover my-0', 'paginator' => null])
 
 <div class="container py-4">
     <div class="d-flex align-items-center mb-4">
@@ -19,5 +19,10 @@
                 {{ $rows }}
             </tbody>
         </table>
+        @if ($paginator)
+            <div class="d-flex justify-content-center py-3">
+                {{ $paginator->links() }}
+            </div>
+        @endif
     </div>
 </div>

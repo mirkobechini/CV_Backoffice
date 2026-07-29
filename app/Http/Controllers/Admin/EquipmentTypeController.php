@@ -15,7 +15,7 @@ class EquipmentTypeController extends Controller
      */
     public function index()
     {
-        $equipmentTypes = EquipmentType::all();
+        $equipmentTypes = EquipmentType::paginate(20);
         return view('admin.equipment-types.index', compact('equipmentTypes'));
     }
 

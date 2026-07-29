@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('content')
-    <x-admin.index-table title="Veicoli" tableClass="table table-striped table-hover my-0 align-middle text-center">
+    <x-admin.index-table title="Veicoli" tableClass="table table-striped table-hover my-0 align-middle text-center"
+        :paginator="$vehicles">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.vehicles.create')" label="veicolo" />
         </x-slot:headingActions>
@@ -47,8 +48,7 @@
                         @elseif ($missingEquipment->isEmpty())
                             <span class="badge bg-success">Completo</span>
                         @else
-                            <span class="badge bg-danger"
-                                title="Manca: {{ $missingEquipment->pluck('name')->join(', ') }}">
+                            <span class="badge bg-danger" title="Manca: {{ $missingEquipment->pluck('name')->join(', ') }}">
                                 Da integrare
                             </span>
                         @endif

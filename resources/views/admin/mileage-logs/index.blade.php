@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('content')
-    <x-admin.index-table title="Chilometraggi" tableClass="table table-striped table-hover my-0 align-middle text-center">
+    <x-admin.index-table title="Chilometraggi" tableClass="table table-striped table-hover my-0 align-middle text-center"
+        :paginator="$mileageLogs">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.mileage-logs.create')" label="chilometraggio" />
         </x-slot:headingActions>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-    <x-admin.index-table title="Officine">
+    <x-admin.index-table title="Officine" :paginator="$providers">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.providers.create')" label="officina" />
         </x-slot:headingActions>
