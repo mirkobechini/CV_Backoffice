@@ -135,10 +135,11 @@ Tutti i FormRequest hanno `authorize() { return true; }`. Ogni utente autenticat
 La data di scadenza garanzia non può essere prima dell'immatricolazione.
 **Soluzione:** Aggiunta validazione `after_or_equal:immatricolation_date` e messaggio personalizzato in entrambi i FormRequest.
 
-### M8. Aggiungere validazione `mileage` deve essere >= ultimo log
+### M8. Aggiungere validazione `mileage` deve essere >= ultimo log ✅ FIXATO
 
 **Impatto:** Medio
 Quando si inserisce un nuovo chilometraggio, non si controlla che sia maggiore o uguale all'ultimo registrato per lo stesso veicolo.
+**Soluzione:** Aggiunto `withValidator` in `StoreMileageLogRequest` e `UpdateMileageLogRequest` che confronta con l'ultimo chilometraggio dello stesso veicolo. Nell'update esclude il record corrente dal confronto.
 
 ### M9. Tema chiaro/scuro non funzionante
 
