@@ -35,15 +35,11 @@ class MaintenanceRecordController extends Controller
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
 
-        $maintenanceRecords = MaintenanceRecord::with(['vehicle', 'provider', 'issue'])->get();
-
-        $maintenanceRecords = $this->applySorting($maintenanceRecords, $sortBy, $sortDir, function (MaintenanceRecord $record) use ($sortBy) {
-            return match ($sortBy) {
-                'vehicle' => $record->vehicle?->internal_code ?? '',
-                'description' => $record->issue?->description ?? ($record->activity_type ?? ''),
-                'date' => $record->appointment_date?->format('Y-m-d') ?? '',
-            };
-        });
+        $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'issue']), $sortBy, $sortDir, [
+            'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
+            'description' => fn(MaintenanceRecord $r) => $r->issue?->description ?? ($r->activity_type ?? ''),
+            'date' => 'appointment_date',
+        ]);
 
         $groupedMaintenanceRecords = $this->applyGrouping($maintenanceRecords, $groupBy, function (MaintenanceRecord $record) use ($groupBy) {
             return match ($groupBy) {

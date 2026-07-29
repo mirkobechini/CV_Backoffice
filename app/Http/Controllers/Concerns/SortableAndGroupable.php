@@ -2,14 +2,51 @@
 
 namespace App\Http\Controllers\Concerns;
 use Illuminate\Support\Collection;
+use Illuminate\Database\Eloquent\Builder;
 
 trait SortableAndGroupable
 {
-    protected function applySorting($collection, string $sortBy, string $sortDir, callable $sortCallback): Collection
+    /**
+     * Applica ordinamento.
+     * $sortMap: [ 'field' => 'colonna_db' | callable ]
+     * - Se stringa → orderBy() direttamente nel DB
+     * - Se callable → sorting in memoria (per accessor/relazioni)
+     */
+    protected function applySorting(Builder $query, string $sortBy, string $sortDir, array $sortMap): Collection
     {
+        $entry = $sortMap[$sortBy] ?? null;
+
+        if ($entry === null) {
+            return $query->get();
+        }
+
+        // Ordinamento via DB
+        if (is_string($entry)) {
+            return $query->orderBy($entry, $sortDir)->get();
+        }
+
+        // Ordinamento in memoria per accessor/relazioni
+        $collection = $query->get();
         return $sortDir === 'desc'
-            ? $collection->sortByDesc($sortCallback)->values()
-            : $collection->sortBy($sortCallback)->values();
+            ? $collection->sortByDesc($entry)->values()
+            : $collection->sortBy($entry)->values();
+    }
+
+    /**
+     * Applica ordinamento su una collection già esistente.
+     * Utile quando devi elaborare la collection prima di ordinarla.
+     */
+    protected function applySortingToCollection(Collection $collection, string $sortBy, string $sortDir, array $sortMap): Collection
+    {
+        $entry = $sortMap[$sortBy] ?? null;
+
+        if ($entry === null || !is_callable($entry)) {
+            return $collection;
+        }
+
+        return $sortDir === 'desc'
+            ? $collection->sortByDesc($entry)->values()
+            : $collection->sortBy($entry)->values();
     }
 
     protected function applyGrouping($collection, ?string $groupBy, callable $groupCallback): ?Collection

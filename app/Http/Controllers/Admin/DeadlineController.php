@@ -43,14 +43,12 @@ class DeadlineController extends Controller
                 ->values();
         }
 
-        $deadlines = $this->applySorting($deadlines, $sortBy, $sortDir, function (Deadline $d) use ($sortBy) {
-            return match ($sortBy) {
-                'type' => $d->type,
-                'status' => $d->automatic_status,
-                'vehicle' => $d->vehicle?->internal_code ?? '',
-                'date' => $d->due_date?->format('Y-m-d') ?? '',
-            };
-        });
+        $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
+            'type' => fn(Deadline $d) => $d->type,
+            'status' => fn(Deadline $d) => $d->automatic_status,
+            'vehicle' => fn(Deadline $d) => $d->vehicle?->internal_code ?? '',
+            'date' => fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
+        ]);
 
 
 

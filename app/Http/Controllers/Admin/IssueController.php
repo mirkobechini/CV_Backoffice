@@ -32,15 +32,11 @@ class IssueController extends Controller
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
 
-        $issues = Issue::with('vehicle')->get();
-
-        $issues = $this->applySorting($issues, $sortBy, $sortDir, function (Issue $issue) use ($sortBy) {
-            return match ($sortBy) {
-                'vehicle' => $issue->vehicle?->internal_code ?? '',
-                'status' => $issue->status,
-                'date' => $issue->event_date?->format('Y-m-d') ?? '',
-            };
-        });
+        $issues = $this->applySorting(Issue::with('vehicle'), $sortBy, $sortDir, [
+            'vehicle' => fn(Issue $i) => $i->vehicle?->internal_code ?? '',
+            'status' => 'status',
+            'date' => 'event_date',
+        ]);
 
         $groupedIssues = $this->applyGrouping($issues, $groupBy, function (Issue $issue) use ($groupBy) {
             return match ($groupBy) {

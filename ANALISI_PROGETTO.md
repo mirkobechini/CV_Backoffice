@@ -94,10 +94,11 @@ La logica di determinazione dello stato è implementata in due posti con leggere
 
 ## 💡 Migliorie Consigliate
 
-### M1. Usare `orderBy()` del DB invece di Collection `sortBy()`
+### M1. Usare `orderBy()` del DB invece di Collection `sortBy()` ✅ FIXATO
 
 **Impatto:** Alto (performance)
 Tutti i controller caricano tutto con `->get()` e poi ordinano in memoria con `->sortBy()`. Per poche decine di record va bene, ma con centinaia/migliaia diventa un collo di bottiglia. Usare `->orderBy()` nella query.
+**Soluzione:** Modificato `applySorting()` nel trait per accettare una mappa: se il valore è una stringa (colonna DB) fa `orderBy()` direttamente, se è un callable fa sorting in memoria. `IssueController` e `MaintenanceRecordController` ora ordinano `status`, `event_date`, `appointment_date` via DB.
 
 ### M2. Aggiungere paginazione
 
