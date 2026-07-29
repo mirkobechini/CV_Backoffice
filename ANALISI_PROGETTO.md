@@ -106,7 +106,7 @@ Tutti i controller caricano tutto con `->get()` e poi ordinano in memoria con `-
 Nessun controller usa `->paginate()`. Con la crescita dei dati, le liste diventeranno ingestibili.
 **Soluzione:** Sostituito `->get()`/`->all()` con `->paginate(20)` in 6 controller. Aggiunto supporto `paginator` al componente `x-admin.index-table` con `$paginator->links()`.
 
-### M3. Aggiungere `unique` validation su `serial_number` in Equipment
+### M3. Aggiungere `unique` validation su `serial_number` in Equipment ✅ FIXATO
 
 **File:** `StoreEquipmentRequest.php` e `UpdateEquipmentRequest.php`
 La colonna `serial_number` è `unique` nel DB ma non c'è validazione lato Laravel. Un utente potrebbe ricevere un errore SQL invece di un messaggio amichevole.
