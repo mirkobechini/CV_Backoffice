@@ -3,7 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\MileageLog;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class UpdateMileageLogRequest extends FormRequest
 {
@@ -33,5 +35,27 @@ class UpdateMileageLogRequest extends FormRequest
             'mileage.integer' => 'Il campo chilometraggio deve essere un numero intero.',
             'mileage.min' => 'Il chilometraggio non può essere negativo.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $vehicleId = $this->input('vehicle_id');
+            $newMileage = $this->input('mileage');
+            $currentId = $this->route('mileageLog')?->id;
+
+            if (!$vehicleId || !$newMileage) {
+                return;
+            }
+
+            $lastMileage = MileageLog::where('vehicle_id', $vehicleId)
+                ->where('id', '!=', $currentId)
+                ->orderByDesc('log_date')
+                ->value('mileage');
+
+            if ($lastMileage !== null && (int) $newMileage < (int) $lastMileage) {
+                $validator->errors()->add('mileage', 'Il chilometraggio non può essere inferiore all\'ultimo registrato (' . number_format($lastMileage, 0, ',', '.') . ' km).');
+            }
+        });
     }
 }
