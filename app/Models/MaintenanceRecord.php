@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MaintenanceRecord extends Model
 {
+    use SoftDeletes;
 
     public const ACTIVITY_TAGLIANDO = 'Tagliando';
     public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';

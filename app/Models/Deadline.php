@@ -4,9 +4,11 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Deadline extends Model
 {
+    use SoftDeletes;
     //status
     public const STATUS_PENDING = 'pending';
     public const STATUS_EXPIRED = 'expired';
@@ -83,7 +85,7 @@ class Deadline extends Model
             return;
         }
 
-        if($this->is_renewed){
+        if ($this->is_renewed) {
             return; // Se è marcata come rinnovata, non cambiamo lo stato.
         }
 
@@ -165,5 +167,4 @@ class Deadline extends Model
     {
         return (bool) optional($vehicle->vehicleType)->needs_oxygen_check;
     }
-
 }

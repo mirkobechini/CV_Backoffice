@@ -117,32 +117,28 @@ La colonna `serial_number` è `unique` nel DB ma non c'è validazione lato Larav
 I nomi delle officine dovrebbero essere univoci.
 **Soluzione:** Aggiunta validazione `unique` in entrambe le Request. Creata migration per rendere `name` unico anche a livello DB.
 
-### M5. Aggiungere SoftDeletes
+### M5. Aggiungere SoftDeletes ✅ FIXATO
 
 **Impatto:** Medio
 Eliminare un veicolo (`cascadeOnDelete`) cancella permanentemente guasti, manutenzioni, scadenze. Con `SoftDeletes` si potrebbe recuperare.
+**Soluzione:** Creata migration unica per aggiungere `softDeletes()` a vehicles, issues, maintenance_records, deadlines. Aggiunto `use SoftDeletes` ai rispettivi Model.
 
 ### M6. Aggiungere Authorization/Policy
 
 **Impatto:** Medio (sicurezza)
 Tutti i FormRequest hanno `authorize() { return true; }`. Ogni utente autenticato può fare tutto. Per un uso personale va bene, ma se in futuro ci saranno più utenti con ruoli diversi serviranno Policies.
 
-### M7. Estrarre la logica di ordinamento in un Trait
-
-**Impatto:** Basso (manutenibilità)
-Vedi D1. Un trait `SortableAndGroupable` ridurrebbe drasticamente la duplicazione.
-
-### M8. Aggiungere validazione `after_or_equal:immatricolation_date` su `warranty_expiration_date`
+### M7. Aggiungere validazione `after_or_equal:immatricolation_date` su `warranty_expiration_date`
 
 **Impatto:** Basso
 La data di scadenza garanzia non può essere prima dell'immatricolazione.
 
-### M9. Aggiungere validazione `mileage` deve essere >= ultimo log
+### M8. Aggiungere validazione `mileage` deve essere >= ultimo log
 
 **Impatto:** Medio
 Quando si inserisce un nuovo chilometraggio, non si controlla che sia maggiore o uguale all'ultimo registrato per lo stesso veicolo.
 
-### M10. Tema chiaro/scuro non funzionante
+### M9. Tema chiaro/scuro non funzionante
 
 **File:** `resources/views/layouts/app.blade.php`
 Il pulsante theme toggle c'è nell'header ma non c'è lo script JavaScript per gestire il click e salvare la preferenza.
@@ -200,16 +196,14 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 
 ## 🎯 Priorità Suggerite
 
-| Priorità       | Cosa           | Perché                                                                          |
-| -------------- | -------------- | ------------------------------------------------------------------------------- |
-| 🔴 ~~Critico~~ | ~~B1, B2~~     | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                    |
-| 🔴 ~~Critico~~ | ~~B4~~         | ~~$vehicle->mileage non esiste — mostra vuoto~~ ✅ Fixato                       |
-| 🟡 **Alto**    | D4             | `DeadlineController::resolveStatus()` duplica logica del Model (collegato a B3) |
-| 🟡 ~~Alto~~    | ~~B5~~         | ~~Upload carta circolazione ignorato in edit~~ ✅ Fixato                        |
-| 🟡 **Alto**    | M1, M2         | Performance e scalabilità                                                       |
-| 🟢 **Medio**   | D1, D2, D3     | Refactoring duplicazioni                                                        |
-| 🟢 **Medio**   | F1, F2         | Dashboard e notifiche                                                           |
-| 🔵 **Basso**   | M3-M10, F3-F10 | Migliorie e feature secondarie                                                  |
+| Priorità                     | Cosa               | Perché                                          |
+| ---------------------------- | ------------------ | ----------------------------------------------- |
+| ✅ **Tutti i Bug**           | **B1-B6**          | ✅ **Risolti**                                  |
+| ✅ **Tutte le Duplicazioni** | **D1-D4**          | ✅ **Risolte**                                  |
+| ✅ **Performance**           | **M1-M2**          | ✅ **Ordinamento DB + Paginazione**             |
+| ✅ **Migliorie**             | **M3-M5**          | ✅ **Unique validation + SoftDeletes**          |
+| 🟢 **Medio**                 | F1, F2             | Dashboard e notifiche                           |
+| 🔵 **Basso**                 | M6, M8-M10, F3-F10 | Authorization, validazioni, export, audit, ecc. |
 
 ---
 

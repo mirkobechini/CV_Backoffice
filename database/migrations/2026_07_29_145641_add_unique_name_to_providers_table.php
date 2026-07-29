@@ -13,7 +13,7 @@ return new class extends Migration
     public function up(): void
     {
         // Rimuovi eventuali duplicati prima di aggiungere il vincolo unico
-        DB::statement('DELETE FROM providers WHERE id NOT IN (SELECT MIN(id) FROM providers GROUP BY name)');
+        DB::statement('DELETE FROM providers WHERE id NOT IN (SELECT id FROM (SELECT MIN(id) AS id FROM providers GROUP BY name) AS tmp)');
 
         Schema::table('providers', function (Blueprint $table) {
             $table->unique('name');
