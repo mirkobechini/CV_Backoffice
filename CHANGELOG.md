@@ -28,3 +28,4 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Migliorie
 
 - **M3** — Aggiunta validazione `unique` su `serial_number` in `StoreEquipmentRequest` e `UpdateEquipmentRequest`.
+- **M4** — Aggiunta validazione `unique` su `name` in `StoreProviderRequest` e `UpdateProviderRequest` + migration per rendere `name` unico nel DB.

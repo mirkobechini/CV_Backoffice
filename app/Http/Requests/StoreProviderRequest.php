@@ -22,7 +22,7 @@ class StoreProviderRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'name' => 'required|string|max:255',
+                'name' => 'required|string|max:255|unique:providers,name',
                 'address' => 'nullable|string|max:255',
                 'contact_info' => 'nullable|string|max:255',
                 'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',
@@ -35,6 +35,7 @@ class StoreProviderRequest extends FormRequest
             'name.required' => 'Il nome è obbligatorio.',
             'name.string' => 'Il nome deve essere una stringa.',
             'name.max' => 'Il nome non può superare i 255 caratteri.',
+            'name.unique' => 'Esiste già un\'officina con questo nome.',
             'address.string' => 'L\'indirizzo deve essere una stringa.',
             'address.max' => 'L\'indirizzo non può superare i 255 caratteri.',
             'contact_info.string' => 'Le informazioni di contatto devono essere una stringa.',

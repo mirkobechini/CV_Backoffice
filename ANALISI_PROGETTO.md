@@ -111,10 +111,11 @@ Nessun controller usa `->paginate()`. Con la crescita dei dati, le liste divente
 **File:** `StoreEquipmentRequest.php` e `UpdateEquipmentRequest.php`
 La colonna `serial_number` è `unique` nel DB ma non c'è validazione lato Laravel. Un utente potrebbe ricevere un errore SQL invece di un messaggio amichevole.
 
-### M4. Aggiungere `unique` validation su `name` in Provider
+### M4. Aggiungere `unique` validation su `name` in Provider ✅ FIXATO
 
-**File:** `StoreProviderRequest.php`
+**File:** `StoreProviderRequest.php` e `UpdateProviderRequest.php`
 I nomi delle officine dovrebbero essere univoci.
+**Soluzione:** Aggiunta validazione `unique` in entrambe le Request. Creata migration per rendere `name` unico anche a livello DB.
 
 ### M5. Aggiungere SoftDeletes
 
