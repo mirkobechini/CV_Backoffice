@@ -140,6 +140,14 @@ class VehicleController extends Controller
                 ->toDateString();
         }
 
+        $registrationCard = null;
+
+        if ($request->hasFile('registration_card')) {
+            $registrationCardFile = $request->file('registration_card');
+            $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
+            $registrationCard = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
+        }
+
         $vehicle->update([
             'license_plate' => $data['license_plate'],
             'vehicle_type_id' => $data['vehicle_type_id'],
@@ -151,6 +159,7 @@ class VehicleController extends Controller
             'warranty_expiration_date' => $warrantyEffectiveExpirationDate,
             'has_warranty_extension' => $hasWarrantyExtension,
             'warranty_extension_duration' => $warrantyExtensionDuration,
+            'registration_card_path' => $registrationCard ?? $vehicle->registration_card_path,
         ]);
 
         return redirect()->route('admin.vehicles.show', $vehicle->id)->with('status', 'Veicolo aggiornato con successo.');

@@ -50,10 +50,11 @@
 `mileage` non è una colonna del DB né un accessor sul model `Vehicle`. I chilometri sono in `mileage_logs`. Questa riga restituirà `null`.
 **Soluzione:** Aggiunto accessor `getMileageAttribute()` su `Vehicle` che restituisce l'ultimo chilometraggio da `mileageLogs`. Aggiunto `'mileageLogs'` alla eager load nel `VehicleController::show()`.
 
-### B5. `VehicleController::update()` ignora il file `registration_card`
+### B5. `VehicleController::update()` ignora il file `registration_card` ✅ FIXATO
 
 **File:** `app/Http/Controllers/Admin/VehicleController.php`
 **Problema:** Il metodo `store()` gestisce il caricamento della carta di circolazione, ma `update()` no. Se un utente modifica un veicolo e carica un nuovo file, questo viene ignorato.
+**Soluzione:** Aggiunta la stessa logica di upload di `store()` anche in `update()`.
 
 ### B6. `VehicleObserver::created()` chiama `syncStatusFromRules()` su deadline rinnovate
 
@@ -200,9 +201,9 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | -------------- | -------------- | ----------------------------------------------------------------------------------- |
 | 🔴 ~~Critico~~ | ~~B1, B2~~     | ~~Bug nella logica scadenze — dati inconsistenti~~ ✅ Fixati                        |
 | **Medio**      | B6             | `VehicleObserver::created()` — ora mitigato dal fix B1, ma verificare se ridondante |
-| 🔴 ~~Critico~~ | ~~B4~~         | ~~$vehicle->mileage non esiste — mostra vuoto~~ ✅ Fixato                            |
+| 🔴 ~~Critico~~ | ~~B4~~         | ~~$vehicle->mileage non esiste — mostra vuoto~~ ✅ Fixato                           |
 | 🟡 **Alto**    | D4             | `DeadlineController::resolveStatus()` duplica logica del Model (collegato a B3)     |
-| 🟡 **Alto**    | B5             | Upload carta circolazione ignorato in edit                                          |
+| 🟡 ~~Alto~~    | ~~B5~~         | ~~Upload carta circolazione ignorato in edit~~ ✅ Fixato                            |
 | 🟡 **Alto**    | M1, M2         | Performance e scalabilità                                                           |
 | 🟢 **Medio**   | D1, D2, D3     | Refactoring duplicazioni                                                            |
 | 🟢 **Medio**   | F1, F2         | Dashboard e notifiche                                                               |
