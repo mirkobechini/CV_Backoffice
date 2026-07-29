@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use Illuminate\Support\Carbon;
@@ -11,13 +12,7 @@ use Illuminate\Validation\Validator;
 
 class UpdateMaintenanceRecordRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    use AdminOnlyAccess;
 
     /**
      * Get the validation rules that apply to the request.

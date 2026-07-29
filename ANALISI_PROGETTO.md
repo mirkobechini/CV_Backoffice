@@ -123,10 +123,11 @@ I nomi delle officine dovrebbero essere univoci.
 Eliminare un veicolo (`cascadeOnDelete`) cancella permanentemente guasti, manutenzioni, scadenze. Con `SoftDeletes` si potrebbe recuperare.
 **Soluzione:** Creata migration unica per aggiungere `softDeletes()` a vehicles, issues, maintenance_records, deadlines. Aggiunto `use SoftDeletes` ai rispettivi Model.
 
-### M6. Aggiungere Authorization/Policy
+### M6. Aggiungere Authorization/Policy ✅ FIXATO
 
 **Impatto:** Medio (sicurezza)
-Tutti i FormRequest hanno `authorize() { return true; }`. Ogni utente autenticato può fare tutto. Per un uso personale va bene, ma se in futuro ci saranno più utenti con ruoli diversi serviranno Policies.
+Tutti i FormRequest hanno `authorize() { return true; }`. Ogni utente autenticato può fare tutto.
+**Soluzione:** Aggiunta colonna `role` a users. Create 9 Policy con trait `HasRoleBasedAccess` (admin può tutto, altri solo visualizzazione). Creato trait `AdminOnlyAccess` per i FormRequest. Registrate le Policy in `AppServiceProvider`.
 
 ### M7. Aggiungere validazione `after_or_equal:immatricolation_date` su `warranty_expiration_date`
 

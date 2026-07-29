@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use Illuminate\Support\Carbon;
@@ -11,13 +12,7 @@ use Illuminate\Validation\Validator;
 
 class StoreMaintenanceRecordRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    use AdminOnlyAccess;
 
     /**
      * Get the validation rules that apply to the request.
@@ -27,13 +22,13 @@ class StoreMaintenanceRecordRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'vehicle_id' => 'required|exists:vehicles,id',
-                'issue_id' => 'required|exists:issues,id',
-                'provider_id' => 'required|exists:providers,id',
-                'appointment_date' => 'required|date',
-                'return_date' => 'nullable|date|after_or_equal:appointment_date',
-                'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
-            ];
+            'vehicle_id' => 'required|exists:vehicles,id',
+            'issue_id' => 'required|exists:issues,id',
+            'provider_id' => 'required|exists:providers,id',
+            'appointment_date' => 'required|date',
+            'return_date' => 'nullable|date|after_or_equal:appointment_date',
+            'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
+        ];
     }
 
     public function messages(): array
@@ -55,7 +50,7 @@ class StoreMaintenanceRecordRequest extends FormRequest
         ];
     }
 
-    public function withValidator(Validator $validator):void
+    public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
             $issueId = $this->input('issue_id');

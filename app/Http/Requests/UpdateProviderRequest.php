@@ -2,17 +2,12 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\AdminOnlyAccess;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProviderRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    use AdminOnlyAccess;
 
     /**
      * Get the validation rules that apply to the request.
@@ -22,11 +17,11 @@ class UpdateProviderRequest extends FormRequest
     public function rules(): array
     {
         return [
-                'name' => 'required|string|max:255|unique:providers,name,' . $this->route('provider') . ',id',
-                'address' => 'nullable|string|max:255',
-                'contact_info' => 'nullable|string|max:255',
-                'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',
-            ];
+            'name' => 'required|string|max:255|unique:providers,name,' . $this->route('provider') . ',id',
+            'address' => 'nullable|string|max:255',
+            'contact_info' => 'nullable|string|max:255',
+            'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',
+        ];
     }
 
     public function messages(): array
