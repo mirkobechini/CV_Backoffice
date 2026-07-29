@@ -27,7 +27,7 @@ class StoreVehicleRequest extends FormRequest
             'immatricolation_date' => 'required|date',
             'registration_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
             'has_warranty_extension' => 'nullable|boolean',
-            'warranty_expiration_date' => 'nullable|date|required_if_accepted:has_warranty_extension',
+            'warranty_expiration_date' => 'nullable|date|required_if_accepted:has_warranty_extension|after_or_equal:immatricolation_date',
             'warranty_extension_duration' => 'nullable|integer|min:1|required_if_accepted:has_warranty_extension',
         ];
     }
@@ -56,6 +56,7 @@ class StoreVehicleRequest extends FormRequest
             'has_warranty_extension.boolean' => "Il campo di estensione della garanzia deve essere un valore booleano.",
             'warranty_expiration_date.required_if_accepted' => "La data di scadenza è obbligatoria quando l'estensione garanzia è attiva.",
             'warranty_expiration_date.date' => "La data di scadenza originale della garanzia deve essere una data valida.",
+            'warranty_expiration_date.after_or_equal' => "La data di scadenza originale della garanzia deve essere successiva o uguale alla data di immatricolazione.",
             'warranty_extension_duration.required_if_accepted' => "La durata estensione è obbligatoria quando l'estensione garanzia è attiva.",
             'warranty_extension_duration.integer' => "La durata dell'estensione della garanzia deve essere un numero intero.",
             'warranty_extension_duration.min' => "La durata dell'estensione della garanzia deve essere almeno di 1 mese."

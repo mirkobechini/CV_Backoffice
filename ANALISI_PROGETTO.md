@@ -129,10 +129,11 @@ Eliminare un veicolo (`cascadeOnDelete`) cancella permanentemente guasti, manute
 Tutti i FormRequest hanno `authorize() { return true; }`. Ogni utente autenticato può fare tutto.
 **Soluzione:** Aggiunta colonna `role` a users. Create 9 Policy con trait `HasRoleBasedAccess` (admin può tutto, altri solo visualizzazione). Creato trait `AdminOnlyAccess` per i FormRequest. Registrate le Policy in `AppServiceProvider`.
 
-### M7. Aggiungere validazione `after_or_equal:immatricolation_date` su `warranty_expiration_date`
+### M7. Aggiungere validazione `after_or_equal:immatricolation_date` su `warranty_expiration_date` ✅ FIXATO
 
 **Impatto:** Basso
 La data di scadenza garanzia non può essere prima dell'immatricolazione.
+**Soluzione:** Aggiunta validazione `after_or_equal:immatricolation_date` e messaggio personalizzato in entrambi i FormRequest.
 
 ### M8. Aggiungere validazione `mileage` deve essere >= ultimo log
 
