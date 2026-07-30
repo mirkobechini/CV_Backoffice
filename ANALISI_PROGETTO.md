@@ -149,7 +149,7 @@ Il pulsante theme toggle c'è nell'header ma non c'è lo script JavaScript per g
 
 ## 🏗️ Cosa è Incompleto / Mancante
 
-### F1. ❌ **Dashboard vuota**
+### F1. ✅ **Dashboard implementata** ✅ FIXATO
 
 La dashboard (`/dashboard`) mostra solo "You are logged in!". Dovrebbe mostrare:
 
@@ -157,6 +157,8 @@ La dashboard (`/dashboard`) mostra solo "You are logged in!". Dovrebbe mostrare:
 - Guasti aperti
 - Veicoli con equipaggiamento incompleto
 - Prossimi appuntamenti in officina
+
+**Soluzione:** Creata `DashboardController` con query per tutte le statistiche. View dashboard.blade.php con card interattive, badge colorati, progress bar, supporto dark mode e link alle pagine di dettaglio.
 
 ### F2. ❌ **Nessun sistema di notifiche**
 
@@ -203,9 +205,10 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | ✅ **Tutti i Bug**           | **B1-B6**          | ✅ **Risolti**                                  |
 | ✅ **Tutte le Duplicazioni** | **D1-D4**          | ✅ **Risolte**                                  |
 | ✅ **Performance**           | **M1-M2**          | ✅ **Ordinamento DB + Paginazione**             |
-| ✅ **Migliorie**             | **M3-M5**          | ✅ **Unique validation + SoftDeletes**          |
-| 🟢 **Medio**                 | F1, F2             | Dashboard e notifiche                           |
-| 🔵 **Basso**                 | M6, M8-M10, F3-F10 | Authorization, validazioni, export, audit, ecc. |
+| ✅ **Migliorie**             | **M3-M9**          | ✅ **Validazioni, SoftDeletes, Auth, Tema**     |
+| ✅ **Feature**               | **F1**             | ✅ **Dashboard completata**                     |
+| 🟢 **Medio**                 | **F2**             | **Notifiche scadenze**                          |
+| 🔵 **Basso**                 | F3-F10, M10        | Export, audit, test, ecc.                       |
 
 ---
 
