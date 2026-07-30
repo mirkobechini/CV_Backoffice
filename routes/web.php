@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VehicleTypeController;
 use App\Http\Controllers\Admin\MileageLogController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
+use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Models\User;
@@ -47,7 +48,11 @@ Route::middleware(['auth', 'verified'])
         Route::patch('maintenance-records/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
             ->name('maintenance-records.complete');
     });
-
+    
+Route::get('/admin/notifications', [NotificationSettingController::class, 'edit'])
+    ->name('admin.notifications.edit');
+Route::patch('/admin/notifications', [NotificationSettingController::class, 'update'])
+    ->name('admin.notifications.update');
 
 require __DIR__ . '/auth.php';
 
