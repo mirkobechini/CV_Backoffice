@@ -30,7 +30,7 @@
 
 <body>
     @include('admin.partials.header')
-    <main>
+    <main style="background-color: var(--bs-tertiary-bg); min-height: 100vh;">
         @if ($errors->any())
             <div class="container pt-3">
                 <div class="alert alert-danger" role="alert">

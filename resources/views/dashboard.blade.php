@@ -4,7 +4,7 @@
     <style>
         .stat-card {
             border-radius: 16px;
-            border: none;
+            border: var(--bs-border-width) solid var(--bs-border-color);
             transition: transform .2s;
         }
 
@@ -23,27 +23,27 @@
         }
 
         .badge-expiring {
-            background-color: #fff3cd;
-            color: #856404;
+            background-color: var(--bs-warning-bg-subtle);
+            color: var(--bs-warning-text-emphasis);
         }
 
         .badge-expired {
-            background-color: #f8d7da;
-            color: #721c24;
+            background-color: var(--bs-danger-bg-subtle);
+            color: var(--bs-danger-text-emphasis);
         }
 
         .badge-ok {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: var(--bs-success-bg-subtle);
+            color: var(--bs-success-text-emphasis);
         }
     </style>
-    <div class="container py-5 bg-light">
+    <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2"></i>{{ __('Dashboard') }}</h2>
             <span class="text-muted small">Oggi, 29 luglio 2026</span>
         </div>
-        <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
+        <div class="row row-cols-md-4 g-3 mb-4">
+            <div class="col-6">
                 <div class="card stat-card shadow-sm p-3 h-100">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-truck"></i></div>
@@ -55,7 +55,7 @@
                 </div>
 
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6">
                 <div class="card stat-card shadow-sm p-3 h-100">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i
@@ -67,7 +67,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6">
                 <div class="card stat-card shadow-sm p-3 h-100">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-calendar-check"></i>
@@ -79,7 +79,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
+            <div class="col-6">
                 <div class="card stat-card shadow-sm p-3 h-100">
                     <div class="d-flex align-items-center gap-3">
                         <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-wrench"></i></div>
@@ -92,12 +92,12 @@
             </div>
         </div>
 
-        <div class="row g-4">
+        <div class="row row-cols-md-2 g-4">
 
             <!-- COLONNA SINISTRA: Scadenze imminenti -->
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0 rounded-4 h-100">
-                    <div class="card-header bg-white border-0 rounded-4 pb-0 pt-3">
+            <div class="col">
+                <div class="card shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Scadenze imminenti
                         </h5>
                     </div>
@@ -135,9 +135,9 @@
             </div>
 
             <!-- COLONNA DESTRA: Guasti aperti -->
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0 rounded-4 h-100">
-                    <div class="card-header bg-white border-0 rounded-4 pb-0 pt-3">
+            <div class="col">
+                <div class="card shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-circle me-2 text-danger"></i>Guasti aperti
                         </h5>
                     </div>
@@ -173,12 +173,12 @@
                 </div>
             </div>
         </div>
-        <div class="row g-4 mt-2">
+        <div class="row row-cols-md-2 g-4 mt-2">
 
             <!-- Prossimi appuntamenti -->
-            <div class="col-md-6">
-                <div class="card shadow-sm border-0 rounded-4 h-100">
-                    <div class="card-header bg-white border-0 rounded-4 pb-0 pt-3">
+            <div class="col">
+                <div class="card shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-tools me-2 text-primary"></i>Prossimi appuntamenti in
                             officina</h5>
                     </div>
@@ -217,9 +217,9 @@
             </div>
 
             <!-- Equipaggiamento da integrare -->
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 rounded-4 h-100">
-                    <div class="card-header bg-white border-0 rounded-4 pb-0 pt-3">
+            <div class="col">
+                <div class="card shadow-sm rounded-4 h-100">
+                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-backpack me-2 text-success"></i>Equipaggiamento</h5>
                     </div>
                     <div class="card-body d-flex flex-column">
@@ -243,42 +243,6 @@
                         </div>
                         <a href="{{ route('admin.vehicles.index') }}"
                             class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Dettagli</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Veicoli in warning -->
-            <div class="col-md-3">
-                <div class="card shadow-sm border-0 rounded-4 h-100">
-                    <div class="card-header bg-white border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-diamond me-2 text-danger"></i>Da
-                            attenzionare</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            @if ($incompleteVehicles->isEmpty())
-                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Nessun veicolo da attenzionare</strong><br>
-                                        <small class="text-muted">Tutti i veicoli sono in regola</small>
-                                    </div>
-                                </div>
-                            @else
-                                @foreach ($incompleteVehicles as $vehicle)
-                                    <div
-                                        class="list-group-item px-0 py-2 d-flex justify-content-between align-items-center">
-                                        <span><i
-                                                class="bi bi-truck text-warning me-2"></i>{{ $vehicle->internal_code }}</span>
-                                        <span class="badge bg-warning text-dark rounded-pill">Equipaggiamento da
-                                            integrare</span>
-                                    </div>
-                                @endforeach
-                                <a href="{{ route('admin.vehicles.index') }}"
-                                    class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Vedi
-                                    tutti i
-                                    veicoli</a>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>
