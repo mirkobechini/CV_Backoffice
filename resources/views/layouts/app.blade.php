@@ -46,18 +46,6 @@
         @yield('content')
     </main>
     @livewireScripts
-    <script>
-        document.getElementById('theme-toggle')?.addEventListener('click', function() {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.documentElement.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            const icon = document.getElementById('theme-toggle-icon');
-            if (icon) {
-                icon.className = newTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
-            }
-        });
-    </script>
 </body>
 
 </html>

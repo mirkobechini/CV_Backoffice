@@ -6,10 +6,19 @@
                 <span class="brand-text">{{ config('app.name', 'Gods Backoffice') }}</span>
             </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            {{-- Theme Toggle — sempre visibile --}}
+            <div class="d-flex align-items-center ms-auto">
+                <button id="theme-toggle" class="btn btn-sm btn-outline-secondary rounded-pill me-2" type="button"
+                    aria-label="Cambia tema">
+                    <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+            </div>
 
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <!-- Left Side Of Navbar -->
@@ -102,15 +111,7 @@
                 </ul>
 
                 <!-- Right Side Of Navbar -->
-                <ul class="navbar-nav ms-auto align-items-center">
-                    {{-- Theme Toggle --}}
-                    <li class="nav-item me-2">
-                        <button id="theme-toggle" class="btn btn-sm btn-outline-secondary rounded-pill" type="button"
-                            aria-label="Cambia tema">
-                            <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
-                        </button>
-                    </li>
-
+                <ul class="navbar-nav ms-lg-auto align-items-lg-center">
                     @guest
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('login') }}" title="{{ __('Login') }}">
