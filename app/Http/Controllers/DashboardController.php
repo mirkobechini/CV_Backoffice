@@ -7,6 +7,7 @@ use App\Models\Deadline;
 use App\Models\MaintenanceRecord;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -41,6 +42,7 @@ class DashboardController extends Controller
         $incompleteVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
             ->get()
             ->filter(fn($v) => !$v->hasAllRequiredEquipment());
+
 
         return view('dashboard', compact(
             'totalVehicles',

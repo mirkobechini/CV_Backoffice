@@ -40,7 +40,7 @@
     <div class="container py-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2"></i>{{ __('Dashboard') }}</h2>
-            <span class="text-muted small">Oggi, 29 luglio 2026</span>
+            <span class="text-muted small">Oggi, {{ \Carbon\Carbon::now()->locale('it')->translatedFormat('j F Y') }}</span>
         </div>
         <div class="row row-cols-md-4 g-3 mb-4">
             <div class="col-6">
@@ -114,7 +114,7 @@
                                 @foreach ($upcomingDeadlines as $deadline)
                                     <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>{{ $deadline->name }}</strong><br>
+                                            <strong>{{ $deadline->type }}</strong><br>
                                             <small class="text-muted">{{ $deadline->vehicle->internal_code }} —
                                                 Scade tra {{ now()->diffInDays($deadline->due_date) }} giorni</small>
                                         </div>
@@ -154,9 +154,9 @@
                                 @foreach ($openIssues as $issue)
                                     <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>{{ $issue->title }}cioao</strong><br>
+                                            <strong>{{ $issue->description }}</strong><br>
                                             <small class="text-muted">{{ $issue->vehicle->internal_code }} —
-                                                {{ $issue->created_at->format('d/m/Y') }}</small>
+                                                {{ $issue->event_date->format('d/m/Y') }}</small>
                                         </div>
                                         <span
                                             class="badge {{ $issue->status === 'open' ? 'bg-danger text-light' : 'bg-warning text-dark' }} rounded-pill px-3 py-2">{{ match ($issue->status) {'open' => 'Aperto','in_progress' => 'In lavorazione','closed' => 'Risolto',default => $issue->status} }}</span>
@@ -195,16 +195,16 @@
                                 @foreach ($upcomingAppointments as $appointment)
                                     <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>{{ $appointment->description }}</strong><br>
+                                            <strong>{{ $appointment->issue?->description ?? $appointment->activity_type }}</strong><br>
                                             <small class="text-muted">{{ $appointment->vehicle->internal_code }} @
-                                                {{ $appointment->workshop_name }}</small>
+                                                {{ $appointment->provider?->name }}</small>
                                         </div>
                                         <span
-                                            class="badge bg-primary rounded-pill px-3 py-2">{{ $appointment->scheduled_date->format('d/m/Y') }}</span>
+                                            class="badge bg-primary rounded-pill px-3 py-2">{{ $appointment->appointment_date->format('d/m/Y') }}</span>
                                     </div>
                                 @endforeach
                                 <div class="mt-3 text-center">
-                                    <a href="{{ route('admin.maintenance_records.index') }}"
+                                    <a href="{{ route('admin.maintenance-records.index') }}"
                                         class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutti
                                         gli
                                         appuntamenti <i class="bi bi-arrow-right ms-1"></i></a>
