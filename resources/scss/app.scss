@@ -1,1 +1,135 @@
 @import '~bootstrap/scss/bootstrap';
+
+/* =============================================
+   Navbar personalizzata
+   ============================================= */
+
+/* Su schermi medi (768-991px) — solo icone nella navbar */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .navbar .nav-label,
+    .navbar .brand-text {
+        display: none;
+    }
+
+    .navbar .nav-link,
+    .navbar .dropdown-toggle {
+        padding: 0.5rem 0.6rem;
+    }
+
+    .navbar .nav-link i,
+    .navbar .dropdown-toggle i {
+        font-size: 1.2rem;
+    }
+
+    .navbar .dropdown-toggle::after {
+        display: none;
+    }
+
+    .navbar .dropdown-menu {
+        /* Position fixed relative to viewport per evitare che esca a destra */
+        position: fixed;
+        top: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90vw;
+        max-width: 320px;
+        margin-top: 0.5rem;
+    }
+
+    .navbar .dropdown-menu .dropdown-item {
+        padding: 0.5rem 1rem;
+    }
+
+    /* Brand solo icona */
+    .navbar-brand {
+        font-size: 1.25rem;
+        padding: 0.5rem 0;
+    }
+
+    .navbar-brand i {
+        font-size: 1.3rem;
+    }
+
+    /* Tema toggle più piccolo */
+    #theme-toggle {
+        width: 1.8rem;
+        height: 1.8rem;
+    }
+}
+
+/* Su schermi grandi (≥992px) — tutto visibile normalmente */
+@media (min-width: 992px) {
+    .navbar .nav-link i {
+        font-size: 0.95rem;
+    }
+}
+
+/* Dropdown più eleganti */
+.navbar .dropdown-menu {
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 0.6rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.1);
+    padding: 0.4rem 0;
+    margin-top: 0.4rem;
+}
+
+.navbar .dropdown-item {
+    border-radius: 0.4rem;
+    padding: 0.45rem 1rem;
+    font-size: 0.9rem;
+    transition: background-color 0.15s ease, padding-left 0.15s ease;
+}
+
+.navbar .dropdown-item:hover {
+    padding-left: 1.25rem;
+}
+
+.navbar .dropdown-item i {
+    width: 1.2rem;
+    text-align: center;
+}
+
+/* Nav-link più leggibili */
+.navbar .nav-link {
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.4rem;
+    transition: background-color 0.15s ease;
+}
+
+.navbar .nav-link:hover {
+    background-color: rgba(128, 128, 128, 0.08);
+}
+
+/* Brand */
+.navbar-brand {
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
+}
+
+/* Theme toggle button */
+#theme-toggle {
+    width: 2.2rem;
+    height: 2.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(128, 128, 128, 0.25);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+#theme-toggle:hover {
+    background-color: rgba(128, 128, 128, 0.1);
+    border-color: rgba(128, 128, 128, 0.4);
+}
+
+/* Dark mode refinements */
+[data-bs-theme="dark"] .navbar .dropdown-menu {
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.4);
+}
+
+[data-bs-theme="dark"] .navbar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+}
