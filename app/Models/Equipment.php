@@ -3,9 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Equipment extends Model
 {
+    use LogsActivity;
+
+    protected static $logAttributes = ['*'];
+    protected static $logOnlyDirty = true;
+
     protected $fillable = [
         'vehicle_id',
         'equipment_type_id',
