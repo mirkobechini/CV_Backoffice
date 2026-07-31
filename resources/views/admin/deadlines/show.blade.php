@@ -20,26 +20,14 @@
                             {{ $deadline->vehicle->carModel?->name ?? 'N/A' }}</p>
                         <p><strong>Data di scadenza:</strong> {{ $deadline->due_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Stato:</strong>
-                            @switch($deadline->automatic_status)
-                                @case('renewed')
-                                    <span class="badge bg-success">Rinnovata</span>
-                                @break
-
-                                @case('valid')
-                                    <span class="badge bg-success">Valida</span>
-                                @break
-
-                                @case('pending')
-                                    <span class="badge bg-warning text-dark">In scadenza</span>
-                                @break
-
-                                @case('expired')
-                                    <span class="badge bg-danger">Scaduta</span>
-                                @break
-
-                                @default
-                                    <span class="badge bg-secondary">Sconosciuto</span>
-                            @endswitch
+                            <span
+                                class="badge {{ match ($deadline->automatic_status) {
+                                    'renewed' => 'bg-success',
+                                    'valid' => 'bg-success',
+                                    'pending' => 'bg-warning text-dark',
+                                    'expired' => 'bg-danger',
+                                    default => 'bg-secondary',
+                                } }}">{{ $deadline->status_label }}</span>
                         </p>
                     </div>
                 </div>

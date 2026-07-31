@@ -20,21 +20,22 @@
                         @endif
                     </div>
                     <div class="card-body">
-                        <p><strong>Veicolo:</strong> {{ $issue->vehicle->internal_code }} - {{ $issue->vehicle->brand->name ?? 'N/A' }}
+                        <p><strong>Veicolo:</strong> {{ $issue->vehicle->internal_code }} -
+                            {{ $issue->vehicle->brand->name ?? 'N/A' }}
                             {{ $issue->vehicle->carModel->name ?? 'N/A' }}</p>
                         <p><strong>Data del guasto:</strong> {{ $issue->event_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Stato:</strong>
                             @switch($issue->status)
                                 @case('open')
-                                    <span class="badge bg-danger">Aperto</span>
+                                    <span class="badge bg-danger">{{ $issue->status_label }}</span>
                                 @break
 
                                 @case('in_progress')
-                                    <span class="badge bg-warning text-dark">In lavorazione</span>
+                                    <span class="badge bg-warning text-dark">{{ $issue->status_label }}</span>
                                 @break
 
                                 @case('closed')
-                                    <span class="badge bg-success">Risolto</span>
+                                    <span class="badge bg-success">{{ $issue->status_label }}</span>
                                 @break
 
                                 @default

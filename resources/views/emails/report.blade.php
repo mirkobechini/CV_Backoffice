@@ -217,7 +217,8 @@
                 Guasti aperti
             </div>
             <div class="stat-box stat-yellow">
-                <span class="number">{{ $data['expiredDeadlines']->count() + $data['upcomingDeadlines']->count() }}</span>
+                <span
+                    class="number">{{ $data['expiredDeadlines']->count() + $data['upcomingDeadlines']->count() }}</span>
                 Scadenze in arrivo
             </div>
             <div class="stat-box stat-blue">
@@ -277,7 +278,8 @@
                             <div class="meta">{{ $issue->vehicle->internal_code }} —
                                 {{ $issue->event_date->format('d/m/Y') }}</div>
                         </div>
-                        <span class="badge {{ $issue->status === 'open' ? 'badge-red' : 'badge-yellow' }}">{{ match($issue->status) { 'open' => 'Aperto', 'in_progress' => 'In lavorazione', default => $issue->status } }}</span>
+                        <span
+                            class="badge {{ $issue->status === 'open' ? 'badge-red' : 'badge-yellow' }}">{{ $issue->status_label }}</span>
                     </div>
                 @endforeach
             @endif
@@ -290,7 +292,8 @@
                 @foreach ($data['upcomingAppointments'] as $appointment)
                     <div class="section-item">
                         <div>
-                            <div class="label">{{ $appointment->issue?->description ?? $appointment->activity_type }}</div>
+                            <div class="label">{{ $appointment->issue?->description ?? $appointment->activity_type }}
+                            </div>
                             <div class="meta">{{ $appointment->vehicle->internal_code }} @
                                 {{ $appointment->provider->name }}</div>
                         </div>

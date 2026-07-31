@@ -1,6 +1,5 @@
 @extends('layouts.app')
 @section('content')
-
     <x-admin.index-table title="Guasti">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.issues.create')" label="guasto" />
@@ -63,15 +62,15 @@
                         <td>
                             @switch($issue->status)
                                 @case('open')
-                                    <span class="badge bg-danger">Aperto</span>
+                                    <span class="badge bg-danger">{{ $issue->status_label }}</span>
                                 @break
 
                                 @case('in_progress')
-                                    <span class="badge bg-warning text-dark">In lavorazione</span>
+                                    <span class="badge bg-warning text-dark">{{ $issue->status_label }}</span>
                                 @break
 
                                 @case('closed')
-                                    <span class="badge bg-success">Risolto</span>
+                                    <span class="badge bg-success">{{ $issue->status_label }}</span>
                                 @break
 
                                 @default

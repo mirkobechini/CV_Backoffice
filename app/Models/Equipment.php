@@ -30,6 +30,26 @@ class Equipment extends Model
         return $this->expiration_date?->format('m/Y');
     }
 
+    public function getStatusLabelAttribute(): string
+    {
+        if (!$this->expiration_date) {
+            return 'N/A';
+        }
+
+        $today = now()->startOfDay();
+        $expiration = $this->expiration_date->startOfDay();
+
+        if ($expiration->isPast()) {
+            return 'Scaduta';
+        }
+
+        if ($expiration->diffInDays($today) <= 30) {
+            return 'In scadenza';
+        }
+
+        return 'Valida';
+    }
+
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);

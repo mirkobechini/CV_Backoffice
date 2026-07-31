@@ -25,6 +25,16 @@ class Issue extends Model
         return $this->event_date?->format('d/m/Y');
     }
 
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'open' => 'Aperto',
+            'in_progress' => 'In lavorazione',
+            'closed' => 'Risolto',
+            default => $this->status,
+        };
+    }
+
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);

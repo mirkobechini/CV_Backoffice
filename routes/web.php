@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\IssueController;
+use App\Http\Controllers\PdfExportController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -53,6 +54,9 @@ Route::get('/admin/notifications', [NotificationSettingController::class, 'edit'
     ->name('admin.notifications.edit');
 Route::patch('/admin/notifications', [NotificationSettingController::class, 'update'])
     ->name('admin.notifications.update');
+
+Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
+    ->name('admin.vehicles.pdf');
 
 require __DIR__ . '/auth.php';
 

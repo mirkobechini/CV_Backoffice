@@ -50,6 +50,17 @@ class Deadline extends Model
         return $this->due_date?->format('m/Y');
     }
 
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->automatic_status) {
+            self::STATUS_RENEWED => 'Rinnovata',
+            self::STATUS_PENDING => 'In scadenza',
+            self::STATUS_EXPIRED => 'Scaduta',
+            self::STATUS_VALID => 'Valida',
+            default => 'Sconosciuto',
+        };
+    }
+
     public function getAutomaticStatusAttribute(): string
     {
         $warningMonths = max(0, (int) config('deadlines.warning_months', 3));

@@ -84,26 +84,14 @@
                         <td>{{ $deadline->type }}</td>
                         <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
                         <td>
-                            @switch($deadline->automatic_status)
-                                @case('renewed')
-                                    <span class="badge bg-success">Rinnovata</span>
-                                @break
-
-                                @case('valid')
-                                    <span class="badge bg-success">Valida</span>
-                                @break
-
-                                @case('pending')
-                                    <span class="badge bg-warning text-dark">In scadenza</span>
-                                @break
-
-                                @case('expired')
-                                    <span class="badge bg-danger">Scaduta</span>
-                                @break
-
-                                @default
-                                    <span class="badge bg-secondary">Sconosciuto</span>
-                            @endswitch
+                            <span
+                                class="badge bg-{{ match ($deadline->automatic_status) {
+                                    'renewed' => 'success',
+                                    'valid' => 'success',
+                                    'pending' => 'warning text-dark',
+                                    'expired' => 'danger',
+                                    default => 'secondary',
+                                } }}">{{ $deadline->status_label }}</span>
                         </td>
                         <td>{{ $deadline->vehicle->internal_code ?? 'N/A' }}</td>
                         <x-admin.row-actions :showUrl="route('admin.deadlines.show', $deadline->id)" :editUrl="route('admin.deadlines.edit', $deadline->id)" :deleteTarget="'#confirmDeleteModal-' . $deadline->id" :label="'scadenza ' . $deadline->type" />

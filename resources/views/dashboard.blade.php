@@ -159,7 +159,7 @@
                                                 {{ $issue->event_date->format('d/m/Y') }}</small>
                                         </div>
                                         <span
-                                            class="badge {{ $issue->status === 'open' ? 'bg-danger text-light' : 'bg-warning text-dark' }} rounded-pill px-3 py-2">{{ match ($issue->status) {'open' => 'Aperto','in_progress' => 'In lavorazione','closed' => 'Risolto',default => $issue->status} }}</span>
+                                            class="badge {{ $issue->status === 'open' ? 'bg-danger text-light' : 'bg-warning text-dark' }} rounded-pill px-3 py-2">{{ $issue->status_label }}</span>
                                     </div>
                                 @endforeach
                                 <div class="mt-3 text-center">
