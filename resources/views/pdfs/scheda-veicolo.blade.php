@@ -291,7 +291,7 @@
             <tr>
                 <td>{{ $deadline->type }}</td>
                 <td>{{ $deadline->due_date->format('d/m/Y') }}</td>
-                <td><span class="tag tag-{{ $deadline->automatic_status }}">{{ $deadline->status_label }}</span></td>
+                <td><span class="tag tag-{{ $deadline->status_color }}">{{ $deadline->status_label }}</span></td>
             </tr>
         @endforeach
     </tbody>
@@ -315,7 +315,8 @@
                 <tr>
                     <td>{{ $issue->description }}</td>
                     <td>{{ $issue->event_date->format('d/m/Y') }}</td>
-                    <td><span class="tag tag-{{ $issue->status }}">{{ $issue->status_label }}</span></td>
+                    <td><span class="tag tag-{{ $issue->status_color }}">{{ $issue->status_label }}</span>
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -342,7 +343,7 @@
                     <td>{{ $equipment->name }}</td>
                     <td>{{ $equipment->serial_number }}</td>
                     <td>{{ $equipment->revision_date ? $equipment->revision_date->format('d/m/Y') : '—' }}</td>
-                    <td><span class="tag tag-{{ $equipment->status_label }}">{{ $equipment->status_label }}</span>
+                    <td><span class="tag tag-{{ $equipment->status_color }}">{{ $equipment->status_label }}</span>
                     </td>
                 </tr>
             @endforeach
@@ -395,7 +396,7 @@
             @foreach ($vehicle->issues as $issue)
                 <tr>
                     <td>{{ $issue->description }}</td>
-                    <td>{{ $issue->reported_at->format('d/m/Y') }}</td>
+                    <td>{{ $issue->event_date->format('d/m/Y') }}</td>
                     <td>{{ $issue->maintenanceRecords->first()?->activity_type ?? '—' }}</td>
                     <td>{{ $issue->maintenanceRecords->first()?->appointment_date?->format('d/m/Y') ?? '—' }}</td>
                     <td>{{ $issue->maintenanceRecords->first()?->provider?->name ?? '—' }}</td>

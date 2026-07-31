@@ -165,9 +165,10 @@ La dashboard (`/dashboard`) mostra solo "You are logged in!". Dovrebbe mostrare:
 Non ci sono comandi schedulati, notifiche email, o alert per scadenze imminenti.
 **Soluzione:** Creato comando `SendSummaryReport` con report giornaliero via email. Mailable `ReportMail` con template HTML contenente veicoli ok, statistiche, scadenze (da rinnovare + in arrivo), guasti aperti, appuntamenti in officina e interventi necessari. Scheduler configurabile con frequenza daily/weekly/monthly. Model `NotificationSetting` con CRUD per impostare email, frequenza e giorni reminder.
 
-### F3. ❌ **Nessun export dati**
+### F3. ✅ **Export PDF implementato** ✅ FIXATO
 
 Non c'è export in Excel/PDF per nessuna entità.
+**Soluzione:** Installato DomPDF. Creato `PdfExportController` con eager loading di tutte le relazioni. View `scheda-veicolo.blade.php` con anagrafica, documenti, scadenze, guasti aperti, dotazioni di bordo, ultime manutenzioni e storico guasti e interventi. Bottone "Scarica PDF" nella show del veicolo.
 
 ### F4. ❌ **Nessun audit log / tracciamento modifiche**
 
@@ -207,8 +208,8 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | ✅ **Tutte le Duplicazioni** | **D1-D4**   | ✅ **Risolte**                                  |
 | ✅ **Performance**           | **M1-M2**   | ✅ **Ordinamento DB + Paginazione**             |
 | ✅ **Migliorie**             | **M3-M9**   | ✅ **Validazioni, SoftDeletes, Auth, Tema**     |
-| ✅ **Feature**               | **F1, F2**  | ✅ **Dashboard + Notifiche completate**         |
-| 🔵 **Basso**                 | F3-F10, M10 | Export, audit, test, integrazione mileage, ecc. |
+| ✅ **Feature**               | **F1, F2, F3** | ✅ **Dashboard + Notifiche + Export PDF**      |
+| 🔵 **Basso**                 | F4-F10, M10 | Audit, test, integrazione mileage, ecc.         |
 
 ---
 

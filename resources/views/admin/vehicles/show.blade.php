@@ -2,9 +2,12 @@
 @section('content')
     <div class="container py-4">
         <div class="row mb-3">
-            <div class="col-12">
+            <div class="col-12 d-flex gap-2">
                 <a href="{{ request('back', route('admin.vehicles.index')) }}" class="btn btn-secondary">Torna alla pagina
                     precedente</a>
+                <a href="{{ route('admin.vehicles.pdf', $vehicle->id) }}" class="btn btn-outline-primary" target="_blank">
+                    <i class="bi bi-filetype-pdf"></i> Scarica PDF
+                </a>
             </div>
         </div>
         <div class="row row-cols-1">
