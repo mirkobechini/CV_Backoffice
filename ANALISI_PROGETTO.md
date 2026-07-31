@@ -170,9 +170,10 @@ Non ci sono comandi schedulati, notifiche email, o alert per scadenze imminenti.
 Non c'è export in Excel/PDF per nessuna entità.
 **Soluzione:** Installato DomPDF. Creato `PdfExportController` con eager loading di tutte le relazioni. View `scheda-veicolo.blade.php` con anagrafica, documenti, scadenze, guasti aperti, dotazioni di bordo, ultime manutenzioni e storico guasti e interventi. Bottone "Scarica PDF" nella show del veicolo.
 
-### F4. ❌ **Nessun audit log / tracciamento modifiche**
+### F4. ✅ **Audit log implementato** ✅ FIXATO
 
 Non si sa chi ha creato/modificato/cancellato cosa.
+**Soluzione:** Installato `spatie/laravel-activitylog`. Aggiunto trait `LogsActivity` a Vehicle, Issue, MaintenanceRecord, Deadline, Equipment. Logging automatico con `$logOnlyDirty = true`.
 
 ### F5. ❌ **Collegamento manutenzione ↔ scadenza non esposto in UI**
 
@@ -208,8 +209,8 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | ✅ **Tutte le Duplicazioni** | **D1-D4**   | ✅ **Risolte**                                  |
 | ✅ **Performance**           | **M1-M2**   | ✅ **Ordinamento DB + Paginazione**             |
 | ✅ **Migliorie**             | **M3-M9**   | ✅ **Validazioni, SoftDeletes, Auth, Tema**     |
-| ✅ **Feature**               | **F1, F2, F3** | ✅ **Dashboard + Notifiche + Export PDF**      |
-| 🔵 **Basso**                 | F4-F10, M10 | Audit, test, integrazione mileage, ecc.         |
+| ✅ **Feature**               | **F1, F2, F3, F4** | ✅ **Dashboard + Notifiche + Export PDF + Audit** |
+| 🔵 **Basso**                 | F5-F10, M10 | Link manut.-scadenza, alert, test, ricerca, ecc.  |
 
 ---
 
