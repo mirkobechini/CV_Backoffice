@@ -25,22 +25,8 @@
                             {{ $issue->vehicle->carModel->name ?? 'N/A' }}</p>
                         <p><strong>Data del guasto:</strong> {{ $issue->event_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Stato:</strong>
-                            @switch($issue->status)
-                                @case('open')
-                                    <span class="badge bg-danger">{{ $issue->status_label }}</span>
-                                @break
-
-                                @case('in_progress')
-                                    <span class="badge bg-warning text-dark">{{ $issue->status_label }}</span>
-                                @break
-
-                                @case('closed')
-                                    <span class="badge bg-success">{{ $issue->status_label }}</span>
-                                @break
-
-                                @default
-                                    <span class="badge bg-secondary">Sconosciuto</span>
-                            @endswitch
+                            <span
+                                class="badge bg-{{ match ($issue->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $issue->status_label }}</span>
                         </p>
                         @if ($issue->photo)
                             <div class="card mb-3">

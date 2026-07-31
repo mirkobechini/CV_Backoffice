@@ -28,6 +28,11 @@ class Vehicle extends Model
         'warranty_expiration_date' => 'date',
     ];
 
+    public function getOpenIssuesAttribute()
+    {
+        return $this->issues->whereIn('status', ['open', 'in_progress']);
+    }
+
     public function getImmatricolationDateFormattedAttribute(): ?string
     {
         return $this->immatricolation_date?->format('d/m/Y');

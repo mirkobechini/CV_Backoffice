@@ -25,6 +25,16 @@ class Issue extends Model
         return $this->event_date?->format('d/m/Y');
     }
 
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            'open' => 'red',
+            'in_progress' => 'yellow',
+            'closed' => 'green',
+            default => 'blue',
+        };
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {

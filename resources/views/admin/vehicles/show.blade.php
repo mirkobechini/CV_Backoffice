@@ -136,7 +136,7 @@
                             <li
                                 class="list-group-item @if ($issue->status === 'open') list-group-item-danger @elseif($issue->status === 'in_progress') list-group-item-warning @else list-group-item-success @endif">
                                 <span
-                                    class="badge bg-{{ $issue->status === 'open' ? 'danger' : ($issue->status === 'in_progress' ? 'warning text-dark' : 'success') }} rounded-pill px-3 py-2 float-end">{{ $issue->status_label }}</span>
+                                    class="badge bg-{{ match ($issue->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }} rounded-pill px-3 py-2 float-end">{{ $issue->status_label }}</span>
                                 <div class="row row-cols-1 row-cols-md-2 justify-content-between align-items-center">
                                     <div class="col">
                                         <div class="row row-cols-1 row-cols-md-2">

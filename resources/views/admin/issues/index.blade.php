@@ -60,22 +60,7 @@
                         <td>{{ $issue->vehicle->internal_code }}</td>
                         <td>{{ $issue->description }}</td>
                         <td>
-                            @switch($issue->status)
-                                @case('open')
-                                    <span class="badge bg-danger">{{ $issue->status_label }}</span>
-                                @break
-
-                                @case('in_progress')
-                                    <span class="badge bg-warning text-dark">{{ $issue->status_label }}</span>
-                                @break
-
-                                @case('closed')
-                                    <span class="badge bg-success">{{ $issue->status_label }}</span>
-                                @break
-
-                                @default
-                                    <span class="badge bg-secondary">Sconosciuto</span>
-                            @endswitch
+                            <span class="badge bg-{{ match ($issue->status_color) { 'red' => 'danger', 'yellow' => 'warning text-dark', 'green' => 'success', default => 'secondary' } }}">{{ $issue->status_label }}</span>
                         </td>
                         <td>{{ $issue->event_date_formatted }}</td>
                         <x-admin.row-actions :showUrl="route('admin.issues.show', $issue->id)" :editUrl="route('admin.issues.edit', $issue->id)" :deleteTarget="'#confirmDeleteModal-' . $issue->id" :label="'guasto ' . $issue->description" />

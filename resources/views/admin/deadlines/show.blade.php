@@ -21,13 +21,7 @@
                         <p><strong>Data di scadenza:</strong> {{ $deadline->due_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Stato:</strong>
                             <span
-                                class="badge {{ match ($deadline->automatic_status) {
-                                    'renewed' => 'bg-success',
-                                    'valid' => 'bg-success',
-                                    'pending' => 'bg-warning text-dark',
-                                    'expired' => 'bg-danger',
-                                    default => 'bg-secondary',
-                                } }}">{{ $deadline->status_label }}</span>
+                                class="badge {{ match ($deadline->status_color) {'red' => 'bg-danger','yellow' => 'bg-warning text-dark','green' => 'bg-success',default => 'bg-secondary'} }}">{{ $deadline->status_label }}</span>
                         </p>
                     </div>
                 </div>

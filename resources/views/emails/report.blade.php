@@ -278,8 +278,7 @@
                             <div class="meta">{{ $issue->vehicle->internal_code }} —
                                 {{ $issue->event_date->format('d/m/Y') }}</div>
                         </div>
-                        <span
-                            class="badge {{ $issue->status === 'open' ? 'badge-red' : 'badge-yellow' }}">{{ $issue->status_label }}</span>
+                        <span class="badge badge-{{ $issue->status_color }}">{{ $issue->status_label }}</span>
                     </div>
                 @endforeach
             @endif

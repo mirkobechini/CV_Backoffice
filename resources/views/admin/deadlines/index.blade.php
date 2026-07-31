@@ -85,13 +85,7 @@
                         <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
                         <td>
                             <span
-                                class="badge bg-{{ match ($deadline->automatic_status) {
-                                    'renewed' => 'success',
-                                    'valid' => 'success',
-                                    'pending' => 'warning text-dark',
-                                    'expired' => 'danger',
-                                    default => 'secondary',
-                                } }}">{{ $deadline->status_label }}</span>
+                                class="badge bg-{{ match ($deadline->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $deadline->status_label }}</span>
                         </td>
                         <td>{{ $deadline->vehicle->internal_code ?? 'N/A' }}</td>
                         <x-admin.row-actions :showUrl="route('admin.deadlines.show', $deadline->id)" :editUrl="route('admin.deadlines.edit', $deadline->id)" :deleteTarget="'#confirmDeleteModal-' . $deadline->id" :label="'scadenza ' . $deadline->type" />

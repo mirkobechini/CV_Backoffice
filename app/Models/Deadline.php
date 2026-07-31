@@ -45,6 +45,17 @@ class Deadline extends Model
 
 
 
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->automatic_status) {
+            self::STATUS_EXPIRED => 'red',
+            self::STATUS_PENDING => 'yellow',
+            self::STATUS_RENEWED => 'green',
+            self::STATUS_VALID => 'green',
+            default => 'blue',
+        };
+    }
+
     public function getDueDateFormattedAttribute(): ?string
     {
         return $this->due_date?->format('m/Y');

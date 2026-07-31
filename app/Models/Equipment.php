@@ -30,6 +30,16 @@ class Equipment extends Model
         return $this->expiration_date?->format('m/Y');
     }
 
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status_label) {
+            'Scaduta' => 'red',
+            'In scadenza' => 'yellow',
+            'Valida' => 'green',
+            default => 'blue',
+        };
+    }
+
     public function getStatusLabelAttribute(): string
     {
         if (!$this->expiration_date) {
