@@ -97,17 +97,7 @@ class IssueController extends Controller
                 ->with('status', 'Guasto già registrato: creazione duplicata bloccata.');
         }
 
-        $issueData = [
-            'vehicle_id' => $data['vehicle_id'],
-            'description' => $data['description'],
-            'event_date' => $data['event_date'],
-            'status' => $data['status'],
-        ];
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('issue_images', 'public');
-            $issueData['photo'] = $path;
-        }
+        $issueData = $this->buildIssueData($data, $request);
 
         $newIssue = Issue::create($issueData);
 
@@ -137,19 +127,7 @@ class IssueController extends Controller
     public function update(UpdateIssueRequest $request, Issue $issue)
     {
         $data = $request->validated();
-
-        $issueData = [
-            'vehicle_id' => $data['vehicle_id'],
-            'description' => $data['description'],
-            'event_date' => $data['event_date'],
-            'status' => $data['status'],
-        ];
-
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('issue_images', 'public');
-            $issueData['photo'] = $path;
-        }
-
+        $issueData = $this->buildIssueData($data, $request);
         $issue->update($issueData);
 
         return redirect()->route('admin.issues.show', $issue->id)->with('status', 'Guasto aggiornato con successo.');
@@ -162,5 +140,25 @@ class IssueController extends Controller
     {
         $issue->delete();
         return redirect()->route('admin.issues.index')->with('status', 'Guasto eliminato con successo.');
+    }
+
+    /**
+     * Costruisce l'array dati per creazione/aggiornamento, gestendo l'upload dell'immagine.
+     */
+    private function buildIssueData(array $data, $request): array
+    {
+        $issueData = [
+            'vehicle_id' => $data['vehicle_id'],
+            'description' => $data['description'],
+            'event_date' => $data['event_date'],
+            'status' => $data['status'],
+        ];
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('issue_images', 'public');
+            $issueData['photo'] = $path;
+        }
+
+        return $issueData;
     }
 }

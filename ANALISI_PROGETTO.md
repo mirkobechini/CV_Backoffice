@@ -210,6 +210,7 @@ Aggiunta colonna `mileage_at_service` (nullable) su `maintenance_records` + camp
 Nuova rotta `mileage-logs.bulk` con vista unica che elenca TUTTI i veicoli con ultimo km noto e un input per inserire i km attuali. Un submit crea N `MileageLog` in una transazione. Pulsante "Rilevazione mensile" nell'index dei chilometraggi.
 
 **F10c — Scadenze basate sui km (Tagliando e Cinghia Distribuzione)**
+
 - Nuovi tipi `Deadline`: `Tagliando` e `Cinghia Distribuzione`
 - Nuove colonne su `deadlines`: `interval_km`, `last_mileage`, `interval_days`
 - Nuova colonna `has_timing_belt` su `vehicles` (flag cinghia distribuzione)
@@ -223,14 +224,74 @@ Nuova rotta `mileage-logs.bulk` con vista unica che elenca TUTTI i veicoli con u
 
 ## 🎯 Priorità Suggerite
 
-| Priorità                     | Cosa                   | Perché                                                      |
-| ---------------------------- | ---------------------- | ----------------------------------------------------------- |
-| ✅ **Tutti i Bug**           | **B1-B6**              | ✅ **Risolti**                                              |
-| ✅ **Tutte le Duplicazioni** | **D1-D4**              | ✅ **Risolte**                                              |
-| ✅ **Performance**           | **M1-M2**              | ✅ **Ordinamento DB + Paginazione**                         |
-| ✅ **Migliorie**             | **M3-M9**              | ✅ **Validazioni, SoftDeletes, Auth, Tema**                 |
+| Priorità                     | Cosa                        | Perché                                                           |
+| ---------------------------- | --------------------------- | ---------------------------------------------------------------- |
+| ✅ **Tutti i Bug**           | **B1-B6**                   | ✅ **Risolti**                                                   |
+| ✅ **Tutte le Duplicazioni** | **D1-D4**                   | ✅ **Risolte**                                                   |
+| ✅ **Performance**           | **M1-M2**                   | ✅ **Ordinamento DB + Paginazione**                              |
+| ✅ **Migliorie**             | **M3-M9**                   | ✅ **Validazioni, SoftDeletes, Auth, Tema**                      |
 | ✅ **Feature**               | **F1, F2, F3, F4, F9, F10** | ✅ **Dashboard + Notifiche + Export PDF + Audit + Ricerca + Km** |
-| 🔵 **Basso**                 | F8                | Utenti                                                  |
+| 🔵 **Basso**                 | F8                          | Utenti                                                           |
+
+---
+
+## 🔧 Refactoring Best Practice (Post-Analisi)
+
+### N1. ✅ `User` — `role` in fillable e casts
+
+Aggiunto `role` a `$fillable` e `$casts` su `User` per allineamento con la colonna DB.
+
+### N2. ✅ Policy — metodi `restore()` e `forceDelete()` mancanti
+
+Aggiunti al trait `HasRoleBasedAccess` per coprire tutte le operazioni con SoftDeletes.
+
+### N3. ✅ Issue — relazione obsoleta rimossa
+
+Rimossa `maintenanceRecords()` (hasMany) da `Issue` perché sostituita dalla pivot polimorfica `maintenanceRecordItems()`.
+
+### N4. ✅ DashboardController — pulizia metodi vuoti
+
+Rimossi 6 metodi vuoti (create/store/show/edit/update/destroy). Aggiunto `take(20)` su `openIssues`.
+
+### N6. ✅ NotificationSetting — cast automatico booleani
+
+Aggiunto `getValueAttribute()` che converte in booleano le chiavi notifiche note (`notify_on_*`).
+
+### N7. ✅ VehicleType — `extinguishers_required` ripristinato
+
+Ripristinata colonna (era stata rimossa da una migration), aggiunti campo form create/edit/show, validazione Request.
+
+### O1. ✅ PDF export — eager loading ridondante rimosso
+
+Rimossa la catena `issues.maintenanceRecords.*` già coperta da `maintenanceRecords`.
+
+### O2. ✅ SendSummaryReport — query unificate
+
+Unite 2 query separate (`Vehicle::count()` + `Vehicle::with()->get()`) in una sola, calcolando `$vehiclesOk` e `$incompleteVehicles` dalla stessa collection.
+
+### O4. ✅ MileageLog bulkStore — loop query ottimizzato
+
+Sostituito `Vehicle::find()` in loop con una singola `whereIn()`.
+
+### B1. ✅ Vehicle — accessor `warranty_original_expiration_date`
+
+Spostato il calcolo della data originale di garanzia dal controller all'accessor del model.
+
+### B2. ✅ IssueController — metodo privato `buildIssueData()`
+
+Estratta logica di upload immagine duplicata tra `store()` e `update()` in un metodo privato.
+
+### B3. ✅ Scope Eloquent — query riutilizzabili
+
+Creati: `Issue::scopeOpen()`, `Deadline::scopeUpcoming()`, `Equipment::scopeExpiringSoon()`. Usati in DashboardController e SendSummaryReport.
+
+### B4. ✅ Dashboard + Report — refactor con scope
+
+Sostituite query inline con gli scope B3 in `DashboardController` e `SendSummaryReport`.
+
+### B5. ✅ Vehicle — accessor `deadlines_grouped` + costante tipi
+
+Spostata logica di raggruppamento deadline (sortByDesc→groupBy→first) dal controller all'accessor del model. Costante `DEADLINE_TYPES` sul model.
 
 ---
 

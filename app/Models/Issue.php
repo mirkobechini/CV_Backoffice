@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Concerns\Searchable;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
 
 class Issue extends Model
 {
@@ -30,6 +31,11 @@ class Issue extends Model
     ];
 
     protected $searchable = ['description', 'status'];
+
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->whereIn('status', ['open', 'in_progress']);
+    }
 
     public function getEventDateFormattedAttribute(): ?string
     {

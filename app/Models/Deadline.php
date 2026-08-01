@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Concerns\Searchable;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
 
 class Deadline extends Model
 {
@@ -51,6 +52,12 @@ class Deadline extends Model
 
     protected $searchable = ['type', 'status'];
 
+    public function scopeUpcoming(Builder $query, int $days = 30): Builder
+    {
+        return $query->where('due_date', '>=', Carbon::today())
+            ->where('due_date', '<=', Carbon::today()->addDays($days))
+            ->orderBy('due_date');
+    }
 
     public function maintenanceRecordItems()
     {

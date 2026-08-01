@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\Builder;
+use Carbon\Carbon;
 
 class Equipment extends Model
 {
@@ -29,6 +31,13 @@ class Equipment extends Model
         'revision_date' => 'date',
         'expiration_date' => 'date',
     ];
+
+    public function scopeExpiringSoon(Builder $query, int $days = 30): Builder
+    {
+        return $query->whereNotNull('expiration_date')
+            ->where('expiration_date', '<=', Carbon::today()->addDays($days))
+            ->orderBy('expiration_date');
+    }
 
     public function getRevisionDateFormattedAttribute(): ?string
     {

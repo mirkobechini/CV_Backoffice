@@ -5,10 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
-use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -72,11 +70,8 @@ class VehicleController extends Controller
             ->orderByDesc('appointment_date')
             ->get();
 
-        $deadlines = $vehicle->deadlines
-            ->sortByDesc('due_date')
-            ->groupBy('type')
-            ->map(fn($typeDeadlines) => $typeDeadlines->first());
-        $deadlinesTypes = ["revisione" => Deadline::TYPE_MINISTERIAL, "ossigeno" => Deadline::TYPE_OXYGEN];
+        $deadlines = $vehicle->deadlines_grouped;
+        $deadlinesTypes = Vehicle::DEADLINE_TYPES;
 
         return view('admin.vehicles.show', compact('vehicle', 'vehicleAppointments', 'deadlines', 'deadlinesTypes'));
     }
@@ -87,13 +82,7 @@ class VehicleController extends Controller
     public function edit(Vehicle $vehicle)
     {
         $vehicleTypes = VehicleType::all();
-
-        $warrantyOriginalExpirationDate = $vehicle->warranty_expiration_date?->toDateString();
-        if ($vehicle->has_warranty_extension && $vehicle->warranty_expiration_date && $vehicle->warranty_extension_duration) {
-            $warrantyOriginalExpirationDate = Carbon::parse($vehicle->warranty_expiration_date)
-                ->subMonths((int) $vehicle->warranty_extension_duration)
-                ->toDateString();
-        }
+        $warrantyOriginalExpirationDate = $vehicle->warranty_original_expiration_date;
 
         return view('admin.vehicles.edit', compact('vehicle', 'vehicleTypes', 'warrantyOriginalExpirationDate'));
     }

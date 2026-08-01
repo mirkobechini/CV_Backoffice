@@ -65,6 +65,21 @@ class Vehicle extends Model
         return $this->warranty_expiration_date->isPast();
     }
 
+    public function getWarrantyOriginalExpirationDateAttribute(): ?string
+    {
+        $date = $this->warranty_expiration_date;
+
+        if (!$date) {
+            return null;
+        }
+
+        if ($this->has_warranty_extension && $this->warranty_extension_duration) {
+            return $date->copy()->subMonths((int) $this->warranty_extension_duration)->toDateString();
+        }
+
+        return $date->toDateString();
+    }
+
 
     public function vehicleType()
     {
@@ -148,4 +163,17 @@ class Vehicle extends Model
 
         return $latestLog?->mileage;
     }
+
+    public function getDeadlinesGroupedAttribute(): \Illuminate\Support\Collection
+    {
+        return $this->deadlines
+            ->sortByDesc('due_date')
+            ->groupBy('type')
+            ->map(fn($typeDeadlines) => $typeDeadlines->first());
+    }
+
+    public const DEADLINE_TYPES = [
+        'revisione' => Deadline::TYPE_MINISTERIAL,
+        'ossigeno' => Deadline::TYPE_OXYGEN,
+    ];
 }

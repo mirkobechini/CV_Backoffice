@@ -18,16 +18,14 @@ class DashboardController extends Controller
         $totalVehicles = Vehicle::count();
         // Guasti aperti
         $openIssues = Issue::with('vehicle')
-            ->whereIn('status', ['open', 'in_progress'])
+            ->open()
             ->orderByDesc('event_date')
             ->take(20)
             ->get();
 
         // Scadenze imminenti (prossimi 30 giorni)
         $upcomingDeadlines = Deadline::with('vehicle')
-            ->where('due_date', '>=', now())
-            ->where('due_date', '<=', now()->addDays(30))
-            ->orderBy('due_date')
+            ->upcoming()
             ->get();
 
         // Appuntamenti futuri
@@ -45,9 +43,7 @@ class DashboardController extends Controller
 
         // Attrezzature in scadenza (prossimi 30 giorni) o già scadute
         $expiringEquipment = Equipment::with('vehicle')
-            ->whereNotNull('expiration_date')
-            ->where('expiration_date', '<=', now()->addDays(30))
-            ->orderBy('expiration_date')
+            ->expiringSoon()
             ->get();
 
 

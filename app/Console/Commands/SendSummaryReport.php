@@ -32,7 +32,7 @@ class SendSummaryReport extends Command
         $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')->get();
 
         // Veicoli senza guasti aperti/in lavorazione (ok)
-        $vehicleIdsWithOpenIssues = Issue::whereIn('status', ['open', 'in_progress'])
+        $vehicleIdsWithOpenIssues = Issue::open()
             ->distinct('vehicle_id')
             ->pluck('vehicle_id');
         $vehiclesOk = $allVehicles->reject(fn($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count();
@@ -40,22 +40,14 @@ class SendSummaryReport extends Command
         // Veicoli con equipaggiamento incompleto (dalla collection già caricata)
         $incompleteVehicles = $allVehicles->filter(fn($v) => !$v->hasAllRequiredEquipment());
 
-        $openIssues = Issue::with('vehicle')->whereIn('status', ['open', 'in_progress'])->get();
-        $expiredDeadlines = Deadline::where('status', 'expired')->where('is_renewed', false)->get();
-        $upcomingDeadlines = Deadline::with('vehicle')
-            ->where('due_date', '>=', Carbon::today())
-            ->where('due_date', '<=', Carbon::today()->addDays(30))
-            ->orderBy('due_date')
-            ->get();
+        $openIssues = Issue::with('vehicle')->open()->get();
+        $expiredDeadlines = Deadline::where('status', Deadline::STATUS_EXPIRED)->where('is_renewed', false)->get();
+        $upcomingDeadlines = Deadline::with('vehicle')->upcoming()->get();
         $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')->whereNull('return_date')->where('appointment_date', '>=', today())->orderBy('appointment_date')->take(5)->get();
         $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')
             ->distinct('vehicle_id')
             ->count('vehicle_id');
-        $expiringEquipment = Equipment::with('vehicle')
-            ->whereNotNull('expiration_date')
-            ->where('expiration_date', '<=', Carbon::today()->addDays(30))
-            ->orderBy('expiration_date')
-            ->get();
+        $expiringEquipment = Equipment::with('vehicle')->expiringSoon()->get();
 
         $data = [
             'totalVehicles' => $totalVehicles,
