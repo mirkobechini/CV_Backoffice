@@ -25,7 +25,8 @@
                                     <option value="{{ $vehicle->id }}"
                                         data-needs-oxygen-check="{{ $vehicle->vehicleType?->needs_oxygen_check ? '1' : '0' }}"
                                         {{ old('vehicle_id', $deadline->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand?->name ?? 'N/A' }} {{ $vehicle->carModel?->name ?? 'N/A' }}
+                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand?->name ?? 'N/A' }}
+                                        {{ $vehicle->carModel?->name ?? 'N/A' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -47,6 +48,11 @@
                                 <option id="oxygen-type-option" value="Revisione Impianto Ossigeno"
                                     {{ old('type', $deadline->type) == 'Revisione Impianto Ossigeno' ? 'selected' : '' }}>
                                     Revisione Impianto Ossigeno</option>
+                                <option value="Tagliando"
+                                    {{ old('type', $deadline->type) == 'Tagliando' ? 'selected' : '' }}>Tagliando</option>
+                                <option value="Cinghia Distribuzione"
+                                    {{ old('type', $deadline->type) == 'Cinghia Distribuzione' ? 'selected' : '' }}>Cinghia
+                                    Distribuzione</option>
                             </select>
                             @error('type')
                                 <div class="invalid-feedback">{{ $message }}</div>
@@ -56,13 +62,50 @@
                             <x-form.month-input name="due_date" id="due_date" label="Data di scadenza" :model="$deadline"
                                 :value="$deadline->due_date" />
                             <small class="text-muted">Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno"
-                                la data viene calcolata automaticamente. La revisione ossigeno è disponibile solo per
-                                le ambulanze.</small>
+                                la data viene calcolata automaticamente.</small>
+                        </div>
+                        <div class="mb-3 border rounded p-3 bg-body-secondary" id="km-settings-group"
+                            style="display: none;">
+                            <h3 class="h6">Impostazioni km</h3>
+                            <div class="row">
+                                <div class="col-md-4 mb-2">
+                                    <label for="interval_km" class="form-label">Intervallo km</label>
+                                    <input type="number" class="form-control @error('interval_km') is-invalid @enderror"
+                                        id="interval_km" name="interval_km"
+                                        value="{{ old('interval_km', $deadline->interval_km) }}" min="0"
+                                        placeholder="es. 15000">
+                                    @error('interval_km')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label for="last_mileage" class="form-label">Km all'ultimo cambio</label>
+                                    <input type="number" class="form-control @error('last_mileage') is-invalid @enderror"
+                                        id="last_mileage" name="last_mileage"
+                                        value="{{ old('last_mileage', $deadline->last_mileage) }}" min="0"
+                                        placeholder="es. 50000">
+                                    @error('last_mileage')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4 mb-2">
+                                    <label for="interval_days" class="form-label">Intervallo giorni</label>
+                                    <input type="number" class="form-control @error('interval_days') is-invalid @enderror"
+                                        id="interval_days" name="interval_days"
+                                        value="{{ old('interval_days', $deadline->interval_days) }}" min="0"
+                                        placeholder="es. 365">
+                                    @error('interval_days')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+                            <small class="text-muted">La scadenza scatta al primo tra superamento km o raggiungimento data.
+                                Per la cinghia distribuzione: 100.000 km o 10 anni (3650 giorni).</small>
                         </div>
                         <div class="mb-3">
                             <div class="form-check mt-2">
-                                <input class="form-check-input @error('is_renewed') is-invalid @enderror"
-                                    type="checkbox" value="1" id="is_renewed" name="is_renewed"
+                                <input class="form-check-input @error('is_renewed') is-invalid @enderror" type="checkbox"
+                                    value="1" id="is_renewed" name="is_renewed"
                                     {{ old('is_renewed', $deadline->is_renewed) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="is_renewed">
                                     Segna come rinnovata
@@ -82,55 +125,71 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const vehicleSelect = document.getElementById('vehicle_id');
-            const typeSelect = document.getElementById('type');
-            const oxygenOption = document.getElementById('oxygen-type-option');
-            const dueDateGroup = document.getElementById('due-date-group');
-            const dueDateInput = document.getElementById('due_date');
-            const ministerialType = 'Revisione Ministeriale';
-            const oxygenType = 'Revisione Impianto Ossigeno';
+                const vehicleSelect = document.getElementById('vehicle_id');
+                const typeSelect = document.getElementById('type');
+                const oxygenOption = document.getElementById('oxygen-type-option');
+                const dueDateGroup = document.getElementById('due-date-group');
+                const dueDateInput = document.getElementById('due_date');
+                const kmSettingsGroup = document.getElementById('km-settings-group');
+                const ministerialType = 'Revisione Ministeriale';
+                const oxygenType = 'Revisione Impianto Ossigeno';
+                const kmTypes = ['Tagliando', 'Cinghia Distribuzione'];
 
-            // Abilita revisione ossigeno solo per tipologie mezzo che la prevedono.
-            const selectedVehicleNeedsOxygenCheck = () => {
-                const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+                // Abilita revisione ossigeno solo per tipologie mezzo che la prevedono.
+                const selectedVehicleNeedsOxygenCheck = () => {
+                    const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
 
-                if (!selectedOption) {
-                    return false;
-                }
+                    if (!selectedOption) {
+                        return false;
+                    }
 
-                return selectedOption.getAttribute('data-needs-oxygen-check') === '1';
-            };
+                    return selectedOption.getAttribute('data-needs-oxygen-check') === '1';
+                };
 
-            const syncOxygenTypeAvailability = () => {
-                const canUseOxygenType = selectedVehicleNeedsOxygenCheck();
-                oxygenOption.disabled = !canUseOxygenType;
+                const syncOxygenTypeAvailability = () => {
+                    const canUseOxygenType = selectedVehicleNeedsOxygenCheck();
+                    oxygenOption.disabled = !canUseOxygenType;
 
-                if (!canUseOxygenType && typeSelect.value === oxygenType) {
-                    typeSelect.value = '';
-                }
-            };
+                    if (!canUseOxygenType && typeSelect.value === oxygenType) {
+                        typeSelect.value = '';
+                    }
+                };
 
-            // La data manuale è richiesta solo per scadenze non auto-calcolate.
-            const toggleDueDateVisibility = () => {
-                const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
+                // La data manuale è richiesta solo per scadenze non auto-calcolate.
+                const toggleVisibility = () => {
+                    const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
+                    const isKmType = kmTypes.includes(typeSelect.value);
 
-                if (isAutoCalculated) {
-                    dueDateGroup.style.display = 'none';
-                    dueDateInput.disabled = true;
-                    dueDateInput.value = '';
-                } else {
-                    dueDateGroup.style.display = '';
-                    dueDateInput.disabled = false;
-                }
-            };
+                    dueDateGroup.style.display = isAutoCalculated ? 'none' : '';
+                    dueDateInput.disabled = isAutoCalculated;
 
+                    kmSettingsGroup.style.display = isKmType ? '' : 'none';
+
+                    if (isAutoCalculated) {
+                        dueDateInput.value = '';
+                    }
+                };
+
+                syncOxygenTypeAvailability();
+                toggleVisibility();
+                vehicleSelect.addEventListener('change', () => {
+                    syncOxygenTypeAvailability();
+                    toggleVisibility();
+                });
+                typeSelect.addEventListener('change', toggleVisibility);
+            } else {
+                dueDateGroup.style.display = '';
+                dueDateInput.disabled = false;
+            }
+        };
+
+        syncOxygenTypeAvailability();
+        toggleDueDateVisibility();
+        vehicleSelect.addEventListener('change', () => {
             syncOxygenTypeAvailability();
             toggleDueDateVisibility();
-            vehicleSelect.addEventListener('change', () => {
-                syncOxygenTypeAvailability();
-                toggleDueDateVisibility();
-            });
-            typeSelect.addEventListener('change', toggleDueDateVisibility);
+        });
+        typeSelect.addEventListener('change', toggleDueDateVisibility);
         });
     </script>
 @endsection

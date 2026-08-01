@@ -19,6 +19,10 @@
                         <p><strong>Officina:</strong> {{ $maintenanceRecord->provider?->name ?? 'N/A' }}</p>
                         <p><strong>Appuntamento:</strong> {{ $maintenanceRecord->appointment_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Data completamento:</strong> {{ $maintenanceRecord->return_date_formatted ?? 'N/A' }}</p>
+                        @if ($maintenanceRecord->mileage_at_service !== null)
+                            <p><strong>Km all'appuntamento:</strong>
+                                {{ number_format($maintenanceRecord->mileage_at_service, 0, ',', '.') }}</p>
+                        @endif
                         @if ($maintenanceRecord->activity_type !== null)
                             <p><strong>Tipo attività:</strong> {{ $maintenanceRecord->activity_type }}</p>
                         @endif

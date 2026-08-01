@@ -34,6 +34,7 @@ class MaintenanceRecord extends Model
     protected $casts = [
         'appointment_date' => 'date',
         'return_date' => 'date',
+        'mileage_at_service' => 'integer',
     ];
 
     protected $fillable = [
@@ -42,6 +43,7 @@ class MaintenanceRecord extends Model
         'appointment_date',
         'return_date',
         'activity_type',
+        'mileage_at_service',
     ];
 
     public function vehicle()

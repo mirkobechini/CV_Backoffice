@@ -7,6 +7,7 @@ use App\Http\Requests\StoreMileageLogRequest;
 use App\Http\Requests\UpdateMileageLogRequest;
 use App\Models\MileageLog;
 use App\Models\Vehicle;
+use Illuminate\Http\Request;
 
 class MileageLogController extends Controller
 {
@@ -66,6 +67,61 @@ class MileageLogController extends Controller
     {
         $mileageLog->update($request->validated());
         return redirect()->route('admin.mileage-logs.show',  $mileageLog)->with('status', 'Chilometraggio aggiornato con successo.');
+    }
+
+    /**
+     * Show the form for bulk mileage entry (all vehicles).
+     */
+    public function bulkCreate()
+    {
+        $vehicles = Vehicle::with(['brand', 'carModel'])->orderBy('internal_code')->get();
+        return view('admin.mileage-logs.bulk', compact('vehicles'));
+    }
+
+    /**
+     * Store bulk mileage logs for multiple vehicles at once.
+     */
+    public function bulkStore(Request $request)
+    {
+        $data = $request->validate([
+            'log_date' => 'required|date',
+            'mileages' => 'nullable|array',
+            'mileages.*' => 'nullable|integer|min:0',
+        ]);
+
+        $logDate = $data['log_date'];
+        $count = 0;
+
+        if (!empty($data['mileages'])) {
+            foreach ($data['mileages'] as $vehicleId => $mileage) {
+                if ($mileage === null || $mileage === '' || $mileage < 0) {
+                    continue;
+                }
+
+                // Verifica che il veicolo esista
+                $vehicle = Vehicle::find($vehicleId);
+                if (!$vehicle) {
+                    continue;
+                }
+
+                MileageLog::create([
+                    'vehicle_id' => $vehicleId,
+                    'log_date' => $logDate,
+                    'mileage' => (int) $mileage,
+                ]);
+
+                $count++;
+            }
+        }
+
+        if ($count === 0) {
+            return redirect()->route('admin.mileage-logs.bulk')
+                ->with('status', 'Nessun chilometraggio da registrare (campi vuoti).')
+                ->withInput();
+        }
+
+        return redirect()->route('admin.mileage-logs.index')
+            ->with('status', "{$count} chilometraggi registrati con successo per il {$logDate}.");
     }
 
     /**

@@ -69,9 +69,9 @@
                         </div>
                         <div class="mb-3">
                             <label for="internal_code" class="form-label">Sigla</label>
-                            <input type="text" inputmode="numeric" class="form-control @error('internal_code') is-invalid @enderror"
-                                id="internal_code" name="internal_code"
-                                value="{{ old('internal_code', $vehicle->internal_code) }}">
+                            <input type="text" inputmode="numeric"
+                                class="form-control @error('internal_code') is-invalid @enderror" id="internal_code"
+                                name="internal_code" value="{{ old('internal_code', $vehicle->internal_code) }}">
                             @error('internal_code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -120,12 +120,25 @@
                                 </div>
                             </div>
                         </section>
+                        <section class="col mb-3 card p-3">
+                            <h4>Cinghia distribuzione</h4>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" value="1" id="has_timing_belt"
+                                    name="has_timing_belt"
+                                    {{ old('has_timing_belt', $vehicle->has_timing_belt) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="has_timing_belt">
+                                    Veicolo dotato di cinghia di distribuzione
+                                </label>
+                            </div>
+                            <small class="text-muted">Se attivo, potrai creare una scadenza "Cinghia Distribuzione" che
+                                scatta dopo 100.000 km o 10 anni.</small>
+                        </section>
                         <!-- Sezione assicurazione
-                            <section class="col mb-3 card p-3">
-                                <h4>Assicurazione</h4>
-                                <x-form.month-input name="insurance_due_date" label="Data di scadenza" :value="$vehicle->insurance_due_date" />
-                            </section>
-                            -->
+                                <section class="col mb-3 card p-3">
+                                    <h4>Assicurazione</h4>
+                                    <x-form.month-input name="insurance_due_date" label="Data di scadenza" :value="$vehicle->insurance_due_date" />
+                                </section>
+                                -->
                     </section>
                     <button id="vehicle-edit-submit-btn" type="submit" class="btn btn-primary"
                         data-loading-text="Salvataggio...">Salva modifiche</button>

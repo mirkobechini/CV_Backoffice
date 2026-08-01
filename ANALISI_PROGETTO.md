@@ -197,9 +197,27 @@ Solo autenticazione base di Laravel Breeze. Nessun pannello admin per gestire ut
 Le index non avevano una barra di ricerca testuale.
 **Soluzione:** Creata trait `Searchable` in `app/Models/Concerns/` con metodo `scopeSearch()` che suddivide la query in termini e cerca con `LIKE` sulle colonne dichiarate in `$searchable`. Aggiunta a `Vehicle` (`$searchable = ['internal_code', 'license_plate']`), `Issue` (`$searchable = ['description', 'status']`) e `Deadline` (`$searchable = ['type', 'status']`). I controller `VehicleController`, `IssueController` e `DeadlineController` usano `->search($request->get('q'))` prima di `applySorting()`/`paginate()`. La view `x-admin.index-table` supporta la prop `searchRoute` con form di ricerca e pulsante "Cancella filtro", preservando i parametri query esistenti.
 
-### F10. ⚠️ **Mileage non integrato nel vehicle show**
+### F10. ✅ **Mileage integrato in manutenzione, rilevazione mensile e scadenze km** ✅ FIXATO
 
-I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" nella scheda veicolo, né un calcolo del totale km.
+I chilometraggi erano registrati ma non integrati con manutenzioni, scadenze e rilevazioni periodiche.
+
+**Soluzioni (3 sotto-feature):**
+
+**F10a — Km sull'appuntamento di manutenzione**
+Aggiunta colonna `mileage_at_service` (nullable) su `maintenance_records` + campo opzionale nei form create/edit. Durante la creazione/modifica di un appuntamento in officina si possono registrare i km correnti del veicolo.
+
+**F10b — Rilevazione mensile km di massa (bulk)**
+Nuova rotta `mileage-logs.bulk` con vista unica che elenca TUTTI i veicoli con ultimo km noto e un input per inserire i km attuali. Un submit crea N `MileageLog` in una transazione. Pulsante "Rilevazione mensile" nell'index dei chilometraggi.
+
+**F10c — Scadenze basate sui km (Tagliando e Cinghia Distribuzione)**
+- Nuovi tipi `Deadline`: `Tagliando` e `Cinghia Distribuzione`
+- Nuove colonne su `deadlines`: `interval_km`, `last_mileage`, `interval_days`
+- Nuova colonna `has_timing_belt` su `vehicles` (flag cinghia distribuzione)
+- `getAutomaticStatusAttribute()` e `syncStatusFromRules()` ora considerano anche il superamento km: la scadenza scatta al primo tra superamento km o raggiungimento data
+- Tagliando: intervallo km (es. 15.000 km) o giorni (es. 365) — configurabile dal form
+- Cinghia Distribuzione: 100.000 km o 10 anni (3650 giorni) dall'ultimo cambio
+- Nuove option nei form create/edit deadline (Tagliando, Cinghia Distribuzione) con sezione dedicata per impostare km
+- Form veicolo aggiornato con checkbox `has_timing_belt`
 
 ---
 
@@ -211,8 +229,8 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | ✅ **Tutte le Duplicazioni** | **D1-D4**              | ✅ **Risolte**                                              |
 | ✅ **Performance**           | **M1-M2**              | ✅ **Ordinamento DB + Paginazione**                         |
 | ✅ **Migliorie**             | **M3-M9**              | ✅ **Validazioni, SoftDeletes, Auth, Tema**                 |
-| ✅ **Feature**               | **F1, F2, F3, F4, F9** | ✅ **Dashboard + Notifiche + Export PDF + Audit + Ricerca** |
-| 🔵 **Basso**                 | F8, F10                | Utenti, km                                                  |
+| ✅ **Feature**               | **F1, F2, F3, F4, F9, F10** | ✅ **Dashboard + Notifiche + Export PDF + Audit + Ricerca + Km** |
+| 🔵 **Basso**                 | F8                | Utenti                                                  |
 
 ---
 

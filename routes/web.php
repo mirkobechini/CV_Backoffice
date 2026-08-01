@@ -40,6 +40,10 @@ Route::middleware(['auth', 'verified'])
         Route::resource("equipments", EquipmentController::class);
         Route::resource("mileage-logs", MileageLogController::class)
             ->parameters(['mileage-logs' => 'mileageLog']);
+        Route::get('mileage-logs/bulk/create', [MileageLogController::class, 'bulkCreate'])
+            ->name('mileage-logs.bulk');
+        Route::post('mileage-logs/bulk/store', [MileageLogController::class, 'bulkStore'])
+            ->name('mileage-logs.bulk-store');
         Route::resource("maintenance-records", MaintenanceRecordController::class)
             ->parameters(['maintenance-records' => 'maintenanceRecord']);
         Route::resource("vehicle-types", VehicleTypeController::class)
@@ -49,7 +53,7 @@ Route::middleware(['auth', 'verified'])
         Route::patch('maintenance-records/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
             ->name('maintenance-records.complete');
     });
-    
+
 Route::get('/admin/notifications', [NotificationSettingController::class, 'edit'])
     ->name('admin.notifications.edit');
 Route::patch('/admin/notifications', [NotificationSettingController::class, 'update'])

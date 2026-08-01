@@ -126,6 +126,16 @@
                             @enderror
                         </div>
                         <x-form.date-input name="return_date" label="Data restituzione veicolo" />
+                        <div class="mb-3">
+                            <label for="mileage_at_service" class="form-label">Chilometraggio all'appuntamento</label>
+                            <input type="number" class="form-control @error('mileage_at_service') is-invalid @enderror"
+                                id="mileage_at_service" name="mileage_at_service" value="{{ old('mileage_at_service') }}"
+                                min="0">
+                            @error('mileage_at_service')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <div class="form-text">Opzionale — km al momento del conferimento in officina.</div>
+                        </div>
                     </section>
                     <button id="maintenance-submit-btn" type="submit" class="btn btn-primary"
                         data-loading-text="Salvataggio...">Aggiungi</button>

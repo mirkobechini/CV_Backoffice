@@ -30,11 +30,13 @@ class Vehicle extends Model
         'warranty_expiration_date',
         'has_warranty_extension',
         'warranty_extension_duration',
+        'has_timing_belt',
     ];
 
     protected $casts = [
         'immatricolation_date' => 'date',
         'warranty_expiration_date' => 'date',
+        'has_timing_belt' => 'boolean',
     ];
 
     protected $searchable = ['internal_code', 'license_plate'];

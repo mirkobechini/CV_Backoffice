@@ -32,6 +32,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'return_date' => 'nullable|date|after_or_equal:appointment_date',
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'issue_resolved' => 'nullable|boolean',
+            'mileage_at_service' => 'nullable|integer|min:0',
         ];
     }
 

@@ -26,6 +26,8 @@ class Deadline extends Model
     //type
     public const TYPE_MINISTERIAL = 'Revisione Ministeriale';
     public const TYPE_OXYGEN = 'Revisione Impianto Ossigeno';
+    public const TYPE_TAGLIANDO = 'Tagliando';
+    public const TYPE_CINGHIA = 'Cinghia Distribuzione';
     public const OXYGEN_CHECK_INTERVAL_MONTHS = 12;
 
     protected $fillable = [
@@ -34,11 +36,17 @@ class Deadline extends Model
         'due_date',
         'status',
         'is_renewed',
+        'interval_km',
+        'last_mileage',
+        'interval_days',
     ];
 
     protected $casts = [
         'due_date' => 'date',
         'is_renewed' => 'boolean',
+        'interval_km' => 'integer',
+        'last_mileage' => 'integer',
+        'interval_days' => 'integer',
     ];
 
     protected $searchable = ['type', 'status'];
@@ -92,48 +100,89 @@ class Deadline extends Model
             return self::STATUS_RENEWED;
         }
 
-        if (!$this->due_date) {
+        $today = Carbon::today();
+        $isKmExpired = false;
+        $isKmPending = false;
+
+        // Check km-based conditions (solo se la relazione vehicle è già caricata)
+        if ($this->interval_km !== null && $this->last_mileage !== null && $this->relationLoaded('vehicle') && $this->vehicle) {
+            $currentMileage = $this->vehicle->mileage;
+            if ($currentMileage !== null) {
+                $thresholdKm = $this->last_mileage + $this->interval_km;
+                if ($currentMileage >= $thresholdKm) {
+                    $isKmExpired = true;
+                }
+                $warningKm = $this->last_mileage + (int) ($this->interval_km * 0.9);
+                if ($currentMileage >= $warningKm) {
+                    $isKmPending = true;
+                }
+            }
+        }
+
+        // Se non c'è né data né km, pending
+        if (!$this->due_date && !$this->interval_km) {
             return self::STATUS_PENDING;
         }
 
-        $today = Carbon::today();
+        // Check date-based expiry
+        $isDateExpired = $this->due_date && $this->due_date->isBefore($today);
+        $isDatePending = false;
+        if ($this->due_date && !$isDateExpired) {
+            $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
+            $isDatePending = $today->gte($warningStartDate);
+        }
 
-        if ($this->due_date->isBefore($today)) {
+        // Expired se UNA delle condizioni è scaduta (km O data — il primo che arriva)
+        if ($isKmExpired || $isDateExpired) {
             return self::STATUS_EXPIRED;
         }
 
-        if ($this->due_date->isAfter($today) && $this->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
-            return self::STATUS_VALID;
+        // Pending se UNA delle condizioni è in warning
+        if ($isKmPending || $isDatePending) {
+            return self::STATUS_PENDING;
         }
 
-        $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
-
-        return $today->gte($warningStartDate) ? self::STATUS_PENDING : self::STATUS_VALID;
+        return self::STATUS_VALID;
     }
 
     public function syncStatusFromRules(): void
     {
-        // Sincronizza lo stato persistito con le regole temporali correnti.
-        if (!$this->due_date) {
-            return;
-        }
-
+        // Sincronizza lo stato persistito con le regole temporali/km correnti.
         if ($this->is_renewed) {
-            return; // Se è marcata come rinnovata, non cambiamo lo stato.
+            return;
         }
 
         $today = Carbon::today();
         $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
-        $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
+        $newStatus = null;
 
-        if ($this->due_date->isBefore($today)) {
-            $newStatus = self::STATUS_EXPIRED;
-        } elseif ($this->due_date->isAfter($today) && $this->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
-            $newStatus = self::STATUS_VALID;
-        } elseif ($today->gte($warningStartDate)) {
+        // KM-based check
+        if ($this->interval_km !== null && $this->last_mileage !== null) {
+            $this->loadMissing('vehicle');
+            $currentMileage = $this->vehicle?->mileage;
+            if ($currentMileage !== null && $currentMileage >= ($this->last_mileage + $this->interval_km)) {
+                $newStatus = self::STATUS_EXPIRED;
+            }
+        }
+
+        // Date-based check (solo se non è già expired per km)
+        if ($newStatus === null && $this->due_date) {
+            $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
+
+            if ($this->due_date->isBefore($today)) {
+                $newStatus = self::STATUS_EXPIRED;
+            } elseif ($this->due_date->isAfter($today) && $this->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
+                $newStatus = self::STATUS_VALID;
+            } elseif ($today->gte($warningStartDate)) {
+                $newStatus = self::STATUS_PENDING;
+            } else {
+                $newStatus = self::STATUS_VALID;
+            }
+        }
+
+        // Se non c'è né data né km, pending
+        if ($newStatus === null) {
             $newStatus = self::STATUS_PENDING;
-        } else {
-            $newStatus = self::STATUS_VALID; // Default fallback, anche se non dovrebbe mai accadere.
         }
 
         if ($this->status !== $newStatus) {

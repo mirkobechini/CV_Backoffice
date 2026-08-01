@@ -18,10 +18,13 @@ class StoreDeadlineRequest extends FormRequest
     {
         return [
             'vehicle_id' => 'required|exists:vehicles,id',
-            'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno',
+            'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno,Tagliando,Cinghia Distribuzione',
             'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
             'status' => 'nullable|in:pending,expired,renewed,valid',
             'is_renewed' => 'nullable|boolean',
+            'interval_km' => 'nullable|integer|min:0',
+            'last_mileage' => 'nullable|integer|min:0',
+            'interval_days' => 'nullable|integer|min:0',
         ];
     }
 
@@ -37,6 +40,12 @@ class StoreDeadlineRequest extends FormRequest
             'due_date.date_format' => 'La data di scadenza deve essere nel formato mese/anno valido.',
             'status.in' => 'Lo stato selezionato non è valido.',
             'is_renewed.boolean' => 'Il valore di rinnovo non è valido.',
+            'interval_km.integer' => "L'intervallo km deve essere un numero.",
+            'interval_km.min' => "L'intervallo km non può essere negativo.",
+            'last_mileage.integer' => 'I km all\'ultimo cambio devono essere un numero.',
+            'last_mileage.min' => 'I km all\'ultimo cambio non possono essere negativi.',
+            'interval_days.integer' => "L'intervallo giorni deve essere un numero.",
+            'interval_days.min' => "L'intervallo giorni non può essere negativo.",
         ];
     }
 }

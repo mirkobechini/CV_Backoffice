@@ -98,7 +98,12 @@ class DeadlineController extends Controller
                 ->withInput();
         }
 
-        $dueDate = $this->resolveDueDate($data, $vehicle);
+        if (in_array($data['type'], [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
+            // Tagliando e Cinghia: data fornita dall'utente, usiamo i campi km
+            $dueDate = $data['due_date'] ? Carbon::createFromFormat('Y-m', $data['due_date'])?->endOfMonth() : null;
+        } else {
+            $dueDate = $this->resolveDueDate($data, $vehicle);
+        }
 
         if (!$dueDate) {
             return back()
@@ -113,6 +118,9 @@ class DeadlineController extends Controller
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
             'is_renewed' => $markAsRenewed,
+            'interval_km' => $data['interval_km'] ?? null,
+            'last_mileage' => $data['last_mileage'] ?? null,
+            'interval_days' => $data['interval_days'] ?? null,
         ]);
         $deadline->syncStatusFromRules();
 
@@ -153,7 +161,12 @@ class DeadlineController extends Controller
                 ->withInput();
         }
 
-        $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
+        if (in_array($data['type'], [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
+            // Tagliando e Cinghia: data fornita dall'utente, usiamo i campi km
+            $dueDate = $data['due_date'] ? Carbon::createFromFormat('Y-m', $data['due_date'])?->endOfMonth() : null;
+        } else {
+            $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
+        }
 
         if (!$dueDate) {
             return back()
@@ -168,6 +181,9 @@ class DeadlineController extends Controller
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
             'is_renewed' => $markAsRenewed,
+            'interval_km' => $data['interval_km'] ?? null,
+            'last_mileage' => $data['last_mileage'] ?? null,
+            'interval_days' => $data['interval_days'] ?? null,
         ]);
         $deadline->syncStatusFromRules();
 
