@@ -11,8 +11,12 @@ class Deadline extends Model
 {
     use SoftDeletes, LogsActivity;
 
-    protected static $logAttributes = ['*'];
-    protected static $logOnlyDirty = true;
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
+    }
     //status
     public const STATUS_PENDING = 'pending';
     public const STATUS_EXPIRED = 'expired';

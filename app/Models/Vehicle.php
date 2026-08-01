@@ -11,8 +11,12 @@ class Vehicle extends Model
 {
     use SoftDeletes, LogsActivity;
 
-    protected static $logAttributes = ['*'];
-    protected static $logOnlyDirty = true;
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
+    }
     protected $fillable = [
         'license_plate',
         'internal_code',

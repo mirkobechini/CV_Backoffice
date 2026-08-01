@@ -210,7 +210,7 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | ✅ **Performance**           | **M1-M2**   | ✅ **Ordinamento DB + Paginazione**             |
 | ✅ **Migliorie**             | **M3-M9**   | ✅ **Validazioni, SoftDeletes, Auth, Tema**     |
 | ✅ **Feature**               | **F1, F2, F3, F4** | ✅ **Dashboard + Notifiche + Export PDF + Audit** |
-| 🔵 **Basso**                 | F5-F10, M10 | Link manut.-scadenza, alert, test, ricerca, ecc.  |
+| 🔵 **Basso**                 | F5-F10 | Link manut.-scadenza, alert, test, ricerca, ecc.  |
 
 ---
 

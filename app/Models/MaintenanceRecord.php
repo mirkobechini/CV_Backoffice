@@ -10,8 +10,12 @@ class MaintenanceRecord extends Model
 {
     use SoftDeletes, LogsActivity;
 
-    protected static $logAttributes = ['*'];
-    protected static $logOnlyDirty = true;
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
+    }
 
     public const ACTIVITY_TAGLIANDO = 'Tagliando';
     public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';

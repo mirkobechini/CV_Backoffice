@@ -10,8 +10,12 @@ class Issue extends Model
 {
     use SoftDeletes, LogsActivity;
 
-    protected static $logAttributes = ['*'];
-    protected static $logOnlyDirty = true;
+    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    {
+        return \Spatie\Activitylog\LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty();
+    }
     protected $fillable = [
         'vehicle_id',
         'description',
