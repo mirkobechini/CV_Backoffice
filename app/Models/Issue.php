@@ -61,11 +61,6 @@ class Issue extends Model
         return $this->belongsTo(Vehicle::class);
     }
 
-    public function maintenanceRecords()
-    {
-        return $this->hasMany(MaintenanceRecord::class);
-    }
-
     public function maintenanceRecordItems()
     {
         return $this->morphMany(MaintenanceRecordItem::class, 'itemable');

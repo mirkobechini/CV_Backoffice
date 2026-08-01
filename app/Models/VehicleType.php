@@ -14,14 +14,22 @@ class VehicleType extends Model
         'regular_inspection_months',
     ];
 
+    protected $casts = [
+        'needs_oxygen_check' => 'boolean',
+        'extinguishers_required' => 'integer',
+        'first_inspection_months' => 'integer',
+        'regular_inspection_months' => 'integer',
+    ];
+
     public function vehicles()
     {
         // Un tipo ha molti (hasMany) mezzi
         return $this->hasMany(Vehicle::class);
     }
 
-    public function equipmentTypes(){
+    public function equipmentTypes()
+    {
         return $this->belongsToMany(EquipmentType::class, 'vehicle_type_equipment_requirements', 'vehicle_type_id', 'equipment_type_id')
-        ->withPivot('required_quantity');
+            ->withPivot('required_quantity');
     }
 }

@@ -27,9 +27,19 @@ class SendSummaryReport extends Command
     public function handle()
     {
         $totalVehicles = Vehicle::count();
-        $vehiclesOk = Vehicle::whereDoesntHave('issues', function ($query) {
-            $query->whereIn('status', ['open', 'in_progress']);
-        })->count();
+
+        // Carichiamo tutti i veicoli con le relazioni necessarie in una sola query
+        $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')->get();
+
+        // Veicoli senza guasti aperti/in lavorazione (ok)
+        $vehicleIdsWithOpenIssues = Issue::whereIn('status', ['open', 'in_progress'])
+            ->distinct('vehicle_id')
+            ->pluck('vehicle_id');
+        $vehiclesOk = $allVehicles->reject(fn($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count();
+
+        // Veicoli con equipaggiamento incompleto (dalla collection già caricata)
+        $incompleteVehicles = $allVehicles->filter(fn($v) => !$v->hasAllRequiredEquipment());
+
         $openIssues = Issue::with('vehicle')->whereIn('status', ['open', 'in_progress'])->get();
         $expiredDeadlines = Deadline::where('status', 'expired')->where('is_renewed', false)->get();
         $upcomingDeadlines = Deadline::with('vehicle')
@@ -38,9 +48,6 @@ class SendSummaryReport extends Command
             ->orderBy('due_date')
             ->get();
         $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')->whereNull('return_date')->where('appointment_date', '>=', today())->orderBy('appointment_date')->take(5)->get();
-        $incompleteVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
-            ->get()
-            ->filter(fn($v) => !$v->hasAllRequiredEquipment());
         $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')
             ->distinct('vehicle_id')
             ->count('vehicle_id');

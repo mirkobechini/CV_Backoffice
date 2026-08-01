@@ -63,6 +63,16 @@
                                 @enderror
                             </div>
                         </div>
+                        <div class="mb-3">
+                            <label for="extinguishers_required" class="form-label">Estintori richiesti</label>
+                            <input type="number" class="form-control @error('extinguishers_required') is-invalid @enderror"
+                                id="extinguishers_required" name="extinguishers_required"
+                                value="{{ old('extinguishers_required', $vehicleType->extinguishers_required) }}"
+                                min="0">
+                            @error('extinguishers_required')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <fieldset class="mb-3">
                             <legend class="mb-3">Equipaggiamento necessario</legend>
 

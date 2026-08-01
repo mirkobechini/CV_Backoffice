@@ -6,9 +6,7 @@ use App\Models\Issue;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\MaintenanceRecord;
-use Illuminate\Http\Request;
 use App\Models\Vehicle;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -22,6 +20,7 @@ class DashboardController extends Controller
         $openIssues = Issue::with('vehicle')
             ->whereIn('status', ['open', 'in_progress'])
             ->orderByDesc('event_date')
+            ->take(20)
             ->get();
 
         // Scadenze imminenti (prossimi 30 giorni)
@@ -60,53 +59,5 @@ class DashboardController extends Controller
             'incompleteVehicles',
             'expiringEquipment'
         ));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

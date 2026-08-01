@@ -93,19 +93,23 @@ class MileageLogController extends Controller
         $count = 0;
 
         if (!empty($data['mileages'])) {
+            // Carichiamo tutti i veicoli in una sola query, filtrando solo gli ID forniti
+            $validVehicleIds = Vehicle::whereIn('id', array_keys($data['mileages']))
+                ->pluck('id')
+                ->toArray();
+
             foreach ($data['mileages'] as $vehicleId => $mileage) {
                 if ($mileage === null || $mileage === '' || $mileage < 0) {
                     continue;
                 }
 
-                // Verifica che il veicolo esista
-                $vehicle = Vehicle::find($vehicleId);
-                if (!$vehicle) {
+                // Salta se il veicolo non esiste nel DB
+                if (!in_array((int) $vehicleId, $validVehicleIds, true)) {
                     continue;
                 }
 
                 MileageLog::create([
-                    'vehicle_id' => $vehicleId,
+                    'vehicle_id' => (int) $vehicleId,
                     'log_date' => $logDate,
                     'mileage' => (int) $mileage,
                 ]);

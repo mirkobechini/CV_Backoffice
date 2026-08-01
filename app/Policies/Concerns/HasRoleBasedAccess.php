@@ -43,4 +43,14 @@ trait HasRoleBasedAccess
     {
         return false; // solo admin (gestito da before)
     }
+
+    public function restore(User $user, mixed $model): bool
+    {
+        return false; // solo admin (gestito da before)
+    }
+
+    public function forceDelete(User $user, mixed $model): bool
+    {
+        return false; // solo admin (gestito da before)
+    }
 }
