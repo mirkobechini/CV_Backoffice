@@ -17,7 +17,7 @@ class MileageLogCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createVehicle(): Vehicle

@@ -12,18 +12,18 @@ use Tests\TestCase;
 
 class VehicleValidationTest extends TestCase
 {
-    
+
     use RefreshDatabase;
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
-    
+
     public function test_vehicle_store_fails_when_car_model_does_not_belong_to_brand(): void
     {
         $user = $this->createUser();
-    
+
         $brandA = Brand::create(['name' => 'Fiat']);
         $brandB = Brand::create(['name' => 'Ford']);
         $carModel = CarModel::create([
@@ -50,13 +50,12 @@ class VehicleValidationTest extends TestCase
 
         $response->assertSessionHasErrors(['car_model_id']);
         $this->assertDatabaseCount('vehicles', 0);
-
     }
 
     public function test_vehicle_update_fails_when_car_model_does_not_belong_to_brand(): void
     {
         $user = $this->createUser();
-    
+
         $brandA = Brand::create(['name' => 'Fiat']);
         $brandB = Brand::create(['name' => 'Ford']);
         $carModel = CarModel::create([
@@ -91,6 +90,5 @@ class VehicleValidationTest extends TestCase
             'brand_id' => $brandA->id,
             'car_model_id' => $carModel->id,
         ]);
-
     }
 }

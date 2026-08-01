@@ -18,7 +18,9 @@ class PdfExportController extends Controller
             'deadlines',
             'equipment.equipmentType',
             'maintenanceRecords.provider',
+            'maintenanceRecords.items.itemable',
             'issues.maintenanceRecords.provider',
+            'issues.maintenanceRecords.items.itemable',
         ]);
         $pdf = Pdf::loadView('pdfs.scheda-veicolo', compact('vehicle'));
         return $pdf->download('scheda-' . $vehicle->internal_code . '.pdf');

@@ -19,7 +19,7 @@ class MaintenanceRecordCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createVehicle(): Vehicle
@@ -61,14 +61,14 @@ class MaintenanceRecordCrudTest extends TestCase
         ]);
     }
 
-    private function createIssue(): array
+    private function createIssue(string $status = 'open'): array
     {
         $vehicle = $this->createVehicle();
 
         $issue = Issue::create([
             'vehicle_id' => $vehicle->id,
             'description' => 'something',
-            'status' => 'closed',
+            'status' => $status,
             'event_date' => '2025-01-02',
         ]);
 
@@ -77,7 +77,6 @@ class MaintenanceRecordCrudTest extends TestCase
 
     private function createMaintenance(): array
     {
-
         $data = $this->createIssue();
         $vehicle = $data['vehicle'];
         $issue = $data['issue'];
@@ -87,8 +86,7 @@ class MaintenanceRecordCrudTest extends TestCase
             [
                 'vehicle_id' => $vehicle->id,
                 'provider_id' => $provider->id,
-                'issue_id' => $issue->id,
-                'appointment_date' => '2025/01/03'
+                'appointment_date' => '2025/01/03',
             ]
         );
 
@@ -148,8 +146,8 @@ class MaintenanceRecordCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
             'vehicle_id' => $vehicle->id,
             'provider_id' => $provider->id,
-            'issue_id' => $issue->id,
-            'appointment_date' => '2025/01/03'
+            'issue_ids' => [$issue->id],
+            'appointment_date' => '2025/01/03',
         ]);
 
         $maintenance = MaintenanceRecord::first();
@@ -159,7 +157,11 @@ class MaintenanceRecordCrudTest extends TestCase
             'id' => $maintenance->id,
             'vehicle_id' => $vehicle->id,
             'provider_id' => $provider->id,
-            'issue_id' => $issue->id,
+        ]);
+        $this->assertDatabaseHas('maintenance_record_items', [
+            'maintenance_record_id' => $maintenance->id,
+            'itemable_id' => $issue->id,
+            'itemable_type' => Issue::class,
         ]);
     }
 
@@ -176,8 +178,8 @@ class MaintenanceRecordCrudTest extends TestCase
         $response = $this->actingAs($user)->put(route('admin.maintenance-records.update', $maintenance), [
             'vehicle_id' => $vehicle->id,
             'provider_id' => $provider->id,
-            'issue_id' => $issue->id,
-            'appointment_date' => '2026/01/03'
+            'issue_ids' => [$issue->id],
+            'appointment_date' => '2026/01/03',
         ]);
 
         $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
@@ -185,7 +187,11 @@ class MaintenanceRecordCrudTest extends TestCase
             'id' => $maintenance->id,
             'vehicle_id' => $vehicle->id,
             'provider_id' => $provider->id,
-            'issue_id' => $issue->id,
+        ]);
+        $this->assertDatabaseHas('maintenance_record_items', [
+            'maintenance_record_id' => $maintenance->id,
+            'itemable_id' => $issue->id,
+            'itemable_type' => Issue::class,
         ]);
     }
 
@@ -193,13 +199,22 @@ class MaintenanceRecordCrudTest extends TestCase
     {
         $user = $this->createUser();
 
-        $maintenance = $this->createMaintenance()['maintenance'];
+        $data = $this->createMaintenance();
+        $maintenance = $data['maintenance'];
+        $issue = $data['issue'];
+
+        // Collega un item via pivot
+        $maintenance->items()->create([
+            'itemable_id' => $issue->id,
+            'itemable_type' => Issue::class,
+        ]);
 
         $response = $this->actingAs($user)->delete(route('admin.maintenance-records.destroy', $maintenance));
 
         $response->assertRedirect(route('admin.maintenance-records.index'));
-        $this->assertDatabaseMissing('maintenance_records', [
-            'id' => $maintenance->id,
+        $this->assertSoftDeleted($maintenance);
+        $this->assertDatabaseMissing('maintenance_record_items', [
+            'maintenance_record_id' => $maintenance->id,
         ]);
     }
 
@@ -214,12 +229,12 @@ class MaintenanceRecordCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
             'vehicle_id' => $vehicle->id,
-            'issue_id' => $issue->id,
-            'appointment_date' => '2025/01/03'
+            'issue_ids' => [$issue->id],
+            'appointment_date' => '2025/01/03',
         ]);
 
         // Verifica che il campo `provider_id` sia obbligatorio.
         $response->assertSessionHasErrors(['provider_id']);
-        $this->assertDatabaseCount('maintenance_records', 0); // Conferma che non venga creato alcun record di manutenzione senza provider.
+        $this->assertDatabaseCount('maintenance_records', 0);
     }
 }

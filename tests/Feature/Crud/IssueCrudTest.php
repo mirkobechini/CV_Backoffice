@@ -17,7 +17,7 @@ class IssueCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createVehicle(): Vehicle
@@ -163,9 +163,7 @@ class IssueCrudTest extends TestCase
         $response = $this->actingAs($user)->delete(route('admin.issues.destroy', $issue));
 
         $response->assertRedirect(route('admin.issues.index'));
-        $this->assertDatabaseMissing('issues', [
-            'id' => $issue->id,
-        ]);
+        $this->assertSoftDeleted($issue);
     }
 
     // VALIDAZIONE DEI CAMPI OBBLIGATORI

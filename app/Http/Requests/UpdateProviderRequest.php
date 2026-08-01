@@ -17,7 +17,7 @@ class UpdateProviderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:providers,name,' . $this->route('provider') . ',id',
+            'name' => 'required|string|max:255|unique:providers,name,' . $this->route('provider')?->id . ',id',
             'address' => 'nullable|string|max:255',
             'contact_info' => 'nullable|string|max:255',
             'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore',

@@ -31,7 +31,7 @@ class DashboardController extends Controller
             ->get();
 
         // Appuntamenti futuri
-        $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider'])
+        $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
             ->whereNull('return_date')
             ->where('appointment_date', '>=', now())
             ->orderBy('appointment_date')

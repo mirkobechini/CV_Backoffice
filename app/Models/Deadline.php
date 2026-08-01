@@ -41,9 +41,9 @@ class Deadline extends Model
     ];
 
 
-    public function maintenanceRecord()
+    public function maintenanceRecordItems()
     {
-        return $this->hasOne(MaintenanceRecord::class);
+        return $this->morphMany(MaintenanceRecordItem::class, 'itemable');
     }
 
     public function vehicle()

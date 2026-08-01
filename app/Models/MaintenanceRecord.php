@@ -39,11 +39,9 @@ class MaintenanceRecord extends Model
     protected $fillable = [
         'vehicle_id',
         'provider_id',
-        'issue_id',
         'appointment_date',
         'return_date',
         'activity_type',
-        'deadline_id',
     ];
 
     public function vehicle()
@@ -56,14 +54,19 @@ class MaintenanceRecord extends Model
         return $this->belongsTo(Provider::class);
     }
 
-    public function issue()
+    public function items()
     {
-        return $this->belongsTo(Issue::class);
+        return $this->hasMany(MaintenanceRecordItem::class);
     }
 
-    public function deadline()
+    public function issues()
     {
-        return $this->belongsTo(Deadline::class);
+        return $this->morphToMany(Issue::class, 'itemable', 'maintenance_record_items');
+    }
+
+    public function deadlines()
+    {
+        return $this->morphToMany(Deadline::class, 'itemable', 'maintenance_record_items');
     }
 
     public function getAppointmentDateFormattedAttribute(): ?string

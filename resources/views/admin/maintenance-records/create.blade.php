@@ -30,25 +30,57 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
                         <div class="mb-3" id="issue-section" style="display: none;">
-                            <label for="issue_id" class="form-label">Guasto</label>
-                            <select class="form-select @error('issue_id') is-invalid @enderror" id="issue_id"
-                                name="issue_id" disabled required>
-                                <option value="">Seleziona un guasto</option>
+                            <label class="form-label">Guasti collegati</label>
+                            <div class="border rounded p-3 bg-body-secondary" id="issue-checkboxes">
+                                @error('issue_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
                                 @foreach ($openIssues as $issue)
-                                    <option value="{{ $issue->id }}" data-vehicle-id="{{ $issue->vehicle_id }}"
-                                        {{ (string) old('issue_id', $preselectedIssueId ?? '') === (string) $issue->id ? 'selected' : '' }}>
-                                        {{ $issue->description }}</option>
+                                    <div class="form-check issue-checkbox" data-vehicle-id="{{ $issue->vehicle_id }}"
+                                        style="display: none;">
+                                        <input class="form-check-input" type="checkbox" name="issue_ids[]"
+                                            value="{{ $issue->id }}" id="issue_{{ $issue->id }}"
+                                            {{ in_array((string) $issue->id, old('issue_ids', $preselectedIssueId ? [$preselectedIssueId] : [])) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="issue_{{ $issue->id }}">
+                                            {{ $issue->description }}
+                                        </label>
+                                    </div>
                                 @endforeach
-                            </select>
-                            @error('issue_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            </div>
+                            <div class="alert alert-info mt-2 d-none" id="no-issue-msg">
+                                <small>Nessun guasto aperto per il veicolo selezionato.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3" id="deadline-section" style="display: none;">
+                            <label class="form-label">Scadenze collegate</label>
+                            <div class="border rounded p-3 bg-body-secondary" id="deadline-checkboxes">
+                                @error('deadline_ids')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                @foreach ($pendingDeadlines as $deadline)
+                                    <div class="form-check deadline-checkbox" data-vehicle-id="{{ $deadline->vehicle_id }}"
+                                        style="display: none;">
+                                        <input class="form-check-input" type="checkbox" name="deadline_ids[]"
+                                            value="{{ $deadline->id }}" id="deadline_{{ $deadline->id }}"
+                                            {{ in_array((string) $deadline->id, old('deadline_ids', [])) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="deadline_{{ $deadline->id }}">
+                                            {{ ucfirst($deadline->type) }} —
+                                            {{ $deadline->due_date?->format('d/m/Y') ?? 'N/A' }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="alert alert-info mt-2 d-none" id="no-deadline-msg">
+                                <small>Nessuna scadenza in sospeso per il veicolo selezionato.</small>
+                            </div>
                         </div>
 
                         <div class="mb-3" id="no-issue-cta" style="display: none;">
                             <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
-                                <span>Nessun guasto disponibile per il veicolo selezionato.</span>
+                                <span>Nessun guasto aperto per il veicolo selezionato.</span>
                                 <a id="create-issue-link" class="btn btn-sm btn-primary"
                                     href="{{ route('admin.issues.create', ['back' => url()->full()]) }}">
                                     Crea guasto
@@ -106,60 +138,71 @@
         document.addEventListener('DOMContentLoaded', function() {
             const vehicleSelect = document.getElementById('vehicle_id');
             const issueSection = document.getElementById('issue-section');
-            const issueSelect = document.getElementById('issue_id');
             const noIssueCta = document.getElementById('no-issue-cta');
             const createIssueLink = document.getElementById('create-issue-link');
+            const deadlineSection = document.getElementById('deadline-section');
+            const noIssueMsg = document.getElementById('no-issue-msg');
+            const noDeadlineMsg = document.getElementById('no-deadline-msg');
 
-            // Filtra i guasti in base al veicolo selezionato e gestisce CTA alternativa.
-            const filterIssuesByVehicle = () => {
+            const filterByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
+
+                // Filtra guasti
+                const issueChecks = document.querySelectorAll('.issue-checkbox');
+                let hasVisibleIssue = false;
+                issueChecks.forEach(el => {
+                    if (el.dataset.vehicleId === selectedVehicleId) {
+                        el.style.display = '';
+                        hasVisibleIssue = true;
+                    } else {
+                        el.style.display = 'none';
+                        el.querySelector('input').checked = false;
+                    }
+                });
 
                 if (!selectedVehicleId) {
                     issueSection.style.display = 'none';
                     noIssueCta.style.display = 'none';
-                    issueSelect.disabled = true;
-                    issueSelect.value = '';
-                    return;
-                }
-
-                const options = issueSelect.querySelectorAll('option');
-                let hasVisibleIssue = false;
-
-                options.forEach((option) => {
-                    if (!option.value) {
-                        option.hidden = false;
-                        return;
-                    }
-
-                    const belongsToVehicle = option.dataset.vehicleId === selectedVehicleId;
-                    option.hidden = !belongsToVehicle;
-
-                    if (!belongsToVehicle && option.selected) {
-                        issueSelect.value = '';
-                    }
-
-                    if (belongsToVehicle) {
-                        hasVisibleIssue = true;
-                    }
-                });
-
-                if (!hasVisibleIssue) {
-                    issueSection.style.display = 'none';
+                    noIssueMsg.classList.add('d-none');
+                } else if (!hasVisibleIssue) {
+                    issueSection.style.display = '';
                     noIssueCta.style.display = '';
-                    issueSelect.disabled = true;
-                    issueSelect.value = '';
+                    noIssueMsg.classList.remove('d-none');
                     createIssueLink.href =
                         `{{ route('admin.issues.create') }}?vehicle_id=${selectedVehicleId}&back={{ urlencode(url()->full()) }}`;
                 } else {
                     issueSection.style.display = '';
                     noIssueCta.style.display = 'none';
-                    issueSelect.disabled = false;
+                    noIssueMsg.classList.add('d-none');
+                }
+
+                // Filtra scadenze
+                const deadlineChecks = document.querySelectorAll('.deadline-checkbox');
+                let hasVisibleDeadline = false;
+                deadlineChecks.forEach(el => {
+                    if (el.dataset.vehicleId === selectedVehicleId) {
+                        el.style.display = '';
+                        hasVisibleDeadline = true;
+                    } else {
+                        el.style.display = 'none';
+                        el.querySelector('input').checked = false;
+                    }
+                });
+
+                if (!selectedVehicleId) {
+                    deadlineSection.style.display = 'none';
+                    noDeadlineMsg.classList.add('d-none');
+                } else if (!hasVisibleDeadline) {
+                    deadlineSection.style.display = '';
+                    noDeadlineMsg.classList.remove('d-none');
+                } else {
+                    deadlineSection.style.display = '';
+                    noDeadlineMsg.classList.add('d-none');
                 }
             };
 
-            filterIssuesByVehicle();
-            vehicleSelect.addEventListener('change', filterIssuesByVehicle);
-
+            filterByVehicle();
+            vehicleSelect.addEventListener('change', filterByVehicle);
         });
     </script>
 @endsection

@@ -291,7 +291,8 @@
                 @foreach ($data['upcomingAppointments'] as $appointment)
                     <div class="section-item">
                         <div>
-                            <div class="label">{{ $appointment->issue?->description ?? $appointment->activity_type }}
+                            <div class="label">
+                                {{ $appointment->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? $appointment->activity_type }}
                             </div>
                             <div class="meta">{{ $appointment->vehicle->internal_code }} @
                                 {{ $appointment->provider->name }}</div>

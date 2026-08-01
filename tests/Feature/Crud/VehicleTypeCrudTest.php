@@ -14,7 +14,7 @@ class VehicleTypeCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createVehicleType(): VehicleType
@@ -81,9 +81,9 @@ class VehicleTypeCrudTest extends TestCase
             'regular_inspection_months' => 12,
         ]);
 
-         $vehicleType = VehicleType::first();
+        $vehicleType = VehicleType::first();
 
-        $response->assertRedirect(route('admin.vehicle-types.show',$vehicleType));
+        $response->assertRedirect(route('admin.vehicle-types.show', $vehicleType));
 
         $this->assertDatabaseHas('vehicle_types', [
             'name' => 'Ambulanza',
@@ -166,11 +166,11 @@ class VehicleTypeCrudTest extends TestCase
 
         // Forza il ritorno alla form di modifica in caso di errore.
         $response = $this->from(route('admin.vehicle-types.edit', $vehicleType))->actingAs($user)->put(route('admin.vehicle-types.update', $vehicleType), [
-                'name' => $vehicleTypeBase->name,
-                'needs_oxygen_check' => true,
-                'first_inspection_months' => 12,
-                'regular_inspection_months' => 12,
-            ]);
+            'name' => $vehicleTypeBase->name,
+            'needs_oxygen_check' => true,
+            'first_inspection_months' => 12,
+            'regular_inspection_months' => 12,
+        ]);
 
         // Verifica che l'update con nome duplicato venga bloccato.
         $response->assertSessionHasErrors(['name']);

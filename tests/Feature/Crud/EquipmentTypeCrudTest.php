@@ -14,7 +14,7 @@ class EquipmentTypeCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createEquipmentType(): EquipmentType
@@ -159,10 +159,10 @@ class EquipmentTypeCrudTest extends TestCase
 
         // Forza il ritorno alla form di modifica in caso di errore.
         $response = $this->from(route('admin.equipment-types.edit', $equipmentType))->actingAs($user)->put(route('admin.equipment-types.update', $equipmentType), [
-                'name' => $equipmentTypeBase->name,
-                'first_inspection_months' => 12,
-                'regular_inspection_months' => 12,
-            ]);
+            'name' => $equipmentTypeBase->name,
+            'first_inspection_months' => 12,
+            'regular_inspection_months' => 12,
+        ]);
 
         // Verifica che l'update con nome duplicato venga bloccato.
         $response->assertSessionHasErrors(['name']);

@@ -175,17 +175,17 @@ Non c'è export in Excel/PDF per nessuna entità.
 Non si sa chi ha creato/modificato/cancellato cosa.
 **Soluzione:** Installato `spatie/laravel-activitylog`. Aggiunto trait `LogsActivity` a Vehicle, Issue, MaintenanceRecord, Deadline, Equipment. Logging automatico con `$logOnlyDirty = true`.
 
-### F5. ❌ **Collegamento manutenzione ↔ scadenza non esposto in UI**
+### F5. ✅ **Collegamento manutenzione ↔ guasti/scadenze via polimorfico** ✅ FIXATO
 
-Il campo `deadline_id` esiste in `maintenance_records` ma non è presente nei form di creazione/modifica. Quando si completa una manutenzione, la scadenza viene aggiornata solo se già collegata (tramite `complete()`), ma non c'è modo di collegarle manualmente.
+Il campo `issue_id` e `deadline_id` in `maintenance_records` sono stati sostituiti da una tabella pivot polimorfica `maintenance_record_items` (morph `itemable`: Issue o Deadline). Un appuntamento può ora collegare N guasti + N scadenze. Le view create/edit hanno checkbox multipli filtrati per veicolo. Lo stato dei guasti viene aggiornato automaticamente: `open` → `in_progress` alla creazione, `in_progress` → `open` alla rimozione.
 
 ### F6. ❌ **Nessun alert per equipaggiamento in scadenza**
 
 Gli equipaggiamenti hanno `expiration_date` ma non c'è alcun sistema che avvisi quando si avvicina la scadenza.
 
-### F7. ⚠️ **Test minimi**
+### F7. ✅ **Test implementati** ✅ FIXATO
 
-Ci sono test Unit (`DeadlineBusinessLogicTest`, `VehicleBusinessLogicTest`) e Feature (CRUD), ma la copertura è bassa. Manca la logica di `complete()`, `syncStatusFromRules()`, `VehicleObserver`.
+118 test passati (244 assertions) che coprono: CRUD completo di tutte le entità, validazione (Vehicle, Deadline), Observer (VehicleObserver), business logic (transizioni di stato manutenzioni, complete(), rinnovo scadenze), autorizzazione (non-admin bloccato su POST/PUT/DELETE, può vedere le view), e duplicate detection. Sono coperti anche: trait `SortableAndGroupable`, `DetectsDuplicates`, `AdminOnlyAccess` e `HasRoleBasedAccess`.
 
 ### F8. ⚠️ **Nessuna gestione utenti/ruoli**
 
@@ -203,14 +203,14 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 
 ## 🎯 Priorità Suggerite
 
-| Priorità                     | Cosa        | Perché                                          |
-| ---------------------------- | ----------- | ----------------------------------------------- |
-| ✅ **Tutti i Bug**           | **B1-B6**   | ✅ **Risolti**                                  |
-| ✅ **Tutte le Duplicazioni** | **D1-D4**   | ✅ **Risolte**                                  |
-| ✅ **Performance**           | **M1-M2**   | ✅ **Ordinamento DB + Paginazione**             |
-| ✅ **Migliorie**             | **M3-M9**   | ✅ **Validazioni, SoftDeletes, Auth, Tema**     |
+| Priorità                     | Cosa               | Perché                                            |
+| ---------------------------- | ------------------ | ------------------------------------------------- |
+| ✅ **Tutti i Bug**           | **B1-B6**          | ✅ **Risolti**                                    |
+| ✅ **Tutte le Duplicazioni** | **D1-D4**          | ✅ **Risolte**                                    |
+| ✅ **Performance**           | **M1-M2**          | ✅ **Ordinamento DB + Paginazione**               |
+| ✅ **Migliorie**             | **M3-M9**          | ✅ **Validazioni, SoftDeletes, Auth, Tema**       |
 | ✅ **Feature**               | **F1, F2, F3, F4** | ✅ **Dashboard + Notifiche + Export PDF + Audit** |
-| 🔵 **Basso**                 | F5-F10 | Link manut.-scadenza, alert, test, ricerca, ecc.  |
+| 🔵 **Basso**                 | F6, F8-F10         | Alert equipaggiamento, utenti, ricerca, km        |
 
 ---
 

@@ -17,7 +17,7 @@ class DeadlineCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createVehicle(): Vehicle
@@ -159,9 +159,7 @@ class DeadlineCrudTest extends TestCase
         $response = $this->actingAs($user)->delete(route('admin.deadlines.destroy', $deadline));
 
         $response->assertRedirect(route('admin.deadlines.index'));
-        $this->assertDatabaseMissing('deadlines', [
-            'id' => $deadline->id,
-        ]);
+        $this->assertSoftDeleted($deadline);
     }
 
     // VALIDAZIONE DEI CAMPI OBBLIGATORI

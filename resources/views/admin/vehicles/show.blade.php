@@ -149,19 +149,21 @@
                                                 {{ $issue->event_date_formatted ?? 'N/A' }}<br>
                                                 <strong>Descrizione:</strong> {{ $issue->description }}<br>
                                             </div>
-                                            @if ($vehicleAppointments->where('issue_id', $issue->id)->where('provider_id', '!=', '')->isNotEmpty())
+                                            @php
+                                                $linkedAppointment = $vehicleAppointments->first(
+                                                    fn($r) => $r->items
+                                                        ->where('itemable_id', $issue->id)
+                                                        ->where('itemable_type', 'App\Models\Issue')
+                                                        ->isNotEmpty() && $r->provider_id,
+                                                );
+                                            @endphp
+                                            @if ($linkedAppointment)
                                                 <div class="col-md-2">
                                                     <h5>Officina</h5>
-                                                    @php
-                                                        $appointment = $vehicleAppointments
-                                                            ->where('issue_id', $issue->id)
-                                                            ->where('provider_id', '!=', '')
-                                                            ->first();
-                                                    @endphp
                                                     <p class="card-text">
-                                                        @if ($appointment?->provider)
+                                                        @if ($linkedAppointment?->provider)
                                                             <a class="text-decoration-none text-reset"
-                                                                href="{{ route('admin.providers.show', ['provider' => $appointment->provider->id, 'back' => url()->full()]) }}">{{ $appointment->provider->name }}</a>
+                                                                href="{{ route('admin.providers.show', ['provider' => $linkedAppointment->provider->id, 'back' => url()->full()]) }}">{{ $linkedAppointment->provider->name }}</a>
                                                         @else
                                                             N/A
                                                         @endif

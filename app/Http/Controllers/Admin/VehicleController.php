@@ -66,7 +66,7 @@ class VehicleController extends Controller
         $vehicle->load(['vehicleType', 'brand', 'carModel', 'equipment.equipmentType', 'issues', 'deadlines', 'mileageLogs']);
 
         $vehicleAppointments = $vehicle->maintenanceRecords()
-            ->with('issue', 'provider')
+            ->with('items.itemable', 'provider')
             ->orderByDesc('appointment_date')
             ->get();
 

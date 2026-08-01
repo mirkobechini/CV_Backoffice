@@ -36,7 +36,7 @@ class SendSummaryReport extends Command
             ->where('due_date', '<=', Carbon::today()->addDays(30))
             ->orderBy('due_date')
             ->get();
-        $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider')->whereNull('return_date')->where('appointment_date', '>=', today())->orderBy('appointment_date')->take(5)->get();
+        $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')->whereNull('return_date')->where('appointment_date', '>=', today())->orderBy('appointment_date')->take(5)->get();
         $incompleteVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
             ->get()
             ->filter(fn($v) => !$v->hasAllRequiredEquipment());

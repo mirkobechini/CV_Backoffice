@@ -13,12 +13,12 @@ use Tests\TestCase;
 
 class DeadlineValidationTest extends TestCase
 {
-    
+
     use RefreshDatabase;
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createVehicle(): Vehicle
@@ -91,7 +91,7 @@ class DeadlineValidationTest extends TestCase
             'due_date' => "02-2025-01",
         ]);
         $response->assertSessionHasErrors(['due_date']);
-        
+
         $this->assertDatabaseCount('deadlines', $actualDeadlineCount);
     }
 

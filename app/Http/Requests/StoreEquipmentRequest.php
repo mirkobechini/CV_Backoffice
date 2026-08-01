@@ -21,7 +21,7 @@ class StoreEquipmentRequest extends FormRequest
         return [
             'vehicle_id' => 'nullable|exists:vehicles,id',
             'name' => 'required|string|max:255',
-            'serial_number' => 'unique:equipments,serial_number|nullable|string|max:255',
+            'serial_number' => 'unique:equipment,serial_number|nullable|string|max:255',
             'revision_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after_or_equal:revision_date',
             'equipment_type_id' => 'required|exists:equipment_types,id',
@@ -46,7 +46,7 @@ class StoreEquipmentRequest extends FormRequest
         ];
     }
 
-    public function withValidator(Validator $validator):void
+    public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
             $expirationDate = $this->input('expiration_date');

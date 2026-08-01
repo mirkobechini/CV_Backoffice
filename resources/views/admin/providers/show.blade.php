@@ -41,7 +41,7 @@
                         <li class="list-group-item d-flex gap-3">
                             <p class="m-0">
                                 {{ $record->vehicle?->internal_code ?? 'N/A' }} -
-                                {{ $record->issue?->description ?? ($record->activity_type ?? 'N/A') }}
+                                {{ $record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? ($record->activity_type ?? 'N/A') }}
                                 ({{ $record->appointment_date_formatted ?? 'N/A' }})
                             </p>
                             <a href="{{ route('admin.maintenance-records.show', ['maintenanceRecord' => $record->id, 'back' => url()->full()]) }}"

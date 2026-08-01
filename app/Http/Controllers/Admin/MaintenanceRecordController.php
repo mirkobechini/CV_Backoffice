@@ -35,16 +35,16 @@ class MaintenanceRecordController extends Controller
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
 
-        $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'issue']), $sortBy, $sortDir, [
+        $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']), $sortBy, $sortDir, [
             'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn(MaintenanceRecord $r) => $r->issue?->description ?? ($r->activity_type ?? ''),
+            'description' => fn(MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
         $groupedMaintenanceRecords = $this->applyGrouping($maintenanceRecords, $groupBy, function (MaintenanceRecord $record) use ($groupBy) {
             return match ($groupBy) {
                 'vehicle' => $record->vehicle?->internal_code ?? 'N/A',
-                'description' => $record->issue?->description ?? ($record->activity_type ?? 'N/A'),
+                'description' => $record->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($record->activity_type ?? 'N/A'),
                 'date' => $record->appointment_date
                     ? ucfirst($record->appointment_date->locale('it')->translatedFormat('F Y'))
                     : 'N/A',
@@ -52,9 +52,9 @@ class MaintenanceRecordController extends Controller
         });
 
         return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords') + [
-            'groupToggleUrl' => fn($f)=> $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
-            'sortToggleUrl' => fn($f)=> $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
-            'sortIcon' => fn($f)=> $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -100,11 +100,20 @@ class MaintenanceRecordController extends Controller
 
         $vehicles = Vehicle::all();
         $providers = Provider::all();
-        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])->get(['id', 'vehicle_id', 'description']);
+        $openIssues = Issue::whereIn('status', ['open'])->get(['id', 'vehicle_id', 'description']);
+
+        // Una sola deadline per tipo per veicolo: prendiamo l'ultima non rinnovata
+        $pendingDeadlines = Deadline::whereIn('status', ['pending', 'expired', 'valid'])
+            ->orderByDesc('due_date')
+            ->get()
+            ->unique(function ($item) {
+                return $item->vehicle_id . '-' . $item->type;
+            })
+            ->values();
 
         // La view usa old(..., $preselected...) così old() ha priorità
         // dopo un errore validazione, altrimenti usa le preselezioni.
-        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'preselectedIssueId', 'preselectedVehicleId'));
+        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'pendingDeadlines', 'preselectedIssueId', 'preselectedVehicleId'));
     }
 
     /**
@@ -114,19 +123,8 @@ class MaintenanceRecordController extends Controller
     {
         $data = $request->validated();
 
-        $issueBelongsToVehicle = Issue::where('id', $data['issue_id'])
-            ->where('vehicle_id', $data['vehicle_id'])
-            ->exists();
-
-        if (!$issueBelongsToVehicle) {
-            return back()
-                ->withErrors(['issue_id' => 'Il guasto selezionato non appartiene al veicolo scelto.'])
-                ->withInput();
-        }
-
         $duplicateRecord = $this->findDuplicate(MaintenanceRecord::class, [
             'vehicle_id' => $data['vehicle_id'],
-            'issue_id' => $data['issue_id'],
             'provider_id' => $data['provider_id'],
             'appointment_date' => $data['appointment_date'],
             'return_date' => $data['return_date'] ?? null,
@@ -141,12 +139,30 @@ class MaintenanceRecordController extends Controller
 
         $newRecord = MaintenanceRecord::create([
             'vehicle_id' => $data['vehicle_id'],
-            'issue_id' => $data['issue_id'],
             'provider_id' => $data['provider_id'],
             'appointment_date' => $data['appointment_date'],
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
         ]);
+
+        if (!empty($data['issue_ids'])) {
+            foreach ($data['issue_ids'] as $issueId) {
+                $newRecord->items()->create([
+                    'itemable_id' => $issueId,
+                    'itemable_type' => Issue::class,
+                ]);
+                // Il guasto passa automaticamente in lavorazione
+                Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
+            }
+        }
+        if (!empty($data['deadline_ids'])) {
+            foreach ($data['deadline_ids'] as $deadlineId) {
+                $newRecord->items()->create([
+                    'itemable_id' => $deadlineId,
+                    'itemable_type' => Deadline::class,
+                ]);
+            }
+        }
 
         return redirect()->route('admin.maintenance-records.show', $newRecord->id)->with('status', 'Intervento aggiunto con successo.');
     }
@@ -156,7 +172,7 @@ class MaintenanceRecordController extends Controller
      */
     public function show(MaintenanceRecord $maintenanceRecord)
     {
-        $maintenanceRecord->load(['vehicle', 'provider', 'issue']);
+        $maintenanceRecord->load(['vehicle', 'provider', 'items.itemable']);
         return view('admin.maintenance-records.show', compact('maintenanceRecord'));
     }
 
@@ -165,16 +181,32 @@ class MaintenanceRecordController extends Controller
      */
     public function edit(MaintenanceRecord $maintenanceRecord)
     {
-        $maintenanceRecord->load(['vehicle', 'provider', 'issue']);
+        $maintenanceRecord->load(['vehicle', 'provider', 'items.itemable']);
 
         $vehicles = Vehicle::all();
         $providers = Provider::all();
-        // In edit rendiamo selezionabili i guasti attivi + quello già collegato al record.
-        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])
-            ->orWhere('id', $maintenanceRecord->issue_id)
+        // In edit rendiamo selezionabili i guasti attivi + quelli già collegati al record.
+        $linkedIssueIds = $maintenanceRecord->items
+            ->where('itemable_type', Issue::class)
+            ->pluck('itemable_id');
+        $openIssues = Issue::whereIn('status', ['open'])
+            ->orWhereIn('id', $linkedIssueIds)
             ->get(['id', 'vehicle_id', 'description', 'status']);
 
-        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues'));
+        $linkedDeadlineIds = $maintenanceRecord->items
+            ->where('itemable_type', Deadline::class)
+            ->pluck('itemable_id');
+        $pendingDeadlines = Deadline::whereIn('status', ['pending', 'expired', 'valid'])
+            ->orWhereIn('id', $linkedDeadlineIds)
+            ->orderByDesc('due_date')
+            ->get(['id', 'vehicle_id', 'type', 'due_date'])
+            // Una sola per veicolo+tipo (mantenendo quelle già collegate)
+            ->unique(function ($item) {
+                return $item->vehicle_id . '-' . $item->type;
+            })
+            ->values();
+
+        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues', 'pendingDeadlines'));
     }
     /**
      * Update the specified resource in storage.
@@ -183,32 +215,49 @@ class MaintenanceRecordController extends Controller
     {
         $data = $request->validated();
 
-        $issueBelongsToVehicle = Issue::where('id', $data['issue_id'])
-            ->where('vehicle_id', $data['vehicle_id'])
-            ->exists();
-
-        if (!$issueBelongsToVehicle) {
-            return back()
-                ->withErrors(['issue_id' => 'Il guasto selezionato non appartiene al veicolo scelto.'])
-                ->withInput();
-        }
-
         $maintenanceRecord->update([
             'vehicle_id' => $data['vehicle_id'],
-            'issue_id' => $data['issue_id'],
             'provider_id' => $data['provider_id'],
             'appointment_date' => $data['appointment_date'],
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
         ]);
 
-        if ($maintenanceRecord->issue && array_key_exists('issue_resolved', $data)) {
-            if ((bool) $data['issue_resolved']) {
-                $maintenanceRecord->issue->status = 'closed';
-                $maintenanceRecord->issue->save();
-            } else {
-                $maintenanceRecord->issue->status = 'in_progress';
-                $maintenanceRecord->issue->save();
+        // Sincronizza gli item: cancella e ricrea
+        // Prima di cancellare, registra i guasti attualmente collegati
+        $oldIssueIds = $maintenanceRecord->items()
+            ->where('itemable_type', Issue::class)
+            ->pluck('itemable_id')
+            ->toArray();
+
+        $maintenanceRecord->items()->delete();
+
+        $newIssueIds = [];
+        if (!empty($data['issue_ids'])) {
+            foreach ($data['issue_ids'] as $issueId) {
+                $maintenanceRecord->items()->create([
+                    'itemable_id' => $issueId,
+                    'itemable_type' => Issue::class,
+                ]);
+                // Il guasto nuovo passa in lavorazione
+                Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
+            }
+            $newIssueIds = $data['issue_ids'];
+        }
+
+        // I guasti rimossi tornano in open
+        $removedIssueIds = array_diff($oldIssueIds, $newIssueIds);
+        if (!empty($removedIssueIds)) {
+            Issue::whereIn('id', $removedIssueIds)
+                ->where('status', 'in_progress')
+                ->update(['status' => 'open']);
+        }
+        if (!empty($data['deadline_ids'])) {
+            foreach ($data['deadline_ids'] as $deadlineId) {
+                $maintenanceRecord->items()->create([
+                    'itemable_id' => $deadlineId,
+                    'itemable_type' => Deadline::class,
+                ]);
             }
         }
 
@@ -219,7 +268,22 @@ class MaintenanceRecordController extends Controller
      */
     public function destroy(MaintenanceRecord $maintenanceRecord)
     {
+        $maintenanceRecord->loadMissing('items.itemable');
+
+        // I guasti in lavorazione tornano in open
+        $issueIds = $maintenanceRecord->items
+            ->where('itemable_type', Issue::class)
+            ->pluck('itemable_id');
+        if ($issueIds->isNotEmpty()) {
+            Issue::whereIn('id', $issueIds)
+                ->where('status', 'in_progress')
+                ->update(['status' => 'open']);
+        }
+
+        // Elimina gli item della pivot prima del soft-delete
+        $maintenanceRecord->items()->delete();
         $maintenanceRecord->delete();
+
         return redirect()->route('admin.maintenance-records.index')->with('status', 'Intervento eliminato con successo.');
     }
 
@@ -237,55 +301,62 @@ class MaintenanceRecordController extends Controller
             ]
         );
 
-        $maintenanceRecord->loadMissing(['issue', 'deadline', 'vehicle.vehicleType']);
+        $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
+
+        $issues = $maintenanceRecord->items->where('itemable_type', Issue::class);
+        $deadlines = $maintenanceRecord->items->where('itemable_type', Deadline::class);
 
         // Transazione unica: aggiornamento intervento/guasto/scadenza deve essere atomico.
-        DB::transaction(function () use ($maintenanceRecord, $data) {
+        DB::transaction(function () use ($maintenanceRecord, $data, $issues, $deadlines) {
             // 1) complete maintenance
             $maintenanceRecord->return_date = Carbon::today();
             $maintenanceRecord->save();
 
-            // 2) update issue
-            if ($maintenanceRecord->issue) {
-                if ((bool) $data['issue_resolved']) {
-                    $maintenanceRecord->issue->status = 'closed';
-                    $maintenanceRecord->issue->save();
-                } else {
-                    $maintenanceRecord->issue->status = 'in_progress';
-                    $maintenanceRecord->issue->save();
+            // 2) update issues
+            foreach ($issues as $item) {
+                $issue = $item->itemable;
+                if ($issue) {
+                    if ((bool) $data['issue_resolved']) {
+                        $issue->status = 'closed';
+                        $issue->save();
+                    } else {
+                        $issue->status = 'in_progress';
+                        $issue->save();
+                    }
                 }
             }
 
-            // 3) update current deadline + create next one
-            if ($maintenanceRecord->deadline && in_array($maintenanceRecord->deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true)) {
+            // 3) update deadlines + create next ones
+            foreach ($deadlines as $item) {
+                $deadline = $item->itemable;
+                if (!$deadline || !in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true)) {
+                    continue;
+                }
 
                 if ((bool) $data['issue_resolved']) {
-                    $maintenanceRecord->deadline->status = 'renewed';
-                    $maintenanceRecord->deadline->save();
+                    $deadline->status = 'renewed';
+                    $deadline->save();
                     $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
                     $nextDueDate = null;
-                    if ($maintenanceRecord->deadline->type === Deadline::TYPE_MINISTERIAL && $maintenanceRecord->vehicle->vehicleType->regular_inspection_months > 0) {
+                    if ($deadline->type === Deadline::TYPE_MINISTERIAL && $maintenanceRecord->vehicle->vehicleType->regular_inspection_months > 0) {
                         $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType->regular_inspection_months;
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
-                    } elseif ($maintenanceRecord->deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
+                    } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
                     }
                     if ($nextDueDate) {
-                        // Evita duplicati della stessa scadenza (stesso mezzo, tipo, data).
                         Deadline::firstOrCreate(
                             [
                                 'vehicle_id' => $maintenanceRecord->vehicle_id,
-                                'type' => $maintenanceRecord->deadline->type,
+                                'type' => $deadline->type,
                                 'due_date' => $nextDueDate->toDateString(),
                             ],
-                            [
-                                'status' => 'pending',
-                            ]
+                            ['status' => 'pending',]
                         );
                     }
                 } else {
-                    $maintenanceRecord->deadline->status = 'pending';
-                    $maintenanceRecord->deadline->save();
+                    $deadline->status = 'pending';
+                    $deadline->save();
                 }
             }
         });

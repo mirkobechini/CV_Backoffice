@@ -18,7 +18,7 @@ class VehicleCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create();
+        return User::factory()->create(['role' => 'admin']);
     }
 
     private function createVehicleDependencies(): array
@@ -178,9 +178,7 @@ class VehicleCrudTest extends TestCase
         $response = $this->actingAs($user)->delete(route('admin.vehicles.destroy', $vehicle));
 
         $response->assertRedirect(route('admin.vehicles.index'));
-        $this->assertDatabaseMissing('vehicles', [
-            'id' => $vehicle->id,
-        ]);
+        $this->assertSoftDeleted($vehicle);
     }
 
     // VALIDAZIONE UNICITÀ
@@ -237,15 +235,15 @@ class VehicleCrudTest extends TestCase
 
         // Forza il ritorno alla form di modifica in caso di errore.
         $response = $this->from(route('admin.vehicles.edit', $vehicle))->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
-                'license_plate' => $vehicleBase->license_plate,
-                'vehicle_type_id' => $vehicleType->id,
-                'internal_code' => '1234',
-                'brand_id' => $brand->id,
-                'car_model_id' => $carModel->id,
-                'fuel_type' => 'diesel',
-                'immatricolation_date' => '2024-01-01',
-                'has_warranty_extension' => 0,
-            ]);
+            'license_plate' => $vehicleBase->license_plate,
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => '1234',
+            'brand_id' => $brand->id,
+            'car_model_id' => $carModel->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+        ]);
 
         // Verifica che l'update con targa duplicata venga bloccato.
         $response->assertSessionHasErrors(['license_plate']);

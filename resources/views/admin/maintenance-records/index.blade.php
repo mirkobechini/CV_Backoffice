@@ -60,10 +60,13 @@
                 @foreach ($groupRecords as $record)
                     <tr>
                         <td>{{ $record->vehicle->internal_code }}</td>
-                        <td>{{ $record->issue?->description ?? ($record->activity_type ?? 'N/A') }}</td>
+                        <td>{{ $record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? ($record->activity_type ?? 'N/A') }}
+                        </td>
                         <td>{{ $record->appointment_date_formatted ?? 'N/A' }}</td>
                         <x-admin.row-actions :showUrl="route('admin.maintenance-records.show', $record->id)" :editUrl="route('admin.maintenance-records.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' .
-                            ($record->issue?->description ?? ($record->activity_type ?? $record->id))" />
+                            ($record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable
+                                ?->description ??
+                                ($record->activity_type ?? $record->id))" />
                     </tr>
                     <x-admin.delete-modal type="maintenanceRecord" :object="$record" />
                 @endforeach

@@ -195,7 +195,7 @@
                                 @foreach ($upcomingAppointments as $appointment)
                                     <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>{{ $appointment->issue?->description ?? $appointment->activity_type }}</strong><br>
+                                            <strong>{{ $appointment->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? $appointment->activity_type }}</strong><br>
                                             <small class="text-muted">{{ $appointment->vehicle->internal_code }} @
                                                 {{ $appointment->provider?->name }}</small>
                                         </div>
@@ -230,7 +230,7 @@
                             </div>
                             <div class="progress mt-1" style="height: 8px;">
                                 <div class="progress-bar bg-success"
-                                    style="width: {{ (($totalVehicles - $incompleteVehicles->count()) / $totalVehicles) * 100 }}%">
+                                    style="width: {{ $totalVehicles > 0 ? (($totalVehicles - $incompleteVehicles->count()) / $totalVehicles) * 100 : 0 }}%">
                                 </div>
                             </div>
                             <small class="text-muted">completi</small>

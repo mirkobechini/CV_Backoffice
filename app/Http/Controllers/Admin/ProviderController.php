@@ -64,6 +64,8 @@ class ProviderController extends Controller
      */
     public function show(Provider $provider)
     {
+        $provider->load('maintenanceRecords.items.itemable', 'maintenanceRecords.vehicle');
+
         return view('admin.providers.show', compact('provider'));
     }
 

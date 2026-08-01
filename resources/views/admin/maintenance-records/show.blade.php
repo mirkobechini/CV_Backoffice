@@ -11,7 +11,7 @@
             <div class="col-12">
                 <div class="card my-4">
                     <div class="card-header">
-                        <h1>{{ $maintenanceRecord->issue?->description ?? ($maintenanceRecord->activity_type ?? 'Intervento') }}
+                        <h1>{{ $maintenanceRecord->items->where('itemable_type', 'App\\Models\\Issue')->first()?->itemable?->description ?? ($maintenanceRecord->activity_type ?? 'Intervento') }}
                         </h1>
                     </div>
                     <div class="card-body">
@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="col-12">
-                @if ($maintenanceRecord->issue?->status !== 'closed')
+                @if ($maintenanceRecord->items->where('itemable_type', 'App\\Models\\Issue')->first()?->itemable?->status !== 'closed')
                     <x-admin.complete-maintenance-modal :maintenanceRecord="$maintenanceRecord" />
                 @endif
                 @if ($maintenanceRecord?->getKey())
