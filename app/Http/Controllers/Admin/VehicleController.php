@@ -9,6 +9,7 @@ use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class VehicleController extends Controller
@@ -16,7 +17,7 @@ class VehicleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
 
         $vehicles = Vehicle::query()
@@ -25,6 +26,7 @@ class VehicleController extends Controller
                 'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
                 'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
             ])
+            ->search($request->get('q'))
             ->paginate(20);
 
         return view('admin.vehicles.index', compact('vehicles'));

@@ -5,11 +5,12 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\Searchable;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Deadline extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use SoftDeletes, LogsActivity, Searchable;
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
@@ -39,6 +40,8 @@ class Deadline extends Model
         'due_date' => 'date',
         'is_renewed' => 'boolean',
     ];
+
+    protected $searchable = ['type', 'status'];
 
 
     public function maintenanceRecordItems()

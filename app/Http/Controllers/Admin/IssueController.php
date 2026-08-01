@@ -32,11 +32,16 @@ class IssueController extends Controller
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
 
-        $issues = $this->applySorting(Issue::with('vehicle'), $sortBy, $sortDir, [
-            'vehicle' => fn(Issue $i) => $i->vehicle?->internal_code ?? '',
-            'status' => 'status',
-            'date' => 'event_date',
-        ]);
+        $issues = $this->applySorting(
+            Issue::with('vehicle')->search($request->get('q')),
+            $sortBy,
+            $sortDir,
+            [
+                'vehicle' => fn(Issue $i) => $i->vehicle?->internal_code ?? '',
+                'status' => 'status',
+                'date' => 'event_date',
+            ]
+        );
 
         $groupedIssues = $this->applyGrouping($issues, $groupBy, function (Issue $issue) use ($groupBy) {
             return match ($groupBy) {
@@ -54,9 +59,9 @@ class IssueController extends Controller
         });
 
         return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues') + [
-            'groupToggleUrl' => fn($f)=> $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
-            'sortToggleUrl' => fn($f)=> $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
-            'sortIcon' => fn($f)=> $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 

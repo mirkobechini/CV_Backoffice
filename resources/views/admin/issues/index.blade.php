@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-    <x-admin.index-table title="Guasti">
+    <x-admin.index-table title="Guasti" :searchRoute="route('admin.issues.index')">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.issues.create')" label="guasto" />
         </x-slot:headingActions>
@@ -60,7 +60,8 @@
                         <td>{{ $issue->vehicle->internal_code }}</td>
                         <td>{{ $issue->description }}</td>
                         <td>
-                            <span class="badge bg-{{ match ($issue->status_color) { 'red' => 'danger', 'yellow' => 'warning text-dark', 'green' => 'success', default => 'secondary' } }}">{{ $issue->status_label }}</span>
+                            <span
+                                class="badge bg-{{ match ($issue->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $issue->status_label }}</span>
                         </td>
                         <td>{{ $issue->event_date_formatted }}</td>
                         <x-admin.row-actions :showUrl="route('admin.issues.show', $issue->id)" :editUrl="route('admin.issues.edit', $issue->id)" :deleteTarget="'#confirmDeleteModal-' . $issue->id" :label="'guasto ' . $issue->description" />

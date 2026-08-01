@@ -31,7 +31,7 @@ class DeadlineController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
         $latestRevisionOnly = ($validated['latest_revision_only'] ?? '0') === '1';
 
-        $deadlines = Deadline::with('vehicle')->get();
+        $deadlines = Deadline::with('vehicle')->search($request->get('q'))->get();
         $deadlines->each->syncStatusFromRules();
 
         if ($latestRevisionOnly) {
@@ -68,9 +68,9 @@ class DeadlineController extends Controller
         });
 
         return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly') + [
-            'groupToggleUrl' => fn($f)=> $this->groupToggleUrl($f, $groupBy, 'admin.deadlines.index'),
-            'sortToggleUrl' => fn($f)=> $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
-            'sortIcon' => fn($f)=> $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.deadlines.index'),
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 

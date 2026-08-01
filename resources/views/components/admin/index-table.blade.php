@@ -1,4 +1,10 @@
-@props(['title', 'tableClass' => 'table table-striped table-hover my-0', 'paginator' => null])
+@props([
+    'title',
+    'tableClass' => 'table table-striped table-hover my-0',
+    'paginator' => null,
+    'searchRoute' => null,
+    'searchPlaceholder' => 'Cerca...',
+])
 
 <div class="container py-4">
     <div class="d-flex align-items-center mb-4">
@@ -6,6 +12,23 @@
         @isset($headingActions)
             <div class="ms-3 pt-2">{{ $headingActions }}</div>
         @endisset
+        @if ($searchRoute)
+            <div class="ms-auto">
+                <form action="{{ $searchRoute }}" method="GET" class="d-flex gap-2" id="search-form">
+                    @foreach (request()->except('q', 'page') as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <div class="input-group input-group-sm">
+                        <input type="text" name="q" class="form-control" placeholder="{{ $searchPlaceholder }}"
+                            value="{{ request('q') }}" style="min-width: 220px;">
+                        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
+                        @if (request('q'))
+                            <a href="{{ $searchRoute }}" class="btn btn-outline-danger"><i class="bi bi-x-lg"></i></a>
+                        @endif
+                    </div>
+                </form>
+            </div>
+        @endif
     </div>
 
     <div class="card my-0">

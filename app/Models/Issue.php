@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Concerns\Searchable;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Issue extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use SoftDeletes, LogsActivity, Searchable;
 
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
@@ -27,6 +28,8 @@ class Issue extends Model
     protected $casts = [
         'event_date' => 'date',
     ];
+
+    protected $searchable = ['description', 'status'];
 
     public function getEventDateFormattedAttribute(): ?string
     {

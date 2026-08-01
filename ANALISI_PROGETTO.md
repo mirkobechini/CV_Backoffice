@@ -1,6 +1,6 @@
 # 📋 Analisi Progetto: CV Backoffice
 
-> **Data analisi:** 2026-07-28
+> **Data analisi:** 2026-08-01
 > **Progetto:** Laravel 11 + Livewire 4 — Gestione flotta mezzi pubblica assistenza
 > **Stato:** Sviluppo attivo
 
@@ -186,15 +186,16 @@ Gli equipaggiamenti hanno `expiration_date` ma non c'era alcun sistema che avvis
 
 ### F7. ✅ **Test implementati** ✅ FIXATO
 
-118 test passati (244 assertions) che coprono: CRUD completo di tutte le entità, validazione (Vehicle, Deadline), Observer (VehicleObserver), business logic (transizioni di stato manutenzioni, complete(), rinnovo scadenze), autorizzazione (non-admin bloccato su POST/PUT/DELETE, può vedere le view), duplicate detection (maintenance, issue, provider), e trait `SortableAndGroupable`, `DetectsDuplicates`, `AdminOnlyAccess` e `HasRoleBasedAccess`.
+**136 test passati (282 assertions)** che coprono: CRUD completo di tutte le entità, validazione (Vehicle, Deadline), Observer (VehicleObserver), business logic (transizioni di stato manutenzioni, complete(), rinnovo scadenze), autorizzazione (non-admin bloccato su POST/PUT/DELETE, può vedere le view), duplicate detection (maintenance, issue, provider), e trait `SortableAndGroupable`, `DetectsDuplicates`, `AdminOnlyAccess` e `HasRoleBasedAccess`.
 
-### F8. ⚠️ **Nessuna gestione utenti/ruoli**
+### F8. ❌ **Nessuna gestione utenti/ruoli** (deferita)
 
 Solo autenticazione base di Laravel Breeze. Nessun pannello admin per gestire utenti.
 
-### F9. ⚠️ **Nessuna ricerca/filtro nelle liste**
+### F9. ✅ **Ricerca/filtro implementata** ✅ FIXATO
 
-Le index hanno raggruppamento e ordinamento ma non una barra di ricerca testuale.
+Le index non avevano una barra di ricerca testuale.
+**Soluzione:** Creata trait `Searchable` in `app/Models/Concerns/` con metodo `scopeSearch()` che suddivide la query in termini e cerca con `LIKE` sulle colonne dichiarate in `$searchable`. Aggiunta a `Vehicle` (`$searchable = ['internal_code', 'license_plate']`), `Issue` (`$searchable = ['description', 'status']`) e `Deadline` (`$searchable = ['type', 'status']`). I controller `VehicleController`, `IssueController` e `DeadlineController` usano `->search($request->get('q'))` prima di `applySorting()`/`paginate()`. La view `x-admin.index-table` supporta la prop `searchRoute` con form di ricerca e pulsante "Cancella filtro", preservando i parametri query esistenti.
 
 ### F10. ⚠️ **Mileage non integrato nel vehicle show**
 
@@ -204,14 +205,14 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 
 ## 🎯 Priorità Suggerite
 
-| Priorità                     | Cosa               | Perché                                            |
-| ---------------------------- | ------------------ | ------------------------------------------------- |
-| ✅ **Tutti i Bug**           | **B1-B6**          | ✅ **Risolti**                                    |
-| ✅ **Tutte le Duplicazioni** | **D1-D4**          | ✅ **Risolte**                                    |
-| ✅ **Performance**           | **M1-M2**          | ✅ **Ordinamento DB + Paginazione**               |
-| ✅ **Migliorie**             | **M3-M9**          | ✅ **Validazioni, SoftDeletes, Auth, Tema**       |
-| ✅ **Feature**               | **F1, F2, F3, F4** | ✅ **Dashboard + Notifiche + Export PDF + Audit** |
-| 🔵 **Basso**                 | F8, F9, F10        | Utenti, ricerca, km                               |
+| Priorità                     | Cosa                   | Perché                                                      |
+| ---------------------------- | ---------------------- | ----------------------------------------------------------- |
+| ✅ **Tutti i Bug**           | **B1-B6**              | ✅ **Risolti**                                              |
+| ✅ **Tutte le Duplicazioni** | **D1-D4**              | ✅ **Risolte**                                              |
+| ✅ **Performance**           | **M1-M2**              | ✅ **Ordinamento DB + Paginazione**                         |
+| ✅ **Migliorie**             | **M3-M9**              | ✅ **Validazioni, SoftDeletes, Auth, Tema**                 |
+| ✅ **Feature**               | **F1, F2, F3, F4, F9** | ✅ **Dashboard + Notifiche + Export PDF + Audit + Ricerca** |
+| 🔵 **Basso**                 | F8, F10                | Utenti, km                                                  |
 
 ---
 
