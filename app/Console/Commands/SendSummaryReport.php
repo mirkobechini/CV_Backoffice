@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReportMail;
 use App\Models\Deadline;
+use App\Models\Equipment;
 use App\Models\MaintenanceRecord;
 use Carbon\Carbon;
 
@@ -43,6 +44,11 @@ class SendSummaryReport extends Command
         $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')
             ->distinct('vehicle_id')
             ->count('vehicle_id');
+        $expiringEquipment = Equipment::with('vehicle')
+            ->whereNotNull('expiration_date')
+            ->where('expiration_date', '<=', Carbon::today()->addDays(30))
+            ->orderBy('expiration_date')
+            ->get();
 
         $data = [
             'totalVehicles' => $totalVehicles,
@@ -53,6 +59,7 @@ class SendSummaryReport extends Command
             'upcomingAppointments' => $upcomingAppointments,
             'incompleteVehicles' => $incompleteVehicles,
             'vehiclesInMaintenance' => $vehiclesInMaintenance,
+            'expiringEquipment' => $expiringEquipment,
         ];
         Mail::to('test@example.com')->send(new ReportMail($data));
         $this->info('Report inviato con successo!');

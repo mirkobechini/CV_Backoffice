@@ -179,13 +179,14 @@ Non si sa chi ha creato/modificato/cancellato cosa.
 
 Il campo `issue_id` e `deadline_id` in `maintenance_records` sono stati sostituiti da una tabella pivot polimorfica `maintenance_record_items` (morph `itemable`: Issue o Deadline). Un appuntamento può ora collegare N guasti + N scadenze. Le view create/edit hanno checkbox multipli filtrati per veicolo. Lo stato dei guasti viene aggiornato automaticamente: `open` → `in_progress` alla creazione, `in_progress` → `open` alla rimozione.
 
-### F6. ❌ **Nessun alert per equipaggiamento in scadenza**
+### F6. ✅ **Alert equipaggiamento in scadenza integrato** ✅ FIXATO
 
-Gli equipaggiamenti hanno `expiration_date` ma non c'è alcun sistema che avvisi quando si avvicina la scadenza.
+Gli equipaggiamenti hanno `expiration_date` ma non c'era alcun sistema che avvisasse quando si avvicina la scadenza.
+**Soluzione:** Aggiunta query `$expiringEquipment` nel `DashboardController` e `SendSummaryReport` per attrezzature con scadenza nei prossimi 30 giorni. Dashboard mostra stat card dedicata e lista dettagliata con badge rosso (scaduta) / giallo (in scadenza). Report email include sezione "Attrezzature in scadenza" con nome, veicolo e data.
 
 ### F7. ✅ **Test implementati** ✅ FIXATO
 
-118 test passati (244 assertions) che coprono: CRUD completo di tutte le entità, validazione (Vehicle, Deadline), Observer (VehicleObserver), business logic (transizioni di stato manutenzioni, complete(), rinnovo scadenze), autorizzazione (non-admin bloccato su POST/PUT/DELETE, può vedere le view), e duplicate detection. Sono coperti anche: trait `SortableAndGroupable`, `DetectsDuplicates`, `AdminOnlyAccess` e `HasRoleBasedAccess`.
+118 test passati (244 assertions) che coprono: CRUD completo di tutte le entità, validazione (Vehicle, Deadline), Observer (VehicleObserver), business logic (transizioni di stato manutenzioni, complete(), rinnovo scadenze), autorizzazione (non-admin bloccato su POST/PUT/DELETE, può vedere le view), duplicate detection (maintenance, issue, provider), e trait `SortableAndGroupable`, `DetectsDuplicates`, `AdminOnlyAccess` e `HasRoleBasedAccess`.
 
 ### F8. ⚠️ **Nessuna gestione utenti/ruoli**
 
@@ -210,7 +211,7 @@ I chilometraggi sono registrati ma non c'è una sezione "Ultimi chilometraggi" n
 | ✅ **Performance**           | **M1-M2**          | ✅ **Ordinamento DB + Paginazione**               |
 | ✅ **Migliorie**             | **M3-M9**          | ✅ **Validazioni, SoftDeletes, Auth, Tema**       |
 | ✅ **Feature**               | **F1, F2, F3, F4** | ✅ **Dashboard + Notifiche + Export PDF + Audit** |
-| 🔵 **Basso**                 | F6, F8-F10         | Alert equipaggiamento, utenti, ricerca, km        |
+| 🔵 **Basso**                 | F8, F9, F10        | Utenti, ricerca, km                               |
 
 ---
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Issue;
 use App\Models\Deadline;
+use App\Models\Equipment;
 use App\Models\MaintenanceRecord;
 use Illuminate\Http\Request;
 use App\Models\Vehicle;
@@ -43,13 +44,21 @@ class DashboardController extends Controller
             ->get()
             ->filter(fn($v) => !$v->hasAllRequiredEquipment());
 
+        // Attrezzature in scadenza (prossimi 30 giorni) o già scadute
+        $expiringEquipment = Equipment::with('vehicle')
+            ->whereNotNull('expiration_date')
+            ->where('expiration_date', '<=', now()->addDays(30))
+            ->orderBy('expiration_date')
+            ->get();
+
 
         return view('dashboard', compact(
             'totalVehicles',
             'openIssues',
             'upcomingDeadlines',
             'upcomingAppointments',
-            'incompleteVehicles'
+            'incompleteVehicles',
+            'expiringEquipment'
         ));
     }
 

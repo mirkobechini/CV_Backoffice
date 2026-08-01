@@ -307,6 +307,29 @@
             @endif
         </div>
 
+        <!-- ATTREZZATURE IN SCADENZA -->
+        <div class="section">
+            <div class="section-header gray">🔧 Attrezzature in scadenza</div>
+            @if (!empty($data['expiringEquipment']) && $data['expiringEquipment']->isNotEmpty())
+                @foreach ($data['expiringEquipment'] as $equipment)
+                    <div class="section-item">
+                        <div>
+                            <div class="label">{{ $equipment->name }}</div>
+                            <div class="meta">{{ $equipment->vehicle->internal_code }} —
+                                {{ $equipment->expiration_date->format('d/m/Y') }}</div>
+                        </div>
+                        <span class="badge {{ $equipment->expiration_date->isPast() ? 'badge-red' : 'badge-yellow' }}">
+                            {{ $equipment->expiration_date->isPast() ? 'Scaduta' : 'In scadenza' }}
+                        </span>
+                    </div>
+                @endforeach
+            @else
+                <div class="empty-state">
+                    <span>Tutte le attrezzature in regola ✅</span>
+                </div>
+            @endif
+        </div>
+
         <!-- INTERVENTI NECESSARI -->
         <div class="section">
             <div class="section-header gray">⚠️ Interventi necessari</div>

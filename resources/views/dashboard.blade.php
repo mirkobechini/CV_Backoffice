@@ -90,6 +90,17 @@
                     </div>
                 </div>
             </div>
+            <div class="col-6">
+                <div class="card stat-card shadow-sm p-3 h-100">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-tools"></i></div>
+                        <div>
+                            <div class="fs-3 fw-bold">{{ $expiringEquipment->count() }}</div>
+                            <div class="text-muted small">Attrez. in scadenza</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="row row-cols-md-2 g-4">
@@ -243,6 +254,95 @@
                         </div>
                         <a href="{{ route('admin.vehicles.index') }}"
                             class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Dettagli</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-tools me-2 text-info"></i>Attrezzature in scadenza</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @if ($expiringEquipment->isEmpty())
+                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Nessuna attrezzatura in scadenza</strong><br>
+                                        <small class="text-muted">Tutte le attrezzature sono in regola</small>
+                                    </div>
+                                </div>
+                            @else
+                                @foreach ($expiringEquipment as $equipment)
+                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ $equipment->name }}</strong><br>
+                                            <small class="text-muted">{{ $equipment->vehicle->internal_code }} —
+                                                {{ $equipment->equipmentType?->name ?? 'N/A' }}</small>
+                                        </div>
+                                        <span
+                                            class="badge {{ $equipment->expiration_date->isPast() ? 'bg-danger text-light' : 'bg-warning text-dark' }} rounded-pill px-3 py-2">
+                                            {{ $equipment->expiration_date->format('d/m/Y') }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                                <div class="mt-3 text-center">
+                                    <a href="{{ route('admin.equipments.index') }}"
+                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte le
+                                        attrezzature <i class="bi bi-arrow-right ms-1"></i></a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGA AGGIUNTIVA: Attrezzature in scadenza -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-shield-exclamation me-2 text-warning"></i>Attrezzature in
+                            scadenza</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @if ($expiringEquipment->isEmpty())
+                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Nessuna attrezzatura in scadenza</strong><br>
+                                        <small class="text-muted">Tutti gli equipaggiamenti sono in regola</small>
+                                    </div>
+                                </div>
+                            @else
+                                @foreach ($expiringEquipment as $equipment)
+                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ $equipment->name }}</strong>
+                                            @if ($equipment->equipmentType)
+                                                <span
+                                                    class="badge bg-secondary ms-1">{{ $equipment->equipmentType->name }}</span>
+                                            @endif
+                                            <br>
+                                            <small class="text-muted">{{ $equipment->vehicle?->internal_code ?? 'N/A' }} —
+                                                Scadenza: {{ $equipment->expiration_date->format('d/m/Y') }}</small>
+                                        </div>
+                                        <span
+                                            class="badge {{ $equipment->expiration_date->isPast() ? 'bg-danger' : ($equipment->expiration_date->diffInDays(now()) <= 30 ? 'bg-warning text-dark' : 'bg-success') }} rounded-pill px-3 py-2">
+                                            {{ $equipment->expiration_date->isPast() ? 'Scaduta' : ($equipment->expiration_date->diffInDays(now()) <= 30 ? 'In scadenza' : 'Valida') }}
+                                        </span>
+                                    </div>
+                                @endforeach
+                                <div class="mt-3 text-center">
+                                    <a href="{{ route('admin.equipments.index') }}"
+                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte le
+                                        attrezzature
+                                        <i class="bi bi-arrow-right ms-1"></i></a>
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
