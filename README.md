@@ -4,6 +4,7 @@
 > Guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo in un unico pannello.
 
 ![GitHub license](https://img.shields.io/github/license/mirkobechini/CV_Backoffice)
+![CI](https://github.com/mirkobechini/CV_Backoffice/actions/workflows/ci.yml/badge.svg)
 
 ---
 
