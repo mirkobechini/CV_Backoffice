@@ -114,13 +114,66 @@ php artisan test
 
 ---
 
+## 🗄️ Schema del database
+
+```mermaid
+erDiagram
+    %% Veicoli e anagrafica
+    VEHICLES ||--o{ ISSUES : "ha"
+    VEHICLES ||--o{ DEADLINES : "ha"
+    VEHICLES ||--o{ MAINTENANCE_RECORDS : "ha"
+    VEHICLES ||--o{ MILEAGE_LOGS : "ha"
+    VEHICLES ||--o{ EQUIPMENT : "ha"
+    VEHICLES }o--|| BRANDS : "marca"
+    VEHICLES }o--|| CAR_MODELS : "modello"
+    VEHICLES }o--|| VEHICLE_TYPES : "tipo"
+
+    BRANDS ||--o{ CAR_MODELS : "ha"
+
+    EQUIPMENT_TYPES ||--o{ EQUIPMENT : "categorizza"
+    EQUIPMENT_TYPES }o--o{ VEHICLE_TYPES : "richiesto per"
+
+    VEHICLE_TYPE_EQUIPMENT_REQUIREMENTS }o--|| VEHICLE_TYPES : ""
+    VEHICLE_TYPE_EQUIPMENT_REQUIREMENTS }o--|| EQUIPMENT_TYPES : ""
+
+    %% Manutenzione polimorfica
+    MAINTENANCE_RECORDS ||--o{ MAINTENANCE_RECORD_ITEMS : "contiene"
+    MAINTENANCE_RECORD_ITEMS }o--|| ISSUES : "itemable"
+    MAINTENANCE_RECORD_ITEMS }o--|| DEADLINES : "itemable"
+    MAINTENANCE_RECORDS }o--|| PROVIDERS : "fornitore"
+
+    %% Utenti e configurazione
+    USERS |o--o{ NOTIFICATION_SETTINGS : ""
+```
+
+**Legenda entità:**
+
+| Tabella | Descrizione |
+| :------ | :---------- |
+| `vehicles` | Veicoli (targa, codice, marca/modello, garanzia, cinghia) |
+| `brands` | Marche veicoli |
+| `car_models` | Modelli veicoli (FK → brands) |
+| `vehicle_types` | Tipologie mezzo (MSB, MSDA, ecc.) con requisiti equipaggiamento |
+| `issues` | Guasti (descrizione, stato, foto) |
+| `deadlines` | Scadenze (revisione ministeriale, ossigeno, tagliando, cinghia, assicurazione) |
+| `maintenance_records` | Appuntamenti officina |
+| `maintenance_record_items` | Join polimorfico guasti/scadenze ↔ appuntamento |
+| `mileage_logs` | Storico chilometraggi |
+| `providers` | Fornitori (meccanico, carrozziere, gommista, ecc.) |
+| `equipment` | Dotazioni di bordo (estintori, barelle, ecc.) |
+| `equipment_types` | Tipologie di dotazione (con frequenza revisione) |
+| `vehicle_type_equipment_requirements` | Equipaggiamento obbligatorio per tipo mezzo |
+| `notification_settings` | Configurazione report email |
+| `users` | Utenti con ruolo (admin, manager, worker, volunteer) |
+
+---
+
 ## 🗺️ Roadmap
 
 ### 🔜 Prossimi step
 
 - [ ] Notifiche in-app (badge e toast nella navbar)
 - [ ] Gestione utenti e ruoli da backoffice
-- [ ] Fulltext search su volumi elevati
 - [ ] App mobile nativa (via API REST)
 
 ---
@@ -136,11 +189,3 @@ php artisan test
 ## 📄 Licenza
 
 MIT
-
----
-
-## 📧 Contatti
-
-Mirko Bechini - LinkedIn: https://www.linkedin.com/in/mirko-bechini-892202252
-Mail: mirkobechini@gmail.com
-Link progetto: https://github.com/mirkobechini/CV_Backoffice
