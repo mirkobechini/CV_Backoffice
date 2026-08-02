@@ -155,6 +155,8 @@ php artisan test
 |-- bootstrap/
 |-- config/
 |-- database/
+|-- docs/
+|   |-- ADR              # Architecture Decision Records
 |-- public/
 |-- resources/
 |-- routes/
@@ -163,6 +165,19 @@ php artisan test
 |-- composer.json
 |-- package.json
 ```
+
+---
+
+## 📐 Decisioni architetturali
+
+Le scelte architetturali del progetto sono documentate in un unico [Architecture Decision Record](docs/ADR.md). Copre:
+
+- Relazioni polimorfiche (guasti/scadenze ↔ manutenzioni)
+- SoftDeletes e stato automatico scadenze (data + km)
+- Autenticazione Sanctum + ruoli (Policies)
+- Notifiche email con scheduler
+- Export PDF (DomPDF) e CSV
+- Audit logging e ricerca FULLTEXT
 
 ---
 
