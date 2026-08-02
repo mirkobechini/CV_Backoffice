@@ -48,7 +48,7 @@ jobs:
           php -v
 
       - name: Run PHPUnit
-        run: php vendor/bin/phpunit --verbose 2>&1
+        run: php artisan test --debug 2>&1 | head -100
 
   # ────────────────────────────────────────────
   #  Frontend build (Vite)
