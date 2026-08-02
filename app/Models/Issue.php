@@ -31,6 +31,7 @@ class Issue extends Model
     ];
 
     protected $searchable = ['description', 'status'];
+    protected $fulltextable = ['description'];
 
     public function scopeOpen(Builder $query): Builder
     {
