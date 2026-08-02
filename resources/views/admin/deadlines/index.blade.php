@@ -15,7 +15,7 @@
     @endphp
 
     <x-admin.index-table title="Scadenze" tableClass="table table-striped table-hover my-0 align-middle text-center"
-        :searchRoute="route('admin.deadlines.index')">
+        :searchRoute="route('admin.deadlines.index')" :csvRoute="route('admin.csv.export', 'deadlines')">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.deadlines.create')" label="scadenza" />
         </x-slot:headingActions>

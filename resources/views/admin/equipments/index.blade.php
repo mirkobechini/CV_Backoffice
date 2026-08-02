@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
-    <x-admin.index-table title="Attrezzature" tableClass="table table-striped table-hover my-0 align-middle text-center"
-        :paginator="$equipments">
+    <x-admin.index-table title="Attrezzature" :csvRoute="route('admin.csv.export', 'equipments')"
+        tableClass="table table-striped table-hover my-0 align-middle text-center" :paginator="$equipments">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.equipments.create')" label="attrezzatura" />
         </x-slot:headingActions>

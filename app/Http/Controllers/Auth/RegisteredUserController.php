@@ -31,14 +31,26 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
+
+        // Il primo utente registrato diventa automaticamente admin.
+        // Se ci sono già utenti, solo un admin può registrarne di nuovi.
+        $isFirstUser = User::count() === 0;
+
+        if (!$isFirstUser) {
+            $currentUser = Auth::user();
+            if (!$currentUser || $currentUser->role !== 'admin') {
+                abort(403, 'Solo un amministratore può registrare nuovi utenti.');
+            }
+        }
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => $isFirstUser ? 'admin' : ($request->role ?? 'worker'),
         ]);
 
         event(new Registered($user));

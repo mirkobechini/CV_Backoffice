@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CsvExportController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -29,7 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::middleware(['auth', 'verified'])
+Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
     ->name("admin.")
     ->prefix("admin")
     ->group(function () {
@@ -53,6 +54,11 @@ Route::middleware(['auth', 'verified'])
         Route::patch('maintenance-records/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
             ->name('maintenance-records.complete');
 
+        Route::get('maintenance-records/calendar', [MaintenanceRecordController::class, 'calendar'])
+            ->name('maintenance-records.calendar');
+        Route::get('maintenance-records/events', [MaintenanceRecordController::class, 'events'])
+            ->name('maintenance-records.events');
+
         Route::get('/notifications', [NotificationSettingController::class, 'edit'])
             ->name('admin.notifications.edit');
         Route::patch('/notifications', [NotificationSettingController::class, 'update'])
@@ -60,6 +66,11 @@ Route::middleware(['auth', 'verified'])
 
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
             ->name('admin.vehicles.pdf');
+
+        // Export CSV
+        Route::get('csv/{entity}', [CsvExportController::class, 'export'])
+            ->name('admin.csv.export')
+            ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'providers']);
     });
 
 require __DIR__ . '/auth.php';

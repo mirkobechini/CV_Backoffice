@@ -81,6 +81,11 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item" href="{{ route('admin.maintenance-records.calendar') }}">
+                                    <i class="fa-solid fa-calendar-alt me-2"></i>{{ __('Calendario') }}
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{{ route('admin.deadlines.index') }}">
                                     <i class="fa-solid fa-clock me-2"></i>{{ __('Scadenze') }}
                                 </a>
@@ -104,6 +109,27 @@
                             <li>
                                 <a class="dropdown-item" href="{{ route('admin.equipment-types.index') }}">
                                     <i class="fa-solid fa-tag me-2"></i>{{ __('Tipi di Attrezzature') }}
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+
+                    {{-- Dropdown: Sistema --}}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false" title="{{ __('Sistema') }}">
+                            <i class="fa-solid fa-gear"></i>
+                            <span class="nav-label ms-1">{{ __('Sistema') }}</span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" href="{{ route('admin.notifications.edit') }}">
+                                    <i class="fa-solid fa-bell me-2"></i>{{ __('Notifiche') }}
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('admin.activity-log.index') }}">
+                                    <i class="fa-solid fa-clock-rotate-left me-2"></i>{{ __('Registro Attività') }}
                                 </a>
                             </li>
                         </ul>

@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('content')
-    <x-admin.index-table title="Manutenzioni">
+    <x-admin.index-table title="Manutenzioni" :csvRoute="route('admin.csv.export', 'maintenance-records')">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.maintenance-records.create')" label="manutenzione" />
         </x-slot:headingActions>

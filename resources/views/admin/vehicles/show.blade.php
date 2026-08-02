@@ -127,6 +127,46 @@
         </div>
         <div class="row">
             <div class="col-12 mb-3">
+                <h2 class="display-6 fw-bold">Storico Revisioni</h2>
+                @if ($vehicle->deadlines->isEmpty())
+                    <p class="card-text">Nessuna scadenza registrata per questo veicolo.</p>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Tipo</th>
+                                    <th>Data scadenza</th>
+                                    <th>Stato</th>
+                                    <th>Rinnovata</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($vehicle->deadlines->sortByDesc('due_date') as $deadline)
+                                    <tr>
+                                        <td>{{ $deadline->type }}</td>
+                                        <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
+                                        <td>
+                                            <span
+                                                class="badge bg-{{ match ($deadline->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $deadline->status_label }}</span>
+                                        </td>
+                                        <td>
+                                            @if ($deadline->is_renewed)
+                                                <i class="fa-solid fa-check text-success"></i>
+                                            @else
+                                                <i class="fa-solid fa-times text-muted"></i>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12 mb-3">
                 <h2 class="display-6 fw-bold">Guasti<a class="btn btn-success rounded-pill ms-3 py-0 px-2"
                         href="{{ route('admin.issues.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"><i
                             class="fa-solid fa-add text-light"></i></a>

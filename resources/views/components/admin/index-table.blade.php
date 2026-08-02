@@ -4,6 +4,7 @@
     'paginator' => null,
     'searchRoute' => null,
     'searchPlaceholder' => 'Cerca...',
+    'csvRoute' => null,
 ])
 
 <div class="container py-4">
@@ -12,6 +13,13 @@
         @isset($headingActions)
             <div class="ms-3 pt-2">{{ $headingActions }}</div>
         @endisset
+        @if ($csvRoute)
+            <div class="ms-1 pt-2">
+                <a href="{{ $csvRoute }}" class="btn btn-sm btn-outline-secondary" title="Scarica CSV">
+                    <i class="bi bi-download me-1"></i>CSV
+                </a>
+            </div>
+        @endif
         @if ($searchRoute)
             <div class="ms-auto">
                 <form action="{{ $searchRoute }}" method="GET" class="d-flex gap-2" id="search-form">

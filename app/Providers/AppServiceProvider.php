@@ -25,6 +25,9 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 use App\Models\CarModel;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 
 class AppServiceProvider extends ServiceProvider
@@ -42,6 +45,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Rate limiting per le route admin (mutazioni)
+        RateLimiter::for('admin-mutations', function (Request $request) {
+            return Limit::perMinute(30)
+                ->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Rate limiting per il login (già gestito da Breeze, ma rinforziamo)
+        RateLimiter::for('login', function (Request $request) {
+            return Limit::perMinute(5)
+                ->by($request->input('email') . '|' . $request->ip());
+        });
         // Registra le policy
         Gate::policy(Vehicle::class, VehiclePolicy::class);
         Gate::policy(Provider::class, ProviderPolicy::class);
