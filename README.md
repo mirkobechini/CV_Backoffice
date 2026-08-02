@@ -1,27 +1,27 @@
 # 🚀 CV Backoffice
 
-> Applicazione web per gestire in modo centralizzato mezzi, guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo.
+> Applicazione web per la gestione centralizzata di una flotta di mezzi di pubblica assistenza.
+> Guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo in un unico pannello.
 
-![Banner o Screenshot](vehicle-preview.png)
-
-![GitHub stars](https://img.shields.io/github/stars/mirkobechini/CV_Backoffice?style=flat-square)
-![GitHub forks](https://img.shields.io/github/forks/mirkobechini/CV_Backoffice?style=flat-square)
 ![GitHub license](https://img.shields.io/github/license/mirkobechini/CV_Backoffice)
----
-
-## 🌍 Demo
-
-<!-- Inserisci qui i link reali: URL del sito live e una demo video o GIF del flusso principale. -->
-- Live: https://tuo-link-demo.com
-- Video/GIF: https://tuo-link-demo-video.com
 
 ---
 
 ## 🌟 Caratteristiche principali
 
-- **Gestione completa del parco mezzi**: anagrafica veicoli, tipologie, provider e storico operativo in un unico pannello.
-- **Flusso guasti e manutenzioni**: dalla segnalazione problema alla chiusura intervento con tracciamento date e stato.
-- **Controllo scadenze e dotazioni**: monitoraggio revisioni, assicurazioni, ossigeno e attrezzature con visione centralizzata.
+- **Gestione completa del parco mezzi**: anagrafica veicoli, marche, modelli, tipologie e documenti
+- **Flusso guasti e manutenzioni**: dalla segnalazione alla chiusura intervento, con collegamento polimorfico tra guasti, scadenze e appuntamenti in officina
+- **Controllo scadenze e dotazioni**: revisioni ministeriali, ossigeno, tagliando, cinghia distribuzione, assicurazione — con stato automatico basato su data e km
+- **Chilometraggi**: rilevazione mensile bulk, storico, integrazione con scadenze km
+- **Dashboard interattiva**: statistiche, scadenze imminenti, guasti aperti, equipaggiamento incompleto
+- **Calendario appuntamenti**: vista mese/settimana con colori per tipo attività
+- **Export PDF e CSV**: scheda veicolo PDF, export CSV per tutte le entità
+- **API REST**: 11 endpoint protetti da token (Sanctum)
+- **Audit log**: tracciamento completo di tutte le modifiche
+- **Notifiche email**: report giornaliero/settimanale/mensile configurabile
+- **Rate limiting**: protezione su login e route admin
+- **Tema chiaro/scuro**: persistente in localStorage
+- **166 test, 330 assertions — tutti verdi** ✅
 
 ---
 
@@ -29,34 +29,20 @@
 
 | Tecnologia | Scopo |
 | :--------- | :---- |
-| **Laravel (PHP)** | Core applicativo e logica backend |
-| **Blade + Bootstrap (Laravel Breeze)** | Interfaccia amministrativa |
-| **MySQL (SQLite in sviluppo)** | Persistenza dati |
-
-### 🔌 API utilizzate
-
-- **Car List JSON dataset**: `https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json`
-  - usata per importare **brand** e **modelli** veicolo tramite il comando `php artisan import:car-data`
-
-### ⚙️ Funzionalità Laravel utilizzate
-
-- **Eloquent ORM** per modelli, relazioni e query applicative
-- **Migrations e Seeders** per struttura e popolamento iniziale del database
-- **Form Requests** per la validazione dei dati lato backend
-- **Laravel Breeze** per autenticazione e gestione sessione utente
-- **Livewire** per componenti dinamici come `VehicleSelect`
-- **Observers** per automatizzare logiche su entità legate ai veicoli
-- **Artisan Commands** personalizzati, come `php artisan import:car-data` per importare dati da API esterne
-- **Testing** con PHPUnit per garantire stabilità e correttezza delle funzionalità critiche
-- **Filesystem / Storage pubblico** per la gestione degli upload documentali
+| **Laravel 11 (PHP 8.2+)** | Core applicativo e logica backend |
+| **Blade + Bootstrap 5 (Breeze)** | Interfaccia amministrativa |
+| **Livewire 4** | Componenti dinamici (VehicleSelect) |
+| **MySQL / SQLite** | Persistenza dati |
+| **Laravel Sanctum** | API token authentication |
+| **spatie/laravel-activitylog** | Audit logging |
+| **DomPDF** | Export PDF |
+| **FullCalendar** | Calendario appuntamenti |
 
 ---
 
 ## 🚀 Quick Start
 
 ### Requisiti
-
-Prima di iniziare, assicurati di avere installato:
 
 - PHP 8.2+
 - Composer
@@ -66,37 +52,46 @@ Prima di iniziare, assicurati di avere installato:
 ### Installazione
 
 ```bash
-# Clona il repository
 git clone https://github.com/mirkobechini/CV_Backoffice.git
-
-# Entra nella cartella del progetto
 cd CV_Backoffice
-
-# Installa le dipendenze backend e frontend
 composer install
 npm install
+```
+
+### Configurazione
+
+```bash
+cp .env.example .env
+php artisan key:generate
+php artisan storage:link
+php artisan migrate --seed
+php artisan import:car-data
 ```
 
 ### Avvio
 
 ```bash
-# Configura ambiente
-cp .env.example .env
-php artisan key:generate
-php artisan import:car-data
-
-# Configura e popola il database
-php artisan migrate --seed
-
-# Collega lo storage pubblico
-php artisan storage:link
-
-# Avvia frontend e backend (in due terminali separati)
+# Due terminali separati:
 npm run dev
 php artisan serve
 ```
 
 Apri il browser su `http://127.0.0.1:8000`.
+
+---
+
+## 📸 Screenshot
+
+<!-- Aggiungi qui screenshot dell'app -->
+
+---
+
+## 🧪 Test
+
+```bash
+php artisan test
+# 166 tests, 330 assertions — all green ✅
+```
 
 ---
 
@@ -121,51 +116,31 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ## 🗺️ Roadmap
 
-- [x] Rivedere nelle scadenze lo status rinnovata/scaduta (added is_renewed boolean in migration) se rinnovata, non mostrare più come scaduta e spostare in fondo alla lista(aggiungere attuale/valida (ok) a status?)
-- [x] Rivedere la creazione automatica delle scadenze ( valutare se mettere tutte a scadute e far andare ad una pagina di modifica)
-- [x] Modificare status che di default va a scaduta e non rinnovata
-- [x] Gestione dotazioni di bordo (estintori, attrezzature in generale) con scadenze e revisioni
-- [x] Salva in database Models e Brands veicoli da API  (https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json)
-- [x] Crea test per raggiungimento pagine entita, creazione entità, validazione form
-- [x] Crea test per univocità su operazioni delle entità
-- [x] Crea test per funzioni critiche come creazione scadenze, chiusura guasti, aggiornamento chilometraggio
-- [ ] Modificare revisione e scadenza attrezzature di bordo (estintori, bombole ossigeno) come deadlines per veicoli
-- [ ] Implementare dimensione attrezzatura di bordo (es. capacità bombole ossigeno, estintori)
-- [ ] Implementare gestione attrezzatura bombole ossigeno con scadenze e revisioni
-- [ ] Dashboard con KPI principali (scadenze, guasti aperti, manutenzioni in corso)
-- [ ] Report chilometraggi per periodo e per singolo mezzo
-- [ ] Modulo API REST per integrazione esterna
-- [ ] Style e UX migliorati, con focus su usabilità e accessibilità
+### 🔜 Prossimi step
 
-### Backlog funzionale dettagliato
+- [ ] Notifiche in-app (badge e toast nella navbar)
+- [ ] Gestione utenti e ruoli da backoffice
+- [ ] Fulltext search su volumi elevati
+- [ ] App mobile nativa (via API REST)
 
-#### Vehicle / Equipment
+---
 
-- [x] Rivedere VehicleType per gestione equipaggiamento per tipologia mezzo
-- [x] View veicolo: link agli equipaggiamenti del mezzo + stato conformità per equipaggiamento
+## 👤 Contatti
 
-#### Deadlines / Tagliandi
-
-- [x] In index visualizzare solo scadenze attive (non rinnovate) e scadute, escludendo quelle rinnovate
-- [ ] Implementare tagliandi in scadenze: oltre alla data, soglia km per prossimo tagliando
-
-#### MileageLog / Report
-
-- [ ] Report storico chilometri per singolo mezzo (timeline)
-- [ ] Report ultimo chilometraggio per mese (singolo mezzo)
-- [ ] Filtro per mezzo + range mese/anno
-- [ ] Dashboard cards (mensile, mezzi)
+**Sviluppatore:** Bechini Mirko  
+**Email:** mirkobechini@gmail.com  
+**GitHub:** [github.com/mirkobechini](https://github.com/mirkobechini)
 
 ---
 
 ## 📄 Licenza
 
-Distribuito sotto licenza MIT. Vedi il file `LICENSE` per i dettagli.
+MIT
 
 ---
 
 ## 📧 Contatti
 
-Mirko Bechini - LinkedIn: https://www.linkedin.com/in/mirko-bechini-892202252 - mirkobechini@gmail.com
-
+Mirko Bechini - LinkedIn: https://www.linkedin.com/in/mirko-bechini-892202252
+Mail: mirkobechini@gmail.com
 Link progetto: https://github.com/mirkobechini/CV_Backoffice
