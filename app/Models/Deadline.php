@@ -111,17 +111,20 @@ class Deadline extends Model
         $isKmExpired = false;
         $isKmPending = false;
 
-        // Check km-based conditions (solo se la relazione vehicle è già caricata)
-        if ($this->interval_km !== null && $this->last_mileage !== null && $this->relationLoaded('vehicle') && $this->vehicle) {
-            $currentMileage = $this->vehicle->mileage;
-            if ($currentMileage !== null) {
-                $thresholdKm = $this->last_mileage + $this->interval_km;
-                if ($currentMileage >= $thresholdKm) {
-                    $isKmExpired = true;
-                }
-                $warningKm = $this->last_mileage + (int) ($this->interval_km * 0.9);
-                if ($currentMileage >= $warningKm) {
-                    $isKmPending = true;
+        // Check km-based conditions (carica veicolo e ultimo km on-demand se necessario)
+        if ($this->interval_km !== null && $this->last_mileage !== null) {
+            $this->loadMissing('vehicle.latestMileageLog');
+            if ($this->vehicle) {
+                $currentMileage = $this->vehicle->mileage;
+                if ($currentMileage !== null) {
+                    $thresholdKm = $this->last_mileage + $this->interval_km;
+                    if ($currentMileage >= $thresholdKm) {
+                        $isKmExpired = true;
+                    }
+                    $warningKm = $this->last_mileage + (int) ($this->interval_km * 0.9);
+                    if ($currentMileage >= $warningKm) {
+                        $isKmPending = true;
+                    }
                 }
             }
         }
@@ -165,7 +168,7 @@ class Deadline extends Model
 
         // KM-based check
         if ($this->interval_km !== null && $this->last_mileage !== null) {
-            $this->loadMissing('vehicle');
+            $this->loadMissing('vehicle.latestMileageLog');
             $currentMileage = $this->vehicle?->mileage;
             if ($currentMileage !== null && $currentMileage >= ($this->last_mileage + $this->interval_km)) {
                 $newStatus = self::STATUS_EXPIRED;

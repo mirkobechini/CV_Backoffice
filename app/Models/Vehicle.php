@@ -113,6 +113,11 @@ class Vehicle extends Model
         return $this->hasMany(MileageLog::class);
     }
 
+    public function latestMileageLog()
+    {
+        return $this->hasOne(MileageLog::class)->latest('log_date');
+    }
+
     public function equipment()
     {
         return $this->hasMany(Equipment::class);
@@ -156,7 +161,12 @@ class Vehicle extends Model
 
     public function getMileageAttribute(): ?int
     {
-        // Prende l'ultimo log di chilometraggio per questo veicolo
+        // Usa la relazione pre-caricata (latestMileageLog) se disponibile,
+        // altrimenti fa query sull'ultimo log di chilometraggio.
+        if ($this->relationLoaded('latestMileageLog')) {
+            return $this->latestMileageLog?->mileage;
+        }
+
         $latestLog = $this->mileageLogs()
             ->orderByDesc('log_date')
             ->first();

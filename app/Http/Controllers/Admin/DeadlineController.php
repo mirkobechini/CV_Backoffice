@@ -31,7 +31,7 @@ class DeadlineController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
         $latestRevisionOnly = ($validated['latest_revision_only'] ?? '0') === '1';
 
-        $deadlines = Deadline::with('vehicle')->search($request->get('q'))->get();
+        $deadlines = Deadline::with('vehicle.latestMileageLog')->search($request->get('q'))->get();
         $deadlines->each->syncStatusFromRules();
 
         if ($latestRevisionOnly) {

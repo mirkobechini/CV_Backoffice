@@ -20,7 +20,7 @@ class StoreVehicleRequest extends FormRequest
         return [
             'license_plate' => 'required|string|size:7|regex:/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/|unique:vehicles,license_plate',
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
-            'internal_code' => 'required|string|size:4|regex:/^[0-9]{4}$/',
+            'internal_code' => 'required|string|size:4|regex:/^[0-9]{4}$/|unique:vehicles,internal_code',
             'brand_id' => 'required|exists:brands,id',
             'car_model_id' => 'required|exists:car_models,id|car_model_belongs_to_brand:brand_id',
             'fuel_type' => 'nullable|in:benzina,diesel,elettrico,ibrido',

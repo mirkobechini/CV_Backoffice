@@ -52,15 +52,15 @@ Route::middleware(['auth', 'verified'])
             ->parameters(['equipment-types' => 'equipmentType']);
         Route::patch('maintenance-records/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
             ->name('maintenance-records.complete');
+
+        Route::get('/notifications', [NotificationSettingController::class, 'edit'])
+            ->name('admin.notifications.edit');
+        Route::patch('/notifications', [NotificationSettingController::class, 'update'])
+            ->name('admin.notifications.update');
+
+        Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
+            ->name('admin.vehicles.pdf');
     });
-
-Route::get('/admin/notifications', [NotificationSettingController::class, 'edit'])
-    ->name('admin.notifications.edit');
-Route::patch('/admin/notifications', [NotificationSettingController::class, 'update'])
-    ->name('admin.notifications.update');
-
-Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
-    ->name('admin.vehicles.pdf');
 
 require __DIR__ . '/auth.php';
 

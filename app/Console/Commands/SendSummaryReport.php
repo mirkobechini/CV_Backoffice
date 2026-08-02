@@ -10,6 +10,7 @@ use App\Mail\ReportMail;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\MaintenanceRecord;
+use App\Models\NotificationSetting;
 use Carbon\Carbon;
 
 class SendSummaryReport extends Command
@@ -60,7 +61,15 @@ class SendSummaryReport extends Command
             'vehiclesInMaintenance' => $vehiclesInMaintenance,
             'expiringEquipment' => $expiringEquipment,
         ];
-        Mail::to('test@example.com')->send(new ReportMail($data));
-        $this->info('Report inviato con successo!');
+
+        $recipientEmail = NotificationSetting::where('key', 'report_email')->value('value');
+
+        if (!$recipientEmail) {
+            $this->warn('Nessun destinatario configurato. Imposta report_email nelle impostazioni notifiche.');
+            return Command::SUCCESS;
+        }
+
+        Mail::to($recipientEmail)->send(new ReportMail($data));
+        $this->info("Report inviato con successo a {$recipientEmail}!");
     }
 }
