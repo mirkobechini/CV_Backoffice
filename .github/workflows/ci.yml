@@ -45,10 +45,9 @@ jobs:
         run: |
           cp .env.example .env
           php artisan key:generate
-          php -v
 
       - name: Run PHPUnit
-        run: php artisan test --debug 2>&1 | head -100
+        run: php artisan test --compact
 
   # ────────────────────────────────────────────
   #  Frontend build (Vite)
