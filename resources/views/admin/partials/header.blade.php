@@ -3,7 +3,7 @@
         <div class="container">
             <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ route('dashboard') }}">
                 <i class="fa-solid fa-car me-2"></i>
-                <span class="brand-text">{{ config('app.name', 'Gods Backoffice') }}</span>
+                <span class="brand-text">{{ config('app.name', 'CV Backoffice') }}</span>
             </a>
 
             {{-- Theme Toggle — sempre visibile --}}

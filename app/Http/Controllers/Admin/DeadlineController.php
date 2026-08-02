@@ -6,7 +6,6 @@ use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeadlineRequest;
 use App\Http\Requests\UpdateDeadlineRequest;
-use Carbon\Carbon;
 use App\Models\Deadline;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
@@ -14,6 +13,11 @@ use Illuminate\Http\Request;
 class DeadlineController extends Controller
 {
     use SortableAndGroupable;
+
+    public function __construct(
+        private readonly \App\Services\DeadlineService $deadlineService,
+    ) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -31,17 +35,22 @@ class DeadlineController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
         $latestRevisionOnly = ($validated['latest_revision_only'] ?? '0') === '1';
 
-        $deadlines = Deadline::with('vehicle.latestMileageLog')->search($request->get('q'))->get();
-        $deadlines->each->syncStatusFromRules();
+        $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')->search($request->get('q'));
 
+        // Se latestRevisionOnly, carichiamo solo le ultime revisioni per veicolo
+        // filtrando a monte per tipo, così il DB fa il lavoro pesante.
         if ($latestRevisionOnly) {
-            $deadlines = $deadlines
-                ->filter(fn(Deadline $deadline) => in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true))
-                ->sortByDesc(fn(Deadline $deadline) => $deadline->due_date?->format('Y-m-d') ?? '')
-                // Teniamo una sola scadenza per coppia (mezzo + tipo revisione): la più recente.
-                ->unique(fn(Deadline $deadline) => ($deadline->vehicle_id ?? 'N/A') . '|' . ($deadline->type ?? 'N/A'))
+            $deadlines = $deadlinesQuery
+                ->whereIn('type', [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN])
+                ->get()
+                ->sortByDesc(fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '')
+                ->unique(fn(Deadline $d) => ($d->vehicle_id ?? 'N/A') . '|' . ($d->type ?? 'N/A'))
                 ->values();
+        } else {
+            $deadlines = $deadlinesQuery->get();
         }
+
+        $deadlines->each->syncStatusFromRules();
 
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
             'type' => fn(Deadline $d) => $d->type,
@@ -92,39 +101,12 @@ class DeadlineController extends Controller
 
         $vehicle = Vehicle::with('vehicleType')->findOrFail($data['vehicle_id']);
 
-        if ($data['type'] === Deadline::TYPE_OXYGEN && !Deadline::supportsOxygenCheckForVehicle($vehicle)) {
-            return back()
-                ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
-                ->withInput();
+        try {
+            $deadline = $this->deadlineService->createDeadline($data, $vehicle);
+            return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza creata con successo.');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['due_date' => $e->getMessage()])->withInput();
         }
-
-        if (in_array($data['type'], [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
-            // Tagliando e Cinghia: data fornita dall'utente, usiamo i campi km
-            $dueDate = $data['due_date'] ? Carbon::createFromFormat('Y-m', $data['due_date'])?->endOfMonth() : null;
-        } else {
-            $dueDate = $this->resolveDueDate($data, $vehicle);
-        }
-
-        if (!$dueDate) {
-            return back()
-                ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
-                ->withInput();
-        }
-
-        $markAsRenewed = (bool) ($data['is_renewed'] ?? false);
-
-        $deadline = Deadline::create([
-            'vehicle_id' => $vehicle->id,
-            'type' => $data['type'],
-            'due_date' => $dueDate->toDateString(),
-            'is_renewed' => $markAsRenewed,
-            'interval_km' => $data['interval_km'] ?? null,
-            'last_mileage' => $data['last_mileage'] ?? null,
-            'interval_days' => $data['interval_days'] ?? null,
-        ]);
-        $deadline->syncStatusFromRules();
-
-        return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza creata con successo.');
     }
 
     /**
@@ -155,39 +137,12 @@ class DeadlineController extends Controller
 
         $vehicle = Vehicle::with('vehicleType')->findOrFail($data['vehicle_id']);
 
-        if ($data['type'] === Deadline::TYPE_OXYGEN && !Deadline::supportsOxygenCheckForVehicle($vehicle)) {
-            return back()
-                ->withErrors(['type' => 'La revisione impianto ossigeno è disponibile solo per le ambulanze.'])
-                ->withInput();
+        try {
+            $this->deadlineService->updateDeadline($deadline, $data, $vehicle);
+            return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza aggiornata con successo.');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['due_date' => $e->getMessage()])->withInput();
         }
-
-        if (in_array($data['type'], [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
-            // Tagliando e Cinghia: data fornita dall'utente, usiamo i campi km
-            $dueDate = $data['due_date'] ? Carbon::createFromFormat('Y-m', $data['due_date'])?->endOfMonth() : null;
-        } else {
-            $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
-        }
-
-        if (!$dueDate) {
-            return back()
-                ->withErrors(['due_date' => 'Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.'])
-                ->withInput();
-        }
-
-        $markAsRenewed = (bool) ($data['is_renewed'] ?? false);
-
-        $deadline->update([
-            'vehicle_id' => $vehicle->id,
-            'type' => $data['type'],
-            'due_date' => $dueDate->toDateString(),
-            'is_renewed' => $markAsRenewed,
-            'interval_km' => $data['interval_km'] ?? null,
-            'last_mileage' => $data['last_mileage'] ?? null,
-            'interval_days' => $data['interval_days'] ?? null,
-        ]);
-        $deadline->syncStatusFromRules();
-
-        return redirect()->route('admin.deadlines.show', $deadline)->with('success', 'Scadenza aggiornata con successo.');
     }
 
     /**
@@ -197,35 +152,5 @@ class DeadlineController extends Controller
     {
         $deadline->delete();
         return redirect()->route('admin.deadlines.index')->with('success', 'Scadenza eliminata con successo.');
-    }
-
-    private function resolveDueDate(array $data, Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
-    {
-        // Le revisioni (ministeriale/ossigeno) vengono calcolate automaticamente,
-        // mentre per gli altri tipi la data arriva dal campo manuale YYYY-MM.
-        if ($data['type'] === Deadline::TYPE_MINISTERIAL) {
-            return Deadline::calculateMinisterialDueDateForVehicle($vehicle, $excludeDeadlineId);
-        }
-
-        if ($data['type'] === Deadline::TYPE_OXYGEN) {
-            return Deadline::calculateOxygenDueDateForVehicle($vehicle, $excludeDeadlineId);
-        }
-
-        return $this->resolveManualDueDate($data['due_date'] ?? null);
-    }
-
-    private function resolveManualDueDate(?string $dueDate): ?Carbon
-    {
-        if (!$dueDate) {
-            return null;
-        }
-
-        $parsedDate = Carbon::createFromFormat('Y-m', $dueDate);
-
-        if (!$parsedDate) {
-            return null;
-        }
-
-        return $parsedDate->endOfMonth();
     }
 }

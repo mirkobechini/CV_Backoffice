@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateNotificationSettingRequest;
 use App\Models\NotificationSetting;
-use Illuminate\Http\Request;
 
 class NotificationSettingController extends Controller
 {
@@ -26,9 +26,15 @@ class NotificationSettingController extends Controller
         return view('admin.notifications.edit', compact('settings'));
     }
 
-    public function update(Request $request)
+    public function update(UpdateNotificationSettingRequest $request)
     {
-        foreach ($request->except('_token', '_method') as $key => $value) {
+        $data = $request->validated();
+
+        foreach ($data as $key => $value) {
+            if (in_array($key, ['notify_on_maintenance', 'notify_on_deadline', 'notify_on_issue', 'notify_on_equipment'], true)) {
+                $value = $request->boolean($key);
+            }
+
             NotificationSetting::updateOrCreate(
                 ['key' => $key],
                 ['value' => $value]

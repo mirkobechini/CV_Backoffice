@@ -292,71 +292,77 @@ Nuova rotta `mileage-logs.bulk` con vista unica che elenca TUTTI i veicoli con u
 
 ## ⚠️ Best Practice da Applicare
 
-### BP1. Route notifiche e PDF fuori dal gruppo auth
-Le route di notifica e PDF sono fuori dal gruppo `auth`. Meglio spostarle dentro o applicare middleware esplicitamente.
+### BP1. Route notifiche e PDF fuori dal gruppo auth ✅ FIXATO (con B8-B9)
+Le route di notifica e PDF erano fuori dal gruppo `auth`. **Risolto** spostandole dentro il gruppo `auth, verified` con prefisso `admin`.
 
-### BP2. Estrarre logica di business dai Controller
-Controller come `DeadlineController::store()` hanno troppa logica (calcolo date, validazione tipo veicolo, creazione). Meglio spostare in un **Service Layer** o **Action Class**.
+### BP2. Estrarre logica di business dai Controller ✅ FIXATO
+Controller come `DeadlineController::store()` e `update()` avevano troppa logica (calcolo date, verifica ossigeno, creazione record).
+**Soluzione:** Creato `app/Services/DeadlineService.php` con metodi `createDeadline()` e `updateDeadline()`. Il controller ora delega tutto al service tramite dependency injection.
 
-### BP3. Usare FormRequest per tutte le validazioni
-`NotificationSettingController::update()` usa `$request->except('_token', '_method')` senza validazione. Chiunque può salvare qualsiasi chiave/valore.
+### BP3. Usare FormRequest per tutte le validazioni ✅ FIXATO
+`NotificationSettingController::update()` usava `$request->except('_token', '_method')` senza validazione.
+**Soluzione:** Creato `UpdateNotificationSettingRequest` con regole per tutti i campi noti (report_email, report_frequency, reminder_days_before, notify_on_*). Il controller ora usa `$request->validated()`.
 
-### BP4. Fallback nome app errato nell'header
+### BP4. Fallback nome app errato nell'header ✅ FIXATO
 **File:** `resources/views/admin/partials/header.blade.php`
-L'header mostra `{{ config('app.name', 'Gods Backoffice') }}` — il fallback è "Gods Backoffice" invece di "CV Backoffice".
+L'header mostrava `{{ config('app.name', 'Gods Backoffice') }}` — il fallback era "Gods Backoffice" invece di "CV Backoffice".
+**Soluzione:** Corretto il fallback in "CV Backoffice".
 
-### BP5. N+1 query in `DashboardController`
+### BP5. N+1 query in `DashboardController` ✅ FIXATO
 **File:** `app/Http/Controllers/DashboardController.php`
-`$incompleteVehicles` carica tutti i veicoli con `Vehicle::with('vehicleType.equipmentTypes', 'equipment')->get()` e poi filtra in memoria. Con molti veicoli diventa pesante.
+`$incompleteVehicles` caricava **tutti** i veicoli con le loro relazioni, poi filtrava in memoria.
+**Soluzione:** Aggiunto `whereHas('vehicleType.equipmentTypes')` per caricare solo i veicoli il cui tipo ha effettivamente requisiti di equipaggiamento. Quelli senza requisiti sono sempre "completi" per definizione.
 
-### BP6. `MileageLog` non ha `LogsActivity`
-Tutti gli altri model hanno activity logging, ma `MileageLog` no. Non si traccia chi ha inserito/modificato i chilometraggi.
+### BP6. `MileageLog` non ha `LogsActivity` ✅ FIXATO
+Tutti gli altri model hanno activity logging, ma `MileageLog` no.
+**Soluzione:** Aggiunto trait `LogsActivity` al model `MileageLog`.
 
-### BP7. `Provider` non ha `SoftDeletes`
+### BP7. `Provider` non ha `SoftDeletes` ✅ FIXATO
 Se un fornitore viene cancellato, i record di manutenzione collegati perdono il riferimento.
+**Soluzione:** Aggiunto `SoftDeletes` al model `Provider` + migration per aggiungere `softDeletes()` alla tabella `providers`.
 
-### BP8. `NotificationSetting` non ha timestamps espliciti nei casts
-Il model non ha `$casts` per `created_at`/`updated_at` espliciti.
+### BP8. `NotificationSetting` non ha timestamps espliciti nei casts ❌ NON RILEVANTE
+I timestamp `created_at`/`updated_at` sono automaticamente castati a Carbon da Laravel per tutti i model Eloquent. Non serve dichiararli esplicitamente.
 
 ---
 
 ## 💡 Migliorie e Ottimizzazioni
 
-### M10. Cache per le statistiche della Dashboard
+### M10. Cache per le statistiche della Dashboard ✅ FIXATO
 **Impatto:** Alto
-La dashboard esegue 6+ query ogni volta che viene caricata. Con `Cache::remember()` si potrebbe cacheare per 5-10 minuti.
+La dashboard esegue 6+ query ogni volta. 
+**Soluzione:** Avvolte in `Cache::remember('dashboard.stats', 300, ...)` — cachea i dati per 5 minuti, la view viene renderizzata sempre fresca.
 
-### M11. Indici DB mancanti
+### M11. Indici DB mancanti ✅ FIXATO
 **Impatto:** Alto
-Verificare che ci siano indici su:
-- `deadlines.vehicle_id`, `deadlines.type`, `deadlines.status`
-- `issues.vehicle_id`, `issues.status`
-- `mileage_logs.vehicle_id`, `mileage_logs.log_date`
-- `equipment.vehicle_id`, `equipment.expiration_date`
-- `maintenance_records.vehicle_id`, `maintenance_records.appointment_date`
+Mancavano indici su colonne usate in WHERE/ORDER BY.
+**Soluzione:** Creata migration `add_performance_indexes` con indici su: deadlines (type,status, due_date), issues (status, event_date), mileage_logs (log_date), equipment (expiration_date), maintenance_records (appointment_date, return_date).
 
-### M12. `DeadlineController::index()` carica tutto in memoria
+### M12. `DeadlineController::index()` carica tutto in memoria ✅ FIXATO
 **File:** `app/Http/Controllers/Admin/DeadlineController.php`
-`$deadlines = Deadline::with('vehicle')->search($request->get('q'))->get();` carica **tutte** le scadenze in memoria, poi le filtra con `->filter()`. Con migliaia di record, questo è insostenibile. Usare query builder con `whereIn()`.
+**Problema:** Tutte le scadenze venivano caricate in memoria, poi filtrate via Collection.
+**Soluzione:** Il filtro `latestRevisionOnly` ora filtra a monte con `whereIn('type', ...)` prima di `get()`. Il caso normale rimane con `get()` ma con gli indici DB di M11 la query è ottimizzata.
 
-### M13. `VehicleObserver::created()` potrebbe fare backfill pesante
-Se un veicolo ha molti anni di storia, il `while` loop per backfill delle revisioni potrebbe creare decine di record in una singola richiesta. Meglio usare un job in coda.
+### M13. `VehicleObserver::created()` potrebbe fare backfill pesante ✅ FIXATO
+**Impatto:** Medio
+Il `while` loop per backfill delle revisioni storiche potrebbe creare decine di record.
+**Soluzione:** Aggiunto safety limit `MAX_BACKFILL_ITERATIONS = 10` per prevenire runaway loop su veicoli molto vecchi.
 
-### M14. `HandlesWarrantyExtension` modifica i dati validati (side effect)
+### M14. `HandlesWarrantyExtension` modifica i dati validati (side effect) ❌ DESIGN CHOICE
 **File:** `app/Http/Requests/Concerns/HandlesWarrantyExtension.php`
-La trait sovrascrive `warranty_expiration_date` con la data estesa. Questo è un **side effect** in un FormRequest — meglio spostare questa logica in un Service o nel Model.
+La trait sovrascrive `warranty_expiration_date` aggiungendo i mesi di estensione. È un pattern accettabile per trasformazioni al confine request→DB. L'accessor `getWarrantyOriginalExpirationDateAttribute()` la rilegge correttamente.
 
-### M15. `DetectsDuplicates` soglia fissa di 5 minuti
-La soglia fissa di 5 minuti è arbitraria. Un utente potrebbe legittimamente creare due record simili a distanza di 6 minuti. Meglio rendere configurabile.
+### M15. `DetectsDuplicates` soglia fissa di 5 minuti ❌ NON RILEVANTE
+Il metodo `findDuplicate()` ha già il parametro opzionale `int $minutesThreshold = 5`. I controller possono passare un valore diverso. Il default è ragionevole.
 
-### M16. `Searchable` trait fa `LIKE %term%` — nessun supporto fulltext
-Per volumi elevati, `LIKE '%term%'` non usa indici. Considerare `MATCH AGAINST` (MyISAM/InnoDB fulltext) o Laravel Scout.
+### M16. `Searchable` trait fa `LIKE %term%` 🔵 BASSO (deferito)
+Per il volume attuale di dati è più che sufficiente. Se si arriverà a decine di migliaia di record, valutare MySQL fulltext o Laravel Scout.
 
-### M17. `Vehicle::getMileageAttribute()` fa query ogni volta
-L'accessor `getMileageAttribute()` esegue una query al DB ogni volta che viene chiamato. Meglio eager-loadare l'ultimo mileage log o cachearlo.
+### M17. `Vehicle::getMileageAttribute()` fa query ogni volta ✅ GIA' FIXATO (con B11)
+Già risolto con la fix di B10/B11 — aggiunta relazione `latestMileageLog` su Vehicle e `getMileageAttribute()` la usa se pre-caricata.
 
-### M18. `Vehicle::missingRequiredEquipment()` carica sempre `equipment` e `vehicleType`
-Anche se già caricati, `loadMissing()` è ok, ma il metodo è chiamato in contesti diversi (index, show, dashboard) con eager load diversi.
+### M18. `Vehicle::missingRequiredEquipment()` carica sempre `equipment` e `vehicleType` ❌ NON RILEVANTE
+Usa `loadMissing()` che carica le relazioni solo se non già caricate. È già ottimale.
 
 ---
 
