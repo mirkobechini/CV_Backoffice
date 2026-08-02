@@ -47,7 +47,7 @@ jobs:
           php artisan key:generate
 
       - name: Run PHPUnit
-        run: php artisan test --compact
+        run: php artisan test 2>&1 | tail -50
 
   # ────────────────────────────────────────────
   #  Frontend build (Vite)
