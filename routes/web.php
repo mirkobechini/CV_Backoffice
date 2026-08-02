@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\IssueController;
@@ -60,16 +61,19 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('maintenance-records.events');
 
         Route::get('/notifications', [NotificationSettingController::class, 'edit'])
-            ->name('admin.notifications.edit');
+            ->name('notifications.edit');
         Route::patch('/notifications', [NotificationSettingController::class, 'update'])
-            ->name('admin.notifications.update');
+            ->name('notifications.update');
 
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
-            ->name('admin.vehicles.pdf');
+            ->name('vehicles.pdf');
+
+        Route::get('activity-log', [ActivityLogController::class, 'index'])
+            ->name('activity-log.index');
 
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])
-            ->name('admin.csv.export')
+            ->name('csv.export')
             ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'providers']);
     });
 

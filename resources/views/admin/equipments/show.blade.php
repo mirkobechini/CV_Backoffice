@@ -15,11 +15,12 @@
                         <h1>{{ $equipment->equipmentType->name ?? 'N/A' }}</h1>
                     </div>
                     <div class="card-body">
-                        <p><strong>Data revisione:</strong> {{ $equipment->revision_date_formatted  ?? 'N/A' }}</p>
+                        <p><strong>Data revisione:</strong> {{ $equipment->revision_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Data scadenza:</strong> {{ $equipment->expiration_date_formatted ?? 'N/A' }}</p>
                         <p><strong>Veicolo associato:</strong>
                             @if ($equipment->vehicle)
-                                {{ $equipment->vehicle->internal_code }} - {{ $equipment->vehicle->brand->name }} {{ $equipment->vehicle->carModel->name }}
+                                {{ $equipment->vehicle->internal_code }} - {{ optional($equipment->vehicle->brand)->name }}
+                                {{ optional($equipment->vehicle->carModel)->name }}
                             @else
                                 N/A
                             @endif

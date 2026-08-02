@@ -124,7 +124,7 @@ class ProviderCrudTest extends TestCase
         $response = $this->actingAs($user)->delete(route('admin.providers.destroy', $provider));
 
         $response->assertRedirect(route('admin.providers.index'));
-        $this->assertDatabaseMissing('providers', [
+        $this->assertSoftDeleted('providers', [
             'id' => $provider->id,
         ]);
     }

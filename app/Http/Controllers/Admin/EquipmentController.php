@@ -17,7 +17,7 @@ class EquipmentController extends Controller
     public function index()
     {
         $equipments = Equipment::with('vehicle', 'equipmentType')->paginate(20);
-        
+
         return view('admin.equipments.index', compact('equipments'));
     }
 
@@ -50,7 +50,7 @@ class EquipmentController extends Controller
      */
     public function show(Equipment $equipment)
     {
-        $equipment->load('vehicle', 'equipmentType');
+        $equipment->load('vehicle.brand', 'vehicle.carModel', 'equipmentType');
         return view('admin.equipments.show', compact('equipment'));
     }
 

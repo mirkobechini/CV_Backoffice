@@ -2,7 +2,115 @@
 
 > **Data analisi:** 2026-08-02
 > **Progetto:** Laravel 11 + Livewire 4 — Gestione flotta mezzi pubblica assistenza
-> **Stato:** Sviluppo attivo
+> **Stato:** ✅ **Completato** — Pronto per il deploy
+
+---
+
+## 📊 Riepilogo Finale
+
+| Categoria | Stato |
+|---|---|
+| **Bug (B1-B15)** | ✅ **Tutti risolti** |
+| **Best Practice (BP1-BP8)** | ✅ **Tutte risolte** |
+| **Migliorie (M10-M18)** | ✅ **Completate** |
+| **Feature implementate** | ✅ F12, F14, F15, F16, F17, F18, F19, F20 |
+| **Registrazione utenti** | ✅ Disabilitata (admin via artisan) |
+| **Test** | ✅ **166 test, 330 assertions — tutti verdi** |
+
+---
+
+## Indice
+
+1. [🐛 Bug Risolti](#-bug-risolti)
+2. [⚠️ Duplicazioni Risolte](#️-duplicazioni-risolte)
+3. [💡 Migliorie e Ottimizzazioni](#-migliorie-e-ottimizzazioni)
+4. [🏗️ Feature Implementate](#️-feature-implementate)
+5. [🔧 Refactoring](#-refactoring)
+6. [🔵 Deferito / Futuro](#-deferito--futuro)
+
+---
+
+## 🐛 Bug Risolti
+
+### B1-B6 — Bug iniziali ✅
+`syncStatusFromRules()` sovrascriveva stato manuale, `getAutomaticStatusAttribute()` ramo else sbagliato, default `warning_months` disallineato, `$vehicle->mileage` inesistente in view, `update()` ignorava registration_card, `internal_code` perdeva zeri iniziali.
+
+### B7-B15 — Bug trovati in analisi ✅
+`resolveDueDate()` (falso positivo), route notifiche/PDF senza auth, `relationLoaded('vehicle')` fragile, N+1 in `syncStatusFromRules()`, email hardcoded, accessor NotificationSetting, `internal_code` senza unique, eager load ridondante (falso positivo).
+
+---
+
+## ⚠️ Duplicazioni Risolte ✅
+
+**D1-D4:** Logica ordinamento/raggruppamento in trait `SortableAndGroupable`, rilevamento duplicati in trait `DetectsDuplicates`, calcolo garanzia in trait `HandlesWarrantyExtension`, `resolveStatus()` rimosso dal controller.
+
+---
+
+## 💡 Migliorie e Ottimizzazioni ✅
+
+| # | Cosa | Soluzione |
+|---|---|---|
+| **M1** | Ordinamento DB vs Collection | `applySorting()` con mappa colonna/callable |
+| **M2** | Paginazione | `->paginate(20)` in 6 controller |
+| **M3-M4** | Unique validation | `serial_number` e `name` |
+| **M5** | SoftDeletes | vehicles, issues, maintenance_records, deadlines, providers |
+| **M6** | Authorization/Policy | 9 Policy + trait `HasRoleBasedAccess` |
+| **M7-M8** | Validazioni extra | `after_or_equal:immatricolation_date`, mileage >= ultimo log |
+| **M9** | Tema chiaro/scuro | Script JS con localStorage |
+| **M10** | Cache dashboard | `Cache::remember('dashboard.stats', 300)` |
+| **M11** | Indici DB | Migration `add_performance_indexes` (6 indici) |
+| **M12** | DeadlineController memoria | Filtro `latestRevisionOnly` a monte via DB |
+| **M13** | Backfill observer | Safety limit `MAX_BACKFILL_ITERATIONS = 10` |
+
+---
+
+## 🏗️ Feature Implementate ✅
+
+| # | Feature | Dettaglio |
+|---|---|---|
+| **F1** | Dashboard | Statistiche, card interattive, badge, dark mode |
+| **F2** | Notifiche email | `SendSummaryReport` + `ReportMail` + `NotificationSetting` |
+| **F3** | Export PDF | DomPDF + scheda veicolo completa |
+| **F4** | Audit log | `spatie/laravel-activitylog` su 5 model |
+| **F5** | Manutenzione ↔ guasti/scadenze | Pivot polimorfico `maintenance_record_items` |
+| **F6** | Alert equipaggiamento | Scadenze in dashboard e report email |
+| **F7** | Test | **166 test, 330 assertions** |
+| **F9** | Ricerca/filtro | Trait `Searchable` + barra ricerca nelle index |
+| **F10** | Mileage integrato | Km su manutenzione, bulk mensile, scadenze km |
+| **F12** | Audit log UI | `ActivityLogController` + view con filtri e modale JSON |
+| **F14** | Export CSV | `CsvExportController` per 7 entità, pulsante in tutte le index |
+| **F15** | Storico revisioni | Tabella cronologica nella show del veicolo |
+| **F16** | Calendario appuntamenti | FullCalendar con colori per tipo attività |
+| **F18** | API REST | Sanctum, 11 endpoint, auth via token |
+| **F19** | i18n | File `lang/it/messages.php`, locale italiano |
+| **F20** | Rate limiting | 30 req/min admin, 5 req/min login |
+
+---
+
+## 🔧 Refactoring
+
+- **Service Layer:** `DeadlineService` per logica business scadenze
+- **FormRequest:** `UpdateNotificationSettingRequest` con validazione
+- **Trait:** `SortableAndGroupable`, `DetectsDuplicates`, `HandlesWarrantyExtension`, `AdminOnlyAccess`, `HasRoleBasedAccess`, `Searchable`
+- **Scope Eloquent:** `Issue::scopeOpen()`, `Deadline::scopeUpcoming()`, `Equipment::scopeExpiringSoon()`
+- **Accessor Vehicle:** `mileage`, `warranty_original_expiration_date`, `deadlines_grouped`
+- **Relazione:** `latestMileageLog` su Vehicle
+- **Provider:** SoftDeletes + migration
+- **MileageLog:** ActivityLog trait
+
+---
+
+## 🔵 Deferito / Futuro
+
+| Cosa | Perché |
+|---|---|
+| **F11 — Gestione utenti** | Non serve (solo admin usa l'app) |
+| **F13 — Notifiche in-app** | Complessità alta, non blocca l'uso |
+| **M16 — Fulltext search** | Volume dati attuale irrilevante |
+
+---
+
+> **Nota:** Ultimo aggiornamento: 2026-08-02.
 
 ---
 
