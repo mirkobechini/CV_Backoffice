@@ -12,8 +12,9 @@
         <x-slot:head>
             <th scope="col">Sigla</th>
             <th scope="col">Targa</th>
+            <th scope="col">Data</th>
             <th scope="col">Km</th>
-            <th scope="col">Azioni</th>
+            <th scope="col">Elimina</th>
         </x-slot:head>
 
         <x-slot:rows>
@@ -21,8 +22,15 @@
                 <tr>
                     <td>{{ $mileageLog->vehicle->internal_code }}</td>
                     <td>{{ $mileageLog->vehicle->license_plate }}</td>
-                    <td>{{ $mileageLog->mileage }}</td>
-                    <x-admin.row-actions :showUrl="route('admin.mileage-logs.show', $mileageLog->id)" :editUrl="route('admin.mileage-logs.edit', $mileageLog->id)" :deleteTarget="'#confirmDeleteModal-' . $mileageLog->id" :label="'chilometraggio ' . $mileageLog->id" />
+                    <td>{{ $mileageLog->log_date_formatted ?? $mileageLog->log_date }}</td>
+                    <td>{{ number_format($mileageLog->mileage, 0, ',', '.') }}</td>
+                    <td>
+                        <button type="button" data-bs-toggle="modal"
+                            data-bs-target="#confirmDeleteModal-{{ $mileageLog->id }}" class="btn btn-danger btn-sm"
+                            aria-label="Elimina chilometraggio">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
                 </tr>
                 <x-admin.delete-modal type="mileageLog" :object="$mileageLog" />
             @endforeach

@@ -41,16 +41,16 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("issues", IssueController::class);
         Route::resource("deadlines", DeadlineController::class);
         Route::resource("equipments", EquipmentController::class);
-        Route::resource("mileage-logs", MileageLogController::class)
-            ->parameters(['mileage-logs' => 'mileageLog']);
-        Route::get('mileage-logs/bulk/create', [MileageLogController::class, 'bulkCreate'])
-            ->name('mileage-logs.bulk');
-        Route::post('mileage-logs/bulk/store', [MileageLogController::class, 'bulkStore'])
-            ->name('mileage-logs.bulk-store');
         Route::get('mileage-logs/pivot', [MileageLogController::class, 'pivot'])
             ->name('mileage-logs.pivot');
         Route::post('mileage-logs/pivot/save', [MileageLogController::class, 'pivotSave'])
             ->name('mileage-logs.pivot-save');
+        Route::get('mileage-logs/bulk/create', [MileageLogController::class, 'bulkCreate'])
+            ->name('mileage-logs.bulk');
+        Route::post('mileage-logs/bulk/store', [MileageLogController::class, 'bulkStore'])
+            ->name('mileage-logs.bulk-store');
+        Route::resource("mileage-logs", MileageLogController::class)
+            ->parameters(['mileage-logs' => 'mileageLog']);
         Route::resource("maintenance-records", MaintenanceRecordController::class)
             ->parameters(['maintenance-records' => 'maintenanceRecord']);
         Route::resource("vehicle-types", VehicleTypeController::class)
