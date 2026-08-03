@@ -202,3 +202,13 @@
 [data-bs-theme="dark"] pre code {
     color: #e0e0e0;
 }
+
+[data-bs-theme="dark"] .text-warning {
+    color: #ffc107 !important;
+}
+
+[data-bs-theme="dark"] .alert-warning {
+    background-color: #332701;
+    border-color: #665500;
+    color: #ffc107;
+}

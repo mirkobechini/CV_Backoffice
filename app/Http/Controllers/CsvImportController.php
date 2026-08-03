@@ -390,11 +390,10 @@ class CsvImportController extends Controller
                 $description = $values[1] ?? '';
             }
 
+            // Non required: se vuota, la importa comunque come stringa vuota
+            $result['data']['_description'] = $description;
             if (empty($description)) {
-                $result['valid'] = false;
-                $result['errors'][] = 'Descrizione mancante.';
-            } else {
-                $result['data']['_description'] = $description;
+                $result['warnings'][] = 'Descrizione vuota.';
             }
 
             // Veicolo: usa il parametro se fornito, altrimenti cerca nel file
@@ -419,9 +418,16 @@ class CsvImportController extends Controller
 
             // Data
             $rawDate = $row['DATA'] ?? $row['data'] ?? $row['Data'] ?? '';
+            // Se la prima colonna è l'header "DATA" stesso (es. riga vuota), ignora
+            if (strtoupper(trim($rawDate)) === 'DATA') {
+                $rawDate = '';
+            }
             if (empty($rawDate)) {
                 $values = array_values($row);
                 $rawDate = $values[0] ?? '';
+                if (strtoupper(trim($rawDate)) === 'DATA') {
+                    $rawDate = '';
+                }
             }
 
             if (empty($rawDate)) {
@@ -456,6 +462,7 @@ class CsvImportController extends Controller
 
     /**
      * Parsa una data in vari formati possibili.
+     * Per date GG/MM senza anno: se mese <= 8 usa anno corrente, altrimenti anno precedente.
      */
     private function parseDate(string $date): ?Carbon
     {
@@ -471,7 +478,7 @@ class CsvImportController extends Controller
         }
 
         // GG/MM/AAAA
-        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $date)) {
+        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
             try {
                 return Carbon::createFromFormat('d/m/Y', $date);
             } catch (\Exception $e) {
@@ -479,17 +486,21 @@ class CsvImportController extends Controller
             }
         }
 
-        // GG/MM (senza anno — assume anno corrente)
-        if (preg_match('/^\d{2}\/\d{2}$/', $date)) {
+        // GG/MM (senza anno) — supporta anche G/M senza zero padding
+        if (preg_match('/^\d{1,2}\/\d{1,2}$/', $date)) {
             try {
-                return Carbon::createFromFormat('d/m', $date)->setYear(Carbon::today()->year);
+                $parsed = Carbon::createFromFormat('d/m', $date);
+                $today = Carbon::today();
+                // Se mese <= mese corrente, usa anno corrente, altrimenti anno precedente
+                $year = $parsed->month <= $today->month ? $today->year : $today->year - 1;
+                return $parsed->setYear($year);
             } catch (\Exception $e) {
                 return null;
             }
         }
 
         // GG/MM/AA
-        if (preg_match('/^\d{2}\/\d{2}\/\d{2}$/', $date)) {
+        if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{1,2}$/', $date)) {
             try {
                 return Carbon::createFromFormat('d/m/y', $date);
             } catch (\Exception $e) {
