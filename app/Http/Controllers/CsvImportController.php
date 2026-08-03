@@ -43,9 +43,9 @@ class CsvImportController extends Controller
     public function confirm(Request $request)
     {
         $entity = $request->entity;
-        $rows = json_decode($request->rows_json, true);
+        $results = json_decode($request->rows_json, true);
 
-        if (empty($rows)) {
+        if (empty($results)) {
             return redirect()->route('admin.csv-import.index')
                 ->with('status_error', 'Nessun dato da importare.');
         }
@@ -53,15 +53,21 @@ class CsvImportController extends Controller
         $imported = 0;
         $errors = [];
 
-        DB::transaction(function () use ($entity, $rows, &$imported, &$errors) {
-            foreach ($rows as $row) {
-                $result = match ($entity) {
+        DB::transaction(function () use ($entity, $results, &$imported, &$errors) {
+            foreach ($results as $result) {
+                // Solo record validi
+                if (empty($result['valid'])) {
+                    continue;
+                }
+
+                $row = $result['data'] ?? [];
+                $r = match ($entity) {
                     'issues' => $this->importIssue($row),
                     'mileage-logs' => $this->importMileageLog($row),
                     default => ['error' => 'Entità sconosciuta'],
                 };
-                if (isset($result['error'])) {
-                    $errors[] = $result['error'];
+                if (isset($r['error'])) {
+                    $errors[] = $r['error'];
                 } else {
                     $imported++;
                 }

@@ -25,7 +25,7 @@
         <form action="{{ route('admin.csv-import.confirm') }}" method="POST">
             @csrf
             <input type="hidden" name="entity" value="{{ $entity }}">
-            <input type="hidden" name="rows_json" value="{{ json_encode($rows) }}">
+            <input type="hidden" name="rows_json" value="{{ json_encode($results) }}">
 
             @if ($entity === 'mileage-logs')
                 {{-- Vista raggruppata per mese per i chilometraggi --}}
