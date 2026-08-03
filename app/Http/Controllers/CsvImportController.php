@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Issue;
+use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
 use App\Models\Provider;
 use App\Models\Vehicle;
@@ -575,7 +576,7 @@ class CsvImportController extends Controller
                 }
             }
 
-            $maintenanceRecord = \App\Models\MaintenanceRecord::create([
+            $maintenanceRecord = MaintenanceRecord::create([
                 'vehicle_id' => $vehicleId,
                 'provider_id' => $providerId,
                 'appointment_date' => $parsedDate->toDateString(),
