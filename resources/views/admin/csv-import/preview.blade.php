@@ -44,7 +44,7 @@
                                 <table class="table table-hover table-sm mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>#</th>
+                                            <th>Salta</th>
                                             <th>Veicolo</th>
                                             <th>Km</th>
                                             <th>Stato</th>
@@ -54,7 +54,11 @@
                                         @foreach ($monthResults as $index => $result)
                                             @php $inputIdx = $loop->parent->index * 1000 + $index; @endphp
                                             <tr class="{{ $result['valid'] ? '' : 'table-danger' }}">
-                                                <td>{{ $result['row'] }}</td>
+                                                <td class="text-center">
+                                                    <input type="checkbox" class="form-check-input skip-item"
+                                                        name="editable[{{ $inputIdx }}][_skip]" value="1"
+                                                        {{ !$result['valid'] ? 'disabled' : '' }}>
+                                                </td>
                                                 <td>
                                                     <strong>{{ $result['data']['_vehicle_label'] ?? ($result['data']['veicolo'] ?? ($result['data']['SIGLA'] ?? '?')) }}</strong>
                                                 </td>

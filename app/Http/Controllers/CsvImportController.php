@@ -570,9 +570,13 @@ class CsvImportController extends Controller
 
             $providerId = null;
             if (!empty($providerName)) {
-                $provider = Provider::where('name', 'like', '%' . $providerName . '%')->first();
-                if ($provider) {
-                    $providerId = $provider->id;
+                try {
+                    $provider = Provider::where('name', 'like', '%' . $providerName . '%')->first();
+                    if ($provider) {
+                        $providerId = $provider->id;
+                    }
+                } catch (\Exception $e) {
+                    // Se il fornitore non esiste, procedi senza
                 }
             }
 
