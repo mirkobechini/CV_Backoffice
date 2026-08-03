@@ -52,8 +52,18 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         <div class="form-text">
-                            Il file deve avere la prima riga con gli header (es. "descrizione;veicolo;stato;data").
-                            Massimo 2MB.
+                            Massimo 5MB.
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="vehicle-ref-group" style="display:none;">
+                        <label for="vehicle_ref" class="form-label">Sigla veicolo (per guasti)</label>
+                        <input type="text" class="form-control" id="vehicle_ref" name="vehicle_ref"
+                            placeholder="es. 1727">
+                        <div class="form-text">
+                            Se il file CSV non contiene la colonna "veicolo", inserisci qui la sigla (es. 1727).
+                            Se il nome file contiene la sigla (es. "1727 - Guasti.csv"), verrà rilevata
+                            automaticamente.
                         </div>
                     </div>
 
@@ -64,25 +74,53 @@
 
         <div class="card mt-4">
             <div class="card-header">
-                <h5 class="mb-0">Formato file CSV</h5>
+                <h5 class="mb-0">Formati file CSV supportati</h5>
             </div>
             <div class="card-body">
-                <h6>Guasti</h6>
-                <pre class="bg-light p-2 rounded"><code>descrizione;veicolo;stato;data
-Faro rotto;AB123CD;aperto;01/03/2026
-Frizione da sostituire;1001;open;15/03/2026</code></pre>
-                <p class="text-muted small mb-0">Il veicolo può essere targa o sigla. Stato opzionale (default: aperto).
-                    Data opzionale (default: oggi).</p>
+                <h6>Guasti (dal tuo foglio Google)</h6>
+                <pre class="bg-light p-2 rounded"><code>DATA;DESCRIZIONE;...;APPUNTAMENTO;OFFICINA;RISOLTO
+17/07/2024;Pasticche Freni;;;17/07/2024;Mezzani;17/07/2024</code></pre>
+                <p class="text-muted small mb-0">
+                    Il veicolo va specificato nel nome file (es. "1727 - Guasti.csv") o nel campo apposito.
+                    La colonna RISOLTO con "ok" o "x" imposta il guasto come chiuso.
+                    Le date supportano formati GG/MM/AAAA, GG/MM e GG/MM/AA.
+                </p>
 
                 <hr>
 
-                <h6>Chilometraggi</h6>
+                <h6>Chilometraggi (formato pivot — dal tuo foglio Google)</h6>
+                <pre class="bg-light p-2 rounded"><code>SIGLA;MEZZI;TARGA;GENNAIO;FEBBRAIO;MARZO;...
+1726;DUCATO;GP 365 YL;30742;32556;35907;...</code></pre>
+                <p class="text-muted small mb-0">
+                    Ogni riga è un veicolo, le colonne sono i mesi (italiano). I km vengono
+                    registrati al 1° del mese. I veicoli vengono riconosciuti per sigla o targa.
+                    I campi vuoti vengono ignorati.
+                </p>
+
+                <hr>
+
+                <h6>Chilometraggi (formato semplice alternativo)</h6>
                 <pre class="bg-light p-2 rounded"><code>veicolo;mese;chilometri
 AB123CD;03/2026;45000
 1001;03/2026;32000</code></pre>
-                <p class="text-muted small mb-0">Il mese va inserito come MM/AAAA. I km vengono registrati al 1° del mese.
-                </p>
+                <p class="text-muted small mb-0">Formato alternativo: una riga per lettura.</p>
             </div>
         </div>
     </div>
+
+    <script>
+        document.getElementById('entity').addEventListener('change', function() {
+            const group = document.getElementById('vehicle-ref-group');
+            group.style.display = this.value === 'issues' ? 'block' : 'none';
+        });
+
+        // Auto-detect sigla dal nome file
+        document.getElementById('csv_file').addEventListener('change', function() {
+            const filename = this.files[0]?.name || '';
+            const match = filename.match(/^(\d+)\s*[-–—]/);
+            if (match) {
+                document.getElementById('vehicle_ref').value = match[1];
+            }
+        });
+    </script>
 @endsection

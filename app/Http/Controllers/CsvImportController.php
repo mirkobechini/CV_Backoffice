@@ -11,22 +11,17 @@ use Illuminate\Support\Facades\DB;
 
 class CsvImportController extends Controller
 {
-    /**
-     * Mostra la pagina di import.
-     */
     public function index()
     {
         return view('admin.csv-import.index');
     }
 
-    /**
-     * Analizza il CSV e mostra anteprima con validazione.
-     */
     public function preview(Request $request)
     {
         $request->validate([
             'entity' => 'required|in:issues,mileage-logs',
-            'csv_file' => 'required|file|mimes:csv,txt|max:2048',
+            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+            'vehicle_ref' => 'nullable|string|max:20',
         ]);
 
         $entity = $request->entity;
@@ -37,7 +32,7 @@ class CsvImportController extends Controller
         }
 
         $results = match ($entity) {
-            'issues' => $this->validateIssues($rows),
+            'issues' => $this->validateIssues($rows, $request->vehicle_ref),
             'mileage-logs' => $this->validateMileageLogs($rows),
             default => [],
         };
@@ -45,9 +40,6 @@ class CsvImportController extends Controller
         return view('admin.csv-import.preview', compact('entity', 'results', 'rows'));
     }
 
-    /**
-     * Conferma l'import dopo la preview.
-     */
     public function confirm(Request $request)
     {
         $entity = $request->entity;
@@ -62,15 +54,14 @@ class CsvImportController extends Controller
         $errors = [];
 
         DB::transaction(function () use ($entity, $rows, &$imported, &$errors) {
-            foreach ($rows as $index => $row) {
+            foreach ($rows as $row) {
                 $result = match ($entity) {
                     'issues' => $this->importIssue($row),
                     'mileage-logs' => $this->importMileageLog($row),
                     default => ['error' => 'Entità sconosciuta'],
                 };
-
                 if (isset($result['error'])) {
-                    $errors[] = "Riga " . ($index + 2) . ": " . $result['error'];
+                    $errors[] = $result['error'];
                 } else {
                     $imported++;
                 }
@@ -88,9 +79,6 @@ class CsvImportController extends Controller
             ->with('status', $message);
     }
 
-    /**
-     * Parsa il file CSV in un array associativo.
-     */
     private function parseCsv($file): array
     {
         $rows = [];
@@ -99,14 +87,12 @@ class CsvImportController extends Controller
             return $rows;
         }
 
-        // Legge header (prima riga)
         $headers = fgetcsv($handle);
         if (!$headers) {
             fclose($handle);
             return $rows;
         }
 
-        // Normalizza header: rimuovi BOM, trim, lowercase
         $headers = array_map(fn($h) => trim(preg_replace('/^\xEF\xBB\xBF/', '', $h)), $headers);
 
         while (($line = fgetcsv($handle)) !== false) {
@@ -114,7 +100,6 @@ class CsvImportController extends Controller
             foreach ($headers as $i => $header) {
                 $row[$header] = isset($line[$i]) ? trim($line[$i]) : '';
             }
-            // Salta righe completamente vuote
             if (implode('', $row) !== '') {
                 $rows[] = $row;
             }
@@ -125,89 +110,175 @@ class CsvImportController extends Controller
     }
 
     /**
-     * Valida righe di guasti.
+     * Rileva se il CSV è in formato pivot (con colonne mesi).
      */
-    private function validateIssues(array $rows): array
+    private function isPivotFormat(array $headers): bool
+    {
+        $mesi = [
+            'gennaio',
+            'febbraio',
+            'marzo',
+            'aprile',
+            'maggio',
+            'giugno',
+            'luglio',
+            'agosto',
+            'settembre',
+            'ottobre',
+            'novembre',
+            'dicembre'
+        ];
+        foreach ($headers as $h) {
+            if (in_array(mb_strtolower(trim($h)), $mesi, true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Converte header mese in numero (1-12).
+     */
+    private function monthNameToNumber(string $name): ?int
+    {
+        $map = [
+            'gennaio' => 1,
+            'febbraio' => 2,
+            'marzo' => 3,
+            'aprile' => 4,
+            'maggio' => 5,
+            'giugno' => 6,
+            'luglio' => 7,
+            'agosto' => 8,
+            'settembre' => 9,
+            'ottobre' => 10,
+            'novembre' => 11,
+            'dicembre' => 12,
+        ];
+        return $map[mb_strtolower(trim($name))] ?? null;
+    }
+
+    /**
+     * Valida righe di chilometraggi — supporta formato pivot (mese come colonne).
+     */
+    private function validateMileageLogs(array $rows): array
+    {
+        // Determina se è formato pivot
+        $sampleHeaders = array_keys($rows[0] ?? []);
+        $isPivot = $this->isPivotFormat($sampleHeaders);
+
+        if ($isPivot) {
+            return $this->validateMileageLogsPivot($rows);
+        }
+
+        // Formato semplice (veicolo, mese, km)
+        return $this->validateMileageLogsSimple($rows);
+    }
+
+    /**
+     * Formato pivot: righe=veicoli, colonne=mesi
+     * Header: SIGLA, MEZZI, TARGA, GENNAIO, FEBBRAIO, ...
+     */
+    private function validateMileageLogsPivot(array $rows): array
     {
         $results = [];
         $vehiclesCache = [];
+        $year = date('Y'); // default anno corrente
+
+        // Cerca anno nelle righe (es. "2025" nel nome file o nelle colonne)
+        // Usiamo l'anno corrente, l'utente selezionerà l'anno dalla view
+
+        // Identifica colonne mesi
+        $headers = array_keys($rows[0] ?? []);
+        $monthColumns = [];
+        foreach ($headers as $h) {
+            $monthNum = $this->monthNameToNumber($h);
+            if ($monthNum !== null) {
+                $monthColumns[$h] = $monthNum;
+            }
+        }
 
         foreach ($rows as $index => $row) {
-            $result = [
-                'row' => $index + 2,
-                'data' => $row,
-                'valid' => true,
-                'warnings' => [],
-                'errors' => [],
-            ];
+            $sigla = $row['SIGLA'] ?? $row['sigla'] ?? '';
+            $targa = $row['TARGA'] ?? $row['targa'] ?? '';
 
-            // description
-            if (empty($row['descrizione'] ?? '')) {
-                $result['valid'] = false;
-                $result['errors'][] = 'Descrizione mancante.';
-            }
-
-            // vehicle — cerca per targa o sigla
-            $vehicleRef = $row['veicolo'] ?? $row['targa'] ?? $row['sigla'] ?? '';
+            $vehicleRef = $sigla ?: $targa;
             if (empty($vehicleRef)) {
-                $result['valid'] = false;
-                $result['errors'][] = 'Veicolo (targa/sigla) mancante.';
-            } else {
-                if (!isset($vehiclesCache[$vehicleRef])) {
-                    $vehiclesCache[$vehicleRef] = Vehicle::where('license_plate', $vehicleRef)
-                        ->orWhere('internal_code', $vehicleRef)
-                        ->first();
-                }
-                $vehicle = $vehiclesCache[$vehicleRef];
-                if (!$vehicle) {
-                    $result['valid'] = false;
-                    $result['errors'][] = "Veicolo \"{$vehicleRef}\" non trovato.";
-                } else {
-                    $result['data']['_vehicle_id'] = $vehicle->id;
-                    $result['data']['_vehicle_label'] = $vehicle->internal_code . ' - ' . $vehicle->license_plate;
-                }
+                continue;
             }
 
-            // status
-            $status = $row['stato'] ?? $row['status'] ?? '';
-            if (empty($status)) {
-                $result['data']['_status'] = 'open';
-            } elseif (!in_array($status, ['open', 'in_progress', 'closed', 'aperto', 'in lavorazione', 'risolto'])) {
-                $result['warnings'][] = "Stato \"{$status}\" non riconosciuto, verrà impostato a 'open'.";
-                $result['data']['_status'] = 'open';
-            } else {
-                $result['data']['_status'] = match ($status) {
-                    'aperto' => 'open',
-                    'in lavorazione' => 'in_progress',
-                    'risolto' => 'closed',
-                    default => $status,
-                };
+            // Trova veicolo
+            if (!isset($vehiclesCache[$vehicleRef])) {
+                $vehiclesCache[$vehicleRef] = Vehicle::where('internal_code', $vehicleRef)
+                    ->orWhere('license_plate', $vehicleRef)
+                    ->first();
+            }
+            $vehicle = $vehiclesCache[$vehicleRef];
+
+            if (!$vehicle) {
+                // Veicolo non trovato, crea record con errore
+                $results[] = [
+                    'row' => $index + 2,
+                    'data' => $row,
+                    'valid' => false,
+                    'errors' => ["Veicolo \"{$vehicleRef}\" (sigla: {$sigla}, targa: {$targa}) non trovato nel database."],
+                    'warnings' => [],
+                ];
+                continue;
             }
 
-            // event_date
-            $date = $row['data'] ?? $row['data_evento'] ?? '';
-            if (empty($date)) {
-                $result['data']['_date'] = Carbon::today()->toDateString();
-                $result['warnings'][] = 'Data non specificata, usata data odierna.';
-            } else {
-                try {
-                    $result['data']['_date'] = Carbon::parse($date)->toDateString();
-                } catch (\Exception $e) {
-                    $result['valid'] = false;
-                    $result['errors'][] = "Data \"{$date}\" non valida (usa formato GG/MM/AAAA o AAAA-MM-GG).";
+            // Per ogni mese, crea un record
+            foreach ($monthColumns as $colName => $monthNum) {
+                $kmValue = $row[$colName] ?? '';
+                if ($kmValue === '' || $kmValue === null) {
+                    continue;
                 }
-            }
 
-            $results[] = $result;
+                $kmValue = str_replace(['.', ','], '', $kmValue);
+                if (!is_numeric($kmValue)) {
+                    continue;
+                }
+
+                $kmValue = (int) $kmValue;
+                $dateStr = sprintf('%04d-%02d-01', $year, $monthNum);
+
+                // Controllo duplicato
+                $exists = MileageLog::where('vehicle_id', $vehicle->id)
+                    ->where('log_date', $dateStr)
+                    ->exists();
+
+                $warnings = [];
+                if ($exists) {
+                    $warnings[] = "Chilometraggio già presente per {$vehicle->internal_code} nel mese {$monthNum}/{$year}.";
+                }
+
+                $results[] = [
+                    'row' => $index + 2,
+                    'data' => [
+                        '_vehicle_id' => $vehicle->id,
+                        '_vehicle_label' => $vehicle->internal_code . ' - ' . $vehicle->license_plate,
+                        '_date' => $dateStr,
+                        '_label_date' => sprintf('%02d/%04d', $monthNum, $year),
+                        '_mileage' => $kmValue,
+                        '_exists' => $exists,
+                        'veicolo' => $vehicleRef,
+                        'mese' => sprintf('%02d/%04d', $monthNum, $year),
+                        'chilometri' => $kmValue,
+                    ],
+                    'valid' => !$exists,
+                    'errors' => [],
+                    'warnings' => $warnings,
+                ];
+            }
         }
 
         return $results;
     }
 
     /**
-     * Valida righe di chilometraggi.
+     * Formato semplice: veicolo, mese, km
      */
-    private function validateMileageLogs(array $rows): array
+    private function validateMileageLogsSimple(array $rows): array
     {
         $results = [];
         $vehiclesCache = [];
@@ -221,7 +292,6 @@ class CsvImportController extends Controller
                 'errors' => [],
             ];
 
-            // vehicle
             $vehicleRef = $row['veicolo'] ?? $row['targa'] ?? $row['sigla'] ?? '';
             if (empty($vehicleRef)) {
                 $result['valid'] = false;
@@ -242,7 +312,6 @@ class CsvImportController extends Controller
                 }
             }
 
-            // mileage
             $mileage = $row['chilometri'] ?? $row['km'] ?? $row['mileage'] ?? '';
             if (empty($mileage) || !is_numeric($mileage)) {
                 $result['valid'] = false;
@@ -251,13 +320,11 @@ class CsvImportController extends Controller
                 $result['data']['_mileage'] = (int) $mileage;
             }
 
-            // month/year
             $mese = $row['mese'] ?? $row['data'] ?? $row['periodo'] ?? '';
             if (empty($mese)) {
                 $result['valid'] = false;
                 $result['errors'][] = 'Mese/periodo mancante (usa MM/AAAA).';
             } else {
-                // Prova vari formati: MM/AAAA, MM-AAAA, AAAA-MM
                 $mese = str_replace(['-', '.'], '/', $mese);
                 $parts = explode('/', $mese);
                 if (count($parts) === 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
@@ -265,9 +332,11 @@ class CsvImportController extends Controller
                     $year = (int) $parts[1];
                     if ($month < 1 || $month > 12) {
                         $result['valid'] = false;
-                        $result['errors'][] = "Mese \"{$month}\" non valido (usa MM/AAAA).";
+                        $result['errors'][] = "Mese \"{$month}\" non valido.";
                     } elseif ($year < 2000 || $year > 2100) {
-                        $result['errors'][] = "Anno \"{$year}\" sembra errato.";
+                        $result['warnings'][] = "Anno \"{$year}\" sembra errato.";
+                        $result['data']['_date'] = sprintf('%04d-%02d-01', $year, $month);
+                        $result['data']['_label_date'] = sprintf('%02d/%04d', $month, $year);
                     } else {
                         $result['data']['_date'] = sprintf('%04d-%02d-01', $year, $month);
                         $result['data']['_label_date'] = sprintf('%02d/%04d', $month, $year);
@@ -278,14 +347,98 @@ class CsvImportController extends Controller
                 }
             }
 
-            // Controllo km > ultimo log (solo se tutto valido)
-            if ($result['valid'] && isset($result['data']['_vehicle_id']) && isset($result['data']['_mileage'])) {
-                $lastKm = MileageLog::where('vehicle_id', $result['data']['_vehicle_id'])
-                    ->orderByDesc('log_date')
-                    ->value('mileage');
-                if ($lastKm !== null && $result['data']['_mileage'] < $lastKm) {
-                    $result['warnings'][] = "{$result['data']['_mileage']} km è inferiore all'ultimo registrato ({$lastKm} km).";
+            $results[] = $result;
+        }
+
+        return $results;
+    }
+
+    /**
+     * Valida righe guasti — supporta formato Excel-like con header variabili.
+     */
+    private function validateIssues(array $rows, ?string $vehicleRef = null): array
+    {
+        $results = [];
+        $vehiclesCache = [];
+
+        // Se il veicolo è passato come parametro (es. dal nome file "1727 - Guasti.csv")
+        if ($vehicleRef) {
+            $vehicleRef = trim($vehicleRef);
+        }
+
+        foreach ($rows as $index => $row) {
+            $result = [
+                'row' => $index + 2,
+                'data' => $row,
+                'valid' => true,
+                'warnings' => [],
+                'errors' => [],
+            ];
+
+            // Cerca descrizione in vari campi possibili
+            $description = $row['DESCRIZIONE'] ?? $row['descrizione'] ?? $row['Descrizione'] ?? '';
+            // Se non trova, prova la seconda colonna (posizione 1)
+            if (empty($description)) {
+                $values = array_values($row);
+                $description = $values[1] ?? '';
+            }
+
+            if (empty($description)) {
+                $result['valid'] = false;
+                $result['errors'][] = 'Descrizione mancante.';
+            } else {
+                $result['data']['_description'] = $description;
+            }
+
+            // Veicolo: usa il parametro se fornito, altrimenti cerca nel file
+            if ($vehicleRef) {
+                if (!isset($vehiclesCache[$vehicleRef])) {
+                    $vehiclesCache[$vehicleRef] = Vehicle::where('internal_code', $vehicleRef)
+                        ->orWhere('license_plate', $vehicleRef)
+                        ->first();
                 }
+                $vehicle = $vehiclesCache[$vehicleRef];
+                if (!$vehicle) {
+                    $result['valid'] = false;
+                    $result['errors'][] = "Veicolo \"{$vehicleRef}\" non trovato.";
+                } else {
+                    $result['data']['_vehicle_id'] = $vehicle->id;
+                    $result['data']['_vehicle_label'] = $vehicle->internal_code . ' - ' . $vehicle->license_plate;
+                }
+            } else {
+                $result['valid'] = false;
+                $result['errors'][] = 'Nessun veicolo associato. Specifica la sigla nel nome file (es. "1727 - Guasti.csv").';
+            }
+
+            // Data
+            $rawDate = $row['DATA'] ?? $row['data'] ?? $row['Data'] ?? '';
+            if (empty($rawDate)) {
+                $values = array_values($row);
+                $rawDate = $values[0] ?? '';
+            }
+
+            if (empty($rawDate)) {
+                $result['data']['_date'] = Carbon::today()->toDateString();
+                $result['warnings'][] = 'Data non specificata, usata data odierna.';
+            } else {
+                $parsed = $this->parseDate($rawDate);
+                if ($parsed) {
+                    $result['data']['_date'] = $parsed->toDateString();
+                } else {
+                    $result['warnings'][] = "Data \"{$rawDate}\" non riconosciuta, usata data odierna.";
+                    $result['data']['_date'] = Carbon::today()->toDateString();
+                }
+            }
+
+            // Stato (RISOLTO colonna)
+            $risolto = $row['RISOLTO'] ?? $row['risolto'] ?? '';
+            if (
+                in_array(mb_strtolower(trim($risolto)), ['ok', 'x', 'si', 'cambiate', 'funziona (andava ricaricata)', 'ok']) ||
+                stripos($risolto, 'ok') !== false
+            ) {
+                $result['data']['_status'] = 'closed';
+            } else {
+                $result['data']['_status'] = 'open';
             }
 
             $results[] = $result;
@@ -295,17 +448,70 @@ class CsvImportController extends Controller
     }
 
     /**
-     * Importa una riga guasto (usato in fase di confirm).
+     * Parsa una data in vari formati possibili.
      */
+    private function parseDate(string $date): ?Carbon
+    {
+        $date = trim($date);
+
+        // AAAA-MM-GG
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            try {
+                return Carbon::parse($date);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        // GG/MM/AAAA
+        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $date)) {
+            try {
+                return Carbon::createFromFormat('d/m/Y', $date);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        // GG/MM (senza anno — assume anno corrente)
+        if (preg_match('/^\d{2}\/\d{2}$/', $date)) {
+            try {
+                return Carbon::createFromFormat('d/m', $date)->setYear(Carbon::today()->year);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        // GG/MM/AA
+        if (preg_match('/^\d{2}\/\d{2}\/\d{2}$/', $date)) {
+            try {
+                return Carbon::createFromFormat('d/m/y', $date);
+            } catch (\Exception $e) {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
     private function importIssue(array $row): array
     {
         if (!isset($row['_vehicle_id'])) {
             return ['error' => 'Veicolo non valido'];
         }
 
+        // Controllo se esiste già un guasto simile per stesso veicolo e stessa data
+        $exists = Issue::where('vehicle_id', $row['_vehicle_id'])
+            ->where('description', $row['_description'] ?? '')
+            ->where('event_date', $row['_date'] ?? '')
+            ->exists();
+
+        if ($exists) {
+            return ['error' => 'Guasto già esistente: "' . mb_substr($row['_description'] ?? '', 0, 50) . '"'];
+        }
+
         Issue::create([
             'vehicle_id' => $row['_vehicle_id'],
-            'description' => $row['descrizione'] ?? '',
+            'description' => $row['_description'] ?? '',
             'status' => $row['_status'] ?? 'open',
             'event_date' => $row['_date'] ?? Carbon::today()->toDateString(),
         ]);
@@ -313,22 +519,22 @@ class CsvImportController extends Controller
         return ['success' => true];
     }
 
-    /**
-     * Importa una riga chilometraggio (usato in fase di confirm).
-     */
     private function importMileageLog(array $row): array
     {
         if (!isset($row['_vehicle_id'])) {
             return ['error' => 'Veicolo non valido'];
         }
 
-        // Controlla se esiste già un log per stesso veicolo e stesso mese
+        if (isset($row['_exists']) && $row['_exists']) {
+            return ['error' => 'Chilometraggio già presente per ' . ($row['_label_date'] ?? $row['_date'])];
+        }
+
         $exists = MileageLog::where('vehicle_id', $row['_vehicle_id'])
             ->where('log_date', $row['_date'])
             ->exists();
 
         if ($exists) {
-            return ['error' => 'Chilometraggio già presente per ' . ($row['_label_date'] ?? $row['_date']) . '.'];
+            return ['error' => 'Chilometraggio già presente per ' . ($row['_label_date'] ?? $row['_date'])];
         }
 
         MileageLog::create([
