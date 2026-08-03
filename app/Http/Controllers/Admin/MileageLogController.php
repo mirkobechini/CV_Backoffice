@@ -91,31 +91,54 @@ class MileageLogController extends Controller
 
         $logDate = $data['log_date'];
         $count = 0;
+        $errors = [];
 
         if (!empty($data['mileages'])) {
-            // Carichiamo tutti i veicoli in una sola query, filtrando solo gli ID forniti
             $validVehicleIds = Vehicle::whereIn('id', array_keys($data['mileages']))
                 ->pluck('id')
                 ->toArray();
+
+            // Pre-carica l'ultimo km per ogni veicolo coinvolto
+            $lastMileages = MileageLog::whereIn('vehicle_id', $validVehicleIds)
+                ->selectRaw('vehicle_id, MAX(mileage) as last_mileage')
+                ->groupBy('vehicle_id')
+                ->pluck('last_mileage', 'vehicle_id');
 
             foreach ($data['mileages'] as $vehicleId => $mileage) {
                 if ($mileage === null || $mileage === '' || $mileage < 0) {
                     continue;
                 }
 
-                // Salta se il veicolo non esiste nel DB
-                if (!in_array((int) $vehicleId, $validVehicleIds, true)) {
+                $vehicleId = (int) $vehicleId;
+
+                if (!in_array($vehicleId, $validVehicleIds, true)) {
+                    continue;
+                }
+
+                // Validazione: km devono essere >= ultimo registrato
+                $lastKm = $lastMileages[$vehicleId] ?? null;
+                if ($lastKm !== null && (int) $mileage < (int) $lastKm) {
+                    $vehicle = Vehicle::find($vehicleId);
+                    $label = $vehicle ? ($vehicle->internal_code . ' - ' . $vehicle->license_plate) : ('ID ' . $vehicleId);
+                    $errors[] = "{$label}: {$mileage} km è inferiore all'ultimo registrato ({$lastKm} km).";
                     continue;
                 }
 
                 MileageLog::create([
-                    'vehicle_id' => (int) $vehicleId,
+                    'vehicle_id' => $vehicleId,
                     'log_date' => $logDate,
                     'mileage' => (int) $mileage,
                 ]);
 
                 $count++;
             }
+        }
+
+        if (!empty($errors)) {
+            return redirect()->route('admin.mileage-logs.bulk')
+                ->with('status_error', 'Alcuni chilometraggi non sono stati registrati:')
+                ->with('status_errors', $errors)
+                ->withInput();
         }
 
         if ($count === 0) {

@@ -15,6 +15,18 @@
             </div>
         @endif
 
+        @if (session('status_error'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <strong>{{ session('status_error') }}</strong>
+                <ul class="mb-0 mt-1">
+                    @foreach (session('status_errors', []) as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <strong>Si sono verificati degli errori:</strong>
@@ -56,7 +68,8 @@
                                     <tr>
                                         <td><strong>{{ $vehicle->internal_code }}</strong></td>
                                         <td>{{ $vehicle->license_plate }}</td>
-                                        <td>{{ $vehicle->brand?->name ?? 'N/A' }} {{ $vehicle->carModel?->name ?? '' }}</td>
+                                        <td>{{ $vehicle->brand?->name ?? 'N/A' }} {{ $vehicle->carModel?->name ?? '' }}
+                                        </td>
                                         <td>{{ $vehicle->mileage !== null ? number_format($vehicle->mileage, 0, ',', '.') : 'N/D' }}
                                         </td>
                                         <td>
