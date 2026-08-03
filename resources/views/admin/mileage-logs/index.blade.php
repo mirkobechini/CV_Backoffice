@@ -5,6 +5,7 @@
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.mileage-logs.create')" label="chilometraggio" />
             <a href="{{ route('admin.mileage-logs.bulk') }}" class="btn btn-outline-primary btn-sm">Rilevazione mensile</a>
+            <a href="{{ route('admin.csv-import.index') }}" class="btn btn-outline-primary btn-sm">Importa CSV</a>
         </x-slot:headingActions>
 
         <x-slot:head>

@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CsvExportController;
+use App\Http\Controllers\CsvImportController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -75,6 +76,14 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])
             ->name('csv.export')
             ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'providers']);
+
+        // Import CSV
+        Route::get('csv-import', [CsvImportController::class, 'index'])
+            ->name('csv-import.index');
+        Route::post('csv-import/preview', [CsvImportController::class, 'preview'])
+            ->name('csv-import.preview');
+        Route::post('csv-import/confirm', [CsvImportController::class, 'confirm'])
+            ->name('csv-import.confirm');
     });
 
 require __DIR__ . '/auth.php';
