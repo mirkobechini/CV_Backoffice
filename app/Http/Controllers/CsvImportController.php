@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Issue;
 use App\Models\MileageLog;
+use App\Models\Provider;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -57,6 +58,10 @@ class CsvImportController extends Controller
 
         DB::transaction(function () use ($entity, $editable, &$imported, &$errors) {
             foreach ($editable as $row) {
+                // Salta i record esclusi dall'utente
+                if (!empty($row['_skip'])) {
+                    continue;
+                }
                 // Solo record validi
                 if (empty($row['_valid']) || $row['_valid'] !== '1') {
                     continue;
@@ -530,22 +535,56 @@ class CsvImportController extends Controller
             return ['error' => 'Veicolo non valido'];
         }
 
-        // Controllo se esiste già un guasto simile per stesso veicolo e stessa data
-        $exists = Issue::where('vehicle_id', $row['_vehicle_id'])
-            ->where('description', $row['_description'] ?? '')
-            ->where('event_date', $row['_date'] ?? '')
+        $vehicleId = $row['_vehicle_id'];
+        $description = $row['_description'] ?? '';
+        $status = $row['_status'] ?? 'open';
+        $eventDate = $row['_date'] ?? Carbon::today()->toDateString();
+        $appointmentDate = $row['_appointment_date'] ?? '';
+        $providerName = $row['_provider_name'] ?? '';
+
+        // Controllo se esiste già un guasto simile
+        $exists = Issue::where('vehicle_id', $vehicleId)
+            ->where('description', $description)
+            ->where('event_date', $eventDate)
             ->exists();
 
         if ($exists) {
-            return ['error' => 'Guasto già esistente: "' . mb_substr($row['_description'] ?? '', 0, 50) . '"'];
+            return ['error' => 'Guasto già esistente: "' . mb_substr($description, 0, 50) . '"'];
         }
 
-        Issue::create([
-            'vehicle_id' => $row['_vehicle_id'],
-            'description' => $row['_description'] ?? '',
-            'status' => $row['_status'] ?? 'open',
-            'event_date' => $row['_date'] ?? Carbon::today()->toDateString(),
+        // Crea il guasto
+        $issue = Issue::create([
+            'vehicle_id' => $vehicleId,
+            'description' => $description,
+            'status' => $status,
+            'event_date' => $eventDate,
         ]);
+
+        // Se c'è data appuntamento, crea anche l'appuntamento
+        if (!empty($appointmentDate)) {
+            $parsedDate = $this->parseDate($appointmentDate);
+            if (!$parsedDate) {
+                return ['error' => 'Data appuntamento "' . $appointmentDate . '" non valida.'];
+            }
+
+            $providerId = null;
+            if (!empty($providerName)) {
+                $provider = Provider::where('name', 'like', '%' . $providerName . '%')->first();
+                if ($provider) {
+                    $providerId = $provider->id;
+                }
+            }
+
+            $maintenanceRecord = \App\Models\MaintenanceRecord::create([
+                'vehicle_id' => $vehicleId,
+                'provider_id' => $providerId,
+                'appointment_date' => $parsedDate->toDateString(),
+                'activity_type' => 'Riparazione',
+            ]);
+
+            // Collega il guasto all'appuntamento
+            $maintenanceRecord->issues()->attach($issue->id);
+        }
 
         return ['success' => true];
     }

@@ -108,18 +108,25 @@
                     <table class="table table-hover table-sm">
                         <thead class="table-light">
                             <tr>
+                                <th style="width:40px;">Salta</th>
                                 <th>#</th>
                                 <th>Veicolo</th>
                                 <th>Descrizione</th>
                                 <th>Data</th>
                                 <th>Stato</th>
+                                <th>Appuntamento</th>
+                                <th>Officina</th>
                                 <th>Note</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach ($results as $index => $result)
                                 <tr class="{{ $result['valid'] ? '' : 'table-danger' }}">
-                                    <td>{{ $result['row'] }}</td>
+                                    <td class="text-center">
+                                        <input type="checkbox" class="form-check-input skip-item"
+                                            name="editable[{{ $index }}][_skip]" value="1"
+                                            {{ !$result['valid'] ? 'disabled' : '' }}>
+                                    </td>
                                     <td>
                                         <strong>{{ $result['data']['_vehicle_label'] ?? 'N/D' }}</strong>
                                         <input type="hidden" name="editable[{{ $index }}][_vehicle_id]"
@@ -153,42 +160,34 @@
                                         </select>
                                     </td>
                                     <td>
-                                        @if (!$result['valid'])
-                                            <span class="text-danger small">
-                                                @foreach ($result['errors'] as $err)
-                                                    <div>{{ $err }}</div>
-                                                @endforeach
-                                            </span>
-                                        @endif
-                                        @if (!empty($result['warnings']))
-                                            <span class="text-warning small">
-                                                @foreach ($result['warnings'] as $warn)
-                                                    <div>{{ $warn }}</div>
-                                                @endforeach
-                                            </span>
-                                        @endif
+                                        <input type="text" class="form-control form-control-sm" style="max-width:120px;"
+                                            name="editable[{{ $index }}][_appointment_date]"
+                                            value="{{ $result['data']['_appointment_date'] ?? '' }}"
+                                            {{ !$result['valid'] ? 'disabled' : '' }}>
                                     </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" style="max-width:130px;"
+                                            name="editable[{{ $index }}][_provider_name]"
+                                            value="{{ $result['data']['_provider_name'] ?? '' }}"
+                                            {{ !$result['valid'] ? 'disabled' : '' }}>
+                                    </td>
+                                    <td>
 
-            @if ($validCount > 0)
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Puoi modificare i campi direttamente in tabella prima di importare.
-                    Verranno importati solo i <strong>{{ $validCount }} record validi</strong>.
-                </div>
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-upload"></i> Importa {{ $validCount }} record
-                </button>
-            @else
-                <div class="alert alert-danger">
-                    Nessun record valido da importare. Correggi gli errori e riprova.
-                </div>
-            @endif
+                                        @if ($validCount > 0)
+                                            <div class="alert alert-info">
+                                                <i class="bi bi-info-circle"></i>
+                                                Puoi modificare i campi direttamente in tabella prima di importare.
+                                                Verranno importati solo i <strong>{{ $validCount }} record
+                                                    validi</strong>.
+                                            </div>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="bi bi-upload"></i> Importa {{ $validCount }} record
+                                            </button>
+                                        @else
+                                            <div class="alert alert-danger">
+                                                Nessun record valido da importare. Correggi gli errori e riprova.
+                                            </div>
+                                        @endif
         </form>
     </div>
 @endsection
