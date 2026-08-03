@@ -45,9 +45,9 @@ class CsvImportController extends Controller
     public function confirm(Request $request)
     {
         $entity = $request->entity;
-        $results = json_decode($request->rows_json, true);
+        $editable = $request->input('editable', []);
 
-        if (empty($results)) {
+        if (empty($editable)) {
             return redirect()->route('admin.csv-import.index')
                 ->with('status_error', 'Nessun dato da importare.');
         }
@@ -55,14 +55,13 @@ class CsvImportController extends Controller
         $imported = 0;
         $errors = [];
 
-        DB::transaction(function () use ($entity, $results, &$imported, &$errors) {
-            foreach ($results as $result) {
+        DB::transaction(function () use ($entity, $editable, &$imported, &$errors) {
+            foreach ($editable as $row) {
                 // Solo record validi
-                if (empty($result['valid'])) {
+                if (empty($row['_valid']) || $row['_valid'] !== '1') {
                     continue;
                 }
 
-                $row = $result['data'] ?? [];
                 $r = match ($entity) {
                     'issues' => $this->importIssue($row),
                     'mileage-logs' => $this->importMileageLog($row),

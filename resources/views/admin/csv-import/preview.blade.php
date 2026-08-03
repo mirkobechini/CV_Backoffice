@@ -25,10 +25,8 @@
         <form action="{{ route('admin.csv-import.confirm') }}" method="POST">
             @csrf
             <input type="hidden" name="entity" value="{{ $entity }}">
-            <input type="hidden" name="rows_json" value="{{ json_encode($results) }}">
 
             @if ($entity === 'mileage-logs')
-                {{-- Vista raggruppata per mese per i chilometraggi --}}
                 @php
                     $groupedByMonth = collect($results)->groupBy(fn($r) => $r['data']['_label_date'] ?? 'Senza data');
                 @endphp
@@ -53,13 +51,29 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($monthResults as $result)
+                                        @foreach ($monthResults as $index => $result)
+                                            @php $inputIdx = $loop->parent->index * 1000 + $index; @endphp
                                             <tr class="{{ $result['valid'] ? '' : 'table-danger' }}">
                                                 <td>{{ $result['row'] }}</td>
                                                 <td>
                                                     <strong>{{ $result['data']['_vehicle_label'] ?? ($result['data']['veicolo'] ?? ($result['data']['SIGLA'] ?? '?')) }}</strong>
                                                 </td>
-                                                <td>{{ number_format($result['data']['_mileage'] ?? 0, 0, ',', '.') }} km
+                                                <td>
+                                                    <input type="number" class="form-control form-control-sm"
+                                                        style="max-width:130px;"
+                                                        name="editable[{{ $inputIdx }}][_mileage]"
+                                                        value="{{ $result['data']['_mileage'] ?? '' }}"
+                                                        {{ !$result['valid'] ? 'disabled' : '' }}>
+                                                    <input type="hidden" name="editable[{{ $inputIdx }}][_vehicle_id]"
+                                                        value="{{ $result['data']['_vehicle_id'] ?? '' }}">
+                                                    <input type="hidden" name="editable[{{ $inputIdx }}][_date]"
+                                                        value="{{ $result['data']['_date'] ?? '' }}">
+                                                    <input type="hidden" name="editable[{{ $inputIdx }}][_label_date]"
+                                                        value="{{ $result['data']['_label_date'] ?? '' }}">
+                                                    <input type="hidden" name="editable[{{ $inputIdx }}][_valid]"
+                                                        value="{{ $result['valid'] ? '1' : '0' }}">
+                                                    <input type="hidden" name="editable[{{ $inputIdx }}][_exists]"
+                                                        value="{{ $result['data']['_exists'] ?? '' }}">
                                                 </td>
                                                 <td>
                                                     @if ($result['valid'])
@@ -89,7 +103,7 @@
                     </div>
                 @endforeach
             @else
-                {{-- Vista guasti --}}
+                {{-- Vista guasti con campi editabili --}}
                 <div class="table-responsive">
                     <table class="table table-hover table-sm">
                         <thead class="table-light">
@@ -103,16 +117,29 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($results as $result)
+                            @foreach ($results as $index => $result)
                                 <tr class="{{ $result['valid'] ? '' : 'table-danger' }}">
                                     <td>{{ $result['row'] }}</td>
                                     <td>
                                         <strong>{{ $result['data']['_vehicle_label'] ?? 'N/D' }}</strong>
+                                        <input type="hidden" name="editable[{{ $index }}][_vehicle_id]"
+                                            value="{{ $result['data']['_vehicle_id'] ?? '' }}">
                                     </td>
-                                    <td>{{ $result['data']['_description'] ?? ($result['data']['DESCRIZIONE'] ?? 'N/D') }}
-                                    </td>
-                                    <td>{{ $result['data']['_date'] ?? ($result['data']['DATA'] ?? 'N/D') }}</td>
                                     <td>
+                                        <input type="text" class="form-control form-control-sm" style="min-width:200px;"
+                                            name="editable[{{ $index }}][_description]"
+                                            value="{{ $result['data']['_description'] ?? ($result['data']['DESCRIZIONE'] ?? '') }}"
+                                            {{ !$result['valid'] ? 'disabled' : '' }}>
+                                    </td>
+                                    <td>
+                                        <input type="text" class="form-control form-control-sm" style="max-width:130px;"
+                                            name="editable[{{ $index }}][_date]"
+                                            value="{{ $result['data']['_date'] ?? ($result['data']['DATA'] ?? '') }}"
+                                            {{ !$result['valid'] ? 'disabled' : '' }}>
+                                    </td>
+                                    <td>
+                                        <input type="hidden" name="editable[{{ $index }}][_status]"
+                                            value="{{ $result['data']['_status'] ?? 'open' }}">
                                         @if (isset($result['data']['_status']))
                                             @if ($result['data']['_status'] === 'closed')
                                                 <span class="badge bg-success">Chiuso</span>
@@ -147,11 +174,11 @@
             @if ($validCount > 0)
                 <div class="alert alert-info">
                     <i class="bi bi-info-circle"></i>
+                    Puoi modificare i campi direttamente in tabella prima di importare.
                     Verranno importati solo i <strong>{{ $validCount }} record validi</strong>.
-                    I record con errori verranno saltati.
                 </div>
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-upload"></i> Importa {{ $validCount }} record validi
+                    <i class="bi bi-upload"></i> Importa {{ $validCount }} record
                 </button>
             @else
                 <div class="alert alert-danger">
