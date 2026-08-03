@@ -27,14 +27,14 @@
 
         {{-- Toolbar sticky con solo pulsante Elimina --}}
         <div class="sticky-top py-2 mb-2" style="z-index:10; background: var(--bs-body-bg);">
-            <div class="d-flex align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 ms-2">
                 <button type="button" class="btn btn-danger btn-sm" id="toggle-select-mode">
-                    <i class="bi bi-trash"></i> Elimina
+                    <i class="bi bi-trash"></i>
                 </button>
                 <span id="bulk-delete-bar" style="display:none;">
                     <button type="button" class="btn btn-danger btn-sm" id="bulk-delete-btn" onclick="bulkDeleteSelected()"
                         disabled>
-                        <i class="bi bi-trash"></i> Elimina (<span id="selected-count">0</span>)
+                        Elimina (<span id="selected-count">0</span>)
                     </button>
                 </span>
             </div>
