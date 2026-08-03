@@ -102,9 +102,21 @@ class CsvImportController extends Controller
 
         $headers = array_map(fn($h) => trim(preg_replace('/^\xEF\xBB\xBF/', '', $h)), $headers);
 
+        // Assegna nomi posizionali alle colonne senza header (evita sovrascritture)
+        $cleanHeaders = [];
+        $counter = 0;
+        foreach ($headers as $i => $h) {
+            if (empty($h)) {
+                $cleanHeaders[$i] = '_col_' . $counter++;
+            } else {
+                $cleanHeaders[$i] = $h;
+                $counter = 0;
+            }
+        }
+
         while (($line = fgetcsv($handle)) !== false) {
             $row = [];
-            foreach ($headers as $i => $header) {
+            foreach ($cleanHeaders as $i => $header) {
                 $row[$header] = isset($line[$i]) ? trim($line[$i]) : '';
             }
             if (implode('', $row) !== '') {
@@ -382,15 +394,15 @@ class CsvImportController extends Controller
                 'errors' => [],
             ];
 
-            // Cerca descrizione in vari campi possibili
+            $values = array_values($row);
+
+            // Cerca descrizione: prima per nome colonna, poi per posizione (colonna _col_1)
             $description = $row['DESCRIZIONE'] ?? $row['descrizione'] ?? $row['Descrizione'] ?? '';
-            // Se non trova, prova la seconda colonna (posizione 1)
             if (empty($description)) {
-                $values = array_values($row);
-                $description = $values[1] ?? '';
+                $description = $row['_col_0'] ?? $values[1] ?? '';
             }
 
-            // Non required: se vuota, la importa comunque come stringa vuota
+            // Non required
             $result['data']['_description'] = $description;
             if (empty($description)) {
                 $result['warnings'][] = 'Descrizione vuota.';
