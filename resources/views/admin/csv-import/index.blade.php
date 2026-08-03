@@ -56,6 +56,18 @@
                         </div>
                     </div>
 
+                    <div class="mb-3" id="import-year-group" style="display:none;">
+                        <label for="import_year" class="form-label">Anno di riferimento</label>
+                        <select class="form-select" id="import_year" name="import_year">
+                            <option value="{{ date('Y') }}">{{ date('Y') }}</option>
+                            <option value="{{ date('Y') - 1 }}">{{ date('Y') - 1 }}</option>
+                            <option value="{{ date('Y') - 2 }}">{{ date('Y') - 2 }}</option>
+                        </select>
+                        <div class="form-text">
+                            Per i chilometraggi in formato pivot, le colonne mesi verranno associate a questo anno.
+                        </div>
+                    </div>
+
                     <div class="mb-3" id="vehicle-ref-group" style="display:none;">
                         <label for="vehicle_ref" class="form-label">Sigla veicolo (per guasti)</label>
                         <input type="text" class="form-control" id="vehicle_ref" name="vehicle_ref"
@@ -111,7 +123,9 @@ AB123CD;03/2026;45000
     <script>
         document.getElementById('entity').addEventListener('change', function() {
             const group = document.getElementById('vehicle-ref-group');
+            const yearGroup = document.getElementById('import-year-group');
             group.style.display = this.value === 'issues' ? 'block' : 'none';
+            yearGroup.style.display = this.value === 'mileage-logs' ? 'block' : 'none';
         });
 
         // Auto-detect sigla dal nome file

@@ -22,9 +22,11 @@ class CsvImportController extends Controller
             'entity' => 'required|in:issues,mileage-logs',
             'csv_file' => 'required|file|mimes:csv,txt|max:5120',
             'vehicle_ref' => 'nullable|string|max:20',
+            'import_year' => 'nullable|integer|min:2000|max:2100',
         ]);
 
         $entity = $request->entity;
+        $importYear = $request->import_year ?? (int) date('Y');
         $rows = $this->parseCsv($request->file('csv_file'));
 
         if (empty($rows)) {
@@ -33,7 +35,7 @@ class CsvImportController extends Controller
 
         $results = match ($entity) {
             'issues' => $this->validateIssues($rows, $request->vehicle_ref),
-            'mileage-logs' => $this->validateMileageLogs($rows),
+            'mileage-logs' => $this->validateMileageLogs($rows, $importYear),
             default => [],
         };
 
@@ -167,14 +169,18 @@ class CsvImportController extends Controller
     /**
      * Valida righe di chilometraggi — supporta formato pivot (mese come colonne).
      */
-    private function validateMileageLogs(array $rows): array
+    private function validateMileageLogs(array $rows, int $importYear = 0): array
     {
+        if ($importYear === 0) {
+            $importYear = (int) date('Y');
+        }
+
         // Determina se è formato pivot
         $sampleHeaders = array_keys($rows[0] ?? []);
         $isPivot = $this->isPivotFormat($sampleHeaders);
 
         if ($isPivot) {
-            return $this->validateMileageLogsPivot($rows);
+            return $this->validateMileageLogsPivot($rows, $importYear);
         }
 
         // Formato semplice (veicolo, mese, km)
@@ -185,14 +191,10 @@ class CsvImportController extends Controller
      * Formato pivot: righe=veicoli, colonne=mesi
      * Header: SIGLA, MEZZI, TARGA, GENNAIO, FEBBRAIO, ...
      */
-    private function validateMileageLogsPivot(array $rows): array
+    private function validateMileageLogsPivot(array $rows, int $year): array
     {
         $results = [];
         $vehiclesCache = [];
-        $year = date('Y'); // default anno corrente
-
-        // Cerca anno nelle righe (es. "2025" nel nome file o nelle colonne)
-        // Usiamo l'anno corrente, l'utente selezionerà l'anno dalla view
 
         // Identifica colonne mesi
         $headers = array_keys($rows[0] ?? []);

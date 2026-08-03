@@ -47,6 +47,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('mileage-logs.bulk');
         Route::post('mileage-logs/bulk/store', [MileageLogController::class, 'bulkStore'])
             ->name('mileage-logs.bulk-store');
+        Route::get('mileage-logs/pivot', [MileageLogController::class, 'pivot'])
+            ->name('mileage-logs.pivot');
+        Route::post('mileage-logs/pivot/save', [MileageLogController::class, 'pivotSave'])
+            ->name('mileage-logs.pivot-save');
         Route::resource("maintenance-records", MaintenanceRecordController::class)
             ->parameters(['maintenance-records' => 'maintenanceRecord']);
         Route::resource("vehicle-types", VehicleTypeController::class)

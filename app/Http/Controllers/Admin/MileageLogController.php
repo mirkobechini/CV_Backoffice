@@ -159,4 +159,59 @@ class MileageLogController extends Controller
         $mileageLog->delete();
         return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio eliminato con successo.');
     }
+
+    /**
+     * Vista mensile pivot (come nel foglio Google).
+     */
+    public function pivot(Request $request)
+    {
+        $year = $request->get('year', date('Y'));
+        $vehicles = Vehicle::with(['brand', 'carModel'])->orderBy('internal_code')->get();
+
+        // Raccogli i km per ogni veicolo per ogni mese dell'anno
+        $logs = MileageLog::whereYear('log_date', $year)
+            ->selectRaw('vehicle_id, MONTH(log_date) as month, mileage')
+            ->get()
+            ->groupBy('vehicle_id')
+            ->map(fn($items) => $items->keyBy('month'));
+
+        return view('admin.mileage-logs.pivot', compact('vehicles', 'logs', 'year'));
+    }
+
+    /**
+     * Salva modifiche dalla vista pivot.
+     */
+    public function pivotSave(Request $request)
+    {
+        $data = $request->validate([
+            'year' => 'required|integer|min:2000|max:2100',
+            'mileages' => 'nullable|array',
+            'mileages.*.*' => 'nullable|integer|min:0',
+        ]);
+
+        $year = $data['year'];
+        $count = 0;
+
+        if (!empty($data['mileages'])) {
+            foreach ($data['mileages'] as $vehicleId => $months) {
+                foreach ($months as $month => $mileage) {
+                    if ($mileage === null || $mileage === '' || $mileage < 0) {
+                        continue;
+                    }
+
+                    $dateStr = sprintf('%04d-%02d-01', $year, $month);
+
+                    MileageLog::updateOrCreate(
+                        ['vehicle_id' => $vehicleId, 'log_date' => $dateStr],
+                        ['mileage' => (int) $mileage]
+                    );
+
+                    $count++;
+                }
+            }
+        }
+
+        return redirect()->route('admin.mileage-logs.pivot', ['year' => $year])
+            ->with('status', "{$count} chilometraggi salvati con successo.");
+    }
 }
