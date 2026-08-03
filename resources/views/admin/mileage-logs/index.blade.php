@@ -25,37 +25,30 @@
             </div>
         @endif
 
-        {{-- Toolbar fissa con eliminazione multipla --}}
+        {{-- Toolbar sticky con solo pulsante Elimina --}}
         <div class="sticky-top py-2 mb-2" style="z-index:10; background: var(--bs-body-bg);">
             <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-outline-danger btn-sm" id="toggle-select-mode">
-                    <i class="bi bi-check-square"></i> Seleziona
+                <button type="button" class="btn btn-danger btn-sm" id="toggle-select-mode">
+                    <i class="bi bi-trash"></i> Elimina
                 </button>
-                <form method="POST" action="{{ route('admin.mileage-logs.bulk-delete') }}" id="bulk-delete-form"
-                    class="mb-0 d-inline" style="display:none !important;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger btn-sm" id="bulk-delete-btn"
-                        onclick="return confirm('Eliminare i record selezionati?')" disabled>
-                        <i class="bi bi-trash"></i> Elimina selezionati (<span id="selected-count">0</span>)
+                <span id="bulk-delete-bar" style="display:none;">
+                    <button type="button" class="btn btn-danger btn-sm" id="bulk-delete-btn" onclick="bulkDeleteSelected()"
+                        disabled>
+                        <i class="bi bi-trash"></i> Elimina (<span id="selected-count">0</span>)
                     </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="cancel-select-mode"
-                        style="display:none;">
-                        <i class="bi bi-x-lg"></i> Annulla
-                    </button>
-                </form>
+                </span>
             </div>
         </div>
 
-        <form method="POST" action="{{ route('admin.mileage-logs.bulk-delete') }}" id="bulk-delete-form-hidden">
+        <form method="POST" action="{{ route('admin.mileage-logs.bulk-delete') }}" id="bulk-delete-form">
             @csrf
             @method('DELETE')
             <div class="card my-0">
                 <table class="table table-striped table-hover my-0 align-middle">
                     <thead>
                         <tr>
-                            <th style="width:40px;" class="select-checkbox-col" style="display:none;">
-                                <input type="checkbox" id="select-all"
+                            <th style="width:40px; display:none;" class="select-checkbox-col">
+                                <input type="checkbox" id="select-all" class="form-check-input"
                                     onchange="document.querySelectorAll('.select-item').forEach(c => { c.checked = this.checked; }); updateSelectedCount();">
                             </th>
                             <th>
@@ -79,8 +72,8 @@
                     <tbody>
                         @forelse ($mileageLogs as $mileageLog)
                             <tr>
-                                <td style="width:40px;" class="select-checkbox-col" style="display:none;">
-                                    <input type="checkbox" class="select-item" name="ids[]"
+                                <td style="width:40px; display:none;" class="select-checkbox-col">
+                                    <input type="checkbox" class="form-check-input select-item" name="ids[]"
                                         value="{{ $mileageLog->id }}">
                                 </td>
                                 <td>{{ $mileageLog->vehicle->internal_code }}</td>
@@ -100,26 +93,16 @@
     </div>
 
     <script>
-        let selectMode = false;
-
         document.getElementById('toggle-select-mode').addEventListener('click', function() {
-            selectMode = !selectMode;
-            document.querySelectorAll('.select-checkbox-col').forEach(el => el.style.display = selectMode ? '' :
-                'none');
-            document.getElementById('bulk-delete-form').style.display = selectMode ? 'inline' : 'none';
-            document.getElementById('cancel-select-mode').style.display = selectMode ? '' : 'none';
-            this.innerHTML = selectMode ?
-                '<i class="bi bi-x-lg"></i> Annulla selezione' :
-                '<i class="bi bi-check-square"></i> Seleziona';
+            const selectMode = document.querySelector('.select-checkbox-col').style.display !== 'none';
+            document.querySelectorAll('.select-checkbox-col').forEach(el => el.style.display = selectMode ? 'none' :
+                '');
+            document.getElementById('bulk-delete-bar').style.display = selectMode ? 'none' : 'inline';
             if (!selectMode) {
                 document.querySelectorAll('.select-item').forEach(c => c.checked = false);
                 document.getElementById('select-all').checked = false;
                 updateSelectedCount();
             }
-        });
-
-        document.getElementById('cancel-select-mode').addEventListener('click', function() {
-            document.getElementById('toggle-select-mode').click();
         });
 
         document.getElementById('select-all')?.addEventListener('change', function() {
@@ -137,6 +120,11 @@
             const checked = document.querySelectorAll('.select-item:checked').length;
             document.getElementById('selected-count').textContent = checked;
             document.getElementById('bulk-delete-btn').disabled = checked === 0;
+        }
+
+        function bulkDeleteSelected() {
+            if (!confirm('Eliminare i record selezionati?')) return;
+            document.getElementById('bulk-delete-form').submit();
         }
     </script>
 @endsection
