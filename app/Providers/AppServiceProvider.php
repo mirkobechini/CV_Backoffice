@@ -29,6 +29,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Pagination\Paginator;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -45,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Usa template Bootstrap 5 per la paginazione (invece di Tailwind)
+        Paginator::useBootstrapFive();
         // Rate limiting per le route admin (mutazioni)
         RateLimiter::for('admin-mutations', function (Request $request) {
             return Limit::perMinute(30)
