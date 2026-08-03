@@ -51,6 +51,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('mileage-logs.bulk-store');
         Route::resource("mileage-logs", MileageLogController::class)
             ->parameters(['mileage-logs' => 'mileageLog']);
+        Route::delete('mileage-logs/bulk/delete', [MileageLogController::class, 'bulkDelete'])
+            ->name('mileage-logs.bulk-delete');
         Route::resource("maintenance-records", MaintenanceRecordController::class)
             ->parameters(['maintenance-records' => 'maintenanceRecord']);
         Route::resource("vehicle-types", VehicleTypeController::class)

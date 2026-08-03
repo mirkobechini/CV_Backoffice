@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Requests\StoreMileageLogRequest;
 use App\Http\Requests\UpdateMileageLogRequest;
 use App\Models\MileageLog;
@@ -11,17 +12,36 @@ use Illuminate\Http\Request;
 
 class MileageLogController extends Controller
 {
+    use SortableAndGroupable;
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $mileageLogs = MileageLog::query()
-            ->with('vehicle')
-            ->orderByDesc('log_date')
-            ->paginate(20);
+        $validated = $request->validate([
+            'sort_by' => 'nullable|in:vehicle,date,km',
+            'sort_dir' => 'nullable|in:asc,desc',
+        ]);
 
-        return view('admin.mileage-logs.index', compact('mileageLogs'));
+        $sortBy = $validated['sort_by'] ?? 'date';
+        $sortDir = $validated['sort_dir'] ?? 'desc';
+
+        $mileageLogs = $this->applySorting(
+            MileageLog::with('vehicle'),
+            $sortBy,
+            $sortDir,
+            [
+                'vehicle' => fn(MileageLog $l) => $l->vehicle?->internal_code ?? '',
+                'date' => 'log_date',
+                'km' => 'mileage',
+            ]
+        );
+
+        return view('admin.mileage-logs.index', compact('mileageLogs', 'sortBy', 'sortDir') + [
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.mileage-logs.index'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
+        ]);
     }
 
     /**
@@ -158,6 +178,22 @@ class MileageLogController extends Controller
     {
         $mileageLog->delete();
         return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio eliminato con successo.');
+    }
+
+    /**
+     * Elimina multipli chilometraggi selezionati.
+     */
+    public function bulkDelete(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:mileage_logs,id',
+        ]);
+
+        $count = MileageLog::whereIn('id', $data['ids'])->delete();
+
+        return redirect()->route('admin.mileage-logs.index')
+            ->with('status', "{$count} chilometraggi eliminati con successo.");
     }
 
     /**
