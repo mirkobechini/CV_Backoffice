@@ -138,15 +138,19 @@
                                             {{ !$result['valid'] ? 'disabled' : '' }}>
                                     </td>
                                     <td>
-                                        <input type="hidden" name="editable[{{ $index }}][_status]"
-                                            value="{{ $result['data']['_status'] ?? 'open' }}">
-                                        @if (isset($result['data']['_status']))
-                                            @if ($result['data']['_status'] === 'closed')
-                                                <span class="badge bg-success">Chiuso</span>
-                                            @else
-                                                <span class="badge bg-warning text-dark">Aperto</span>
-                                            @endif
-                                        @endif
+                                        <select class="form-select form-select-sm" style="max-width:110px;"
+                                            name="editable[{{ $index }}][_status]"
+                                            {{ !$result['valid'] ? 'disabled' : '' }}>
+                                            <option value="open"
+                                                {{ ($result['data']['_status'] ?? 'open') == 'open' ? 'selected' : '' }}>
+                                                Aperto</option>
+                                            <option value="in_progress"
+                                                {{ ($result['data']['_status'] ?? '') == 'in_progress' ? 'selected' : '' }}>
+                                                In lavorazione</option>
+                                            <option value="closed"
+                                                {{ ($result['data']['_status'] ?? '') == 'closed' ? 'selected' : '' }}>
+                                                Chiuso</option>
+                                        </select>
                                     </td>
                                     <td>
                                         @if (!$result['valid'])
