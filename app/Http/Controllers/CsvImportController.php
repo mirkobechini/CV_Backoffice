@@ -416,16 +416,16 @@ class CsvImportController extends Controller
                 $result['errors'][] = 'Nessun veicolo associato. Specifica la sigla nel nome file (es. "1727 - Guasti.csv").';
             }
 
-            // Data
-            $rawDate = $row['DATA'] ?? $row['data'] ?? $row['Data'] ?? '';
-            // Se la prima colonna è l'header "DATA" stesso (es. riga vuota), ignora
-            if (strtoupper(trim($rawDate)) === 'DATA') {
+            // Data — cerca in tutti i formati possibili
+            $rawDate = $row['data'] ?? $row['DATA'] ?? $row['Data'] ?? $row['Data evento'] ?? $row['event_date'] ?? '';
+            // Verifica che non sia l'header stesso della colonna
+            if (in_array(mb_strtolower(trim($rawDate)), ['data', 'data evento', 'event_date', 'date', 'giorno', 'mese', 'periodo'], true)) {
                 $rawDate = '';
             }
             if (empty($rawDate)) {
                 $values = array_values($row);
                 $rawDate = $values[0] ?? '';
-                if (strtoupper(trim($rawDate)) === 'DATA') {
+                if (in_array(mb_strtolower(trim($rawDate)), ['data', 'data evento', 'date', 'giorno', 'mese', 'periodo'], true)) {
                     $rawDate = '';
                 }
             }
@@ -462,7 +462,8 @@ class CsvImportController extends Controller
 
     /**
      * Parsa una data in vari formati possibili.
-     * Per date GG/MM senza anno: se mese <= 8 usa anno corrente, altrimenti anno precedente.
+     * Per date GG/MM senza anno: se il mese è già passato (<= mese corrente) usa anno corrente,
+     * altrimenti usa anno precedente (es. 12/8 → 2026, 15/10 → 2025).
      */
     private function parseDate(string $date): ?Carbon
     {
