@@ -17,11 +17,6 @@ class DatabaseSeeder extends Seeder
             EquipmentTypeTableSeeder::class,
             VehicleTypeTableSeeder::class,
             VehicleTypeEquipmentRequirementSeeder::class,
-            VehicleTableSeeder::class,
-            MileageLogTableSeeder::class,
-            EquipmentTableSeeder::class,
-            ProviderTableSeeder::class,
-            IssueTableSeeder::class,
         ]);
     }
 }
