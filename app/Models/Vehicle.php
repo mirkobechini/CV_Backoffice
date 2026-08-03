@@ -185,5 +185,6 @@ class Vehicle extends Model
     public const DEADLINE_TYPES = [
         'revisione' => Deadline::TYPE_MINISTERIAL,
         'ossigeno' => Deadline::TYPE_OXYGEN,
+        'cinghia' => Deadline::TYPE_CINGHIA,
     ];
 }

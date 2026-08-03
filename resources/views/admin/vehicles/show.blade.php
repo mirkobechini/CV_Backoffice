@@ -70,6 +70,14 @@
                                 <span class="card-text d-block"><strong>Tagliando:</strong> </span>
                                 <span class="card-text d-block"><strong>Assicurazione:</strong>
                                     {{ $deadlines->get('Assicurazione')?->due_date_formatted ?? 'N/A' }}</span>
+                                @if ($vehicle->has_timing_belt)
+                                    <span class="card-text d-block"><strong>Cinghia Distribuzione:</strong>
+                                        {{ $deadlines->get($deadlinesTypes['cinghia'])?->due_date_formatted ?? 'N/A' }}
+                                        {!! $deadlines->get($deadlinesTypes['cinghia'])?->getAutomaticStatusAttribute() === 'expired'
+                                            ? '<i class="fa-solid fa-times text-danger"></i>'
+                                            : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                    </span>
+                                @endif
 
                             </div>
                         </div>
@@ -218,7 +226,8 @@
                                                 class="bi bi-eye"></i></a>
                                         <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}"
                                             class="btn btn-secondary rounded-pill "><i class="bi bi-pencil"></i></a>
-                                        <button type="button" class="btn btn-danger rounded-pill " data-bs-toggle="modal"
+                                        <button type="button" class="btn btn-danger rounded-pill "
+                                            data-bs-toggle="modal"
                                             data-bs-target="#confirmDeleteModal-{{ $issue->id }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
