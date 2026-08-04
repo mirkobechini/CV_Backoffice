@@ -28,6 +28,9 @@
                             <span
                                 class="badge bg-{{ match ($issue->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $issue->status_label }}</span>
                         </p>
+                        @if ($issue->notes)
+                            <p><strong>Note:</strong><br>{{ nl2br(e($issue->notes)) }}</p>
+                        @endif
                         @if ($issue->photo)
                             <div class="card mb-3">
                                 <div class="card-body">

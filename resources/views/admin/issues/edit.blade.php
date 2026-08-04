@@ -24,7 +24,8 @@
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         {{ old('vehicle_id', $issue->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand->name ?? 'N/A' }} {{ $vehicle->carModel->name ?? 'N/A' }}
+                                        {{ $vehicle->internal_code }} - {{ $vehicle->brand->name ?? 'N/A' }}
+                                        {{ $vehicle->carModel->name ?? 'N/A' }}
                                     </option>
                                 @endforeach
                             </select>
@@ -50,12 +51,21 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3 position-relative">
                             <label for="description" class="form-label">Descrizione</label>
                             <input type="text" class="form-control @error('description') is-invalid @enderror"
                                 id="description" name="description" value="{{ old('description', $issue->description) }}"
-                                required>
+                                required autocomplete="off" data-autocomplete="{{ route('api.issues.suggestions') }}">
+                            <div id="autocomplete-results" class="list-group position-absolute w-100 shadow"
+                                style="z-index:1000; display:none; max-height:250px; overflow-y:auto;"></div>
                             @error('description')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Note (opzionale)</label>
+                            <textarea class="form-control @error('notes') is-invalid @enderror" id="notes" name="notes" rows="2">{{ old('notes', $issue->notes) }}</textarea>
+                            @error('notes')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -75,3 +85,49 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function() {
+            const input = document.getElementById('description');
+            const results = document.getElementById('autocomplete-results');
+            let timer;
+
+            input.addEventListener('input', function() {
+                clearTimeout(timer);
+                const q = this.value.trim();
+                if (q.length < 2) {
+                    results.style.display = 'none';
+                    return;
+                }
+                timer = setTimeout(() => {
+                    fetch(input.dataset.autocomplete + '?q=' + encodeURIComponent(q))
+                        .then(r => r.json())
+                        .then(data => {
+                            if (!data.length) {
+                                results.style.display = 'none';
+                                return;
+                            }
+                            results.innerHTML = data.map(item =>
+                                `<button type="button" class="list-group-item list-group-item-action" onclick="selectDescription('${item.description.replace(/'/g, "\\'")}', this)">
+                            ${item.description}
+                            <small class="text-muted ms-2">(${item.total}x)</small>
+                        </button>`
+                            ).join('');
+                            results.style.display = 'block';
+                        });
+                }, 300);
+            });
+
+            input.addEventListener('blur', () => setTimeout(() => results.style.display = 'none', 200));
+            input.addEventListener('focus', () => {
+                if (results.children.length) results.style.display = 'block';
+            });
+
+            window.selectDescription = function(val, el) {
+                input.value = val;
+                results.style.display = 'none';
+            };
+        })();
+    </script>
+@endpush

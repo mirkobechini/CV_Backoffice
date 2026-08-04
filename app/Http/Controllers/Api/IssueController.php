@@ -24,4 +24,21 @@ class IssueController extends Controller
         $issue->load('vehicle');
         return response()->json($issue);
     }
+
+    /**
+     * Suggerimenti descrizioni per autocomplete (tutti i veicoli).
+     */
+    public function suggestions(Request $request)
+    {
+        $request->validate(['q' => 'required|string|min:2']);
+
+        $results = Issue::selectRaw('description, COUNT(*) as total')
+            ->where('description', 'like', '%' . $request->q . '%')
+            ->groupBy('description')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        return response()->json($results);
+    }
 }

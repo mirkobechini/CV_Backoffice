@@ -150,6 +150,7 @@ class IssueController extends Controller
         $issueData = [
             'vehicle_id' => $data['vehicle_id'],
             'description' => $data['description'],
+            'notes' => $data['notes'] ?? null,
             'event_date' => $data['event_date'],
             'status' => $data['status'],
         ];

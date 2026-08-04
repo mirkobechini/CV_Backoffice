@@ -19,6 +19,7 @@ class StoreIssueRequest extends FormRequest
         return [
             'vehicle_id' => 'required|exists:vehicles,id',
             'description' => 'required|string',
+            'notes' => 'nullable|string',
             'event_date' => 'required|date',
             'status' => 'required|in:open,in_progress,closed',
             'image' => 'nullable|image|max:2048', // Optional image upload
@@ -32,6 +33,7 @@ class StoreIssueRequest extends FormRequest
             'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'description.required' => 'La descrizione è obbligatoria.',
             'description.string' => 'La descrizione deve essere una stringa.',
+            'notes.string' => 'Le note devono essere una stringa.',
             'event_date.required' => 'La data di segnalazione è obbligatoria.',
             'event_date.date' => 'La data di segnalazione deve essere una data valida.',
             'status.required' => 'Lo stato è obbligatorio.',

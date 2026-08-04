@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vehicles/{vehicle}', [VehicleController::class, 'show']);
 
     Route::get('/issues', [IssueController::class, 'index']);
+    Route::get('/issues/suggestions', [IssueController::class, 'suggestions'])->name('api.issues.suggestions');
     Route::get('/issues/{issue}', [IssueController::class, 'show']);
 
     Route::get('/deadlines', [DeadlineController::class, 'index']);

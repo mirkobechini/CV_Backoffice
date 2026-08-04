@@ -21,6 +21,7 @@ class Issue extends Model
     protected $fillable = [
         'vehicle_id',
         'description',
+        'notes',
         'status',
         'photo',
         'event_date',
