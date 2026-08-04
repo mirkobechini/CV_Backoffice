@@ -95,6 +95,14 @@ class CsvImportController extends Controller
 
         $headers = array_map(fn($h) => trim(preg_replace('/^\xEF\xBB\xBF/', '', $h)), $headers);
 
+        // Assegna nomi univoci alle colonne senza header (es. _col_0, _col_1, ...)
+        $counter = 0;
+        foreach ($headers as $i => $h) {
+            if ($h === '') {
+                $headers[$i] = '_col_' . $counter++;
+            }
+        }
+
         while (($line = fgetcsv($handle)) !== false) {
             $row = [];
             foreach ($headers as $i => $header) {
