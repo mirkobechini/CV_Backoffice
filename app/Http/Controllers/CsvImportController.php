@@ -43,7 +43,7 @@ class CsvImportController extends Controller
             };
 
             return view('admin.csv-import.preview', compact('entity', 'results', 'rows'));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return back()->with('status_error', 'Errore nella validazione: ' . $e->getMessage());
         }
     }
