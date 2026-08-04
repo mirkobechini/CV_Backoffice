@@ -20,28 +20,32 @@ class CsvImportController extends Controller
 
     public function preview(Request $request)
     {
-        $request->validate([
-            'entity' => 'required|in:issues,mileage-logs',
-            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
-            'vehicle_ref' => 'nullable|string|max:20',
-            'import_year' => 'nullable|integer|min:2000|max:2100',
-        ]);
+        try {
+            $request->validate([
+                'entity' => 'required|in:issues,mileage-logs',
+                'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+                'vehicle_ref' => 'nullable|string|max:20',
+                'import_year' => 'nullable|integer|min:2000|max:2100',
+            ]);
 
-        $entity = $request->entity;
-        $importYear = $request->import_year ?? (int) date('Y');
-        $rows = $this->parseCsv($request->file('csv_file'));
+            $entity = $request->entity;
+            $importYear = $request->import_year ?? (int) date('Y');
+            $rows = $this->parseCsv($request->file('csv_file'));
 
-        if (empty($rows)) {
-            return back()->with('status_error', 'Il file CSV è vuoto o il formato non è valido.');
+            if (empty($rows)) {
+                return back()->with('status_error', 'Il file CSV è vuoto o il formato non è valido.');
+            }
+
+            $results = match ($entity) {
+                'issues' => $this->validateIssues($rows, $request->vehicle_ref),
+                'mileage-logs' => $this->validateMileageLogs($rows, $importYear),
+                default => [],
+            };
+
+            return view('admin.csv-import.preview', compact('entity', 'results', 'rows'));
+        } catch (\Exception $e) {
+            return back()->with('status_error', 'Errore nella validazione: ' . $e->getMessage());
         }
-
-        $results = match ($entity) {
-            'issues' => $this->validateIssues($rows, $request->vehicle_ref),
-            'mileage-logs' => $this->validateMileageLogs($rows, $importYear),
-            default => [],
-        };
-
-        return view('admin.csv-import.preview', compact('entity', 'results', 'rows'));
     }
 
     public function confirm(Request $request)
