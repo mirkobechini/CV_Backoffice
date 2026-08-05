@@ -26,6 +26,22 @@
                         @if ($maintenanceRecord->activity_type !== null)
                             <p><strong>Tipo attività:</strong> {{ $maintenanceRecord->activity_type }}</p>
                         @endif
+                        @if ($maintenanceRecord->recurrence_months || $maintenanceRecord->recurrence_km)
+                            <hr>
+                            <h6>Prossimo tagliando</h6>
+                            @if ($maintenanceRecord->next_due_date)
+                                <p class="mb-1"><strong>Scadenza:</strong>
+                                    {{ $maintenanceRecord->next_due_date->format('d/m/Y') }}
+                                    <span class="badge bg-{{ $maintenanceRecord->recurrence_status === 'expired' ? 'danger' : ($maintenanceRecord->recurrence_status === 'expiring' ? 'warning text-dark' : 'success') }} ms-2">
+                                        {{ $maintenanceRecord->recurrence_status_label }}
+                                    </span>
+                                </p>
+                            @endif
+                            @if ($maintenanceRecord->next_due_km)
+                                <p class="mb-0"><strong>Km scadenza:</strong>
+                                    {{ number_format($maintenanceRecord->next_due_km, 0, ',', '.') }}</p>
+                            @endif
+                        @endif
                     </div>
                 </div>
             </div>

@@ -144,6 +144,8 @@ class MaintenanceRecordController extends Controller
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
             'mileage_at_service' => $data['mileage_at_service'] ?? null,
+            'recurrence_months' => $data['recurrence_months'] ?? null,
+            'recurrence_km' => $data['recurrence_km'] ?? null,
         ]);
 
         if (!empty($data['issue_ids'])) {
@@ -223,6 +225,8 @@ class MaintenanceRecordController extends Controller
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
             'mileage_at_service' => $data['mileage_at_service'] ?? null,
+            'recurrence_months' => $data['recurrence_months'] ?? null,
+            'recurrence_km' => $data['recurrence_km'] ?? null,
         ]);
 
         // Sincronizza gli item: cancella e ricrea

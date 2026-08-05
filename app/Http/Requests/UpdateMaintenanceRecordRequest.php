@@ -33,6 +33,8 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'issue_resolved' => 'nullable|boolean',
             'mileage_at_service' => 'nullable|integer|min:0',
+            'recurrence_months' => 'nullable|integer|min:1|max:120',
+            'recurrence_km' => 'nullable|integer|min:100|max:500000',
         ];
     }
 

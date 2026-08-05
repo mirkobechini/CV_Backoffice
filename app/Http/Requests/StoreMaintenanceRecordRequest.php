@@ -32,6 +32,8 @@ class StoreMaintenanceRecordRequest extends FormRequest
             'return_date' => 'nullable|date|after_or_equal:appointment_date',
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'mileage_at_service' => 'nullable|integer|min:0',
+            'recurrence_months' => 'nullable|integer|min:1|max:120',
+            'recurrence_km' => 'nullable|integer|min:100|max:500000',
         ];
     }
 

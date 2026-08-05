@@ -136,6 +136,38 @@
                             @enderror
                             <div class="form-text">Opzionale — km al momento del conferimento in officina.</div>
                         </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ricorrenza (prossimo tagliando)</label>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="number"
+                                            class="form-control @error('recurrence_months') is-invalid @enderror"
+                                            id="recurrence_months" name="recurrence_months"
+                                            value="{{ old('recurrence_months') }}" min="1" max="120"
+                                            placeholder="es. 12">
+                                        <span class="input-group-text">mesi</span>
+                                        @error('recurrence_months')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="input-group">
+                                        <input type="number"
+                                            class="form-control @error('recurrence_km') is-invalid @enderror"
+                                            id="recurrence_km" name="recurrence_km" value="{{ old('recurrence_km') }}"
+                                            min="100" max="500000" placeholder="es. 30000">
+                                        <span class="input-group-text">km</span>
+                                        @error('recurrence_km')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-text">Imposta intervallo se il tagliando è ricorrente (es. ogni 12 mesi o
+                                30.000 km).</div>
+                        </div>
                     </section>
                     <button id="maintenance-submit-btn" type="submit" class="btn btn-primary"
                         data-loading-text="Salvataggio...">Aggiungi</button>
