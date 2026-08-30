@@ -36,7 +36,6 @@ class VehicleTypeControllerTest extends TestCase
             ->post(route('admin.vehicle-types.store'), [
                 'name' => 'Ambulanza',
                 'needs_oxygen_check' => true,
-                'extinguishers_required' => 2,
                 'first_inspection_months' => 48,
                 'regular_inspection_months' => 24,
             ])
@@ -47,7 +46,7 @@ class VehicleTypeControllerTest extends TestCase
 
     public function test_show_displays_vehicle_type(): void
     {
-        $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'extinguishers_required' => 2, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
 
         $this->actingAs($this->admin())
             ->get(route('admin.vehicle-types.show', $vt))
@@ -62,7 +61,6 @@ class VehicleTypeControllerTest extends TestCase
             ->put(route('admin.vehicle-types.update', $vt), [
                 'name' => 'Nuovo Tipo',
                 'needs_oxygen_check' => false,
-                'extinguishers_required' => 1,
                 'first_inspection_months' => 60,
                 'regular_inspection_months' => 30,
             ])
@@ -90,7 +88,6 @@ class VehicleTypeControllerTest extends TestCase
             ->post(route('admin.vehicle-types.store'), [
                 'name' => 'Ambulanza',
                 'needs_oxygen_check' => true,
-                'extinguishers_required' => 2,
                 'first_inspection_months' => 48,
                 'regular_inspection_months' => 24,
                 'required_equipment_types' => [$eqType->id],

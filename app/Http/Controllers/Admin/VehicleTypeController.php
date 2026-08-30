@@ -39,7 +39,6 @@ class VehicleTypeController extends Controller
         $newVehicleType = VehicleType::create([
             'name' => $data['name'],
             'needs_oxygen_check' => $data['needs_oxygen_check'],
-            'extinguishers_required' => $data['extinguishers_required'] ?? 0,
             'first_inspection_months' => $data['first_inspection_months'],
             'regular_inspection_months' => $data['regular_inspection_months'],
         ]);
@@ -81,7 +80,6 @@ class VehicleTypeController extends Controller
         $vehicleType->update([
             'name' => $data['name'],
             'needs_oxygen_check' => $data['needs_oxygen_check'],
-            'extinguishers_required' => $data['extinguishers_required'] ?? 0,
             'first_inspection_months' => $data['first_inspection_months'],
             'regular_inspection_months' => $data['regular_inspection_months'],
         ]);

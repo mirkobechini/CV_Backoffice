@@ -19,7 +19,6 @@ class StoreVehicleTypeRequest extends FormRequest
         return [
             'name' => 'required|string|max:255|unique:vehicle_types,name',
             'needs_oxygen_check' => 'boolean',
-            'extinguishers_required' => 'integer|min:0',
             'first_inspection_months' => 'required|integer|min:0',
             'regular_inspection_months' => 'required|integer|min:0',
             'required_equipment_types' => 'nullable|array',
@@ -38,8 +37,6 @@ class StoreVehicleTypeRequest extends FormRequest
             'name.max' => 'Il nome non può superare i 255 caratteri.',
             'name.unique' => 'Esiste già un tipo di veicolo con questo nome.',
             'needs_oxygen_check.boolean' => 'Il campo revisione ossigeno deve essere true o false.',
-            'extinguishers_required.integer' => 'Il numero di estintori deve essere un intero.',
-            'extinguishers_required.min' => 'Il numero di estintori non può essere negativo.',
             'required_equipment_types.*.integer' => 'L\'ID dell\'equipaggiamento deve essere un intero.',
             'required_equipment_types.*.exists' => 'L\'equipaggiamento selezionato non esiste.',
             'required_equipment_types_qty.*.integer' => 'La quantità di equipaggiamento deve essere un intero.',

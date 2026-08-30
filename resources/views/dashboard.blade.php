@@ -127,7 +127,7 @@
                                         <div>
                                             <strong>{{ $deadline->type }}</strong><br>
                                             <small class="text-muted">{{ $deadline->vehicle->internal_code }} —
-                                                Scade tra {{ now()->diffInDays($deadline->due_date) }} giorni</small>
+                                                Scade tra {{ floor(now()->diffInDays($deadline->due_date,false)) }} giorni</small>
                                         </div>
                                         <span
                                             class="badge badge-expiring rounded-pill px-3 py-2">{{ $deadline->due_date->format('d/m/Y') }}</span>

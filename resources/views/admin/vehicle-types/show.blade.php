@@ -31,8 +31,6 @@
                         </p>
                         <p><strong>Revisione ossigeno:</strong> {{ $vehicleType->needs_oxygen_check ? 'Sì' : 'No' }}</p>
                         <fieldset>
-
-                            <strong>Estintori richiesti:</strong> {{ $vehicleType->extinguishers_required }}
                             <ul class="list-unstyled ps-2">
                                 @foreach ($vehicleType->equipmentTypes as $equipmentType)
                                     <li>{{ $equipmentType->name }}: {{ $equipmentType->pivot->required_quantity }}</li>

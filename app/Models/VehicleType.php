@@ -9,14 +9,12 @@ class VehicleType extends Model
     protected $fillable = [
         'name',
         'needs_oxygen_check',
-        'extinguishers_required',
         'first_inspection_months',
         'regular_inspection_months',
     ];
 
     protected $casts = [
         'needs_oxygen_check' => 'boolean',
-        'extinguishers_required' => 'integer',
         'first_inspection_months' => 'integer',
         'regular_inspection_months' => 'integer',
     ];
