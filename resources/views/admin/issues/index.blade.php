@@ -51,13 +51,20 @@
 
             @foreach ($groups as $groupLabel => $groupIssues)
                 @if ($groupBy !== null)
-                    <tr class="table-light">
-                        <td colspan="5"><strong>{{ $groupLabel }}</strong> ({{ $groupIssues->count() }})</td>
+                    @php
+                        $groupId = \Illuminate\Support\Str::slug($groupLabel);
+                    @endphp
+                    <tr class="table-light" role="button" data-bs-toggle="collapse"
+                        data-bs-target=".collapse-{{ $groupId }}" aria-expanded="true" style="cursor: pointer;">
+                        <td colspan="5">
+                            <span class="collapse-indicator me-2">▼</span>
+                            <strong>{{ $groupLabel }}</strong> ({{ $groupIssues->count() }})
+                        </td>
                     </tr>
                 @endif
 
                 @foreach ($groupIssues as $issue)
-                    <tr>
+                    <tr class="collapse-{{ $groupId }} collapse show">
                         <td>{{ $issue->vehicle->internal_code }}</td>
                         <td>{{ $issue->description }}</td>
                         <td>
@@ -72,4 +79,17 @@
             @endforeach
         </x-slot:rows>
     </x-admin.index-table>
+    @push('scripts')
+        <script>
+            document.addEventListener('click', function(e) {
+                const toggle = e.target.closest('[data-bs-toggle="collapse"]');
+                if (!toggle) return;
+                const indicator = toggle.querySelector('.collapse-indicator');
+                if (indicator) {
+                    const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                    indicator.textContent = isExpanded ? '▶' : '▼';
+                }
+            });
+        </script>
+    @endpush
 @endsection
