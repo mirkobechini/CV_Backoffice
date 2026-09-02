@@ -15,12 +15,15 @@ class PdfExportController extends Controller
             'carModel',
             'vehicleType',
             'issues',
-            'deadlines',
+            'deadlines' => function ($query) {
+                $query->orderBy('due_date', 'desc');
+            },
             'equipment.equipmentType',
             'maintenanceRecords.provider',
             'maintenanceRecords.items.itemable',
         ]);
-        $pdf = Pdf::loadView('pdfs.scheda-veicolo', compact('vehicle'));
+        $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
+            ->loadView('pdfs.scheda-veicolo', compact('vehicle'));
         return $pdf->download('scheda-' . $vehicle->internal_code . '.pdf');
     }
 }

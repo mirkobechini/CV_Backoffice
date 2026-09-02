@@ -50,10 +50,10 @@
             @endphp
 
             @foreach ($groups as $groupLabel => $groupIssues)
+                @php
+                    $groupId = $groupBy !== null ? \Illuminate\Support\Str::slug($groupLabel) : 'all';
+                @endphp
                 @if ($groupBy !== null)
-                    @php
-                        $groupId = \Illuminate\Support\Str::slug($groupLabel);
-                    @endphp
                     <tr class="table-light" role="button" data-bs-toggle="collapse"
                         data-bs-target=".collapse-{{ $groupId }}" aria-expanded="true" style="cursor: pointer;">
                         <td colspan="5">
