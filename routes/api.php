@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// Auth (pubblica)
-Route::post('/login', [AuthController::class, 'login']);
+// Auth (pubblica) — rate limit per prevenire brute-force
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 // Rotta protette da token
 Route::middleware('auth:sanctum')->group(function () {
