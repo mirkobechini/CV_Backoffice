@@ -341,6 +341,7 @@ class MaintenanceRecordController extends Controller
 
                 if ((bool) $data['issue_resolved']) {
                     $deadline->status = 'renewed';
+                    $deadline->is_renewed = true;
                     $deadline->save();
                     $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
                     $nextDueDate = null;
