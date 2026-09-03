@@ -64,6 +64,40 @@ class VehicleObserver
         if ($vehicle->has_timing_belt) {
             $this->createTimingBeltDeadline($vehicle);
         }
+
+        // Primo tagliando: scade al raggiungimento dei km configurati
+        // (default 25.000 km da veicolo nuovo).
+        $this->createFirstTagliandoDeadline($vehicle);
+    }
+
+    /**
+     * Crea la scadenza del primo tagliando se non esiste già.
+     * Scade al raggiungimento dei km configurati sul tipo veicolo
+     * (default 25.000 km da veicolo nuovo).
+     */
+    private function createFirstTagliandoDeadline(Vehicle $vehicle): void
+    {
+        $alreadyExists = $vehicle->deadlines()
+            ->where('type', Deadline::TYPE_TAGLIANDO)
+            ->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
+        $firstKm = (int) ($vehicle->vehicleType?->first_tagliando_km ?? 25000);
+
+        // Scade al primo tra: 1 anno dall'immatricolazione o i km configurati.
+        $dueDate = Carbon::parse($vehicle->immatricolation_date)
+            ->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => $dueDate->toDateString(),
+            'interval_km' => $firstKm,
+            'last_mileage' => 0,
+        ]);
     }
 
     /**

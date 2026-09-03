@@ -39,6 +39,7 @@ class Deadline extends Model
     public const OXYGEN_CHECK_INTERVAL_MONTHS = 12;
     public const TIMING_BELT_INTERVAL_DAYS = 3650; // 10 anni
     public const TIMING_BELT_INTERVAL_KM = 100000; // 100.000 km
+    public const TAGLIANDO_INTERVAL_MONTHS = 12; // 1 anno
 
     protected $fillable = [
         'vehicle_id',
