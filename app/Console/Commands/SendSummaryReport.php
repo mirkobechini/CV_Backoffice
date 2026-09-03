@@ -41,14 +41,17 @@ class SendSummaryReport extends Command
         // Veicoli con equipaggiamento incompleto (dalla collection già caricata)
         $incompleteVehicles = $allVehicles->filter(fn($v) => !$v->hasAllRequiredEquipment());
 
+        // Giorni di preavviso configurabili (default 30)
+        $reminderDays = (int) (NotificationSetting::where('key', 'reminder_days_before')->value('value') ?? 30);
+
         $openIssues = Issue::with('vehicle')->open()->get();
         $expiredDeadlines = Deadline::where('status', Deadline::STATUS_EXPIRED)->where('is_renewed', false)->get();
-        $upcomingDeadlines = Deadline::with('vehicle')->upcoming()->get();
+        $upcomingDeadlines = Deadline::with('vehicle')->upcoming($reminderDays)->get();
         $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')->whereNull('return_date')->where('appointment_date', '>=', today())->orderBy('appointment_date')->take(5)->get();
         $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')
             ->distinct('vehicle_id')
             ->count('vehicle_id');
-        $expiringEquipment = Equipment::with('vehicle')->expiringSoon()->get();
+        $expiringEquipment = Equipment::with('vehicle')->expiringSoon($reminderDays)->get();
 
         $data = [
             'totalVehicles' => $totalVehicles,
