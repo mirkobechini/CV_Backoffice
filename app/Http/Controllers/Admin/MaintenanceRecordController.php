@@ -374,6 +374,12 @@ class MaintenanceRecordController extends Controller
             if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) $data['issue_resolved']) {
                 $this->renewTimingBeltDeadline($maintenanceRecord);
             }
+
+            // 5) Tagliando ricorrente: crea/aggiorna la scadenza del prossimo
+            //    tagliando in base a recurrence_months / recurrence_km.
+            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TAGLIANDO && (bool) $data['issue_resolved']) {
+                $this->renewTagliandoDeadline($maintenanceRecord);
+            }
         });
 
         return redirect()
@@ -412,6 +418,55 @@ class MaintenanceRecordController extends Controller
                 'last_mileage' => $baseKm,
                 'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
                 'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+                'status' => Deadline::STATUS_PENDING,
+            ]);
+        }
+    }
+
+    /**
+     * Crea/aggiorna la scadenza del prossimo tagliando dopo un tagliando
+     * ricorrente completato, in base a recurrence_months / recurrence_km.
+     */
+    private function renewTagliandoDeadline(MaintenanceRecord $maintenanceRecord): void
+    {
+        $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
+        $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
+
+        $dueDate = $maintenanceRecord->recurrence_months
+            ? $baseDate->copy()->addMonthsNoOverflow((int) $maintenanceRecord->recurrence_months)
+            : null;
+
+        $intervalKm = $maintenanceRecord->recurrence_km;
+
+        // Se non c'è né ricorrenza mensile né km, non creiamo una scadenza.
+        if (!$dueDate && !$intervalKm) {
+            return;
+        }
+
+        $deadline = $maintenanceRecord->vehicle->deadlines()
+            ->where('type', Deadline::TYPE_TAGLIANDO)
+            ->first();
+
+        if ($deadline) {
+            $deadline->due_date = $dueDate?->toDateString();
+            $deadline->last_mileage = $baseKm;
+            $deadline->interval_km = $intervalKm;
+            $deadline->interval_days = $maintenanceRecord->recurrence_months
+                ? (int) $maintenanceRecord->recurrence_months * 30
+                : null;
+            $deadline->status = Deadline::STATUS_PENDING;
+            $deadline->is_renewed = false;
+            $deadline->save();
+        } else {
+            Deadline::create([
+                'vehicle_id' => $maintenanceRecord->vehicle_id,
+                'type' => Deadline::TYPE_TAGLIANDO,
+                'due_date' => $dueDate?->toDateString(),
+                'last_mileage' => $baseKm,
+                'interval_km' => $intervalKm,
+                'interval_days' => $maintenanceRecord->recurrence_months
+                    ? (int) $maintenanceRecord->recurrence_months * 30
+                    : null,
                 'status' => Deadline::STATUS_PENDING,
             ]);
         }
