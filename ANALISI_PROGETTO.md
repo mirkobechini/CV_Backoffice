@@ -8,14 +8,14 @@
 
 ## 📊 Riepilogo Finale
 
-| Categoria | Stato |
-|---|---|
-| **Bug (B1-B15)** | ✅ **Tutti risolti** |
-| **Best Practice (BP1-BP8)** | ✅ **Tutte risolte** |
-| **Migliorie (M10-M18)** | ✅ **Completate** |
-| **Feature implementate** | ✅ F12, F14, F15, F16, F17, F18, F19, F20 |
-| **Registrazione utenti** | ✅ Disabilitata (admin via artisan) |
-| **Test** | ✅ **166 test, 330 assertions — tutti verdi** |
+| Categoria                   | Stato                                         |
+| --------------------------- | --------------------------------------------- |
+| **Bug (B1-B15)**            | ✅ **Tutti risolti**                          |
+| **Best Practice (BP1-BP8)** | ✅ **Tutte risolte**                          |
+| **Migliorie (M10-M18)**     | ✅ **Completate**                             |
+| **Feature implementate**    | ✅ F12, F14, F15, F16, F17, F18, F19, F20     |
+| **Registrazione utenti**    | ✅ Disabilitata (admin via artisan)           |
+| **Test**                    | ✅ **166 test, 330 assertions — tutti verdi** |
 
 ---
 
@@ -33,9 +33,11 @@
 ## 🐛 Bug Risolti
 
 ### B1-B6 — Bug iniziali ✅
+
 `syncStatusFromRules()` sovrascriveva stato manuale, `getAutomaticStatusAttribute()` ramo else sbagliato, default `warning_months` disallineato, `$vehicle->mileage` inesistente in view, `update()` ignorava registration_card, `internal_code` perdeva zeri iniziali.
 
 ### B7-B15 — Bug trovati in analisi ✅
+
 `resolveDueDate()` (falso positivo), route notifiche/PDF senza auth, `relationLoaded('vehicle')` fragile, N+1 in `syncStatusFromRules()`, email hardcoded, accessor NotificationSetting, `internal_code` senza unique, eager load ridondante (falso positivo).
 
 ---
@@ -48,42 +50,42 @@
 
 ## 💡 Migliorie e Ottimizzazioni ✅
 
-| # | Cosa | Soluzione |
-|---|---|---|
-| **M1** | Ordinamento DB vs Collection | `applySorting()` con mappa colonna/callable |
-| **M2** | Paginazione | `->paginate(20)` in 6 controller |
-| **M3-M4** | Unique validation | `serial_number` e `name` |
-| **M5** | SoftDeletes | vehicles, issues, maintenance_records, deadlines, providers |
-| **M6** | Authorization/Policy | 9 Policy + trait `HasRoleBasedAccess` |
-| **M7-M8** | Validazioni extra | `after_or_equal:immatricolation_date`, mileage >= ultimo log |
-| **M9** | Tema chiaro/scuro | Script JS con localStorage |
-| **M10** | Cache dashboard | `Cache::remember('dashboard.stats', 300)` |
-| **M11** | Indici DB | Migration `add_performance_indexes` (6 indici) |
-| **M12** | DeadlineController memoria | Filtro `latestRevisionOnly` a monte via DB |
-| **M13** | Backfill observer | Safety limit `MAX_BACKFILL_ITERATIONS = 10` |
+| #         | Cosa                         | Soluzione                                                    |
+| --------- | ---------------------------- | ------------------------------------------------------------ |
+| **M1**    | Ordinamento DB vs Collection | `applySorting()` con mappa colonna/callable                  |
+| **M2**    | Paginazione                  | `->paginate(20)` in 6 controller                             |
+| **M3-M4** | Unique validation            | `serial_number` e `name`                                     |
+| **M5**    | SoftDeletes                  | vehicles, issues, maintenance_records, deadlines, providers  |
+| **M6**    | Authorization/Policy         | 9 Policy + trait `HasRoleBasedAccess`                        |
+| **M7-M8** | Validazioni extra            | `after_or_equal:immatricolation_date`, mileage >= ultimo log |
+| **M9**    | Tema chiaro/scuro            | Script JS con localStorage                                   |
+| **M10**   | Cache dashboard              | `Cache::remember('dashboard.stats', 300)`                    |
+| **M11**   | Indici DB                    | Migration `add_performance_indexes` (6 indici)               |
+| **M12**   | DeadlineController memoria   | Filtro `latestRevisionOnly` a monte via DB                   |
+| **M13**   | Backfill observer            | Safety limit `MAX_BACKFILL_ITERATIONS = 10`                  |
 
 ---
 
 ## 🏗️ Feature Implementate ✅
 
-| # | Feature | Dettaglio |
-|---|---|---|
-| **F1** | Dashboard | Statistiche, card interattive, badge, dark mode |
-| **F2** | Notifiche email | `SendSummaryReport` + `ReportMail` + `NotificationSetting` |
-| **F3** | Export PDF | DomPDF + scheda veicolo completa |
-| **F4** | Audit log | `spatie/laravel-activitylog` su 5 model |
-| **F5** | Manutenzione ↔ guasti/scadenze | Pivot polimorfico `maintenance_record_items` |
-| **F6** | Alert equipaggiamento | Scadenze in dashboard e report email |
-| **F7** | Test | **166 test, 330 assertions** |
-| **F9** | Ricerca/filtro | Trait `Searchable` + barra ricerca nelle index |
-| **F10** | Mileage integrato | Km su manutenzione, bulk mensile, scadenze km |
-| **F12** | Audit log UI | `ActivityLogController` + view con filtri e modale JSON |
-| **F14** | Export CSV | `CsvExportController` per 7 entità, pulsante in tutte le index |
-| **F15** | Storico revisioni | Tabella cronologica nella show del veicolo |
-| **F16** | Calendario appuntamenti | FullCalendar con colori per tipo attività |
-| **F18** | API REST | Sanctum, 11 endpoint, auth via token |
-| **F19** | i18n | File `lang/it/messages.php`, locale italiano |
-| **F20** | Rate limiting | 30 req/min admin, 5 req/min login |
+| #       | Feature                        | Dettaglio                                                      |
+| ------- | ------------------------------ | -------------------------------------------------------------- |
+| **F1**  | Dashboard                      | Statistiche, card interattive, badge, dark mode                |
+| **F2**  | Notifiche email                | `SendSummaryReport` + `ReportMail` + `NotificationSetting`     |
+| **F3**  | Export PDF                     | DomPDF + scheda veicolo completa                               |
+| **F4**  | Audit log                      | `spatie/laravel-activitylog` su 5 model                        |
+| **F5**  | Manutenzione ↔ guasti/scadenze | Pivot polimorfico `maintenance_record_items`                   |
+| **F6**  | Alert equipaggiamento          | Scadenze in dashboard e report email                           |
+| **F7**  | Test                           | **166 test, 330 assertions**                                   |
+| **F9**  | Ricerca/filtro                 | Trait `Searchable` + barra ricerca nelle index                 |
+| **F10** | Mileage integrato              | Km su manutenzione, bulk mensile, scadenze km                  |
+| **F12** | Audit log UI                   | `ActivityLogController` + view con filtri e modale JSON        |
+| **F14** | Export CSV                     | `CsvExportController` per 7 entità, pulsante in tutte le index |
+| **F15** | Storico revisioni              | Tabella cronologica nella show del veicolo                     |
+| **F16** | Calendario appuntamenti        | FullCalendar con colori per tipo attività                      |
+| **F18** | API REST                       | Sanctum, 11 endpoint, auth via token                           |
+| **F19** | i18n                           | File `lang/it/messages.php`, locale italiano                   |
+| **F20** | Rate limiting                  | 30 req/min admin, 5 req/min login                              |
 
 ---
 
@@ -102,15 +104,51 @@
 
 ## 🔵 Deferito / Futuro
 
-| Cosa | Perché |
-|---|---|
-| **F11 — Gestione utenti** | Non serve (solo admin usa l'app) |
+| Cosa                       | Perché                             |
+| -------------------------- | ---------------------------------- |
+| **F11 — Gestione utenti**  | Non serve (solo admin usa l'app)   |
 | **F13 — Notifiche in-app** | Complessità alta, non blocca l'uso |
-| **M16 — Fulltext search** | Volume dati attuale irrilevante |
+| **M16 — Fulltext search**  | Volume dati attuale irrilevante    |
 
 ---
 
-> **Nota:** Ultimo aggiornamento: 2026-08-02.
+## 🏗️ Futuro: Sistema Utenti, Gruppi e Ruoli
+
+> **Nota:** Questa sezione descrive la visione per il futuro sistema multi-utente. Da implementare quando servirà.
+
+### Contesto attuale
+
+Oggi l'app è usata da un **singolo admin** (registrazione pubblica disabilitata, admin creato via `php artisan make:admin`).
+
+### Visione futura
+
+**Utente capo dell'associazione** — l'utente principale che gestisce tutto.
+
+**Registrazione utenti:**
+
+- Ogni utente crea il proprio profilo con **utente e password**.
+- Dopo la registrazione può:
+    - **Creare un'associazione/gruppo**, oppure
+    - **Entrare in un gruppo esistente** tramite **link o codice** fornito dal capo di quel gruppo.
+
+**Ruoli (gestiti dal capo del gruppo):**
+| Ruolo | Permessi |
+|---|---|
+| **Capo** | 1 solo per gruppo. Può fare tutto, incluso gestire i ruoli all'interno del proprio gruppo. |
+| **Sottocapo** | Può fare tutto tranne gestire i ruoli o eliminare/modificare le modifiche del capo. |
+| **Utente base** | Solo visualizzazione: **no modifica, no inserimento, no cancellazione**. |
+
+### Da implementare
+
+- **Nuova entità "Gruppo/Associazione"** (nome da definire) — entità che raggruppa utenti e veicoli.
+- Relazione utenti ↔ gruppo (molti-a-molti con ruolo).
+- Gestione inviti via link/codice.
+- Scoping dei dati per gruppo (ogni gruppo vede solo i propri veicoli/dati).
+- Sistema di permessi per ruolo (capo / sottocapo / utente base).
+
+---
+
+> **Nota:** Ultimo aggiornamento: 2026-09-03.
 
 ---
 
@@ -366,7 +404,8 @@ Nuova rotta `mileage-logs.bulk` con vista unica che elenca TUTTI i veicoli con u
 
 **File:** `app/Models/Deadline.php`, `app/Http/Controllers/Admin/DeadlineController.php`
 **Problema:** `syncStatusFromRules()` chiamava `$this->loadMissing('vehicle')` in loop (N+1) + `$this->vehicle->mileage` faceva un'ulteriore query per `mileage_logs`.
-**Soluzione:** 
+**Soluzione:**
+
 1. Aggiunta relazione `latestMileageLog` su `Vehicle` (hasOne ordinata per `log_date`)
 2. `getMileageAttribute()` ora usa la relazione pre-caricata se disponibile
 3. `syncStatusFromRules()` carica `vehicle.latestMileageLog` in un colpo solo
@@ -401,35 +440,43 @@ Nuova rotta `mileage-logs.bulk` con vista unica che elenca TUTTI i veicoli con u
 ## ⚠️ Best Practice da Applicare
 
 ### BP1. Route notifiche e PDF fuori dal gruppo auth ✅ FIXATO (con B8-B9)
+
 Le route di notifica e PDF erano fuori dal gruppo `auth`. **Risolto** spostandole dentro il gruppo `auth, verified` con prefisso `admin`.
 
 ### BP2. Estrarre logica di business dai Controller ✅ FIXATO
+
 Controller come `DeadlineController::store()` e `update()` avevano troppa logica (calcolo date, verifica ossigeno, creazione record).
 **Soluzione:** Creato `app/Services/DeadlineService.php` con metodi `createDeadline()` e `updateDeadline()`. Il controller ora delega tutto al service tramite dependency injection.
 
 ### BP3. Usare FormRequest per tutte le validazioni ✅ FIXATO
+
 `NotificationSettingController::update()` usava `$request->except('_token', '_method')` senza validazione.
-**Soluzione:** Creato `UpdateNotificationSettingRequest` con regole per tutti i campi noti (report_email, report_frequency, reminder_days_before, notify_on_*). Il controller ora usa `$request->validated()`.
+**Soluzione:** Creato `UpdateNotificationSettingRequest` con regole per tutti i campi noti (report*email, report_frequency, reminder_days_before, notify_on*\*). Il controller ora usa `$request->validated()`.
 
 ### BP4. Fallback nome app errato nell'header ✅ FIXATO
+
 **File:** `resources/views/admin/partials/header.blade.php`
 L'header mostrava `{{ config('app.name', 'Gods Backoffice') }}` — il fallback era "Gods Backoffice" invece di "CV Backoffice".
 **Soluzione:** Corretto il fallback in "CV Backoffice".
 
 ### BP5. N+1 query in `DashboardController` ✅ FIXATO
+
 **File:** `app/Http/Controllers/DashboardController.php`
 `$incompleteVehicles` caricava **tutti** i veicoli con le loro relazioni, poi filtrava in memoria.
 **Soluzione:** Aggiunto `whereHas('vehicleType.equipmentTypes')` per caricare solo i veicoli il cui tipo ha effettivamente requisiti di equipaggiamento. Quelli senza requisiti sono sempre "completi" per definizione.
 
 ### BP6. `MileageLog` non ha `LogsActivity` ✅ FIXATO
+
 Tutti gli altri model hanno activity logging, ma `MileageLog` no.
 **Soluzione:** Aggiunto trait `LogsActivity` al model `MileageLog`.
 
 ### BP7. `Provider` non ha `SoftDeletes` ✅ FIXATO
+
 Se un fornitore viene cancellato, i record di manutenzione collegati perdono il riferimento.
 **Soluzione:** Aggiunto `SoftDeletes` al model `Provider` + migration per aggiungere `softDeletes()` alla tabella `providers`.
 
 ### BP8. `NotificationSetting` non ha timestamps espliciti nei casts ❌ NON RILEVANTE
+
 I timestamp `created_at`/`updated_at` sono automaticamente castati a Carbon da Laravel per tutti i model Eloquent. Non serve dichiararli esplicitamente.
 
 ---
@@ -437,39 +484,48 @@ I timestamp `created_at`/`updated_at` sono automaticamente castati a Carbon da L
 ## 💡 Migliorie e Ottimizzazioni
 
 ### M10. Cache per le statistiche della Dashboard ✅ FIXATO
+
 **Impatto:** Alto
-La dashboard esegue 6+ query ogni volta. 
+La dashboard esegue 6+ query ogni volta.
 **Soluzione:** Avvolte in `Cache::remember('dashboard.stats', 300, ...)` — cachea i dati per 5 minuti, la view viene renderizzata sempre fresca.
 
 ### M11. Indici DB mancanti ✅ FIXATO
+
 **Impatto:** Alto
 Mancavano indici su colonne usate in WHERE/ORDER BY.
 **Soluzione:** Creata migration `add_performance_indexes` con indici su: deadlines (type,status, due_date), issues (status, event_date), mileage_logs (log_date), equipment (expiration_date), maintenance_records (appointment_date, return_date).
 
 ### M12. `DeadlineController::index()` carica tutto in memoria ✅ FIXATO
+
 **File:** `app/Http/Controllers/Admin/DeadlineController.php`
 **Problema:** Tutte le scadenze venivano caricate in memoria, poi filtrate via Collection.
 **Soluzione:** Il filtro `latestRevisionOnly` ora filtra a monte con `whereIn('type', ...)` prima di `get()`. Il caso normale rimane con `get()` ma con gli indici DB di M11 la query è ottimizzata.
 
 ### M13. `VehicleObserver::created()` potrebbe fare backfill pesante ✅ FIXATO
+
 **Impatto:** Medio
 Il `while` loop per backfill delle revisioni storiche potrebbe creare decine di record.
 **Soluzione:** Aggiunto safety limit `MAX_BACKFILL_ITERATIONS = 10` per prevenire runaway loop su veicoli molto vecchi.
 
 ### M14. `HandlesWarrantyExtension` modifica i dati validati (side effect) ❌ DESIGN CHOICE
+
 **File:** `app/Http/Requests/Concerns/HandlesWarrantyExtension.php`
 La trait sovrascrive `warranty_expiration_date` aggiungendo i mesi di estensione. È un pattern accettabile per trasformazioni al confine request→DB. L'accessor `getWarrantyOriginalExpirationDateAttribute()` la rilegge correttamente.
 
 ### M15. `DetectsDuplicates` soglia fissa di 5 minuti ❌ NON RILEVANTE
+
 Il metodo `findDuplicate()` ha già il parametro opzionale `int $minutesThreshold = 5`. I controller possono passare un valore diverso. Il default è ragionevole.
 
 ### M16. `Searchable` trait fa `LIKE %term%` 🔵 BASSO (deferito)
+
 Per il volume attuale di dati è più che sufficiente. Se si arriverà a decine di migliaia di record, valutare MySQL fulltext o Laravel Scout.
 
 ### M17. `Vehicle::getMileageAttribute()` fa query ogni volta ✅ GIA' FIXATO (con B11)
+
 Già risolto con la fix di B10/B11 — aggiunta relazione `latestMileageLog` su Vehicle e `getMileageAttribute()` la usa se pre-caricata.
 
 ### M18. `Vehicle::missingRequiredEquipment()` carica sempre `equipment` e `vehicleType` ❌ NON RILEVANTE
+
 Usa `loadMissing()` che carica le relazioni solo se non già caricate. È già ottimale.
 
 ---
@@ -477,24 +533,31 @@ Usa `loadMissing()` che carica le relazioni solo se non già caricate. È già o
 ## 🏗️ Funzionalità Mancanti / Incomplete
 
 ### F11. ❌ **Gestione utenti e ruoli** (deferita)
+
 Non c'è un pannello admin per creare/modificare utenti o assegnare ruoli. Il ruolo è una colonna `string` su `users` ma non c'è UI per gestirlo.
 
 ### F12. ❌ **Audit log UI**
+
 `spatie/laravel-activitylog` è installato e funzionante, ma non c'è una pagina per visualizzare lo storico delle attività. Sarebbe utile per audit e troubleshooting.
 
 ### F13. ❌ **Notifiche in-app**
+
 Le notifiche sono solo via email (report giornaliero). Non ci sono notifiche in-app (badge, toast, campanella) per scadenze imminenti o guasti aperti.
 
 ### F14. ❌ **Backup / Export dati**
+
 Non c'è export CSV/Excel per nessuna entità (solo PDF per il singolo veicolo). Utile per reportistica esterna.
 
 ### F15. ❌ **Storico revisioni veicolo**
+
 La show del veicolo mostra solo l'ultima scadenza per tipo (`$deadlines_grouped`). Non c'è una sezione "Storico revisioni" con tutte le scadenze passate.
 
 ### F16. ❌ **Calendario appuntamenti**
+
 Gli appuntamenti in officina sono una lista. Una vista calendario (tipo FullCalendar) sarebbe molto più intuitiva.
 
 ### F17. ❌ **Test mancanti**
+
 - `MileageLogController` (CRUD + bulk)
 - `EquipmentController` (CRUD)
 - `EquipmentTypeController` (CRUD)
@@ -507,37 +570,40 @@ Gli appuntamenti in officina sono una lista. Una vista calendario (tipo FullCale
 - `VehicleSelect` Livewire component
 
 ### F18. ❌ **API REST**
+
 Non c'è un'API pubblica. Se in futuro si volesse un'app mobile o integrazione con terze parti, servirebbe Laravel Sanctum o Passport.
 
 ### F19. ❌ **Internazionalizzazione (i18n)**
+
 Il progetto è in italiano ma usa `__('Dashboard')` in alcuni punti e testo hardcoded in altri. Manca un sistema di traduzione coerente.
 
 ### F20. ❌ **Rate limiting**
+
 Non c'è rate limiting sulle route. Un utente malintenzionato potrebbe fare brute force sul login o flooding sulle create.
 
 ---
 
 ## 🎯 Priorità Suggerite
 
-| Priorità | Cosa | Perché |
-|---|---|---|
-| 🔴 **Critico** | ~~**B7**: `resolveDueDate()` mancante~~ | ❌ **Falso positivo — metodi esistono già** |
-| 🔴 **Critico** | **B8-B9**: Route notifiche e PDF senza auth | ✅ **FIXATO — spostate dentro gruppo auth** |
-| 🔴 **Critico** | **B12**: Email hardcoded a test@example.com | ✅ **FIXATO — ora legge da NotificationSetting** |
-| 🟡 **Alto** | **B10**: `relationLoaded('vehicle')` fragile | ✅ **FIXATO — loadMissing + latestMileageLog** |
-| 🟡 **Alto** | **B11 + M12**: N+1 in syncStatusFromRules | ✅ **FIXATO — eager load + relazione dedicata** |
-| 🟡 **Alto** | **B13**: Accessor NotificationSetting | ✅ **FIXATO — usa `$this->attributes['key']`** |
-| 🟡 **Alto** | **B14**: `internal_code` senza unique | ✅ **FIXATO — aggiunta validazione** |
-| 🟡 **Alto** | **M10**: Cache dashboard | Performance homepage |
-| 🟡 **Alto** | **M11**: Indici DB | Performance query |
-| 🟡 **Alto** | **F12**: UI audit log | Compliance e debugging |
-| 🟢 **Medio** | **BP2**: Service Layer | Manutenibilità codice |
-| 🟢 **Medio** | **F11**: Gestione utenti | Completezza funzionale |
-| 🟢 **Medio** | **F17**: Test mancanti | Qualità del codice |
-| 🟢 **Medio** | **BP6**: ActivityLog su MileageLog | Tracciabilità |
-| 🔵 **Basso** | **M14**: Spostare logica garanzia da Request | Refactoring |
-| 🔵 **Basso** | **F16**: Calendario appuntamenti | UX |
-| 🔵 **Basso** | **F19**: i18n | Completezza |
+| Priorità       | Cosa                                         | Perché                                           |
+| -------------- | -------------------------------------------- | ------------------------------------------------ |
+| 🔴 **Critico** | ~~**B7**: `resolveDueDate()` mancante~~      | ❌ **Falso positivo — metodi esistono già**      |
+| 🔴 **Critico** | **B8-B9**: Route notifiche e PDF senza auth  | ✅ **FIXATO — spostate dentro gruppo auth**      |
+| 🔴 **Critico** | **B12**: Email hardcoded a test@example.com  | ✅ **FIXATO — ora legge da NotificationSetting** |
+| 🟡 **Alto**    | **B10**: `relationLoaded('vehicle')` fragile | ✅ **FIXATO — loadMissing + latestMileageLog**   |
+| 🟡 **Alto**    | **B11 + M12**: N+1 in syncStatusFromRules    | ✅ **FIXATO — eager load + relazione dedicata**  |
+| 🟡 **Alto**    | **B13**: Accessor NotificationSetting        | ✅ **FIXATO — usa `$this->attributes['key']`**   |
+| 🟡 **Alto**    | **B14**: `internal_code` senza unique        | ✅ **FIXATO — aggiunta validazione**             |
+| 🟡 **Alto**    | **M10**: Cache dashboard                     | Performance homepage                             |
+| 🟡 **Alto**    | **M11**: Indici DB                           | Performance query                                |
+| 🟡 **Alto**    | **F12**: UI audit log                        | Compliance e debugging                           |
+| 🟢 **Medio**   | **BP2**: Service Layer                       | Manutenibilità codice                            |
+| 🟢 **Medio**   | **F11**: Gestione utenti                     | Completezza funzionale                           |
+| 🟢 **Medio**   | **F17**: Test mancanti                       | Qualità del codice                               |
+| 🟢 **Medio**   | **BP6**: ActivityLog su MileageLog           | Tracciabilità                                    |
+| 🔵 **Basso**   | **M14**: Spostare logica garanzia da Request | Refactoring                                      |
+| 🔵 **Basso**   | **F16**: Calendario appuntamenti             | UX                                               |
+| 🔵 **Basso**   | **F19**: i18n                                | Completezza                                      |
 
 ---
 

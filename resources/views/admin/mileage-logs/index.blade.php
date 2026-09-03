@@ -8,9 +8,10 @@
                 <a href="{{ route('admin.mileage-logs.bulk') }}" class="btn btn-outline-primary btn-sm">Rilevazione
                     mensile</a>
                 <a href="{{ route('admin.mileage-logs.pivot') }}" class="btn btn-outline-primary btn-sm">Vista mensile</a>
-                <a href="{{ route('admin.csv-import.index') }}" class="btn btn-outline-primary btn-sm">Importa CSV</a>
+                <a href="{{ route('admin.csv-import.index') }}"
+                    class="btn btn-outline-primary btn-sm d-none d-md-inline-block">Importa CSV</a>
             </div>
-            <div class="ms-auto">
+            <div class="ms-auto d-none d-md-inline-block">
                 <a href="{{ route('admin.csv.export', 'mileage-logs') }}" class="btn btn-sm btn-outline-secondary"
                     title="Scarica CSV">
                     <i class="bi bi-download me-1"></i>CSV

@@ -3,7 +3,8 @@
     <x-admin.index-table title="Guasti" :searchRoute="route('admin.issues.index')" :csvRoute="route('admin.csv.export', 'issues')">
         <x-slot:headingActions>
             <x-admin.create-button :href="route('admin.issues.create')" label="guasto" />
-            <a href="{{ route('admin.csv-import.index') }}" class="btn btn-outline-primary btn-sm">Importa CSV</a>
+            <a href="{{ route('admin.csv-import.index') }}"
+                class="btn btn-outline-primary btn-sm d-none d-md-inline-block">Importa CSV</a>
         </x-slot:headingActions>
 
         <x-slot:head>
