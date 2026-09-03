@@ -39,6 +39,7 @@ class EquipmentController extends Controller
     public function store(StoreEquipmentRequest $request)
     {
         $validatedData = $request->validated();
+        $validatedData = $this->resolveExpirationDate($validatedData);
 
         $newEquipment = Equipment::create($validatedData);
 
@@ -70,10 +71,41 @@ class EquipmentController extends Controller
     public function update(UpdateEquipmentRequest $request, Equipment $equipment)
     {
         $validatedData = $request->validated();
+        $validatedData = $this->resolveExpirationDate($validatedData);
 
         $equipment->update($validatedData);
 
         return redirect()->route('admin.equipments.show', $equipment)->with('status', 'Attrezzatura aggiornata con successo.');
+    }
+
+    /**
+     * Calcola automaticamente la data di scadenza se non fornita, in base
+     * all'intervallo di revisione periodica del tipo di attrezzatura.
+     */
+    private function resolveExpirationDate(array $data): array
+    {
+        // Se l'utente ha già fornito una data di scadenza, la rispettiamo.
+        if (!empty($data['expiration_date'])) {
+            return $data;
+        }
+
+        // Serve una data di revisione e un tipo con intervallo periodico.
+        if (empty($data['revision_date']) || empty($data['equipment_type_id'])) {
+            return $data;
+        }
+
+        $equipmentType = EquipmentType::find($data['equipment_type_id']);
+        $regularMonths = $equipmentType?->regular_inspection_months;
+
+        if (!$regularMonths || $regularMonths <= 0) {
+            return $data;
+        }
+
+        $data['expiration_date'] = \Illuminate\Support\Carbon::parse($data['revision_date'])
+            ->addMonthsNoOverflow((int) $regularMonths)
+            ->toDateString();
+
+        return $data;
     }
 
     /**
