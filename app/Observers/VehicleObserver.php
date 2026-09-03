@@ -58,6 +58,39 @@ class VehicleObserver
         if ($iteration < self::MAX_BACKFILL_ITERATIONS) {
             $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, false);
         }
+
+        // Cinghia distribuzione: se il veicolo ne è dotato, genera la scadenza
+        // (10 anni o 100.000 km dall'immatricolazione / precedente cambio).
+        if ($vehicle->has_timing_belt) {
+            $this->createTimingBeltDeadline($vehicle);
+        }
+    }
+
+    /**
+     * Crea la scadenza della cinghia di distribuzione se non esiste già.
+     * Scade al primo tra: 10 anni (3650 giorni) o 100.000 km.
+     */
+    private function createTimingBeltDeadline(Vehicle $vehicle): void
+    {
+        $alreadyExists = $vehicle->deadlines()
+            ->where('type', Deadline::TYPE_CINGHIA)
+            ->exists();
+
+        if ($alreadyExists) {
+            return;
+        }
+
+        $dueDate = Carbon::parse($vehicle->immatricolation_date)
+            ->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS);
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'due_date' => $dueDate->toDateString(),
+            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+            'last_mileage' => 0,
+            'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+        ]);
     }
 
     private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, bool $renewed = false): void

@@ -37,6 +37,8 @@ class Deadline extends Model
     public const TYPE_TAGLIANDO = 'Tagliando';
     public const TYPE_CINGHIA = 'Cinghia Distribuzione';
     public const OXYGEN_CHECK_INTERVAL_MONTHS = 12;
+    public const TIMING_BELT_INTERVAL_DAYS = 3650; // 10 anni
+    public const TIMING_BELT_INTERVAL_KM = 100000; // 100.000 km
 
     protected $fillable = [
         'vehicle_id',

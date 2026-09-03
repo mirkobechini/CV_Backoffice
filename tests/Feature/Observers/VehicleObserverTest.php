@@ -12,7 +12,7 @@ class VehicleObserverTest extends TestCase
 {
 
     use RefreshDatabase;
-    
+
     //Helper methods
     private function createVehicleType(bool $needsOxygenCheck = true): VehicleType
     {
@@ -24,7 +24,7 @@ class VehicleObserverTest extends TestCase
         ]);
     }
 
-    private function createVehicle(VehicleType $vehicleType): Vehicle
+    private function createVehicle(VehicleType $vehicleType, bool $hasTimingBelt = false): Vehicle
     {
         return Vehicle::create([
             'license_plate' => 'AB123CD',
@@ -34,6 +34,7 @@ class VehicleObserverTest extends TestCase
             'car_model_id' => null,
             'fuel_type' => 'diesel',
             'immatricolation_date' => today()->toDateString(),
+            'has_timing_belt' => $hasTimingBelt,
         ]);
     }
 
@@ -73,5 +74,29 @@ class VehicleObserverTest extends TestCase
         $vehicleType = $this->createVehicleType();
         $vehicle = $this->createVehicle($vehicleType);
         $this->assertDatabaseCount('deadlines', 2);
+    }
+
+    public function test_vehicle_creation_generates_timing_belt_deadline_when_has_timing_belt(): void
+    {
+        $vehicleType = $this->createVehicleType();
+        $vehicle = $this->createVehicle($vehicleType, true);
+
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+            'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+        ]);
+    }
+
+    public function test_vehicle_creation_does_not_generate_timing_belt_deadline_when_not_has_timing_belt(): void
+    {
+        $vehicleType = $this->createVehicleType();
+        $vehicle = $this->createVehicle($vehicleType, false);
+
+        $this->assertDatabaseMissing('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+        ]);
     }
 }
