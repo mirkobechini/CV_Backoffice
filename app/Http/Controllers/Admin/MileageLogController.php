@@ -207,12 +207,15 @@ class MileageLogController extends Controller
         $year = $request->get('year', date('Y'));
         $vehicles = Vehicle::with(['brand', 'carModel'])->orderBy('internal_code')->get();
 
-        // Raccogli i km per ogni veicolo per ogni mese dell'anno
+        // Raccogli i km per ogni veicolo per ogni mese dell'anno.
+        // Estraiamo il mese in PHP (via Carbon) per restare portabili su
+        // qualsiasi DB (MONTH() è MySQL-specifico e fallisce su SQLite).
         $logs = MileageLog::whereYear('log_date', $year)
-            ->selectRaw('vehicle_id, MONTH(log_date) as month, mileage')
-            ->get()
+            ->get(['vehicle_id', 'log_date', 'mileage'])
             ->groupBy('vehicle_id')
-            ->map(fn($items) => $items->keyBy('month'));
+            ->map(function ($items) {
+                return $items->keyBy(fn($log) => $log->log_date->month);
+            });
 
         return view('admin.mileage-logs.pivot', compact('vehicles', 'logs', 'year'));
     }
