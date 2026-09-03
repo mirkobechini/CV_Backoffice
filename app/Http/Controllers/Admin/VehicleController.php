@@ -47,6 +47,7 @@ class VehicleController extends Controller
     {
 
         $data = $request->validated();
+        $data['has_timing_belt'] = $request->boolean('has_timing_belt');
 
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');
@@ -95,6 +96,7 @@ class VehicleController extends Controller
     {
 
         $data = $request->validated();
+        $data['has_timing_belt'] = $request->boolean('has_timing_belt');
 
         if ($request->hasFile('registration_card')) {
             // Elimina il file precedente per evitare leak di storage
