@@ -30,6 +30,7 @@ class UpdateVehicleRequest extends FormRequest
             'has_warranty_extension' => 'nullable|boolean',
             'warranty_expiration_date' => 'nullable|date|required_if_accepted:has_warranty_extension|after_or_equal:immatricolation_date',
             'warranty_extension_duration' => 'nullable|integer|min:1|required_if_accepted:has_warranty_extension',
+            'has_timing_belt' => 'nullable|boolean',
         ];
     }
 
