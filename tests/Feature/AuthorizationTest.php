@@ -83,4 +83,57 @@ class AuthorizationTest extends TestCase
         $this->actingAs($u)->get(route('admin.deadlines.index'))->assertStatus(200);
         $this->actingAs($u)->get(route('dashboard'))->assertStatus(200);
     }
+
+    public function test_worker_gets_403_on_vehicle_destroy(): void
+    {
+        $this->actingAs($this->worker())
+            ->delete(route('admin.vehicles.destroy', $this->vehicle()))
+            ->assertForbidden();
+    }
+
+    public function test_worker_gets_403_on_issue_destroy(): void
+    {
+        $issue = Issue::create(['vehicle_id' => $this->vehicle()->id, 'description' => 'test', 'event_date' => '2025-01-01']);
+        $this->actingAs($this->worker())
+            ->delete(route('admin.issues.destroy', $issue))
+            ->assertForbidden();
+    }
+
+    public function test_worker_gets_403_on_deadline_destroy(): void
+    {
+        $deadline = Deadline::create(['vehicle_id' => $this->vehicle()->id, 'type' => Deadline::TYPE_MINISTERIAL, 'due_date' => '2025-06-01']);
+        $this->actingAs($this->worker())
+            ->delete(route('admin.deadlines.destroy', $deadline))
+            ->assertForbidden();
+    }
+
+    public function test_worker_gets_403_on_provider_destroy(): void
+    {
+        $this->actingAs($this->worker())
+            ->delete(route('admin.providers.destroy', $this->provider()))
+            ->assertForbidden();
+    }
+
+    public function test_worker_gets_403_on_mileage_log_destroy(): void
+    {
+        $log = \App\Models\MileageLog::create(['vehicle_id' => $this->vehicle()->id, 'log_date' => '2025-01-01', 'mileage' => 100]);
+        $this->actingAs($this->worker())
+            ->delete(route('admin.mileage-logs.destroy', $log))
+            ->assertForbidden();
+    }
+
+    public function test_worker_gets_403_on_maintenance_complete(): void
+    {
+        $record = MaintenanceRecord::create(['vehicle_id' => $this->vehicle()->id, 'provider_id' => $this->provider()->id, 'appointment_date' => '2025-02-01']);
+        $this->actingAs($this->worker())
+            ->patch(route('admin.maintenance-records.complete', $record), ['issue_resolved' => true])
+            ->assertForbidden();
+    }
+
+    public function test_worker_gets_403_on_csv_import_preview(): void
+    {
+        $this->actingAs($this->worker())
+            ->post(route('admin.csv-import.preview'), ['entity' => 'issues'])
+            ->assertForbidden();
+    }
 }

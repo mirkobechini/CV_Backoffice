@@ -125,6 +125,7 @@ class VehicleTypeController extends Controller
      */
     public function destroy(VehicleType $vehicleType)
     {
+        $this->authorize('delete', $vehicleType);
         $vehicleType->delete();
 
         return redirect()

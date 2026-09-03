@@ -99,6 +99,7 @@ class ProviderController extends Controller
      */
     public function destroy(Provider $provider)
     {
+        $this->authorize('delete', $provider);
         $provider->delete();
         return redirect()->route('admin.providers.index')->with('status', 'Struttura eliminata con successo.');
     }

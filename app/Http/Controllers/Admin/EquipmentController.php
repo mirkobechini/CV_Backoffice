@@ -81,6 +81,7 @@ class EquipmentController extends Controller
      */
     public function destroy(Equipment $equipment)
     {
+        $this->authorize('delete', $equipment);
         $equipment->delete();
         return redirect()->route('admin.equipments.index')->with('status', 'Attrezzatura eliminata con successo.');
     }

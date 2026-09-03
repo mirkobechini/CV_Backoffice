@@ -138,6 +138,7 @@ class IssueController extends Controller
      */
     public function destroy(Issue $issue)
     {
+        $this->authorize('delete', $issue);
         $issue->delete();
         return redirect()->route('admin.issues.index')->with('status', 'Guasto eliminato con successo.');
     }

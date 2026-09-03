@@ -274,6 +274,7 @@ class MaintenanceRecordController extends Controller
      */
     public function destroy(MaintenanceRecord $maintenanceRecord)
     {
+        $this->authorize('delete', $maintenanceRecord);
         $maintenanceRecord->loadMissing('items.itemable');
 
         // I guasti in lavorazione tornano in open
@@ -297,6 +298,7 @@ class MaintenanceRecordController extends Controller
     // Metodo per completare un intervento e aggiornare lo stato del guasto associato
     public function complete(Request $request, MaintenanceRecord $maintenanceRecord)
     {
+        $this->authorize('update', $maintenanceRecord);
         $data = $request->validate(
             [
                 'issue_resolved' => 'required|boolean',

@@ -111,6 +111,7 @@ class VehicleController extends Controller
      */
     public function destroy(Vehicle $vehicle)
     {
+        $this->authorize('delete', $vehicle);
         $vehicle->delete();
         return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo eliminato con successo.');
     }

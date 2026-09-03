@@ -103,6 +103,7 @@ class MileageLogController extends Controller
      */
     public function bulkStore(Request $request)
     {
+        $this->authorize('create', MileageLog::class);
         $data = $request->validate([
             'log_date' => 'required|date',
             'mileages' => 'nullable|array',
@@ -176,6 +177,7 @@ class MileageLogController extends Controller
      */
     public function destroy(MileageLog $mileageLog)
     {
+        $this->authorize('delete', $mileageLog);
         $mileageLog->delete();
         return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio eliminato con successo.');
     }
@@ -185,6 +187,7 @@ class MileageLogController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        $this->authorize('delete', MileageLog::class);
         $data = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:mileage_logs,id',
@@ -219,6 +222,7 @@ class MileageLogController extends Controller
      */
     public function pivotSave(Request $request)
     {
+        $this->authorize('create', MileageLog::class);
         $data = $request->validate([
             'year' => 'required|integer|min:2000|max:2100',
             'mileages' => 'nullable|array',

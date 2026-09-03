@@ -150,6 +150,7 @@ class DeadlineController extends Controller
      */
     public function destroy(Deadline $deadline)
     {
+        $this->authorize('delete', $deadline);
         $deadline->delete();
         return redirect()->route('admin.deadlines.index')->with('success', 'Scadenza eliminata con successo.');
     }
