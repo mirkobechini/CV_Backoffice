@@ -186,5 +186,6 @@ class Vehicle extends Model
         'revisione' => Deadline::TYPE_MINISTERIAL,
         'ossigeno' => Deadline::TYPE_OXYGEN,
         'cinghia' => Deadline::TYPE_CINGHIA,
+        'tagliando' => Deadline::TYPE_TAGLIANDO,
     ];
 }
