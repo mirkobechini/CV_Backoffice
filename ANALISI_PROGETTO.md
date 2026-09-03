@@ -15,7 +15,7 @@
 | **Migliorie (M10-M18)**     | ✅ **Completate**                             |
 | **Feature implementate**    | ✅ F12, F14, F15, F16, F17, F18, F19, F20     |
 | **Registrazione utenti**    | ✅ Disabilitata (admin via artisan)           |
-| **Test**                    | ✅ **166 test, 330 assertions — tutti verdi** |
+| **Test**                    | ✅ **178 test, 346 assertions — tutti verdi** |
 
 ---
 
@@ -145,6 +145,62 @@ Oggi l'app è usata da un **singolo admin** (registrazione pubblica disabilitata
 - Gestione inviti via link/codice.
 - Scoping dei dati per gruppo (ogni gruppo vede solo i propri veicoli/dati).
 - Sistema di permessi per ruolo (capo / sottocapo / utente base).
+
+---
+
+## 🔧 Sessione 2026-09-03: Bug Fix, Sicurezza e Generazione Automatica Scadenze
+
+### Bug critici risolti
+
+| #     | Problema                                                                   | Soluzione                                                              |
+| ----- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| **1** | `complete()` non impostava `is_renewed` → rinnovo perso                    | Aggiunto `is_renewed = true`                                           |
+| **2** | `destroy()` e metodi custom senza autorizzazione (worker poteva eliminare) | Aggiunto `authorize()` + trait `AuthorizesRequests` al controller base |
+| **3** | Policy registrate ma mai invocate (dead code)                              | Attivate tramite `authorize()` nei metodi di mutazione                 |
+
+### Bug alti/medi risolti
+
+| #      | Problema                                   | Soluzione                                          |
+| ------ | ------------------------------------------ | -------------------------------------------------- |
+| **4**  | N+1 in `DeadlineController::index`         | Nuovo `syncStatusesFromRules()` con update bulk    |
+| **5**  | N+1 in `getAutomaticStatusAttribute`       | Cache del risultato in proprietà di istanza        |
+| **6**  | `MONTH()` non portabile su SQLite          | Estrazione mese in PHP via Carbon                  |
+| **7**  | API login senza rate limiting              | Applicato throttle `login` (5/min)                 |
+| **8**  | `/dev-login` backdoor                      | Doppia guardia: `APP_ENV=local` + `APP_DEBUG=true` |
+| **9**  | `resolveDueDate` nullsafe su `false`       | Riuso `resolveManualDueDate()`                     |
+| **10** | `complete()` null safety `vehicleType`     | Nullsafe `?->`                                     |
+| **11** | File vecchi mai eliminati su update        | `Storage::delete()` prima del nuovo upload         |
+| **12** | `pivotSave` senza validazione `vehicle_id` | Verifica esistenza veicolo                         |
+| **13** | TODO rinnovo scadenza successiva           | `createNextDeadlineAfterRenewal()`                 |
+| **14** | `DEADLINE_TYPES` manca `tagliando`         | Aggiunto mapping                                   |
+| **15** | `has_timing_belt` non persistito           | Validazione + salvataggio nei FormRequest          |
+| **16** | `reminder_days_before` mai usato           | Applicato al report (default 30)                   |
+| **17** | `EquipmentType` campi ispezione non usati  | Calcolo automatico `expiration_date`               |
+
+### Nuove feature: generazione automatica scadenze
+
+| Feature                   | Dettaglio                                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Cinghia distribuzione** | Generata alla creazione se `has_timing_belt`; scade al primo tra 10 anni o 100.000 km; rinnovo al cambio cinghia          |
+| **Tagliando**             | Primo tagliando alla creazione (1 anno o km configurabili, default 25.000); rinnovo al completamento tagliando ricorrente |
+| **Campi VehicleType**     | `first_tagliando_km` (default 25.000) e `regular_tagliando_km` (default 20.000)                                           |
+| **Enum deadlines.type**   | Esteso per includere Tagliando e Cinghia Distribuzione                                                                    |
+| **due_date nullable**     | Supporto scadenze km-based senza data                                                                                     |
+
+### Backfill dati esistenti
+
+Migrazione `2026_09_03_180215` che al deploy aggiorna i dati esistenti:
+
+1. `expiration_date` equipaggiamenti
+2. Scadenza cinghia per veicoli con `has_timing_belt`
+3. Primo tagliando per veicoli senza
+4. Correzione `is_renewed` per rinnovi persi
+5. Sincronizzazione stato scadenze
+
+### Test
+
+- **178 test, 346 assertions — tutti verdi** ✅
+- Fix manifest Vite fittizio in `TestCase` per test senza build asset
 
 ---
 
