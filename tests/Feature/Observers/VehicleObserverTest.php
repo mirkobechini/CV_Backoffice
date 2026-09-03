@@ -88,6 +88,16 @@ class VehicleObserverTest extends TestCase
             'interval_km' => 25000,
             'last_mileage' => 0,
         ]);
+
+        // La scadenza tagliando ha anche una data (1 anno dall'immatricolazione)
+        $deadline = Deadline::where('vehicle_id', $vehicle->id)
+            ->where('type', Deadline::TYPE_TAGLIANDO)
+            ->first();
+        $this->assertNotNull($deadline->due_date);
+        $this->assertEquals(
+            $vehicle->immatricolation_date->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS)->toDateString(),
+            $deadline->due_date->toDateString()
+        );
     }
 
     public function test_vehicle_creation_generates_first_tagliando_with_custom_km(): void

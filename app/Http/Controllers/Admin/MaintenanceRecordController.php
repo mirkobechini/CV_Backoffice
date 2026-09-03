@@ -432,14 +432,18 @@ class MaintenanceRecordController extends Controller
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
         $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
 
-        $dueDate = $maintenanceRecord->recurrence_months
-            ? $baseDate->copy()->addMonthsNoOverflow((int) $maintenanceRecord->recurrence_months)
-            : null;
+        // Il tagliando scade anche dopo 1 anno (default) se non è specificata
+        // una ricorrenza mensile diversa.
+        $recurrenceMonths = $maintenanceRecord->recurrence_months
+            ? (int) $maintenanceRecord->recurrence_months
+            : Deadline::TAGLIANDO_INTERVAL_MONTHS;
+
+        $dueDate = $baseDate->copy()->addMonthsNoOverflow($recurrenceMonths);
 
         $intervalKm = $maintenanceRecord->recurrence_km;
 
         // Se non c'è né ricorrenza mensile né km, non creiamo una scadenza.
-        if (!$dueDate && !$intervalKm) {
+        if (!$maintenanceRecord->recurrence_months && !$intervalKm) {
             return;
         }
 
@@ -448,12 +452,10 @@ class MaintenanceRecordController extends Controller
             ->first();
 
         if ($deadline) {
-            $deadline->due_date = $dueDate?->toDateString();
+            $deadline->due_date = $dueDate->toDateString();
             $deadline->last_mileage = $baseKm;
             $deadline->interval_km = $intervalKm;
-            $deadline->interval_days = $maintenanceRecord->recurrence_months
-                ? (int) $maintenanceRecord->recurrence_months * 30
-                : null;
+            $deadline->interval_days = $recurrenceMonths * 30;
             $deadline->status = Deadline::STATUS_PENDING;
             $deadline->is_renewed = false;
             $deadline->save();
@@ -461,12 +463,10 @@ class MaintenanceRecordController extends Controller
             Deadline::create([
                 'vehicle_id' => $maintenanceRecord->vehicle_id,
                 'type' => Deadline::TYPE_TAGLIANDO,
-                'due_date' => $dueDate?->toDateString(),
+                'due_date' => $dueDate->toDateString(),
                 'last_mileage' => $baseKm,
                 'interval_km' => $intervalKm,
-                'interval_days' => $maintenanceRecord->recurrence_months
-                    ? (int) $maintenanceRecord->recurrence_months * 30
-                    : null,
+                'interval_days' => $recurrenceMonths * 30,
                 'status' => Deadline::STATUS_PENDING,
             ]);
         }
