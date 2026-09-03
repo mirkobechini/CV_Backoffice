@@ -9,6 +9,7 @@ use App\Models\Issue;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
 
@@ -127,7 +128,7 @@ class IssueController extends Controller
     public function update(UpdateIssueRequest $request, Issue $issue)
     {
         $data = $request->validated();
-        $issueData = $this->buildIssueData($data, $request);
+        $issueData = $this->buildIssueData($data, $request, $issue);
         $issue->update($issueData);
 
         return redirect()->route('admin.issues.show', $issue->id)->with('status', 'Guasto aggiornato con successo.');
@@ -138,6 +139,7 @@ class IssueController extends Controller
      */
     public function destroy(Issue $issue)
     {
+        $this->authorize('delete', $issue);
         $issue->delete();
         return redirect()->route('admin.issues.index')->with('status', 'Guasto eliminato con successo.');
     }
@@ -145,7 +147,7 @@ class IssueController extends Controller
     /**
      * Costruisce l'array dati per creazione/aggiornamento, gestendo l'upload dell'immagine.
      */
-    private function buildIssueData(array $data, $request): array
+    private function buildIssueData(array $data, $request, ?Issue $issue = null): array
     {
         $issueData = [
             'vehicle_id' => $data['vehicle_id'],
@@ -156,6 +158,11 @@ class IssueController extends Controller
         ];
 
         if ($request->hasFile('image')) {
+            // Elimina l'immagine precedente per evitare leak di storage
+            if ($issue && $issue->photo) {
+                Storage::disk('public')->delete($issue->photo);
+            }
+
             $path = $request->file('image')->store('issue_images', 'public');
             $issueData['photo'] = $path;
         }

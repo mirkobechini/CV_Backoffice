@@ -103,6 +103,7 @@ class MileageLogController extends Controller
      */
     public function bulkStore(Request $request)
     {
+        $this->authorize('create', MileageLog::class);
         $data = $request->validate([
             'log_date' => 'required|date',
             'mileages' => 'nullable|array',
@@ -176,6 +177,7 @@ class MileageLogController extends Controller
      */
     public function destroy(MileageLog $mileageLog)
     {
+        $this->authorize('delete', $mileageLog);
         $mileageLog->delete();
         return redirect()->route('admin.mileage-logs.index')->with('status', 'Chilometraggio eliminato con successo.');
     }
@@ -185,6 +187,7 @@ class MileageLogController extends Controller
      */
     public function bulkDelete(Request $request)
     {
+        $this->authorize('delete', MileageLog::class);
         $data = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'exists:mileage_logs,id',
@@ -204,12 +207,15 @@ class MileageLogController extends Controller
         $year = $request->get('year', date('Y'));
         $vehicles = Vehicle::with(['brand', 'carModel'])->orderBy('internal_code')->get();
 
-        // Raccogli i km per ogni veicolo per ogni mese dell'anno
+        // Raccogli i km per ogni veicolo per ogni mese dell'anno.
+        // Estraiamo il mese in PHP (via Carbon) per restare portabili su
+        // qualsiasi DB (MONTH() è MySQL-specifico e fallisce su SQLite).
         $logs = MileageLog::whereYear('log_date', $year)
-            ->selectRaw('vehicle_id, MONTH(log_date) as month, mileage')
-            ->get()
+            ->get(['vehicle_id', 'log_date', 'mileage'])
             ->groupBy('vehicle_id')
-            ->map(fn($items) => $items->keyBy('month'));
+            ->map(function ($items) {
+                return $items->keyBy(fn($log) => $log->log_date->month);
+            });
 
         return view('admin.mileage-logs.pivot', compact('vehicles', 'logs', 'year'));
     }
@@ -219,17 +225,32 @@ class MileageLogController extends Controller
      */
     public function pivotSave(Request $request)
     {
+        $this->authorize('create', MileageLog::class);
         $data = $request->validate([
             'year' => 'required|integer|min:2000|max:2100',
             'mileages' => 'nullable|array',
+            'mileages.*' => 'nullable|array',
             'mileages.*.*' => 'nullable|integer|min:0',
         ]);
+
+        // Valida che le chiavi vehicle_id esistano davvero, per evitare
+        // errori di foreign key (500) con ID inesistenti.
+        if (!empty($data['mileages'])) {
+            $validVehicleIds = Vehicle::whereIn('id', array_keys($data['mileages']))
+                ->pluck('id')
+                ->toArray();
+        }
 
         $year = $data['year'];
         $count = 0;
 
         if (!empty($data['mileages'])) {
             foreach ($data['mileages'] as $vehicleId => $months) {
+                // Salta veicoli non validi (ID inesistente)
+                if (!in_array((int) $vehicleId, $validVehicleIds, true)) {
+                    continue;
+                }
+
                 foreach ($months as $month => $mileage) {
                     if ($mileage === null || $mileage === '' || $mileage < 0) {
                         continue;

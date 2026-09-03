@@ -14,7 +14,7 @@
             <div class="ms-3 pt-2">{{ $headingActions }}</div>
         @endisset
         @if ($csvRoute)
-            <div class="ms-1 pt-2">
+            <div class="ms-1 pt-2 d-none d-md-inline-block">
                 <a href="{{ $csvRoute }}" class="btn btn-sm btn-outline-secondary" title="Scarica CSV">
                     <i class="bi bi-download me-1"></i>CSV
                 </a>

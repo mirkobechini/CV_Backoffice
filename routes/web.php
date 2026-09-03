@@ -94,8 +94,11 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
 require __DIR__ . '/auth.php';
 
-// ⚠️ Dev only: login rapido per sviluppo (funziona solo in ambiente local)
-if (app()->environment('local')) {
+// ⚠️ Dev only: login rapido per sviluppo.
+// Attivo SOLO in ambiente local E con debug abilitato (doppia guardia):
+// se APP_ENV=local venisse impostato per errore in produzione, APP_DEBUG=false
+// blocca comunque questa backdoor.
+if (app()->environment('local') && config('app.debug')) {
     Route::get('/dev-login', function () {
         $user = User::first();
         if ($user) {

@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 
 class EquipmentTypeController extends Controller
 {
-     /**
+    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -73,6 +73,7 @@ class EquipmentTypeController extends Controller
      */
     public function destroy(EquipmentType $equipmentType)
     {
+        $this->authorize('delete', $equipmentType);
         $equipmentType->delete();
         return redirect()->route('admin.equipment-types.index')->with('status', 'Tipo di attrezzatura eliminato con successo.');
     }

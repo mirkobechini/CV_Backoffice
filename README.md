@@ -13,6 +13,7 @@
 - **Gestione completa del parco mezzi**: anagrafica veicoli, marche, modelli, tipologie e documenti
 - **Flusso guasti e manutenzioni**: dalla segnalazione alla chiusura intervento, con collegamento polimorfico tra guasti, scadenze e appuntamenti in officina
 - **Controllo scadenze e dotazioni**: revisioni ministeriali, ossigeno, tagliando, cinghia distribuzione, assicurazione — con stato automatico basato su data e km
+- **Generazione automatica scadenze**: cinghia (10 anni o 100.000 km), tagliando (1 anno o km configurabili), rinnovo automatico al completamento intervento
 - **Chilometraggi**: rilevazione mensile bulk, storico, integrazione con scadenze km
 - **Dashboard interattiva**: statistiche, scadenze imminenti, guasti aperti, equipaggiamento incompleto
 - **Calendario appuntamenti**: vista mese/settimana con colori per tipo attività
@@ -22,7 +23,7 @@
 - **Notifiche email**: report giornaliero/settimanale/mensile configurabile
 - **Rate limiting**: protezione su login e route admin
 - **Tema chiaro/scuro**: persistente in localStorage
-- **166 test, 330 assertions — tutti verdi** ✅
+- **178 test, 346 assertions — tutti verdi** ✅
 
 ---
 
@@ -91,7 +92,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ```bash
 php artisan test
-# 166 tests, 330 assertions — all green ✅
+# 178 tests, 346 assertions — all green ✅
 ```
 
 ---

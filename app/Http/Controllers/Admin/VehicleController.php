@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateVehicleRequest;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class VehicleController extends Controller
@@ -46,6 +47,7 @@ class VehicleController extends Controller
     {
 
         $data = $request->validated();
+        $data['has_timing_belt'] = $request->boolean('has_timing_belt');
 
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');
@@ -94,8 +96,14 @@ class VehicleController extends Controller
     {
 
         $data = $request->validated();
+        $data['has_timing_belt'] = $request->boolean('has_timing_belt');
 
         if ($request->hasFile('registration_card')) {
+            // Elimina il file precedente per evitare leak di storage
+            if ($vehicle->registration_card_path) {
+                Storage::disk('public')->delete($vehicle->registration_card_path);
+            }
+
             $registrationCardFile = $request->file('registration_card');
             $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
             $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
@@ -111,6 +119,7 @@ class VehicleController extends Controller
      */
     public function destroy(Vehicle $vehicle)
     {
+        $this->authorize('delete', $vehicle);
         $vehicle->delete();
         return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo eliminato con successo.');
     }

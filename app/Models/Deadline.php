@@ -13,6 +13,13 @@ class Deadline extends Model
 {
     use SoftDeletes, LogsActivity, Searchable;
 
+    /**
+     * Cache dell'accessor automatic_status per evitare query ripetute
+     * quando l'accessor viene chiamato più volte (status_color, status_label,
+     * view, grouping) sullo stesso modello.
+     */
+    protected ?string $automaticStatusCache = null;
+
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
         return \Spatie\Activitylog\LogOptions::defaults()
@@ -30,6 +37,9 @@ class Deadline extends Model
     public const TYPE_TAGLIANDO = 'Tagliando';
     public const TYPE_CINGHIA = 'Cinghia Distribuzione';
     public const OXYGEN_CHECK_INTERVAL_MONTHS = 12;
+    public const TIMING_BELT_INTERVAL_DAYS = 3650; // 10 anni
+    public const TIMING_BELT_INTERVAL_KM = 100000; // 100.000 km
+    public const TAGLIANDO_INTERVAL_MONTHS = 12; // 1 anno
 
     protected $fillable = [
         'vehicle_id',
@@ -100,11 +110,18 @@ class Deadline extends Model
 
     public function getAutomaticStatusAttribute(): string
     {
+        // Cachea il risultato: l'accessor può essere chiamato più volte
+        // (status_color, status_label, view, grouping) e il calcolo può
+        // comportare query sul veicolo/km.
+        if ($this->automaticStatusCache !== null) {
+            return $this->automaticStatusCache;
+        }
+
         $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
 
         // Se marcata manualmente come rinnovata, preserviamo quel valore.
         if ($this->is_renewed) {
-            return self::STATUS_RENEWED;
+            return $this->automaticStatusCache = self::STATUS_RENEWED;
         }
 
         $today = Carbon::today();
@@ -131,7 +148,7 @@ class Deadline extends Model
 
         // Se non c'è né data né km, pending
         if (!$this->due_date && !$this->interval_km) {
-            return self::STATUS_PENDING;
+            return $this->automaticStatusCache = self::STATUS_PENDING;
         }
 
         // Check date-based expiry
@@ -144,15 +161,102 @@ class Deadline extends Model
 
         // Expired se UNA delle condizioni è scaduta (km O data — il primo che arriva)
         if ($isKmExpired || $isDateExpired) {
-            return self::STATUS_EXPIRED;
+            return $this->automaticStatusCache = self::STATUS_EXPIRED;
         }
 
         // Pending se UNA delle condizioni è in warning
         if ($isKmPending || $isDatePending) {
-            return self::STATUS_PENDING;
+            return $this->automaticStatusCache = self::STATUS_PENDING;
         }
 
-        return self::STATUS_VALID;
+        return $this->automaticStatusCache = self::STATUS_VALID;
+    }
+
+    /**
+     * Sincronizza lo stato di più scadenze in un'unica passata.
+     *
+     * Pre-carica le relazioni necessarie una sola volta e raggruppa gli
+     * aggiornamenti di stato in un unico UPDATE bulk, evitando N query di
+     * loadMissing + N query di save() per ogni scadenza.
+     *
+     * @param  \Illuminate\Support\Collection<int, Deadline>|iterable  $deadlines
+     */
+    public static function syncStatusesFromRules(iterable $deadlines): void
+    {
+        // Mantieni il tipo originale: Eloquent\Collection ha loadMissing/load,
+        // una Collection generica no. Se non è una collection Eloquent,
+        // la convertiamo in una per poter usare l'eager loading in una sola query.
+        if (!$deadlines instanceof \Illuminate\Database\Eloquent\Collection) {
+            $deadlines = new \Illuminate\Database\Eloquent\Collection($deadlines);
+        }
+
+        if ($deadlines->isEmpty()) {
+            return;
+        }
+
+        // Pre-carica veicolo + ultimo km per tutte le scadenze in una sola query.
+        $deadlines->loadMissing('vehicle.latestMileageLog');
+
+        $today = Carbon::today();
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
+
+        $updates = [];
+
+        foreach ($deadlines as $deadline) {
+            // Le scadenze marcate manualmente come rinnovate restano invariate.
+            if ($deadline->is_renewed) {
+                continue;
+            }
+
+            $newStatus = null;
+
+            // KM-based check
+            if ($deadline->interval_km !== null && $deadline->last_mileage !== null) {
+                $currentMileage = $deadline->vehicle?->mileage;
+                if ($currentMileage !== null && $currentMileage >= ($deadline->last_mileage + $deadline->interval_km)) {
+                    $newStatus = self::STATUS_EXPIRED;
+                }
+            }
+
+            // Date-based check (solo se non è già expired per km)
+            if ($newStatus === null && $deadline->due_date) {
+                $warningStartDate = $deadline->due_date->copy()->subMonthsNoOverflow($warningMonths);
+
+                if ($deadline->due_date->isBefore($today)) {
+                    $newStatus = self::STATUS_EXPIRED;
+                } elseif ($deadline->due_date->isAfter($today) && $deadline->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
+                    $newStatus = self::STATUS_VALID;
+                } elseif ($today->gte($warningStartDate)) {
+                    $newStatus = self::STATUS_PENDING;
+                } else {
+                    $newStatus = self::STATUS_VALID;
+                }
+            }
+
+            // Se non c'è né data né km, pending
+            if ($newStatus === null) {
+                $newStatus = self::STATUS_PENDING;
+            }
+
+            if ($deadline->status !== $newStatus) {
+                $updates[$deadline->id] = $newStatus;
+            }
+        }
+
+        if (!empty($updates)) {
+            // Raggruppa per stato e aggiorna in blocco: al massimo 4 query
+            // UPDATE (una per stato) invece di N query save().
+            $grouped = [];
+            foreach ($updates as $id => $status) {
+                $grouped[$status][] = $id;
+            }
+
+            foreach ($grouped as $status => $ids) {
+                self::query()
+                    ->whereIn('id', $ids)
+                    ->update(['status' => $status]);
+            }
+        }
     }
 
     public function syncStatusFromRules(): void

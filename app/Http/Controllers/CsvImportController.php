@@ -20,6 +20,7 @@ class CsvImportController extends Controller
 
     public function preview(Request $request)
     {
+        $this->authorize('create', Issue::class);
         try {
             $request->validate([
                 'entity' => 'required|in:issues,mileage-logs',
@@ -50,6 +51,7 @@ class CsvImportController extends Controller
 
     public function confirm(Request $request)
     {
+        $this->authorize('create', Issue::class);
         $entity = $request->entity;
         $editable = $request->input('editable', []);
 
