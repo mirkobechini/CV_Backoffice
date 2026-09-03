@@ -368,11 +368,53 @@ class MaintenanceRecordController extends Controller
                     $deadline->save();
                 }
             }
+
+            // 4) Cambio cinghia distribuzione: riparte la scadenza dalla data
+            //    e dal chilometraggio del cambio effettuato.
+            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) $data['issue_resolved']) {
+                $this->renewTimingBeltDeadline($maintenanceRecord);
+            }
         });
 
         return redirect()
             ->route('admin.maintenance-records.show', $maintenanceRecord->id)
             ->with('status', 'Intervento completato con successo.');
+    }
+
+    /**
+     * Rinnova la scadenza della cinghia di distribuzione dopo un cambio.
+     * La nuova scadenza riparte dalla data e dal chilometraggio del cambio.
+     */
+    private function renewTimingBeltDeadline(MaintenanceRecord $maintenanceRecord): void
+    {
+        $deadline = $maintenanceRecord->vehicle->deadlines()
+            ->where('type', Deadline::TYPE_CINGHIA)
+            ->first();
+
+        $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
+        $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
+
+        if ($deadline) {
+            // Aggiorna la scadenza esistente
+            $deadline->due_date = $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS);
+            $deadline->last_mileage = $baseKm;
+            $deadline->interval_km = Deadline::TIMING_BELT_INTERVAL_KM;
+            $deadline->interval_days = Deadline::TIMING_BELT_INTERVAL_DAYS;
+            $deadline->status = Deadline::STATUS_PENDING;
+            $deadline->is_renewed = false;
+            $deadline->save();
+        } else {
+            // Crea la scadenza se non esiste
+            Deadline::create([
+                'vehicle_id' => $maintenanceRecord->vehicle_id,
+                'type' => Deadline::TYPE_CINGHIA,
+                'due_date' => $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS)->toDateString(),
+                'last_mileage' => $baseKm,
+                'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+                'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+                'status' => Deadline::STATUS_PENDING,
+            ]);
+        }
     }
 
     /**
