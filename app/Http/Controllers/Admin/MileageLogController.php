@@ -229,14 +229,28 @@ class MileageLogController extends Controller
         $data = $request->validate([
             'year' => 'required|integer|min:2000|max:2100',
             'mileages' => 'nullable|array',
+            'mileages.*' => 'nullable|array',
             'mileages.*.*' => 'nullable|integer|min:0',
         ]);
+
+        // Valida che le chiavi vehicle_id esistano davvero, per evitare
+        // errori di foreign key (500) con ID inesistenti.
+        if (!empty($data['mileages'])) {
+            $validVehicleIds = Vehicle::whereIn('id', array_keys($data['mileages']))
+                ->pluck('id')
+                ->toArray();
+        }
 
         $year = $data['year'];
         $count = 0;
 
         if (!empty($data['mileages'])) {
             foreach ($data['mileages'] as $vehicleId => $months) {
+                // Salta veicoli non validi (ID inesistente)
+                if (!in_array((int) $vehicleId, $validVehicleIds, true)) {
+                    continue;
+                }
+
                 foreach ($months as $month => $mileage) {
                     if ($mileage === null || $mileage === '' || $mileage < 0) {
                         continue;
