@@ -13,6 +13,13 @@ class Deadline extends Model
 {
     use SoftDeletes, LogsActivity, Searchable;
 
+    /**
+     * Cache dell'accessor automatic_status per evitare query ripetute
+     * quando l'accessor viene chiamato più volte (status_color, status_label,
+     * view, grouping) sullo stesso modello.
+     */
+    protected ?string $automaticStatusCache = null;
+
     public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
     {
         return \Spatie\Activitylog\LogOptions::defaults()
@@ -100,11 +107,18 @@ class Deadline extends Model
 
     public function getAutomaticStatusAttribute(): string
     {
+        // Cachea il risultato: l'accessor può essere chiamato più volte
+        // (status_color, status_label, view, grouping) e il calcolo può
+        // comportare query sul veicolo/km.
+        if ($this->automaticStatusCache !== null) {
+            return $this->automaticStatusCache;
+        }
+
         $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
 
         // Se marcata manualmente come rinnovata, preserviamo quel valore.
         if ($this->is_renewed) {
-            return self::STATUS_RENEWED;
+            return $this->automaticStatusCache = self::STATUS_RENEWED;
         }
 
         $today = Carbon::today();
@@ -131,7 +145,7 @@ class Deadline extends Model
 
         // Se non c'è né data né km, pending
         if (!$this->due_date && !$this->interval_km) {
-            return self::STATUS_PENDING;
+            return $this->automaticStatusCache = self::STATUS_PENDING;
         }
 
         // Check date-based expiry
@@ -144,15 +158,15 @@ class Deadline extends Model
 
         // Expired se UNA delle condizioni è scaduta (km O data — il primo che arriva)
         if ($isKmExpired || $isDateExpired) {
-            return self::STATUS_EXPIRED;
+            return $this->automaticStatusCache = self::STATUS_EXPIRED;
         }
 
         // Pending se UNA delle condizioni è in warning
         if ($isKmPending || $isDatePending) {
-            return self::STATUS_PENDING;
+            return $this->automaticStatusCache = self::STATUS_PENDING;
         }
 
-        return self::STATUS_VALID;
+        return $this->automaticStatusCache = self::STATUS_VALID;
     }
 
     /**
