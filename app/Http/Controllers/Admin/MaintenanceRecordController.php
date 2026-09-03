@@ -347,8 +347,8 @@ class MaintenanceRecordController extends Controller
                     $deadline->save();
                     $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
                     $nextDueDate = null;
-                    if ($deadline->type === Deadline::TYPE_MINISTERIAL && $maintenanceRecord->vehicle->vehicleType->regular_inspection_months > 0) {
-                        $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType->regular_inspection_months;
+                    if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
+                        $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType?->regular_inspection_months;
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
                     } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
