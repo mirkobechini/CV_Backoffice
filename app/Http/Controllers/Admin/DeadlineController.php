@@ -50,7 +50,7 @@ class DeadlineController extends Controller
             $deadlines = $deadlinesQuery->get();
         }
 
-        $deadlines->each->syncStatusFromRules();
+        Deadline::syncStatusesFromRules($deadlines);
 
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
             'type' => fn(Deadline $d) => $d->type,

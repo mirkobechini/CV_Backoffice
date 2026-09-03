@@ -155,6 +155,93 @@ class Deadline extends Model
         return self::STATUS_VALID;
     }
 
+    /**
+     * Sincronizza lo stato di più scadenze in un'unica passata.
+     *
+     * Pre-carica le relazioni necessarie una sola volta e raggruppa gli
+     * aggiornamenti di stato in un unico UPDATE bulk, evitando N query di
+     * loadMissing + N query di save() per ogni scadenza.
+     *
+     * @param  \Illuminate\Support\Collection<int, Deadline>|iterable  $deadlines
+     */
+    public static function syncStatusesFromRules(iterable $deadlines): void
+    {
+        // Mantieni il tipo originale: Eloquent\Collection ha loadMissing/load,
+        // una Collection generica no. Se non è una collection Eloquent,
+        // la convertiamo in una per poter usare l'eager loading in una sola query.
+        if (!$deadlines instanceof \Illuminate\Database\Eloquent\Collection) {
+            $deadlines = new \Illuminate\Database\Eloquent\Collection($deadlines);
+        }
+
+        if ($deadlines->isEmpty()) {
+            return;
+        }
+
+        // Pre-carica veicolo + ultimo km per tutte le scadenze in una sola query.
+        $deadlines->loadMissing('vehicle.latestMileageLog');
+
+        $today = Carbon::today();
+        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
+
+        $updates = [];
+
+        foreach ($deadlines as $deadline) {
+            // Le scadenze marcate manualmente come rinnovate restano invariate.
+            if ($deadline->is_renewed) {
+                continue;
+            }
+
+            $newStatus = null;
+
+            // KM-based check
+            if ($deadline->interval_km !== null && $deadline->last_mileage !== null) {
+                $currentMileage = $deadline->vehicle?->mileage;
+                if ($currentMileage !== null && $currentMileage >= ($deadline->last_mileage + $deadline->interval_km)) {
+                    $newStatus = self::STATUS_EXPIRED;
+                }
+            }
+
+            // Date-based check (solo se non è già expired per km)
+            if ($newStatus === null && $deadline->due_date) {
+                $warningStartDate = $deadline->due_date->copy()->subMonthsNoOverflow($warningMonths);
+
+                if ($deadline->due_date->isBefore($today)) {
+                    $newStatus = self::STATUS_EXPIRED;
+                } elseif ($deadline->due_date->isAfter($today) && $deadline->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
+                    $newStatus = self::STATUS_VALID;
+                } elseif ($today->gte($warningStartDate)) {
+                    $newStatus = self::STATUS_PENDING;
+                } else {
+                    $newStatus = self::STATUS_VALID;
+                }
+            }
+
+            // Se non c'è né data né km, pending
+            if ($newStatus === null) {
+                $newStatus = self::STATUS_PENDING;
+            }
+
+            if ($deadline->status !== $newStatus) {
+                $updates[$deadline->id] = $newStatus;
+            }
+        }
+
+        if (!empty($updates)) {
+            // Raggruppa per stato e aggiorna in blocco: al massimo 4 query
+            // UPDATE (una per stato) invece di N query save().
+            $grouped = [];
+            foreach ($updates as $id => $status) {
+                $grouped[$status][] = $id;
+            }
+
+            foreach ($grouped as $status => $ids) {
+                self::query()
+                    ->whereIn('id', $ids)
+                    ->update(['status' => $status]);
+            }
+        }
+    }
+
     public function syncStatusFromRules(): void
     {
         // Sincronizza lo stato persistito con le regole temporali/km correnti.
