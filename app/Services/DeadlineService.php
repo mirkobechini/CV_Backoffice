@@ -82,7 +82,7 @@ class DeadlineService
     private function resolveDueDate(array $data, Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
         if (in_array($data['type'] ?? '', [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
-            return $data['due_date'] ? Carbon::createFromFormat('Y-m', $data['due_date'])?->endOfMonth() : null;
+            return $this->resolveManualDueDate($data['due_date'] ?? null);
         }
 
         if (($data['type'] ?? null) === Deadline::TYPE_MINISTERIAL) {
