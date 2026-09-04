@@ -53,6 +53,14 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->parameters(['mileage-logs' => 'mileageLog']);
         Route::delete('mileage-logs/bulk/delete', [MileageLogController::class, 'bulkDelete'])
             ->name('mileage-logs.bulk-delete');
+
+        // Route statiche PRIMA del resource: altrimenti {maintenanceRecord}
+        // catturerebbe /calendar e /events come parametro (404).
+        Route::get('maintenance-records/calendar', [MaintenanceRecordController::class, 'calendar'])
+            ->name('maintenance-records.calendar');
+        Route::get('maintenance-records/events', [MaintenanceRecordController::class, 'events'])
+            ->name('maintenance-records.events');
+
         Route::resource("maintenance-records", MaintenanceRecordController::class)
             ->parameters(['maintenance-records' => 'maintenanceRecord']);
         Route::resource("vehicle-types", VehicleTypeController::class)
@@ -61,11 +69,6 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->parameters(['equipment-types' => 'equipmentType']);
         Route::patch('maintenance-records/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
             ->name('maintenance-records.complete');
-
-        Route::get('maintenance-records/calendar', [MaintenanceRecordController::class, 'calendar'])
-            ->name('maintenance-records.calendar');
-        Route::get('maintenance-records/events', [MaintenanceRecordController::class, 'events'])
-            ->name('maintenance-records.events');
 
         Route::get('/notifications', [NotificationSettingController::class, 'edit'])
             ->name('notifications.edit');
