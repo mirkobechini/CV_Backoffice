@@ -176,22 +176,33 @@
                                             {{ !$result['valid'] ? 'disabled' : '' }}>
                                     </td>
                                     <td>
+                                        <input type="text" class="form-control form-control-sm" style="max-width:130px;"
+                                            name="editable[{{ $index }}][_notes]"
+                                            value="{{ $result['data']['_notes'] ?? '' }}"
+                                            {{ !$result['valid'] ? 'disabled' : '' }}>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
 
-                                        @if ($validCount > 0)
-                                            <div class="alert alert-info">
-                                                <i class="bi bi-info-circle"></i>
-                                                Puoi modificare i campi direttamente in tabella prima di importare.
-                                                Verranno importati solo i <strong>{{ $validCount }} record
-                                                    validi</strong>.
-                                            </div>
-                                            <button type="submit" class="btn btn-primary">
-                                                <i class="bi bi-upload"></i> Importa {{ $validCount }} record
-                                            </button>
-                                        @else
-                                            <div class="alert alert-danger">
-                                                Nessun record valido da importare. Correggi gli errori e riprova.
-                                            </div>
-                                        @endif
+            @if ($validCount > 0)
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Puoi modificare i campi direttamente in tabella prima di importare.
+                    Verranno importati solo i <strong>{{ $validCount }} record
+                        validi</strong>.
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-upload"></i> Importa {{ $validCount }} record
+                </button>
+            @else
+                <div class="alert alert-danger">
+                    Nessun record valido da importare. Correggi gli errori e riprova.
+                </div>
+            @endif
         </form>
     </div>
 @endsection
