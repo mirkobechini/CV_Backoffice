@@ -6,6 +6,16 @@
                 <span class="brand-text">{{ config('app.name', 'CV Backoffice') }}</span>
             </a>
 
+            {{-- Notifiche --}}
+            <a href="{{ route('notifications.index') }}" class="btn btn-sm btn-outline-secondary position-relative me-2"
+                title="Notifiche">
+                <i class="fa-solid fa-bell"></i>
+                @if (auth()->user()?->notifications()->where('is_read', false)->count() > 0)
+                    <span
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ auth()->user()?->notifications()->where('is_read', false)->count() }}</span>
+                @endif
+            </a>
+
             {{-- Theme Toggle — sempre visibile --}}
             <div class="d-flex align-items-center ms-auto">
                 <button id="theme-toggle" class="btn btn-sm btn-outline-secondary rounded-pill me-2" type="button"
