@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PdfExportController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
@@ -64,6 +65,13 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::patch('groups/{group}/role/{user}', [GroupController::class, 'updateRole'])->name('groups.role');
         Route::delete('groups/{group}/member/{user}', [GroupController::class, 'removeMember'])->name('groups.remove-member');
         Route::resource("groups", GroupController::class);
+
+        // Gestione utenti
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::patch('users/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::get('mileage-logs/pivot', [MileageLogController::class, 'pivot'])
             ->name('mileage-logs.pivot');
         Route::post('mileage-logs/pivot/save', [MileageLogController::class, 'pivotSave'])

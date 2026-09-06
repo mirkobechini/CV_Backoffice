@@ -133,6 +133,11 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li>
+                                <a class="dropdown-item" href="{{ route('admin.users.index') }}">
+                                    <i class="fa-solid fa-user-gear me-2"></i>{{ __('Utenti') }}
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{{ route('admin.groups.index') }}">
                                     <i class="fa-solid fa-users me-2"></i>{{ __('Gruppi') }}
                                 </a>
