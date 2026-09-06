@@ -41,9 +41,10 @@ class RegisteredUserController extends Controller
         // Se ci sono già utenti, solo un capo può registrarne di nuovi.
         $isFirstUser = User::count() === 0;
 
+        $currentUser = Auth::user();
+
         if (! $isFirstUser) {
-            $currentUser = Auth::user();
-            if (! $currentUser || ! $currentUser->canManageData()) {
+            if (! $currentUser instanceof User || ! $currentUser->canManageData()) {
                 abort(403, 'Solo un capo può registrare nuovi utenti.');
             }
         }
@@ -63,10 +64,11 @@ class RegisteredUserController extends Controller
             $group->addUser($user, Group::ROLE_CAPO);
         } else {
             // Utente successivo: entra nel gruppo del capo corrente come membro.
-            $currentUser = Auth::user();
-            $group = $currentUser->activeGroup();
-            if ($group) {
-                $group->addUser($user, Group::ROLE_MEMBER);
+            if ($currentUser instanceof User) {
+                $group = $currentUser->activeGroup();
+                if ($group) {
+                    $group->addUser($user, Group::ROLE_MEMBER);
+                }
             }
         }
 

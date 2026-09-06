@@ -6,15 +6,30 @@ use App\Http\Controllers\Controller;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class GroupController extends Controller
 {
+    /**
+     * L'utente autenticato come modello User.
+     */
+    private function currentUser(): User
+    {
+        $user = Auth::user();
+
+        if (! $user instanceof User) {
+            abort(401);
+        }
+
+        return $user;
+    }
+
     /**
      * Elenco dei gruppi dell'utente corrente.
      */
     public function index()
     {
-        $groups = auth()->user()->groups()->withCount('users', 'vehicles')->get();
+        $groups = $this->currentUser()->groups()->withCount('users', 'vehicles')->get();
 
         return view('admin.groups.index', compact('groups'));
     }
@@ -53,7 +68,7 @@ class GroupController extends Controller
             'invite_code' => Group::generateInviteCode(),
         ]);
 
-        $group->addUser(auth()->user(), Group::ROLE_CAPO);
+        $group->addUser($this->currentUser(), Group::ROLE_CAPO);
 
         return redirect()->route('admin.groups.show', $group)->with('status', 'Gruppo creato con successo.');
     }
@@ -89,7 +104,7 @@ class GroupController extends Controller
             return back()->withErrors(['invite_code' => 'Codice invito non valido.']);
         }
 
-        $group->addUser(auth()->user(), Group::ROLE_MEMBER);
+        $group->addUser($this->currentUser(), Group::ROLE_MEMBER);
 
         return redirect()->route('admin.groups.show', $group)->with('status', 'Sei entrato nel gruppo.');
     }
@@ -101,7 +116,7 @@ class GroupController extends Controller
     {
         $this->authorizeGroup($group);
 
-        if (auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
             abort(403, 'Solo il capo può rigenerare il codice invito.');
         }
 
@@ -122,7 +137,7 @@ class GroupController extends Controller
         ]);
 
         // Solo il capo può gestire i ruoli.
-        if (auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
             abort(403, 'Solo il capo può gestire i ruoli.');
         }
 
@@ -144,7 +159,7 @@ class GroupController extends Controller
         $this->authorizeGroup($group);
 
         // Solo il capo può rimuovere membri.
-        if (auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
             abort(403, 'Solo il capo può rimuovere membri.');
         }
 
@@ -170,7 +185,7 @@ class GroupController extends Controller
     {
         $this->authorizeGroup($group);
 
-        if (auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
             abort(403, 'Solo il capo può eliminare il gruppo.');
         }
 
@@ -184,7 +199,7 @@ class GroupController extends Controller
      */
     private function authorizeGroup(Group $group): void
     {
-        if (! auth()->user()->groups()->where('groups.id', $group->id)->exists()) {
+        if (! $this->currentUser()->groups()->where('groups.id', $group->id)->exists()) {
             abort(403, 'Non appartieni a questo gruppo.');
         }
     }
