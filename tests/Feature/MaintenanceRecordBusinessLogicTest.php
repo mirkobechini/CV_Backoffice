@@ -327,4 +327,57 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         // Il guasto in lavorazione deve restare selezionabile per un nuovo appuntamento
         $response->assertSee('Guasto non risolto');
     }
+
+    public function test_complete_with_issue_resolved_renews_tagliando(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $issue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Tagliando',
+            'status' => 'in_progress',
+            'event_date' => '2025-01-02',
+        ]);
+
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'status' => 'pending',
+            'due_date' => today()->addDays(10),
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $issue->id,
+            'itemable_type' => Issue::class,
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $deadline->id,
+            'itemable_type' => Deadline::class,
+        ]);
+
+        $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'issue_resolved' => '1',
+        ]);
+
+        // Il tagliando deve essere rinnovato
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $deadline->id,
+            'status' => 'renewed',
+            'is_renewed' => true,
+        ]);
+
+        // Una nuova scadenza tagliando deve essere stata creata (12 mesi dopo)
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'status' => 'pending',
+        ]);
+    }
 }
