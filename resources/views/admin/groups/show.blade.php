@@ -11,8 +11,16 @@
             <div class="alert alert-success">{{ session('status') }}</div>
         @endif
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="mb-0">{{ $group->name }}</h1>
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+                <h1 class="mb-0">{{ $group->name }}</h1>
+                @if (auth()->user()->roleIn($group) === 'capo')
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
+                        data-bs-target="#rename-group" aria-expanded="false">
+                        <i class="fa-solid fa-pen"></i>
+                    </button>
+                @endif
+            </div>
             @if (auth()->user()->roleIn($group) === 'capo')
                 <form method="POST" action="{{ route('admin.groups.destroy', $group) }}"
                     onsubmit="return confirm('Eliminare questo gruppo?');">
@@ -32,6 +40,30 @@
             @endif
         </div>
 
+        @if (auth()->user()->roleIn($group) === 'capo')
+            <div class="collapse mb-3" id="rename-group">
+                <div class="card card-body">
+                    <form method="POST" action="{{ route('admin.groups.update', $group) }}">
+                        @csrf
+                        @method('PATCH')
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Nome del gruppo</label>
+                                <input type="text" class="form-control @error('name') is-invalid @enderror"
+                                    id="name" name="name" value="{{ old('name', $group->name) }}" required>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="col-md-auto">
+                                <button type="submit" class="btn btn-primary">Rinomina</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        @endif
+
         @error('delete_vehicles')
             <div class="alert alert-danger">{{ $message }}</div>
         @enderror
@@ -49,6 +81,19 @@
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="btn btn-sm btn-outline-secondary">Rigenera codice</button>
+                            </form>
+                            <hr>
+                            <h6 class="text-center">Invita via email</h6>
+                            <form method="POST" action="{{ route('admin.groups.invite', $group) }}">
+                                @csrf
+                                <div class="input-group">
+                                    <input type="email" name="email" class="form-control" placeholder="email@esempio.it"
+                                        required>
+                                    <button type="submit" class="btn btn-primary">Invia invito</button>
+                                </div>
+                                @error('email')
+                                    <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
                             </form>
                         @endif
                     </div>
