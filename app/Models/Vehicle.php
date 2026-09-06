@@ -2,23 +2,25 @@
 
 namespace App\Models;
 
-use Carbon\Carbon;
+use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Concerns\Searchable;
+use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Vehicle extends Model
 {
-    use SoftDeletes, LogsActivity, Searchable;
+    use LogsActivity, Searchable, SoftDeletes;
 
-    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return \Spatie\Activitylog\LogOptions::defaults()
+        return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty();
     }
+
     protected $fillable = [
         'group_id',
         'license_plate',
@@ -60,7 +62,7 @@ class Vehicle extends Model
 
     public function getIsWarrantyExpiredAttribute(): bool
     {
-        if (!$this->warranty_expiration_date) {
+        if (! $this->warranty_expiration_date) {
             return true;
         }
 
@@ -71,7 +73,7 @@ class Vehicle extends Model
     {
         $date = $this->warranty_expiration_date;
 
-        if (!$date) {
+        if (! $date) {
             return null;
         }
 
@@ -81,7 +83,6 @@ class Vehicle extends Model
 
         return $date->toDateString();
     }
-
 
     public function vehicleType()
     {
@@ -102,7 +103,7 @@ class Vehicle extends Model
     {
         $user = auth()->user();
 
-        if (!$user) {
+        if (! $user) {
             return $query;
         }
 
@@ -124,7 +125,6 @@ class Vehicle extends Model
     {
         return $this->belongsTo(CarModel::class);
     }
-
 
     public function issues()
     {
@@ -175,7 +175,7 @@ class Vehicle extends Model
         // e calcola quante unità abbiamo per ciascun tipo.
         $availableQuantities = $this->equipment
             ->groupBy('equipment_type_id')
-            ->map(fn($items) => $items->count());
+            ->map(fn ($items) => $items->count());
 
         // Restituisce solo i tipi di equipaggiamento per cui la quantità disponibile
         // sul veicolo è inferiore alla quantità richiesta dal pivot required_quantity.
@@ -202,12 +202,12 @@ class Vehicle extends Model
         return $latestLog?->mileage;
     }
 
-    public function getDeadlinesGroupedAttribute(): \Illuminate\Support\Collection
+    public function getDeadlinesGroupedAttribute(): Collection
     {
         return $this->deadlines
             ->sortByDesc('due_date')
             ->groupBy('type')
-            ->map(fn($typeDeadlines) => $typeDeadlines->first());
+            ->map(fn ($typeDeadlines) => $typeDeadlines->first());
     }
 
     public const DEADLINE_TYPES = [

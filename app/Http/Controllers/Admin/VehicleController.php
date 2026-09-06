@@ -23,8 +23,8 @@ class VehicleController extends Controller
             ->forCurrentUser()
             ->with(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment'])
             ->withCount([
-                'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
-                'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
+                'issues as open_issues_count' => fn ($query) => $query->where('status', 'open'),
+                'issues as in_progress_issues_count' => fn ($query) => $query->where('status', 'in_progress'),
             ])
             ->search($request->get('q'))
             ->paginate(20);
@@ -38,6 +38,7 @@ class VehicleController extends Controller
     public function create()
     {
         $vehicleTypes = VehicleType::all();
+
         return view('admin.vehicles.create', compact('vehicleTypes'));
     }
 
@@ -55,7 +56,7 @@ class VehicleController extends Controller
 
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');
-            $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
+            $randomFileName = Str::random(40).'.'.$registrationCardFile->getClientOriginalExtension();
             $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
         }
 
@@ -109,7 +110,7 @@ class VehicleController extends Controller
             }
 
             $registrationCardFile = $request->file('registration_card');
-            $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
+            $randomFileName = Str::random(40).'.'.$registrationCardFile->getClientOriginalExtension();
             $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
         }
 
@@ -125,6 +126,7 @@ class VehicleController extends Controller
     {
         $this->authorize('delete', $vehicle);
         $vehicle->delete();
+
         return redirect()->route('admin.vehicles.index')->with('status', 'Veicolo eliminato con successo.');
     }
 }

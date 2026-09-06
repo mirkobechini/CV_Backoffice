@@ -30,9 +30,10 @@ class MakeAdmin extends Command
      */
     public function handle(): int
     {
-        if (User::whereHas('groups', fn($q) => $q->where('group_user.role', Group::ROLE_CAPO))->exists()) {
+        if (User::whereHas('groups', fn ($q) => $q->where('group_user.role', Group::ROLE_CAPO))->exists()) {
             $this->error('Esiste già un utente capo.');
             $this->info('Puoi crearne un altro modificando il ruolo dalla dashboard o via tinker.');
+
             return Command::FAILURE;
         }
 
@@ -42,11 +43,13 @@ class MakeAdmin extends Command
 
         if (empty($email)) {
             $this->error('L\'email è obbligatoria.');
+
             return Command::FAILURE;
         }
 
         if (empty($password)) {
             $this->error('La password è obbligatoria.');
+
             return Command::FAILURE;
         }
 
@@ -63,7 +66,7 @@ class MakeAdmin extends Command
         ]);
         $group->addUser($user, Group::ROLE_CAPO);
 
-        $this->info("✅ Utente amministratore creato con successo!");
+        $this->info('✅ Utente amministratore creato con successo!');
         $this->table(
             ['Nome', 'Email', 'Ruolo', 'Gruppo'],
             [[$user->name, $user->email, Group::ROLE_CAPO, $group->name]]

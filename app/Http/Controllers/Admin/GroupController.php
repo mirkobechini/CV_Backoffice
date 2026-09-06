@@ -85,7 +85,7 @@ class GroupController extends Controller
 
         $group = Group::where('invite_code', strtoupper($data['invite_code']))->first();
 
-        if (!$group) {
+        if (! $group) {
             return back()->withErrors(['invite_code' => 'Codice invito non valido.']);
         }
 
@@ -174,7 +174,7 @@ class GroupController extends Controller
      */
     private function authorizeGroup(Group $group): void
     {
-        if (!auth()->user()->groups()->where('groups.id', $group->id)->exists()) {
+        if (! auth()->user()->groups()->where('groups.id', $group->id)->exists()) {
             abort(403, 'Non appartieni a questo gruppo.');
         }
     }

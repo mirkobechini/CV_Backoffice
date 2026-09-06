@@ -13,7 +13,9 @@ class Group extends Model
     ];
 
     public const ROLE_CAPO = 'capo';
+
     public const ROLE_SOTTOCAPO = 'sottocapo';
+
     public const ROLE_MEMBER = 'member';
 
     /**

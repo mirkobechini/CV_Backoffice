@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Vehicle;
+use Illuminate\Support\Carbon;
 
 class EquipmentController extends Controller
 {
@@ -30,6 +31,7 @@ class EquipmentController extends Controller
         // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
         $equipmentTypes = EquipmentType::all();
+
         return view('admin.equipments.create', compact('vehicles', 'equipmentTypes', 'selectedVehicleId'));
     }
 
@@ -52,6 +54,7 @@ class EquipmentController extends Controller
     public function show(Equipment $equipment)
     {
         $equipment->load('vehicle.brand', 'vehicle.carModel', 'equipmentType');
+
         return view('admin.equipments.show', compact('equipment'));
     }
 
@@ -62,6 +65,7 @@ class EquipmentController extends Controller
     {
         $vehicles = Vehicle::forCurrentUser()->get();
         $equipmentTypes = EquipmentType::all();
+
         return view('admin.equipments.edit', compact('equipment', 'vehicles', 'equipmentTypes'));
     }
 
@@ -85,7 +89,7 @@ class EquipmentController extends Controller
     private function resolveExpirationDate(array $data): array
     {
         // Se l'utente ha già fornito una data di scadenza, la rispettiamo.
-        if (!empty($data['expiration_date'])) {
+        if (! empty($data['expiration_date'])) {
             return $data;
         }
 
@@ -97,11 +101,11 @@ class EquipmentController extends Controller
         $equipmentType = EquipmentType::find($data['equipment_type_id']);
         $regularMonths = $equipmentType?->regular_inspection_months;
 
-        if (!$regularMonths || $regularMonths <= 0) {
+        if (! $regularMonths || $regularMonths <= 0) {
             return $data;
         }
 
-        $data['expiration_date'] = \Illuminate\Support\Carbon::parse($data['revision_date'])
+        $data['expiration_date'] = Carbon::parse($data['revision_date'])
             ->addMonthsNoOverflow((int) $regularMonths)
             ->toDateString();
 
@@ -115,6 +119,7 @@ class EquipmentController extends Controller
     {
         $this->authorize('delete', $equipment);
         $equipment->delete();
+
         return redirect()->route('admin.equipments.index')->with('status', 'Attrezzatura eliminata con successo.');
     }
 }
