@@ -18,10 +18,23 @@
                     onsubmit="return confirm('Eliminare questo gruppo?');">
                     @csrf
                     @method('DELETE')
+                    @if ($group->vehicles->isNotEmpty())
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="delete_vehicles" id="delete_vehicles"
+                                value="1" required>
+                            <label class="form-check-label" for="delete_vehicles">
+                                Elimina anche i {{ $group->vehicles->count() }} veicoli del gruppo
+                            </label>
+                        </div>
+                    @endif
                     <button type="submit" class="btn btn-danger">Elimina gruppo</button>
                 </form>
             @endif
         </div>
+
+        @error('delete_vehicles')
+            <div class="alert alert-danger">{{ $message }}</div>
+        @enderror
 
         <div class="row">
             <div class="col-md-6 mb-4">
