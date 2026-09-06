@@ -180,13 +180,27 @@ class GroupController extends Controller
 
     /**
      * Elimina un gruppo (solo il capo).
+     * I veicoli del gruppo vengono eliminati solo con conferma esplicita,
+     * per evitare che restino orfani senza gruppo.
      */
-    public function destroy(Group $group)
+    public function destroy(Request $request, Group $group)
     {
         $this->authorizeGroup($group);
 
         if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
             abort(403, 'Solo il capo può eliminare il gruppo.');
+        }
+
+        $deleteVehicles = $request->boolean('delete_vehicles');
+
+        if ($group->vehicles()->exists() && ! $deleteVehicles) {
+            return back()->withErrors([
+                'delete_vehicles' => 'Il gruppo ha veicoli associati. Conferma di volerli eliminare per procedere.',
+            ]);
+        }
+
+        if ($deleteVehicles) {
+            $group->vehicles()->delete();
         }
 
         $group->delete();

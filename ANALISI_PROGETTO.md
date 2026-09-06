@@ -14,8 +14,10 @@
 | **Best Practice (BP1-BP8)** | ✅ **Tutte risolte**                          |
 | **Migliorie (M10-M18)**     | ✅ **Completate**                             |
 | **Feature implementate**    | ✅ F12, F14, F15, F16, F17, F18, F19, F20     |
+| **Notifiche in-app**        | ✅ Completate (2026-09-05)                    |
+| **Gruppi e ruoli**          | ✅ Completati (2026-09-06)                    |
 | **Registrazione utenti**    | ✅ Disabilitata (admin via artisan)           |
-| **Test**                    | ✅ **178 test, 346 assertions — tutti verdi** |
+| **Test**                    | ✅ **257 test, 504 assertions — tutti verdi** |
 
 ---
 
@@ -30,7 +32,55 @@
 
 ---
 
-## 🐛 Bug Risolti
+## � Analisi 2026-09-06: Mancanze identificate
+
+> **Data analisi:** 2026-09-06
+> **Contesto:** Dopo l'implementazione di notifiche e gruppi/ruoli, analisi delle mancanze di sicurezza, privacy, test e feature.
+
+### 🟠 SICUREZZA
+
+| #   | Mancanza                                   | Priorità | Note                                                             |
+| --- | ------------------------------------------ | -------- | ---------------------------------------------------------------- |
+| S1  | Gestione/revoca token API dal backoffice   | Alta     | I token Sanctum non hanno pagina di gestione né scadenza         |
+| S2  | Autorizzazione non uniforme sui controller | Media    | `authorize()` solo su delete; store/update delegati alle Request |
+| S3  | Rate limiting solo su login                | Media    | Le route API protette (GET) non hanno throttle specifico         |
+
+### 🟠 PRIVACY / GDPR
+
+| #   | Mancanza                                  | Priorità | Note                                             |
+| --- | ----------------------------------------- | -------- | ------------------------------------------------ |
+| P1  | Nessuna pagina privacy / cookie banner    | Alta     | L'app raccoglie dati personali senza informativa |
+| P2  | Nessun export dati utente (GDPR)          | Alta     | Manca right to data portability                  |
+| P3  | Delete account non pulisce dati collegati | Alta     | Veicoli/dati restano orfani                      |
+
+### 🟡 TEST
+
+| #   | Mancanza                                           | Priorità | Note                                        |
+| --- | -------------------------------------------------- | -------- | ------------------------------------------- |
+| T1  | Test rate limiting                                 | Media    | Login e admin non testati                   |
+| T2  | Test upload file                                   | Media    | registration_card e issue image non testati |
+| T3  | Test `MakeAdmin` command                           | Media    | Nessun test                                 |
+| T4  | `RegistrationTest` non aggiornato al flusso gruppi | Media    | È il default Breeze                         |
+| T5  | Test scoping API per gruppo                        | Media    | I test API non verificano lo scoping        |
+
+### 🔵 FEATURE MANCANTI
+
+| #   | Feature                        | Priorità | Note                        |
+| --- | ------------------------------ | -------- | --------------------------- |
+| F1  | Gestione utenti dal backoffice | Media    | Non esiste `UserController` |
+| F2  | Gestione token API nel profilo | Alta     | Vedere/revocare token       |
+| F3  | Backup dati                    | Bassa    | Nessun meccanismo           |
+| F4  | Pagina impostazioni generali   | Bassa    | Solo NotificationSetting    |
+
+### 📌 Decisioni utente (2026-09-06)
+
+1. **Eliminazione veicoli al delete associazione**: i veicoli devono essere eliminati se viene eliminata l'associazione/gruppo, ma **va chiesto e specificato al momento** (conferma esplicita).
+2. **Trasferimento ruolo capo**: se un capo organizzazione vuole eliminare il proprio account, deve avere la **proposta di spostare il ruolo capo** a un altro membro prima dell'eliminazione.
+3. **Registrazione utenti**: **non attivare** per ora (rimane solo l'admin). Creare comunque i file opportuni (view, controller, route) e attivarli in un secondo momento.
+
+---
+
+## �🐛 Bug Risolti
 
 ### B1-B6 — Bug iniziali ✅
 

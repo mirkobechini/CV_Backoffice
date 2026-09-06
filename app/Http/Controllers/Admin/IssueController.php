@@ -17,6 +17,11 @@ class IssueController extends Controller
     use DetectsDuplicates;
     use SortableAndGroupable;
 
+    public function __construct()
+    {
+        $this->authorizeResource(Issue::class, 'issue');
+    }
+
     /**
      * Display a listing of the resource.
      */

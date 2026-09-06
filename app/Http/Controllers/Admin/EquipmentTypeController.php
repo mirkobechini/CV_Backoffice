@@ -6,16 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEquipmentTypeRequest;
 use App\Http\Requests\UpdateEquipmentTypeRequest;
 use App\Models\EquipmentType;
-use Illuminate\Http\Request;
 
 class EquipmentTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(EquipmentType::class, 'equipmentType');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $equipmentTypes = EquipmentType::paginate(20);
+
         return view('admin.equipment-types.index', compact('equipmentTypes'));
     }
 
@@ -45,6 +50,7 @@ class EquipmentTypeController extends Controller
     public function show(EquipmentType $equipmentType)
     {
         $equipmentType->load('equipments');
+
         return view('admin.equipment-types.show', compact('equipmentType'));
     }
 
@@ -75,6 +81,7 @@ class EquipmentTypeController extends Controller
     {
         $this->authorize('delete', $equipmentType);
         $equipmentType->delete();
+
         return redirect()->route('admin.equipment-types.index')->with('status', 'Tipo di attrezzatura eliminato con successo.');
     }
 }

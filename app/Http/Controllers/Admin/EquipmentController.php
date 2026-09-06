@@ -12,6 +12,11 @@ use Illuminate\Support\Carbon;
 
 class EquipmentController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(Equipment::class, 'equipment');
+    }
+
     /**
      * Display a listing of the resource.
      */

@@ -5,6 +5,8 @@ use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PdfExportController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
@@ -24,6 +26,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('welcome');
 
+Route::view('/privacy', 'privacy')->name('privacy');
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -32,6 +36,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Gestione token API
+    Route::post('/profile/tokens', [ProfileController::class, 'createToken'])->name('profile.tokens.create');
+    Route::delete('/profile/tokens/{token}', [ProfileController::class, 'revokeToken'])->name('profile.tokens.revoke');
+
+    // Export dati personali (GDPR)
+    Route::get('/profile/export', [ProfileController::class, 'exportData'])->name('profile.export');
 
     // Notifiche in-app (ogni utente vede le proprie)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -55,6 +66,13 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::patch('groups/{group}/role/{user}', [GroupController::class, 'updateRole'])->name('groups.role');
         Route::delete('groups/{group}/member/{user}', [GroupController::class, 'removeMember'])->name('groups.remove-member');
         Route::resource("groups", GroupController::class);
+
+        // Gestione utenti
+        Route::get('users', [UserController::class, 'index'])->name('users.index');
+        Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('users', [UserController::class, 'store'])->name('users.store');
+        Route::patch('users/{user}/role', [UserController::class, 'updateRole'])->name('users.role');
+        Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
         Route::get('mileage-logs/pivot', [MileageLogController::class, 'pivot'])
             ->name('mileage-logs.pivot');
         Route::post('mileage-logs/pivot/save', [MileageLogController::class, 'pivotSave'])
@@ -94,6 +112,11 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         Route::get('activity-log', [ActivityLogController::class, 'index'])
             ->name('activity-log.index');
+
+        // Impostazioni generali
+        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::patch('settings/group', [SettingsController::class, 'updateGroup'])->name('settings.group');
+        Route::post('settings/backup', [SettingsController::class, 'backup'])->name('settings.backup');
 
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\CarModel;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
@@ -21,15 +22,13 @@ use App\Policies\MileageLogPolicy;
 use App\Policies\ProviderPolicy;
 use App\Policies\VehiclePolicy;
 use App\Policies\VehicleTypePolicy;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\ServiceProvider;
-
-use App\Models\CarModel;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Pagination\Paginator;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -57,7 +56,13 @@ class AppServiceProvider extends ServiceProvider
         // Rate limiting per il login (già gestito da Breeze, ma rinforziamo)
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)
-                ->by($request->input('email') . '|' . $request->ip());
+                ->by($request->input('email').'|'.$request->ip());
+        });
+
+        // Rate limiting per le route API protette
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(60)
+                ->by($request->user()?->id ?: $request->ip());
         });
         // Registra le policy
         Gate::policy(Vehicle::class, VehiclePolicy::class);
@@ -75,7 +80,7 @@ class AppServiceProvider extends ServiceProvider
             $brandField = $parameters[0] ?? null;
             $brandId = data_get($validator->getData(), $brandField);
 
-            if (!$brandId || !$value) {
+            if (! $brandId || ! $value) {
                 return true;
             }
 
