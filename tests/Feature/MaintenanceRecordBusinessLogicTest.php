@@ -260,4 +260,71 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'status' => 'in_progress',
         ]);
     }
+
+    public function test_create_form_excludes_closed_issues_already_linked(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        // Guasto risolto NON collegato a un appuntamento
+        $unlinkedIssue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto non collegato',
+            'status' => 'closed',
+        ]);
+
+        // Guasto risolto GIÀ collegato a un appuntamento
+        $linkedIssue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto già collegato',
+            'status' => 'closed',
+        ]);
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $linkedIssue->id,
+            'itemable_type' => Issue::class,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.create'));
+
+        $response->assertOk();
+        // Il guasto non collegato è presente
+        $response->assertSee('Guasto non collegato');
+        // Il guasto già collegato NON è presente
+        $response->assertDontSee('Guasto già collegato');
+    }
+
+    public function test_create_form_includes_in_progress_issue_already_linked(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        // Guasto in lavorazione GIÀ collegato a un appuntamento precedente (non risolto)
+        $issue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto non risolto',
+            'status' => 'in_progress',
+        ]);
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $issue->id,
+            'itemable_type' => Issue::class,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.create'));
+
+        $response->assertOk();
+        // Il guasto in lavorazione deve restare selezionabile per un nuovo appuntamento
+        $response->assertSee('Guasto non risolto');
+    }
 }
