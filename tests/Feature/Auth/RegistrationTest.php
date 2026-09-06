@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,7 +34,7 @@ class RegistrationTest extends TestCase
     public function test_first_user_creates_group_and_becomes_capo(): void
     {
         // Simula il flusso del RegisteredUserController per il primo utente.
-        $controller = new \App\Http\Controllers\Auth\RegisteredUserController();
+        $controller = new RegisteredUserController;
 
         // Il primo utente crea un gruppo di default e diventa capo.
         $user = User::create([
