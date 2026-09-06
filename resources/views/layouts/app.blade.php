@@ -46,6 +46,7 @@
         @endif
         @yield('content')
     </main>
+    @include('partials.cookie-banner')
     @livewireScripts
     @stack('scripts')
 </body>

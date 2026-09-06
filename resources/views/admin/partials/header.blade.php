@@ -147,6 +147,11 @@
                                     <i class="fa-solid fa-clock-rotate-left me-2"></i>{{ __('Registro Attività') }}
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('privacy') }}">
+                                    <i class="fa-solid fa-shield-halved me-2"></i>{{ __('Privacy') }}
+                                </a>
+                            </li>
                         </ul>
                     </li>
                 </ul>
