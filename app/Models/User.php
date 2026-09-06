@@ -48,4 +48,9 @@ class User extends Authenticatable
             'role' => 'string',
         ];
     }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

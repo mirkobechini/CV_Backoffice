@@ -2,27 +2,31 @@
 
 namespace App\Mail;
 
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ReportMail extends Mailable
+class EventNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $data;
+    public $type;
+    public $title;
+    public $message;
+    public $url;
 
     /**
      * Create a new message instance.
      */
-    public function __construct($data)
+    public function __construct(string $type, string $title, string $message, ?string $url = null)
     {
-        $this->data = $data;
+        $this->type = $type;
+        $this->title = $title;
+        $this->message = $message;
+        $this->url = $url;
     }
 
     /**
@@ -31,7 +35,7 @@ class ReportMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '📋 Report giornaliero - CV Backoffice',
+            subject: "🔔 {$this->title} - CV Backoffice",
         );
     }
 
@@ -41,8 +45,13 @@ class ReportMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'emails.report',
-            with: ['data' => $this->data],
+            view: 'emails.event-notification',
+            with: [
+                'type' => $this->type,
+                'title' => $this->title,
+                'message' => $this->message,
+                'url' => $this->url,
+            ],
         );
     }
 
@@ -53,13 +62,6 @@ class ReportMail extends Mailable
      */
     public function attachments(): array
     {
-        $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
-            ->loadView('pdfs.report', ['data' => $this->data])
-            ->output();
-
-        return [
-            Attachment::fromData(fn() => $pdf, 'report-' . now()->format('Y-m-d') . '.pdf')
-                ->withMime('application/pdf'),
-        ];
+        return [];
     }
 }
