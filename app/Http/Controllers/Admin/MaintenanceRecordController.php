@@ -42,8 +42,8 @@ class MaintenanceRecordController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
 
         $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']), $sortBy, $sortDir, [
-            'vehicle' => fn (MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn (MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
+            'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
+            'description' => fn(MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
@@ -58,9 +58,9 @@ class MaintenanceRecordController extends Controller
         });
 
         return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords') + [
-            'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
-            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
-            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -107,19 +107,21 @@ class MaintenanceRecordController extends Controller
         $vehicles = Vehicle::forCurrentUser()->get();
         $providers = Provider::all();
         $openIssues = Issue::whereIn('status', ['open'])->get(['id', 'vehicle_id', 'description']);
+        // Guasti risolti: per registrare riparazioni/appuntamenti già avvenuti
+        $closedIssues = Issue::where('status', 'closed')->get(['id', 'vehicle_id', 'description']);
 
         // Una sola deadline per tipo per veicolo: prendiamo l'ultima non rinnovata
         $pendingDeadlines = Deadline::whereIn('status', ['pending', 'expired', 'valid'])
             ->orderByDesc('due_date')
             ->get()
             ->unique(function ($item) {
-                return $item->vehicle_id.'-'.$item->type;
+                return $item->vehicle_id . '-' . $item->type;
             })
             ->values();
 
         // La view usa old(..., $preselected...) così old() ha priorità
         // dopo un errore validazione, altrimenti usa le preselezioni.
-        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'pendingDeadlines', 'preselectedIssueId', 'preselectedVehicleId'));
+        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'preselectedIssueId', 'preselectedVehicleId'));
     }
 
     /**
@@ -212,7 +214,7 @@ class MaintenanceRecordController extends Controller
             ->get(['id', 'vehicle_id', 'type', 'due_date'])
             // Una sola per veicolo+tipo (mantenendo quelle già collegate)
             ->unique(function ($item) {
-                return $item->vehicle_id.'-'.$item->type;
+                return $item->vehicle_id . '-' . $item->type;
             })
             ->values();
 
@@ -517,7 +519,7 @@ class MaintenanceRecordController extends Controller
 
                 $title = $record->vehicle?->internal_code ?? 'N/A';
                 if ($record->activity_type) {
-                    $title .= ' - '.$record->activity_type;
+                    $title .= ' - ' . $record->activity_type;
                 }
 
                 return [
