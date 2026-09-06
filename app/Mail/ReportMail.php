@@ -2,9 +2,11 @@
 
 namespace App\Mail;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -51,6 +53,13 @@ class ReportMail extends Mailable
      */
     public function attachments(): array
     {
-        return [];
+        $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
+            ->loadView('pdfs.report', ['data' => $this->data])
+            ->output();
+
+        return [
+            Attachment::fromData(fn() => $pdf, 'report-' . now()->format('Y-m-d') . '.pdf')
+                ->withMime('application/pdf'),
+        ];
     }
 }
