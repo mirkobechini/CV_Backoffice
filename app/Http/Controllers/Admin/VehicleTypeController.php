@@ -10,12 +10,18 @@ use App\Models\VehicleType;
 
 class VehicleTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->authorizeResource(VehicleType::class, 'vehicleType');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $vehicleTypes = VehicleType::paginate(20);
+
         return view('admin.vehicle-types.index', compact('vehicleTypes'));
     }
 
@@ -25,6 +31,7 @@ class VehicleTypeController extends Controller
     public function create()
     {
         $equipmentTypes = EquipmentType::all();
+
         return view('admin.vehicle-types.create', compact('equipmentTypes'));
     }
 
@@ -91,17 +98,17 @@ class VehicleTypeController extends Controller
             ->with('status', 'Tipo di veicolo aggiornato con successo.');
     }
 
-    /// Sincronizza le relazioni tra il tipo di veicolo e i tipi di equipaggiamento richiesti
+    // / Sincronizza le relazioni tra il tipo di veicolo e i tipi di equipaggiamento richiesti
     private function syncEquipmentRequirements(VehicleType $vehicleType, array $data): void
     {
         $equipmentTypeIds = $data['required_equipment_types'] ?? [];
         $requiredQuantities = $data['required_equipment_types_qty'] ?? [];
 
-        if (!is_array($equipmentTypeIds)) {
+        if (! is_array($equipmentTypeIds)) {
             $equipmentTypeIds = [$equipmentTypeIds];
         }
 
-        if (!is_array($requiredQuantities)) {
+        if (! is_array($requiredQuantities)) {
             $requiredQuantities = [$requiredQuantities];
         }
 

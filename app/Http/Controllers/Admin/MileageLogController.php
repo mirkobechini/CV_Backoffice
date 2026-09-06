@@ -14,6 +14,11 @@ class MileageLogController extends Controller
 {
     use SortableAndGroupable;
 
+    public function __construct()
+    {
+        $this->authorizeResource(MileageLog::class, 'mileageLog');
+    }
+
     /**
      * Display a listing of the resource.
      */

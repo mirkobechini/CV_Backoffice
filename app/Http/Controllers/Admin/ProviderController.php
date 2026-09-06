@@ -2,22 +2,28 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\Concerns\DetectsDuplicates;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\UpdateProviderRequest;
 use App\Models\Provider;
-use Illuminate\Support\Carbon;
 
 class ProviderController extends Controller
 {
     use DetectsDuplicates;
+
+    public function __construct()
+    {
+        $this->authorizeResource(Provider::class, 'provider');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
         $providers = Provider::paginate(20);
+
         return view('admin.providers.index', compact('providers'));
     }
 
@@ -101,6 +107,7 @@ class ProviderController extends Controller
     {
         $this->authorize('delete', $provider);
         $provider->delete();
+
         return redirect()->route('admin.providers.index')->with('status', 'Struttura eliminata con successo.');
     }
 }
