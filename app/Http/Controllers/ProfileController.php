@@ -18,6 +18,7 @@ class ProfileController extends Controller
     {
         return view('profile.edit', [
             'user' => $request->user(),
+            'tokens' => $request->user()->tokens()->orderByDesc('created_at')->get(),
         ]);
     }
 
@@ -35,6 +36,32 @@ class ProfileController extends Controller
         $request->user()->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    /**
+     * Crea un nuovo token API.
+     */
+    public function createToken(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'token_name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $token = $request->user()->createToken($data['token_name']);
+
+        return Redirect::route('profile.edit')
+            ->with('status', 'token-created')
+            ->with('plainTextToken', $token->plainTextToken);
+    }
+
+    /**
+     * Revoca un token API.
+     */
+    public function revokeToken(Request $request, int $tokenId): RedirectResponse
+    {
+        $request->user()->tokens()->where('id', $tokenId)->delete();
+
+        return Redirect::route('profile.edit')->with('status', 'token-revoked');
     }
 
     /**
