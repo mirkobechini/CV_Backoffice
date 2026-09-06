@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Concerns\Searchable;
@@ -91,6 +92,27 @@ class Vehicle extends Model
     public function group()
     {
         return $this->belongsTo(Group::class);
+    }
+
+    /**
+     * Filtra i veicoli per il gruppo dell'utente autenticato.
+     * Se l'utente non ha un gruppo, non applica alcun filtro.
+     */
+    public function scopeForCurrentUser(Builder $query): Builder
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return $query;
+        }
+
+        $groupId = $user->activeGroup()?->id;
+
+        if ($groupId) {
+            return $query->where('vehicles.group_id', $groupId);
+        }
+
+        return $query;
     }
 
     public function brand()

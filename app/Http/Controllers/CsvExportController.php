@@ -33,7 +33,7 @@ class CsvExportController extends Controller
 
     private function exportVehicles()
     {
-        $vehicles = Vehicle::with(['brand', 'carModel', 'vehicleType'])->get();
+        $vehicles = Vehicle::with(['brand', 'carModel', 'vehicleType'])->forCurrentUser()->get();
 
         $headers = ['Sigla', 'Targa', 'Marca', 'Modello', 'Tipo', 'Carburante', 'Immatricolazione', 'Scadenza Garanzia'];
         $rows = $vehicles->map(fn($v) => [

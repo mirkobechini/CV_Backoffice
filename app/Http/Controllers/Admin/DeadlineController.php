@@ -88,7 +88,7 @@ class DeadlineController extends Controller
      */
     public function create()
     {
-        $vehicles = Vehicle::with('vehicleType')->get();
+        $vehicles = Vehicle::with('vehicleType')->forCurrentUser()->get();
         return view('admin.deadlines.create', compact('vehicles'));
     }
 
@@ -123,7 +123,7 @@ class DeadlineController extends Controller
      */
     public function edit(Deadline $deadline)
     {
-        $vehicles = Vehicle::with('vehicleType')->get();
+        $vehicles = Vehicle::with('vehicleType')->forCurrentUser()->get();
         return view('admin.deadlines.edit', compact('deadline', 'vehicles'));
     }
 

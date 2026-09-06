@@ -71,7 +71,7 @@ class IssueController extends Controller
      */
     public function create()
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
 
@@ -118,7 +118,7 @@ class IssueController extends Controller
      */
     public function edit(Issue $issue)
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         return view('admin.issues.edit', compact('issue', 'vehicles'));
     }
 

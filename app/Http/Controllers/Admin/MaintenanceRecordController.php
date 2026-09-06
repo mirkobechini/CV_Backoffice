@@ -98,7 +98,7 @@ class MaintenanceRecordController extends Controller
             $preselectedVehicleId = $vehicleId;
         }
 
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         $providers = Provider::all();
         $openIssues = Issue::whereIn('status', ['open'])->get(['id', 'vehicle_id', 'description']);
 
@@ -186,7 +186,7 @@ class MaintenanceRecordController extends Controller
     {
         $maintenanceRecord->load(['vehicle', 'provider', 'items.itemable']);
 
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         $providers = Provider::all();
         // In edit rendiamo selezionabili i guasti attivi + quelli già collegati al record.
         $linkedIssueIds = $maintenanceRecord->items

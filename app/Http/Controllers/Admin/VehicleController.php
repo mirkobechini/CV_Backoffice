@@ -20,6 +20,7 @@ class VehicleController extends Controller
     {
 
         $vehicles = Vehicle::query()
+            ->forCurrentUser()
             ->with(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment'])
             ->withCount([
                 'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
@@ -48,6 +49,9 @@ class VehicleController extends Controller
 
         $data = $request->validated();
         $data['has_timing_belt'] = $request->boolean('has_timing_belt');
+
+        // Assegna il veicolo al gruppo dell'utente autenticato.
+        $data['group_id'] = $request->user()->activeGroup()?->id;
 
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');

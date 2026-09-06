@@ -49,7 +49,7 @@ class MileageLogController extends Controller
      */
     public function create()
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         return view('admin.mileage-logs.create', compact('vehicles'));
     }
 
@@ -76,7 +76,7 @@ class MileageLogController extends Controller
      */
     public function edit(MileageLog $mileageLog)
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         return view('admin.mileage-logs.edit', compact('mileageLog', 'vehicles'));
     }
 
@@ -94,7 +94,7 @@ class MileageLogController extends Controller
      */
     public function bulkCreate()
     {
-        $vehicles = Vehicle::with(['brand', 'carModel'])->orderBy('internal_code')->get();
+        $vehicles = Vehicle::with(['brand', 'carModel'])->forCurrentUser()->orderBy('internal_code')->get();
         return view('admin.mileage-logs.bulk', compact('vehicles'));
     }
 
@@ -205,7 +205,7 @@ class MileageLogController extends Controller
     public function pivot(Request $request)
     {
         $year = $request->get('year', date('Y'));
-        $vehicles = Vehicle::with(['brand', 'carModel'])->orderBy('internal_code')->get();
+        $vehicles = Vehicle::with(['brand', 'carModel'])->forCurrentUser()->orderBy('internal_code')->get();
 
         // Raccogli i km per ogni veicolo per ogni mese dell'anno.
         // Estraiamo il mese in PHP (via Carbon) per restare portabili su

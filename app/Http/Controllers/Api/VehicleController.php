@@ -10,7 +10,7 @@ class VehicleController extends Controller
 {
     public function index(Request $request)
     {
-        $vehicles = Vehicle::with(['brand', 'carModel', 'vehicleType'])
+        $vehicles = Vehicle::with(['brand', 'carModel', 'vehicleType'])->forCurrentUser()
             ->when($request->q, fn($q, $search) => $q->search($search))
             ->paginate($request->per_page ?? 20);
 

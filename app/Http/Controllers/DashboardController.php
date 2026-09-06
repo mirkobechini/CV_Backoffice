@@ -37,6 +37,7 @@ class DashboardController extends Controller
                 ->get();
 
             $incompleteVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
+                ->forCurrentUser()
                 ->whereHas('vehicleType.equipmentTypes')
                 ->get()
                 ->filter(fn($v) => !$v->hasAllRequiredEquipment());

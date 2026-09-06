@@ -26,7 +26,7 @@ class EquipmentController extends Controller
      */
     public function create()
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
         $equipmentTypes = EquipmentType::all();
@@ -60,7 +60,7 @@ class EquipmentController extends Controller
      */
     public function edit(Equipment $equipment)
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         $equipmentTypes = EquipmentType::all();
         return view('admin.equipments.edit', compact('equipment', 'vehicles', 'equipmentTypes'));
     }
