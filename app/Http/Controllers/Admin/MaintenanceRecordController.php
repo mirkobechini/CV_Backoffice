@@ -42,8 +42,8 @@ class MaintenanceRecordController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
 
         $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']), $sortBy, $sortDir, [
-            'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn(MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
+            'vehicle' => fn (MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
+            'description' => fn (MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
@@ -58,9 +58,9 @@ class MaintenanceRecordController extends Controller
         });
 
         return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords') + [
-            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
-            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
-            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
+            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
+            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -121,7 +121,7 @@ class MaintenanceRecordController extends Controller
             ->orderByDesc('due_date')
             ->get()
             ->unique(function ($item) {
-                return $item->vehicle_id . '-' . $item->type;
+                return $item->vehicle_id.'-'.$item->type;
             })
             ->values();
 
@@ -220,7 +220,7 @@ class MaintenanceRecordController extends Controller
             ->get(['id', 'vehicle_id', 'type', 'due_date'])
             // Una sola per veicolo+tipo (mantenendo quelle già collegate)
             ->unique(function ($item) {
-                return $item->vehicle_id . '-' . $item->type;
+                return $item->vehicle_id.'-'.$item->type;
             })
             ->values();
 
@@ -354,7 +354,7 @@ class MaintenanceRecordController extends Controller
             // 3) update deadlines + create next ones
             foreach ($deadlines as $item) {
                 $deadline = $item->itemable;
-                if (! $deadline || ! in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true)) {
+                if (! $deadline || ! in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
                     continue;
                 }
 
@@ -369,6 +369,8 @@ class MaintenanceRecordController extends Controller
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
                     } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
+                    } elseif ($deadline->type === Deadline::TYPE_TAGLIANDO) {
+                        $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
                     }
                     if ($nextDueDate) {
                         Deadline::firstOrCreate(
@@ -525,7 +527,7 @@ class MaintenanceRecordController extends Controller
 
                 $title = $record->vehicle?->internal_code ?? 'N/A';
                 if ($record->activity_type) {
-                    $title .= ' - ' . $record->activity_type;
+                    $title .= ' - '.$record->activity_type;
                 }
 
                 return [
