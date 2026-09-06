@@ -20,10 +20,12 @@
 - **Export PDF e CSV**: scheda veicolo PDF, export CSV per tutte le entità
 - **API REST**: 11 endpoint protetti da token (Sanctum)
 - **Audit log**: tracciamento completo di tutte le modifiche
-- **Notifiche email**: report giornaliero/settimanale/mensile configurabile
+- **Notifiche in-app**: campanella con badge, elenco notifiche, segna come letto
+- **Notifiche email**: report giornaliero/settimanale/mensile configurabile con allegato PDF + email automatiche su eventi (scadenze, guasti, attrezzature)
+- **Gruppi e ruoli**: ogni utente appartiene a un gruppo (capo/sottocapo/membro), scoping dati per gruppo, inviti via codice
 - **Rate limiting**: protezione su login e route admin
 - **Tema chiaro/scuro**: persistente in localStorage
-- **178 test, 346 assertions — tutti verdi** ✅
+- **257 test, 504 assertions — tutti verdi** ✅
 
 ---
 
@@ -92,7 +94,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ```bash
 php artisan test
-# 178 tests, 346 assertions — all green ✅
+# 257 tests, 504 assertions — all green ✅
 ```
 
 ---
@@ -141,9 +143,11 @@ php artisan test
 
 | Comando | Cosa fa |
 | :------ | :------ |
-| `php artisan make:admin` | Crea il primo utente amministratore |
+| `php artisan make:admin` | Crea il primo utente amministratore (capo del gruppo di default) |
 | `php artisan import:car-data` | Importa marche e modelli auto |
 | `php artisan app:send-summary-report` | Invia report manuale |
+| `php artisan app:generate-notifications` | Genera notifiche in-app (scadenze, guasti, attrezzature) |
+| `php artisan app:generate-notifications --email` | Genera notifiche + invia email automatiche |
 | `php artisan schedule:run` | Esegue i comandi schedulati |
 
 ---
@@ -179,6 +183,7 @@ Le scelte architetturali del progetto sono documentate in un unico [Architecture
 - Notifiche email con scheduler
 - Export PDF (DomPDF) e CSV
 - Audit logging e ricerca FULLTEXT
+- Gruppi e ruoli (capo/sottocapo/membro) con scoping dati per gruppo
 
 ---
 
@@ -212,13 +217,15 @@ erDiagram
 
     %% Utenti e configurazione
     USERS |o--o{ NOTIFICATION_SETTINGS : ""
+    USERS }o--o{ GROUPS : "appartiene (con ruolo)"
+    GROUPS ||--o{ VEHICLES : "possiede"
 ```
 
 **Legenda entità:**
 
 | Tabella | Descrizione |
 | :------ | :---------- |
-| `vehicles` | Veicoli (targa, codice, marca/modello, garanzia, cinghia) |
+| `vehicles` | Veicoli (targa, codice, marca/modello, garanzia, cinghia, gruppo) |
 | `brands` | Marche veicoli |
 | `car_models` | Modelli veicoli (FK → brands) |
 | `vehicle_types` | Tipologie mezzo (MSB, MSDA, ecc.) con requisiti equipaggiamento |
@@ -232,7 +239,10 @@ erDiagram
 | `equipment_types` | Tipologie di dotazione (con frequenza revisione) |
 | `vehicle_type_equipment_requirements` | Equipaggiamento obbligatorio per tipo mezzo |
 | `notification_settings` | Configurazione report email |
-| `users` | Utenti con ruolo (admin, manager, worker, volunteer) |
+| `notifications` | Notifiche in-app per utente |
+| `groups` | Gruppi/associazioni (con codice invito) |
+| `group_user` | Pivot utenti ↔ gruppi con ruolo (capo/sottocapo/membro) |
+| `users` | Utenti (il ruolo vive nel pivot group_user) |
 
 ---
 
@@ -240,8 +250,8 @@ erDiagram
 
 ### 🔜 Prossimi step
 
-- [ ] Notifiche in-app (badge e toast nella navbar)
-- [ ] Gestione utenti e ruoli da backoffice
+- [x] Notifiche in-app (badge e toast nella navbar)
+- [x] Gestione utenti e ruoli da backoffice (gruppi e ruoli)
 - [ ] App mobile nativa (via API REST)
 
 ---

@@ -13,7 +13,7 @@ class ActivityLogTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     public function test_activity_log_index_loads(): void

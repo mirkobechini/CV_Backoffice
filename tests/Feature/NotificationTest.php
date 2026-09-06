@@ -14,7 +14,7 @@ class NotificationTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     public function test_notify_user_creates_notification(): void
@@ -39,7 +39,7 @@ class NotificationTest extends TestCase
     {
         $admin1 = $this->admin();
         $admin2 = $this->admin();
-        $worker = User::factory()->create(['role' => 'worker']);
+        $worker = User::factory()->withRole('member')->create();
         $service = new NotificationService();
 
         $service->notifyAdmins(Notification::TYPE_SYSTEM, 'Test');
@@ -105,10 +105,10 @@ class NotificationTest extends TestCase
     public function test_notify_role_notifies_only_users_with_that_role(): void
     {
         $admin = $this->admin();
-        $worker = User::factory()->create(['role' => 'worker']);
+        $worker = User::factory()->withRole('member')->create();
         $service = new NotificationService();
 
-        $service->notifyRole('worker', Notification::TYPE_SYSTEM, 'Test');
+        $service->notifyRole('member', Notification::TYPE_SYSTEM, 'Test');
 
         $this->assertDatabaseCount('notifications', 1);
         $this->assertDatabaseHas('notifications', ['user_id' => $worker->id]);
@@ -118,11 +118,11 @@ class NotificationTest extends TestCase
     public function test_notify_by_roles_notifies_users_in_any_role(): void
     {
         $admin = $this->admin();
-        $worker = User::factory()->create(['role' => 'worker']);
-        $manager = User::factory()->create(['role' => 'manager']);
+        $worker = User::factory()->withRole('member')->create();
+        $manager = User::factory()->withRole('sottocapo')->create();
         $service = new NotificationService();
 
-        $service->notifyByRoles(['admin', 'worker'], Notification::TYPE_SYSTEM, 'Test');
+        $service->notifyByRoles(['capo', 'member'], Notification::TYPE_SYSTEM, 'Test');
 
         $this->assertDatabaseCount('notifications', 2);
         $this->assertDatabaseHas('notifications', ['user_id' => $admin->id]);

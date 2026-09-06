@@ -12,10 +12,9 @@ class AuthControllerTest extends TestCase
 
     public function test_login_returns_token_and_user(): void
     {
-        $user = User::factory()->create([
+        $user = User::factory()->withRole('capo')->create([
             'email' => 'test@example.com',
             'password' => bcrypt('password'),
-            'role' => 'admin',
         ]);
 
         $response = $this->postJson('/api/login', [
@@ -27,7 +26,7 @@ class AuthControllerTest extends TestCase
         $response->assertOk()
             ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email', 'role']])
             ->assertJsonPath('user.email', 'test@example.com')
-            ->assertJsonPath('user.role', 'admin');
+            ->assertJsonPath('user.role', 'capo');
     }
 
     public function test_login_fails_with_wrong_credentials(): void
@@ -56,7 +55,7 @@ class AuthControllerTest extends TestCase
 
     public function test_me_returns_authenticated_user(): void
     {
-        $user = User::factory()->create(['role' => 'worker']);
+        $user = User::factory()->withRole('member')->create();
         $token = $user->createToken('test')->plainTextToken;
 
         $response = $this->withToken($token)->getJson('/api/me');

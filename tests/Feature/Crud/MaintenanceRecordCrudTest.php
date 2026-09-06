@@ -19,7 +19,7 @@ class MaintenanceRecordCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     private function createVehicle(): Vehicle

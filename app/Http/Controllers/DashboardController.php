@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Issue;
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Cache;
@@ -37,9 +37,10 @@ class DashboardController extends Controller
                 ->get();
 
             $incompleteVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
+                ->forCurrentUser()
                 ->whereHas('vehicleType.equipmentTypes')
                 ->get()
-                ->filter(fn($v) => !$v->hasAllRequiredEquipment());
+                ->filter(fn ($v) => ! $v->hasAllRequiredEquipment());
 
             $expiringEquipment = Equipment::with('vehicle')
                 ->expiringSoon()

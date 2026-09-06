@@ -17,7 +17,7 @@ class VehicleValidationTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     public function test_vehicle_store_fails_when_car_model_does_not_belong_to_brand(): void

@@ -14,7 +14,7 @@ class EquipmentTypeCrudTest extends TestCase
 
     private function createUser(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     private function createEquipmentType(): EquipmentType
