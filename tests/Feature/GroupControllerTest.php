@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\GroupInviteMail;
 use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Group;
@@ -9,6 +10,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class GroupControllerTest extends TestCase
@@ -260,5 +262,39 @@ class GroupControllerTest extends TestCase
 
         $response->assertRedirect();
         $this->assertDatabaseMissing('groups', ['id' => $group->id]);
+    }
+
+    public function test_capo_can_send_invite_via_email(): void
+    {
+        Mail::fake();
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->post(route('admin.groups.invite', $group), [
+            'email' => 'invitato@example.com',
+        ]);
+
+        $response->assertRedirect();
+        Mail::assertSent(GroupInviteMail::class, function ($mail) {
+            return $mail->hasTo('invitato@example.com');
+        });
+    }
+
+    public function test_member_cannot_send_invite(): void
+    {
+        Mail::fake();
+        $capo = User::factory()->create();
+        $member = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($member)->post(route('admin.groups.invite', $group), [
+            'email' => 'invitato@example.com',
+        ]);
+
+        $response->assertForbidden();
+        Mail::assertNothingSent();
     }
 }
