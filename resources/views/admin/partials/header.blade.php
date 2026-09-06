@@ -153,6 +153,11 @@
                                 </a>
                             </li>
                             <li>
+                                <a class="dropdown-item" href="{{ route('admin.settings.index') }}">
+                                    <i class="fa-solid fa-gear me-2"></i>{{ __('Impostazioni') }}
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{{ route('privacy') }}">
                                     <i class="fa-solid fa-shield-halved me-2"></i>{{ __('Privacy') }}
                                 </a>

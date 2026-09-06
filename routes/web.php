@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PdfExportController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
@@ -111,6 +112,11 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         Route::get('activity-log', [ActivityLogController::class, 'index'])
             ->name('activity-log.index');
+
+        // Impostazioni generali
+        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::patch('settings/group', [SettingsController::class, 'updateGroup'])->name('settings.group');
+        Route::post('settings/backup', [SettingsController::class, 'backup'])->name('settings.backup');
 
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])
