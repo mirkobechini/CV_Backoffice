@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
+use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\PdfExportController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
@@ -47,6 +48,12 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("issues", IssueController::class);
         Route::resource("deadlines", DeadlineController::class);
         Route::resource("equipments", EquipmentController::class);
+
+        // Gestione gruppi
+        Route::post('groups/join', [GroupController::class, 'join'])->name('groups.join');
+        Route::patch('groups/{group}/role/{user}', [GroupController::class, 'updateRole'])->name('groups.role');
+        Route::delete('groups/{group}/member/{user}', [GroupController::class, 'removeMember'])->name('groups.remove-member');
+        Route::resource("groups", GroupController::class);
         Route::get('mileage-logs/pivot', [MileageLogController::class, 'pivot'])
             ->name('mileage-logs.pivot');
         Route::post('mileage-logs/pivot/save', [MileageLogController::class, 'pivotSave'])
