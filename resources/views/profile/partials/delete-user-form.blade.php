@@ -83,16 +83,16 @@
 
 
 
-                        <button type="submit" class="btn btn-danger" data-loading-text="Deleting...">
-                            {{ __('Delete Account') }}
-                        </button>
-                        <!--  -->
-                    </div>
-                </form>
+                    <button type="submit" class="btn btn-danger" data-loading-text="Deleting...">
+                        {{ __('Delete Account') }}
+                    </button>
+                    <!--  -->
+                </div>
+            </form>
 
-            </div>
         </div>
     </div>
+</div>
 </div>
 
 </section>)

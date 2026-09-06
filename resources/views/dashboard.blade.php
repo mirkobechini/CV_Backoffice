@@ -44,62 +44,72 @@
         </div>
         <div class="row row-cols-md-4 g-3 mb-4">
             <div class="col-6">
-                <div class="card stat-card shadow-sm p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-truck"></i></div>
-                        <div>
-                            <div class="fs-3 fw-bold">{{ $totalVehicles }}</div>
-                            <div class="text-muted small">Veicoli totali</div>
+                <a href="{{ route('admin.vehicles.index') }}" class="text-decoration-none">
+                    <div class="card stat-card shadow-sm p-3 h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-truck"></i></div>
+                            <div>
+                                <div class="fs-3 fw-bold">{{ $totalVehicles }}</div>
+                                <div class="text-muted small">Veicoli totali</div>
+                            </div>
                         </div>
                     </div>
-                </div>
-
+                </a>
             </div>
             <div class="col-6">
-                <div class="card stat-card shadow-sm p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i
-                                class="bi bi-exclamation-triangle"></i></div>
-                        <div>
-                            <div class="fs-3 fw-bold">{{ $openIssues->count() }}</div>
-                            <div class="text-muted small">Guasti aperti</div>
+                <a href="{{ route('admin.issues.index') }}" class="text-decoration-none">
+                    <div class="card stat-card shadow-sm p-3 h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i
+                                    class="bi bi-exclamation-triangle"></i></div>
+                            <div>
+                                <div class="fs-3 fw-bold">{{ $openIssues->count() }}</div>
+                                <div class="text-muted small">Guasti aperti</div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-6">
-                <div class="card stat-card shadow-sm p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="bi bi-calendar-check"></i>
-                        </div>
-                        <div>
-                            <div class="fs-3 fw-bold">{{ $upcomingDeadlines->count() }}</div>
-                            <div class="text-muted small">Scadenze imminenti</div>
+                <a href="{{ route('admin.deadlines.index') }}" class="text-decoration-none">
+                    <div class="card stat-card shadow-sm p-3 h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i
+                                    class="bi bi-calendar-check"></i>
+                            </div>
+                            <div>
+                                <div class="fs-3 fw-bold">{{ $upcomingDeadlines->count() }}</div>
+                                <div class="text-muted small">Scadenze imminenti</div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-6">
-                <div class="card stat-card shadow-sm p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-wrench"></i></div>
-                        <div>
-                            <div class="fs-3 fw-bold">{{ $upcomingAppointments->count() }}</div>
-                            <div class="text-muted small">In officina</div>
+                <a href="{{ route('admin.maintenance-records.index') }}" class="text-decoration-none">
+                    <div class="card stat-card shadow-sm p-3 h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-wrench"></i></div>
+                            <div>
+                                <div class="fs-3 fw-bold">{{ $upcomingAppointments->count() }}</div>
+                                <div class="text-muted small">In officina</div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
             <div class="col-6">
-                <div class="card stat-card shadow-sm p-3 h-100">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-tools"></i></div>
-                        <div>
-                            <div class="fs-3 fw-bold">{{ $expiringEquipment->count() }}</div>
-                            <div class="text-muted small">Attrez. in scadenza</div>
+                <a href="{{ route('admin.equipments.index') }}" class="text-decoration-none">
+                    <div class="card stat-card shadow-sm p-3 h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-tools"></i></div>
+                            <div>
+                                <div class="fs-3 fw-bold">{{ $expiringEquipment->count() }}</div>
+                                <div class="text-muted small">Attrez. in scadenza</div>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -127,7 +137,8 @@
                                         <div>
                                             <strong>{{ $deadline->type }}</strong><br>
                                             <small class="text-muted">{{ $deadline->vehicle->internal_code }} —
-                                                Scade tra {{ floor(now()->diffInDays($deadline->due_date,false)) }} giorni</small>
+                                                Scade tra {{ floor(now()->diffInDays($deadline->due_date, false)) }}
+                                                giorni</small>
                                         </div>
                                         <span
                                             class="badge badge-expiring rounded-pill px-3 py-2">{{ $deadline->due_date->format('d/m/Y') }}</span>
