@@ -10,9 +10,14 @@
     </header>
 
     <!-- Modal trigger button -->
-    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-account">
-        {{ __('Delete Account') }}
-    </button>
+    <div class="d-flex gap-2">
+        <a href="{{ route('profile.export') }}" class="btn btn-outline-primary">
+            {{ __('Esporta i miei dati (GDPR)') }}
+        </a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#delete-account">
+            {{ __('Delete Account') }}
+        </button>
+    </div>
 
     <!-- Modal Body -->
     <!-- if you want to close by clicking outside the modal, delete the last endpoint:data-bs-backdrop and data-bs-keyboard -->
@@ -31,6 +36,30 @@
                     <p class="mt-1 text-sm text-gray-600">
                         {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.') }}
                     </p>
+
+                    @php
+                        $capoGroups = auth()->user()->groups()->wherePivot('role', 'capo')->get();
+                    @endphp
+
+                    @if ($capoGroups->isNotEmpty())
+                        <div class="alert alert-warning mt-3">
+                            <strong>{{ __('Sei capo dei seguenti gruppi.') }}</strong>
+                            <p class="mb-2">
+                                {{ __('Prima di eliminare l\'account, trasferisci il ruolo capo a un altro membro.') }}
+                            </p>
+                            @foreach ($capoGroups as $group)
+                                <div class="mb-2">
+                                    <label class="form-label">{{ $group->name }}</label>
+                                    <select name="successor_{{ $group->id }}" class="form-select">
+                                        <option value="">{{ __('Seleziona un membro...') }}</option>
+                                        @foreach ($group->users()->where('users.id', '!=', auth()->id())->get() as $member)
+<option value="{{ $member->id }}">{{ $member->name }} ({{ $member->email }})</option>
+@endforeach
+                                    </select>
+                                </div>
+@endforeach
+                        </div>
+                    @endif
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -47,23 +76,23 @@
                                 placeholder="{{ __('Password') }}" />
 
                             @error('password')
-                                <span class="invalid-feedback mt-2" role="alert">
+<span class="invalid-feedback mt-2" role="alert">
                                     <strong>{{ $errors->userDeletion->get('password') }}</strong>
                                 </span>
-                            @enderror
+@enderror
 
 
 
-                            <button type="submit" class="btn btn-danger" data-loading-text="Deleting...">
-                                {{ __('Delete Account') }}
-                            </button>
-                            <!--  -->
-                        </div>
-                    </form>
+                        <button type="submit" class="btn btn-danger" data-loading-text="Deleting...">
+                            {{ __('Delete Account') }}
+                        </button>
+                        <!--  -->
+                    </div>
+                </form>
 
-                </div>
             </div>
         </div>
     </div>
+</div>
 
-</section>
+</section>)
