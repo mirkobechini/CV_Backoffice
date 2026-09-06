@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -101,9 +102,9 @@ class Vehicle extends Model
      */
     public function scopeForCurrentUser(Builder $query): Builder
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
-        if (! $user) {
+        if (! $user instanceof User) {
             return $query;
         }
 

@@ -166,4 +166,30 @@ class GroupControllerTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_cannot_update_role_of_user_not_in_group(): void
+    {
+        $capo = User::factory()->create();
+        $outsider = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->patch(route('admin.groups.role', [$group, $outsider]), [
+            'role' => 'sottocapo',
+        ]);
+
+        $response->assertNotFound();
+    }
+
+    public function test_cannot_remove_user_not_in_group(): void
+    {
+        $capo = User::factory()->create();
+        $outsider = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->delete(route('admin.groups.remove-member', [$group, $outsider]));
+
+        $response->assertNotFound();
+    }
 }
