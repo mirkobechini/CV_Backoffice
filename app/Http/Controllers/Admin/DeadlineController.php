@@ -17,7 +17,9 @@ class DeadlineController extends Controller
 
     public function __construct(
         private readonly DeadlineService $deadlineService,
-    ) {}
+    ) {
+        $this->authorizeResource(Deadline::class, 'deadline');
+    }
 
     /**
      * Display a listing of the resource.

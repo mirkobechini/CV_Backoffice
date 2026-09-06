@@ -21,6 +21,11 @@ class MaintenanceRecordController extends Controller
     use DetectsDuplicates;
     use SortableAndGroupable;
 
+    public function __construct()
+    {
+        $this->authorizeResource(MaintenanceRecord::class, 'maintenanceRecord');
+    }
+
     /**
      * Display a listing of the resource.
      */
