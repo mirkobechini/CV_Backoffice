@@ -101,4 +101,32 @@ class NotificationTest extends TestCase
         $this->assertCount(1, $unread);
         $this->assertEquals('A', $unread->first()->title);
     }
+
+    public function test_notify_role_notifies_only_users_with_that_role(): void
+    {
+        $admin = $this->admin();
+        $worker = User::factory()->create(['role' => 'worker']);
+        $service = new NotificationService();
+
+        $service->notifyRole('worker', Notification::TYPE_SYSTEM, 'Test');
+
+        $this->assertDatabaseCount('notifications', 1);
+        $this->assertDatabaseHas('notifications', ['user_id' => $worker->id]);
+        $this->assertDatabaseMissing('notifications', ['user_id' => $admin->id]);
+    }
+
+    public function test_notify_by_roles_notifies_users_in_any_role(): void
+    {
+        $admin = $this->admin();
+        $worker = User::factory()->create(['role' => 'worker']);
+        $manager = User::factory()->create(['role' => 'manager']);
+        $service = new NotificationService();
+
+        $service->notifyByRoles(['admin', 'worker'], Notification::TYPE_SYSTEM, 'Test');
+
+        $this->assertDatabaseCount('notifications', 2);
+        $this->assertDatabaseHas('notifications', ['user_id' => $admin->id]);
+        $this->assertDatabaseHas('notifications', ['user_id' => $worker->id]);
+        $this->assertDatabaseMissing('notifications', ['user_id' => $manager->id]);
+    }
 }
