@@ -126,6 +126,11 @@ class GroupController extends Controller
             abort(403, 'Solo il capo può gestire i ruoli.');
         }
 
+        // L'utente target deve appartenere al gruppo.
+        if (! $user->roleIn($group)) {
+            abort(404, 'Utente non trovato in questo gruppo.');
+        }
+
         $group->setUserRole($user, $data['role']);
 
         return back()->with('status', 'Ruolo aggiornato.');
@@ -141,6 +146,11 @@ class GroupController extends Controller
         // Solo il capo può rimuovere membri.
         if (auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
             abort(403, 'Solo il capo può rimuovere membri.');
+        }
+
+        // L'utente target deve appartenere al gruppo.
+        if (! $user->roleIn($group)) {
+            abort(404, 'Utente non trovato in questo gruppo.');
         }
 
         // Non si può rimuovere il capo.
