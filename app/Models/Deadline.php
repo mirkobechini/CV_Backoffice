@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Searchable;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Concerns\Searchable;
+use Illuminate\Support\Collection;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\Builder;
 
 class Deadline extends Model
 {
-    use SoftDeletes, LogsActivity, Searchable;
+    use LogsActivity, Searchable, SoftDeletes;
 
     /**
      * Cache dell'accessor automatic_status per evitare query ripetute
@@ -20,25 +22,37 @@ class Deadline extends Model
      */
     protected ?string $automaticStatusCache = null;
 
-    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return \Spatie\Activitylog\LogOptions::defaults()
+        return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty();
     }
-    //status
+
+    // status
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_EXPIRED = 'expired';
+
     public const STATUS_RENEWED = 'renewed';
+
     public const STATUS_VALID = 'valid';
-    //type
+
+    // type
     public const TYPE_MINISTERIAL = 'Revisione Ministeriale';
+
     public const TYPE_OXYGEN = 'Revisione Impianto Ossigeno';
+
     public const TYPE_TAGLIANDO = 'Tagliando';
+
     public const TYPE_CINGHIA = 'Cinghia Distribuzione';
+
     public const OXYGEN_CHECK_INTERVAL_MONTHS = 12;
+
     public const TIMING_BELT_INTERVAL_DAYS = 3650; // 10 anni
+
     public const TIMING_BELT_INTERVAL_KM = 100000; // 100.000 km
+
     public const TAGLIANDO_INTERVAL_MONTHS = 12; // 1 anno
 
     protected $fillable = [
@@ -78,8 +92,6 @@ class Deadline extends Model
     {
         return $this->belongsTo(Vehicle::class);
     }
-
-
 
     public function getStatusColorAttribute(): string
     {
@@ -147,14 +159,14 @@ class Deadline extends Model
         }
 
         // Se non c'è né data né km, pending
-        if (!$this->due_date && !$this->interval_km) {
+        if (! $this->due_date && ! $this->interval_km) {
             return $this->automaticStatusCache = self::STATUS_PENDING;
         }
 
         // Check date-based expiry
         $isDateExpired = $this->due_date && $this->due_date->isBefore($today);
         $isDatePending = false;
-        if ($this->due_date && !$isDateExpired) {
+        if ($this->due_date && ! $isDateExpired) {
             $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
             $isDatePending = $today->gte($warningStartDate);
         }
@@ -179,14 +191,14 @@ class Deadline extends Model
      * aggiornamenti di stato in un unico UPDATE bulk, evitando N query di
      * loadMissing + N query di save() per ogni scadenza.
      *
-     * @param  \Illuminate\Support\Collection<int, Deadline>|iterable  $deadlines
+     * @param  Collection<int, Deadline>|iterable  $deadlines
      */
     public static function syncStatusesFromRules(iterable $deadlines): void
     {
         // Mantieni il tipo originale: Eloquent\Collection ha loadMissing/load,
         // una Collection generica no. Se non è una collection Eloquent,
         // la convertiamo in una per poter usare l'eager loading in una sola query.
-        if (!$deadlines instanceof \Illuminate\Database\Eloquent\Collection) {
+        if (! $deadlines instanceof \Illuminate\Database\Eloquent\Collection) {
             $deadlines = new \Illuminate\Database\Eloquent\Collection($deadlines);
         }
 
@@ -243,7 +255,7 @@ class Deadline extends Model
             }
         }
 
-        if (!empty($updates)) {
+        if (! empty($updates)) {
             // Raggruppa per stato e aggiorna in blocco: al massimo 4 query
             // UPDATE (una per stato) invece di N query save().
             $grouped = [];
@@ -307,7 +319,7 @@ class Deadline extends Model
 
     public static function calculateMinisterialDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
-        if (!$vehicle->immatricolation_date || !$vehicle->vehicleType) {
+        if (! $vehicle->immatricolation_date || ! $vehicle->vehicleType) {
             return null;
         }
 
@@ -326,16 +338,18 @@ class Deadline extends Model
         // altrimenti partiamo dalla data di immatricolazione con intervallo iniziale.
         if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
             $monthsToAdd = (int) $vehicle->vehicleType->regular_inspection_months;
+
             return Carbon::parse($lastRenewedDeadline->due_date)->addMonthsNoOverflow($monthsToAdd);
         }
 
         $monthsToAdd = (int) $vehicle->vehicleType->first_inspection_months;
+
         return Carbon::parse($vehicle->immatricolation_date)->addMonthsNoOverflow($monthsToAdd);
     }
 
     public static function calculateOxygenDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
-        if (!$vehicle->immatricolation_date || !self::supportsOxygenCheckForVehicle($vehicle)) {
+        if (! $vehicle->immatricolation_date || ! self::supportsOxygenCheckForVehicle($vehicle)) {
             return null;
         }
 
@@ -362,5 +376,35 @@ class Deadline extends Model
     public static function supportsOxygenCheckForVehicle(Vehicle $vehicle): bool
     {
         return (bool) optional($vehicle->vehicleType)->needs_oxygen_check;
+    }
+
+    /**
+     * Calcola la data di scadenza del prossimo tagliando.
+     * Usa l'ultimo tagliando rinnovato come base, altrimenti l'immatricolazione.
+     */
+    public static function calculateTagliandoDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
+    {
+        if (! $vehicle->immatricolation_date) {
+            return null;
+        }
+
+        $query = $vehicle->deadlines()
+            ->where('type', self::TYPE_TAGLIANDO)
+            ->where('status', self::STATUS_RENEWED)
+            ->orderByDesc('due_date');
+
+        if ($excludeDeadlineId !== null) {
+            $query->where('id', '!=', $excludeDeadlineId);
+        }
+
+        $lastRenewedDeadline = $query->first();
+
+        if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
+            return Carbon::parse($lastRenewedDeadline->due_date)
+                ->addMonthsNoOverflow(self::TAGLIANDO_INTERVAL_MONTHS);
+        }
+
+        return Carbon::parse($vehicle->immatricolation_date)
+            ->addMonthsNoOverflow(self::TAGLIANDO_INTERVAL_MONTHS);
     }
 }

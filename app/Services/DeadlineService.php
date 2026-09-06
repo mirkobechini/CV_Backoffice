@@ -17,7 +17,7 @@ class DeadlineService
 
         $dueDate = $this->resolveDueDate($data, $vehicle);
 
-        if (!$dueDate) {
+        if (! $dueDate) {
             throw new \RuntimeException('Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.');
         }
 
@@ -52,13 +52,13 @@ class DeadlineService
 
         // Se è un rinnovo con data esplicita, usiamo quella; altrimenti
         // calcoliamo la data in automatico (per i tipi periodici).
-        if ($isRenewed && !empty($data['due_date'])) {
+        if ($isRenewed && ! empty($data['due_date'])) {
             $dueDate = $this->resolveManualDueDate($data['due_date']);
         } else {
             $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
         }
 
-        if (!$dueDate) {
+        if (! $dueDate) {
             throw new \RuntimeException('Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.');
         }
 
@@ -76,7 +76,7 @@ class DeadlineService
 
         // Crea automaticamente la scadenza successiva per i tipi periodici
         // quando la scadenza corrente viene marcata come rinnovata.
-        if ($isRenewed && in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN], true)) {
+        if ($isRenewed && in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
             $this->createNextDeadlineAfterRenewal($deadline, $vehicle);
         }
 
@@ -94,9 +94,11 @@ class DeadlineService
             $nextDueDate = Deadline::calculateMinisterialDueDateForVehicle($vehicle, $renewedDeadline->id);
         } elseif ($renewedDeadline->type === Deadline::TYPE_OXYGEN) {
             $nextDueDate = Deadline::calculateOxygenDueDateForVehicle($vehicle, $renewedDeadline->id);
+        } elseif ($renewedDeadline->type === Deadline::TYPE_TAGLIANDO) {
+            $nextDueDate = Deadline::calculateTagliandoDueDateForVehicle($vehicle, $renewedDeadline->id);
         }
 
-        if (!$nextDueDate) {
+        if (! $nextDueDate) {
             return;
         }
 
@@ -117,7 +119,7 @@ class DeadlineService
      */
     private function validateOxygenForVehicle(array $data, Vehicle $vehicle): void
     {
-        if (($data['type'] ?? null) === Deadline::TYPE_OXYGEN && !Deadline::supportsOxygenCheckForVehicle($vehicle)) {
+        if (($data['type'] ?? null) === Deadline::TYPE_OXYGEN && ! Deadline::supportsOxygenCheckForVehicle($vehicle)) {
             throw new \RuntimeException('La revisione impianto ossigeno è disponibile solo per le ambulanze.');
         }
     }
@@ -147,13 +149,13 @@ class DeadlineService
      */
     private function resolveManualDueDate(?string $dueDate): ?Carbon
     {
-        if (!$dueDate) {
+        if (! $dueDate) {
             return null;
         }
 
         $parsedDate = Carbon::createFromFormat('Y-m', $dueDate);
 
-        if (!$parsedDate) {
+        if (! $parsedDate) {
             return null;
         }
 
