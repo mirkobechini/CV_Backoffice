@@ -107,8 +107,11 @@ class MaintenanceRecordController extends Controller
         $vehicles = Vehicle::forCurrentUser()->get();
         $providers = Provider::all();
         $openIssues = Issue::whereIn('status', ['open'])->get(['id', 'vehicle_id', 'description']);
-        // Guasti risolti: per registrare riparazioni/appuntamenti già avvenuti
-        $closedIssues = Issue::where('status', 'closed')->get(['id', 'vehicle_id', 'description']);
+        // Guasti risolti: per registrare riparazioni/appuntamenti già avvenuti.
+        // Escludiamo quelli già collegati a un appuntamento.
+        $closedIssues = Issue::where('status', 'closed')
+            ->whereDoesntHave('maintenanceRecordItems')
+            ->get(['id', 'vehicle_id', 'description']);
 
         // Una sola deadline per tipo per veicolo: prendiamo l'ultima non rinnovata
         $pendingDeadlines = Deadline::whereIn('status', ['pending', 'expired', 'valid'])
