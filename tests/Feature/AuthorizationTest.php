@@ -18,12 +18,12 @@ class AuthorizationTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     private function worker(): User
     {
-        return User::factory()->create(['role' => 'worker']);
+        return User::factory()->withRole('member')->create();
     }
 
     private function vehicle(): Vehicle

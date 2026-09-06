@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Group;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -35,14 +36,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
-        // Il primo utente registrato diventa automaticamente admin.
-        // Se ci sono già utenti, solo un admin può registrarne di nuovi.
+        // Il primo utente registrato crea un gruppo e diventa capo.
+        // Se ci sono già utenti, solo un capo può registrarne di nuovi.
         $isFirstUser = User::count() === 0;
 
         if (!$isFirstUser) {
             $currentUser = Auth::user();
-            if (!$currentUser || $currentUser->role !== 'admin') {
-                abort(403, 'Solo un amministratore può registrare nuovi utenti.');
+            if (!$currentUser || !$currentUser->canManageData()) {
+                abort(403, 'Solo un capo può registrare nuovi utenti.');
             }
         }
 
@@ -50,8 +51,23 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => $isFirstUser ? 'admin' : ($request->role ?? 'worker'),
         ]);
+
+        if ($isFirstUser) {
+            // Primo utente: crea un gruppo di default e diventa capo.
+            $group = Group::create([
+                'name' => 'Associazione di default',
+                'invite_code' => Group::generateInviteCode(),
+            ]);
+            $group->addUser($user, Group::ROLE_CAPO);
+        } else {
+            // Utente successivo: entra nel gruppo del capo corrente come membro.
+            $currentUser = Auth::user();
+            $group = $currentUser->activeGroup();
+            if ($group) {
+                $group->addUser($user, Group::ROLE_MEMBER);
+            }
+        }
 
         event(new Registered($user));
 

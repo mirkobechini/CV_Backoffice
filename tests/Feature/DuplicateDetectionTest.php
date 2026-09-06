@@ -13,7 +13,7 @@ class DuplicateDetectionTest extends TestCase
     use RefreshDatabase;
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
     private function vehicle(): Vehicle
     {

@@ -19,6 +19,7 @@ class Vehicle extends Model
             ->logOnlyDirty();
     }
     protected $fillable = [
+        'group_id',
         'license_plate',
         'internal_code',
         'brand_id',
@@ -85,6 +86,11 @@ class Vehicle extends Model
     {
         // Un mezzo appartiene a (belongsTo) un tipo
         return $this->belongsTo(VehicleType::class, 'vehicle_type_id');
+    }
+
+    public function group()
+    {
+        return $this->belongsTo(Group::class);
     }
 
     public function brand()

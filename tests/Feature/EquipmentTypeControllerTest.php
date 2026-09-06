@@ -13,7 +13,7 @@ class EquipmentTypeControllerTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     public function test_index_returns_view(): void

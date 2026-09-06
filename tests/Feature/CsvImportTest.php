@@ -17,7 +17,7 @@ class CsvImportTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     private function vehicle(): Vehicle

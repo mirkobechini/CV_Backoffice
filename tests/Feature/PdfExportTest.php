@@ -13,7 +13,7 @@ class PdfExportTest extends TestCase
     use RefreshDatabase;
     public function test_vehicle_pdf_downloads(): void
     {
-        $user = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->withRole('admin')->create();
         $brand = Brand::create(['name' => 'Fiat']);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
         $type = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 12, 'regular_inspection_months' => 12]);

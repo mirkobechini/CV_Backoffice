@@ -13,7 +13,7 @@ class NotificationControllerTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     public function test_index_requires_auth(): void
@@ -48,7 +48,7 @@ class NotificationControllerTest extends TestCase
     public function test_mark_as_read_forbidden_for_other_user(): void
     {
         $owner = $this->admin();
-        $other = User::factory()->create(['role' => 'worker']);
+        $other = User::factory()->withRole('member')->create();
         $notification = Notification::create(['user_id' => $owner->id, 'type' => Notification::TYPE_SYSTEM, 'title' => 'Test']);
 
         $response = $this->actingAs($other)->patch(route('notifications.read', $notification));

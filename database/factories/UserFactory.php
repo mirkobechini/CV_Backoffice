@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Group;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -37,8 +38,34 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Assegna l'utente a un gruppo con il ruolo indicato.
+     *
+     * Mantiene la compatibilità con i test che usavano ['role' => 'admin']:
+     * ora il ruolo vive nel pivot group_user, non più su users.
+     * Mappa i vecchi ruoli ai nuovi: admin -> capo, manager -> sottocapo,
+     * worker/volunteer -> member.
+     */
+    public function withRole(string $role = Group::ROLE_MEMBER): static
+    {
+        $mapped = match ($role) {
+            'admin' => Group::ROLE_CAPO,
+            'manager' => Group::ROLE_SOTTOCAPO,
+            'worker', 'volunteer' => Group::ROLE_MEMBER,
+            default => $role,
+        };
+
+        return $this->afterCreating(function ($user) use ($mapped) {
+            $group = Group::firstOrCreate(
+                ['name' => 'Associazione di default'],
+                ['invite_code' => Group::generateInviteCode()]
+            );
+            $group->addUser($user, $mapped);
+        });
     }
 }
