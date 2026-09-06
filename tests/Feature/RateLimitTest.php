@@ -53,4 +53,18 @@ class RateLimitTest extends TestCase
         ]);
         $response->assertStatus(302);
     }
+
+    public function test_api_routes_are_rate_limited(): void
+    {
+        $user = User::factory()->withRole('capo')->create();
+        $token = $user->createToken('test')->plainTextToken;
+
+        // Supera il limite di 60 richieste/minuto
+        for ($i = 0; $i < 60; $i++) {
+            $this->withToken($token)->getJson('/api/vehicles');
+        }
+
+        $response = $this->withToken($token)->getJson('/api/vehicles');
+        $response->assertStatus(429);
+    }
 }
