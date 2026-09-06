@@ -95,6 +95,22 @@ class GroupController extends Controller
     }
 
     /**
+     * Rigenera il codice invito del gruppo (solo il capo).
+     */
+    public function regenerateInviteCode(Group $group)
+    {
+        $this->authorizeGroup($group);
+
+        if (auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può rigenerare il codice invito.');
+        }
+
+        $group->update(['invite_code' => Group::generateInviteCode()]);
+
+        return back()->with('status', 'Codice invito rigenerato.');
+    }
+
+    /**
      * Aggiorna il ruolo di un membro del gruppo.
      */
     public function updateRole(Request $request, Group $group, User $user)

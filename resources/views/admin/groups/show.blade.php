@@ -30,6 +30,14 @@
                     <div class="card-body">
                         <p class="fs-4 text-center fw-bold">{{ $group->invite_code }}</p>
                         <p class="text-muted text-center">Condividi questo codice per far entrare nuovi membri.</p>
+                        @if (auth()->user()->roleIn($group) === 'capo')
+                            <form method="POST" action="{{ route('admin.groups.invite-code', $group) }}"
+                                class="text-center">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Rigenera codice</button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>

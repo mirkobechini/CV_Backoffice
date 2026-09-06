@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         // Gestione gruppi
         Route::post('groups/join', [GroupController::class, 'join'])->name('groups.join');
+        Route::patch('groups/{group}/invite-code', [GroupController::class, 'regenerateInviteCode'])->name('groups.invite-code');
         Route::patch('groups/{group}/role/{user}', [GroupController::class, 'updateRole'])->name('groups.role');
         Route::delete('groups/{group}/member/{user}', [GroupController::class, 'removeMember'])->name('groups.remove-member');
         Route::resource("groups", GroupController::class);

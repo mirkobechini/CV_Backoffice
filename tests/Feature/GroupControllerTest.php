@@ -140,4 +140,30 @@ class GroupControllerTest extends TestCase
 
         $response->assertForbidden();
     }
+
+    public function test_capo_can_regenerate_invite_code(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->patch(route('admin.groups.invite-code', $group));
+
+        $response->assertRedirect();
+        $this->assertNotEquals('AAAA1111', $group->fresh()->invite_code);
+        $this->assertNotNull($group->fresh()->invite_code);
+    }
+
+    public function test_member_cannot_regenerate_invite_code(): void
+    {
+        $capo = User::factory()->create();
+        $member = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($member)->patch(route('admin.groups.invite-code', $group));
+
+        $response->assertForbidden();
+    }
 }
