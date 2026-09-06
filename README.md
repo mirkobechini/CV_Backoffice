@@ -23,24 +23,28 @@
 - **Notifiche in-app**: campanella con badge, elenco notifiche, segna come letto
 - **Notifiche email**: report giornaliero/settimanale/mensile configurabile con allegato PDF + email automatiche su eventi (scadenze, guasti, attrezzature)
 - **Gruppi e ruoli**: ogni utente appartiene a un gruppo (capo/sottocapo/membro), scoping dati per gruppo, inviti via codice
-- **Rate limiting**: protezione su login e route admin
+- **Gestione utenti**: creazione e gestione ruoli dal backoffice (solo capo)
+- **Token API**: creazione e revoca dal profilo
+- **Privacy/GDPR**: pagina privacy, cookie banner, export dati personali, trasferimento ruolo capo al delete account
+- **Backup database**: comando Artisan + pulsante nella pagina impostazioni
+- **Rate limiting**: protezione su login, route admin e API
 - **Tema chiaro/scuro**: persistente in localStorage
-- **257 test, 504 assertions — tutti verdi** ✅
+- **296 test, 606 assertions — tutti verdi** ✅
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Tecnologia | Scopo |
-| :--------- | :---- |
-| **Laravel 11 (PHP 8.2+)** | Core applicativo e logica backend |
-| **Blade + Bootstrap 5 (Breeze)** | Interfaccia amministrativa |
-| **Livewire 4** | Componenti dinamici (VehicleSelect) |
-| **MySQL / SQLite** | Persistenza dati |
-| **Laravel Sanctum** | API token authentication |
-| **spatie/laravel-activitylog** | Audit logging |
-| **DomPDF** | Export PDF |
-| **FullCalendar** | Calendario appuntamenti |
+| Tecnologia                       | Scopo                               |
+| :------------------------------- | :---------------------------------- |
+| **Laravel 11 (PHP 8.2+)**        | Core applicativo e logica backend   |
+| **Blade + Bootstrap 5 (Breeze)** | Interfaccia amministrativa          |
+| **Livewire 4**                   | Componenti dinamici (VehicleSelect) |
+| **MySQL / SQLite**               | Persistenza dati                    |
+| **Laravel Sanctum**              | API token authentication            |
+| **spatie/laravel-activitylog**   | Audit logging                       |
+| **DomPDF**                       | Export PDF                          |
+| **FullCalendar**                 | Calendario appuntamenti             |
 
 ---
 
@@ -94,7 +98,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ```bash
 php artisan test
-# 257 tests, 504 assertions — all green ✅
+# 296 tests, 606 assertions — all green ✅
 ```
 
 ---
@@ -111,44 +115,46 @@ php artisan test
 1. **Crea un nuovo progetto** su Laravel Cloud e collega il repository GitHub
 2. **Imposta le variabili d'ambiente** nel pannello di controllo Laravel Cloud:
 
-   | Variabile | Valore | Note |
-   | :-------- | :----- | :--- |
-   | `APP_ENV` | `production` | |
-   | `APP_DEBUG` | `false` | |
-   | `APP_URL` | `https://il-tuo-dominio.laravel.cloud` | |
-   | `DB_CONNECTION` | `mysql` | Laravel Cloud fornisce MySQL |
-   | `APP_LOCALE` | `it` | |
-   | `MAIL_MAILER` | `log` | Per test, poi passa a SMTP |
+    | Variabile       | Valore                                 | Note                         |
+    | :-------------- | :------------------------------------- | :--------------------------- |
+    | `APP_ENV`       | `production`                           |                              |
+    | `APP_DEBUG`     | `false`                                |                              |
+    | `APP_URL`       | `https://il-tuo-dominio.laravel.cloud` |                              |
+    | `DB_CONNECTION` | `mysql`                                | Laravel Cloud fornisce MySQL |
+    | `APP_LOCALE`    | `it`                                   |                              |
+    | `MAIL_MAILER`   | `log`                                  | Per test, poi passa a SMTP   |
 
 3. **Dopo il deploy**, apri il terminale di Laravel Cloud ed esegui:
 
-   ```bash
-   php artisan migrate --seed
-   php artisan import:car-data
-   php artisan make:admin
-   ```
+    ```bash
+    php artisan migrate --seed
+    php artisan import:car-data
+    php artisan make:admin
+    ```
 
 4. **Segui le istruzioni interattive** di `make:admin` per creare il primo admin
 
-   In alternativa, in modalità non interattiva (CI/CD):
-   ```bash
-   php artisan make:admin --email="tua@email.com" --password="password-sicura"
-   ```
+    In alternativa, in modalità non interattiva (CI/CD):
+
+    ```bash
+    php artisan make:admin --email="tua@email.com" --password="password-sicura"
+    ```
 
 5. **Configura lo scheduler** (per report email automatici):
-   - Su Laravel Cloud, aggiungi un cron job che esegua `php artisan schedule:run` ogni minuto
-   - Oppure usa il worker integrato di Laravel Cloud
+    - Su Laravel Cloud, aggiungi un cron job che esegua `php artisan schedule:run` ogni minuto
+    - Oppure usa il worker integrato di Laravel Cloud
 
 ### Comandi utili
 
-| Comando | Cosa fa |
-| :------ | :------ |
-| `php artisan make:admin` | Crea il primo utente amministratore (capo del gruppo di default) |
-| `php artisan import:car-data` | Importa marche e modelli auto |
-| `php artisan app:send-summary-report` | Invia report manuale |
-| `php artisan app:generate-notifications` | Genera notifiche in-app (scadenze, guasti, attrezzature) |
-| `php artisan app:generate-notifications --email` | Genera notifiche + invia email automatiche |
-| `php artisan schedule:run` | Esegue i comandi schedulati |
+| Comando                                          | Cosa fa                                                          |
+| :----------------------------------------------- | :--------------------------------------------------------------- |
+| `php artisan make:admin`                         | Crea il primo utente amministratore (capo del gruppo di default) |
+| `php artisan import:car-data`                    | Importa marche e modelli auto                                    |
+| `php artisan app:send-summary-report`            | Invia report manuale                                             |
+| `php artisan app:generate-notifications`         | Genera notifiche in-app (scadenze, guasti, attrezzature)         |
+| `php artisan app:generate-notifications --email` | Genera notifiche + invia email automatiche                       |
+| `php artisan app:backup-database`                | Crea un backup del database in JSON                              |
+| `php artisan schedule:run`                       | Esegue i comandi schedulati                                      |
 
 ---
 
@@ -223,26 +229,26 @@ erDiagram
 
 **Legenda entità:**
 
-| Tabella | Descrizione |
-| :------ | :---------- |
-| `vehicles` | Veicoli (targa, codice, marca/modello, garanzia, cinghia, gruppo) |
-| `brands` | Marche veicoli |
-| `car_models` | Modelli veicoli (FK → brands) |
-| `vehicle_types` | Tipologie mezzo (MSB, MSDA, ecc.) con requisiti equipaggiamento |
-| `issues` | Guasti (descrizione, stato, foto) |
-| `deadlines` | Scadenze (revisione ministeriale, ossigeno, tagliando, cinghia, assicurazione) |
-| `maintenance_records` | Appuntamenti officina |
-| `maintenance_record_items` | Join polimorfico guasti/scadenze ↔ appuntamento |
-| `mileage_logs` | Storico chilometraggi |
-| `providers` | Fornitori (meccanico, carrozziere, gommista, ecc.) |
-| `equipment` | Dotazioni di bordo (estintori, barelle, ecc.) |
-| `equipment_types` | Tipologie di dotazione (con frequenza revisione) |
-| `vehicle_type_equipment_requirements` | Equipaggiamento obbligatorio per tipo mezzo |
-| `notification_settings` | Configurazione report email |
-| `notifications` | Notifiche in-app per utente |
-| `groups` | Gruppi/associazioni (con codice invito) |
-| `group_user` | Pivot utenti ↔ gruppi con ruolo (capo/sottocapo/membro) |
-| `users` | Utenti (il ruolo vive nel pivot group_user) |
+| Tabella                               | Descrizione                                                                    |
+| :------------------------------------ | :----------------------------------------------------------------------------- |
+| `vehicles`                            | Veicoli (targa, codice, marca/modello, garanzia, cinghia, gruppo)              |
+| `brands`                              | Marche veicoli                                                                 |
+| `car_models`                          | Modelli veicoli (FK → brands)                                                  |
+| `vehicle_types`                       | Tipologie mezzo (MSB, MSDA, ecc.) con requisiti equipaggiamento                |
+| `issues`                              | Guasti (descrizione, stato, foto)                                              |
+| `deadlines`                           | Scadenze (revisione ministeriale, ossigeno, tagliando, cinghia, assicurazione) |
+| `maintenance_records`                 | Appuntamenti officina                                                          |
+| `maintenance_record_items`            | Join polimorfico guasti/scadenze ↔ appuntamento                                |
+| `mileage_logs`                        | Storico chilometraggi                                                          |
+| `providers`                           | Fornitori (meccanico, carrozziere, gommista, ecc.)                             |
+| `equipment`                           | Dotazioni di bordo (estintori, barelle, ecc.)                                  |
+| `equipment_types`                     | Tipologie di dotazione (con frequenza revisione)                               |
+| `vehicle_type_equipment_requirements` | Equipaggiamento obbligatorio per tipo mezzo                                    |
+| `notification_settings`               | Configurazione report email                                                    |
+| `notifications`                       | Notifiche in-app per utente                                                    |
+| `groups`                              | Gruppi/associazioni (con codice invito)                                        |
+| `group_user`                          | Pivot utenti ↔ gruppi con ruolo (capo/sottocapo/membro)                        |
+| `users`                               | Utenti (il ruolo vive nel pivot group_user)                                    |
 
 ---
 
@@ -252,6 +258,9 @@ erDiagram
 
 - [x] Notifiche in-app (badge e toast nella navbar)
 - [x] Gestione utenti e ruoli da backoffice (gruppi e ruoli)
+- [x] Gestione token API nel profilo
+- [x] Privacy/GDPR (pagina privacy, cookie banner, export dati)
+- [x] Backup database
 - [ ] App mobile nativa (via API REST)
 
 ---

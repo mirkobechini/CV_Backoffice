@@ -16,8 +16,11 @@
 | **Feature implementate**    | ✅ F12, F14, F15, F16, F17, F18, F19, F20     |
 | **Notifiche in-app**        | ✅ Completate (2026-09-05)                    |
 | **Gruppi e ruoli**          | ✅ Completati (2026-09-06)                    |
+| **Sicurezza (S1-S3)**       | ✅ Token API, autorizzazione, rate limiting   |
+| **Privacy/GDPR (P1-P3)**    | ✅ Privacy, export dati, pulizia account      |
+| **Feature (F1-F4)**         | ✅ Utenti, token, backup, impostazioni        |
 | **Registrazione utenti**    | ✅ Disabilitata (admin via artisan)           |
-| **Test**                    | ✅ **257 test, 504 assertions — tutti verdi** |
+| **Test**                    | ✅ **296 test, 606 assertions — tutti verdi** |
 
 ---
 
@@ -32,45 +35,46 @@
 
 ---
 
-## � Analisi 2026-09-06: Mancanze identificate
+## 🔍 Analisi 2026-09-06: Mancanze identificate
 
 > **Data analisi:** 2026-09-06
 > **Contesto:** Dopo l'implementazione di notifiche e gruppi/ruoli, analisi delle mancanze di sicurezza, privacy, test e feature.
+> **Stato:** ✅ **Tutte risolte** (2026-09-06)
 
 ### 🟠 SICUREZZA
 
-| #   | Mancanza                                   | Priorità | Note                                                             |
-| --- | ------------------------------------------ | -------- | ---------------------------------------------------------------- |
-| S1  | Gestione/revoca token API dal backoffice   | Alta     | I token Sanctum non hanno pagina di gestione né scadenza         |
-| S2  | Autorizzazione non uniforme sui controller | Media    | `authorize()` solo su delete; store/update delegati alle Request |
-| S3  | Rate limiting solo su login                | Media    | Le route API protette (GET) non hanno throttle specifico         |
+| #   | Mancanza                                   | Priorità | Stato | Note                                                 |
+| --- | ------------------------------------------ | -------- | ----- | ---------------------------------------------------- |
+| S1  | Gestione/revoca token API dal backoffice   | Alta     | ✅    | Pagina profilo con creazione/revoca token            |
+| S2  | Autorizzazione non uniforme sui controller | Media    | ✅    | `authorizeResource()` su tutti i controller admin    |
+| S3  | Rate limiting solo su login                | Media    | ✅    | Rate limiter `api` (60 req/min) sulle route protette |
 
 ### 🟠 PRIVACY / GDPR
 
-| #   | Mancanza                                  | Priorità | Note                                             |
-| --- | ----------------------------------------- | -------- | ------------------------------------------------ |
-| P1  | Nessuna pagina privacy / cookie banner    | Alta     | L'app raccoglie dati personali senza informativa |
-| P2  | Nessun export dati utente (GDPR)          | Alta     | Manca right to data portability                  |
-| P3  | Delete account non pulisce dati collegati | Alta     | Veicoli/dati restano orfani                      |
+| #   | Mancanza                                  | Priorità | Stato | Note                                                   |
+| --- | ----------------------------------------- | -------- | ----- | ------------------------------------------------------ |
+| P1  | Nessuna pagina privacy / cookie banner    | Alta     | ✅    | Pagina privacy + cookie banner (Accetta/Rifiuta)       |
+| P2  | Nessun export dati utente (GDPR)          | Alta     | ✅    | Export dati personali JSON scaricabile                 |
+| P3  | Delete account non pulisce dati collegati | Alta     | ✅    | Trasferimento capo + eliminazione veicoli con conferma |
 
 ### 🟡 TEST
 
-| #   | Mancanza                                           | Priorità | Note                                        |
-| --- | -------------------------------------------------- | -------- | ------------------------------------------- |
-| T1  | Test rate limiting                                 | Media    | Login e admin non testati                   |
-| T2  | Test upload file                                   | Media    | registration_card e issue image non testati |
-| T3  | Test `MakeAdmin` command                           | Media    | Nessun test                                 |
-| T4  | `RegistrationTest` non aggiornato al flusso gruppi | Media    | È il default Breeze                         |
-| T5  | Test scoping API per gruppo                        | Media    | I test API non verificano lo scoping        |
+| #   | Mancanza                                           | Priorità | Stato | Note                             |
+| --- | -------------------------------------------------- | -------- | ----- | -------------------------------- |
+| T1  | Test rate limiting                                 | Media    | ✅    | Login, admin, API                |
+| T2  | Test upload file                                   | Media    | ✅    | registration_card e issue image  |
+| T3  | Test `MakeAdmin` command                           | Media    | ✅    | Crea utente + gruppo + capo      |
+| T4  | `RegistrationTest` non aggiornato al flusso gruppi | Media    | ✅    | Primo utente crea gruppo + capo  |
+| T5  | Test scoping API per gruppo                        | Media    | ✅    | Index e show filtrati per gruppo |
 
 ### 🔵 FEATURE MANCANTI
 
-| #   | Feature                        | Priorità | Note                        |
-| --- | ------------------------------ | -------- | --------------------------- |
-| F1  | Gestione utenti dal backoffice | Media    | Non esiste `UserController` |
-| F2  | Gestione token API nel profilo | Alta     | Vedere/revocare token       |
-| F3  | Backup dati                    | Bassa    | Nessun meccanismo           |
-| F4  | Pagina impostazioni generali   | Bassa    | Solo NotificationSetting    |
+| #   | Feature                        | Priorità | Stato | Note                        |
+| --- | ------------------------------ | -------- | ----- | --------------------------- |
+| F1  | Gestione utenti dal backoffice | Media    | ✅    | `UserController` + view     |
+| F2  | Gestione token API nel profilo | Alta     | ✅    | Vedere/revocare token       |
+| F3  | Backup dati                    | Bassa    | ✅    | `BackupDatabase` command    |
+| F4  | Pagina impostazioni generali   | Bassa    | ✅    | `SettingsController` + view |
 
 ### 📌 Decisioni utente (2026-09-06)
 
