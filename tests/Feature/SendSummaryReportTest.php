@@ -57,4 +57,21 @@ class SendSummaryReportTest extends TestCase
 
         Mail::assertNotSent(ReportMail::class);
     }
+
+    public function test_report_has_pdf_attachment(): void
+    {
+        Mail::fake();
+        NotificationSetting::create(['key' => 'report_email', 'value' => 'admin@example.com']);
+
+        $this->vehicle();
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertSent(ReportMail::class, function (ReportMail $mail) {
+            $attachments = $mail->attachments();
+            $this->assertNotEmpty($attachments);
+            $this->assertStringContainsString('.pdf', $attachments[0]->as);
+            return true;
+        });
+    }
 }
