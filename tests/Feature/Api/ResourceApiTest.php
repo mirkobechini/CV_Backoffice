@@ -20,7 +20,7 @@ class ResourceApiTest extends TestCase
 
     private function authToken(): string
     {
-        $user = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->withRole('admin')->create();
         return $user->createToken('test')->plainTextToken;
     }
 

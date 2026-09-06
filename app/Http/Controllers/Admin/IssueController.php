@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Concerns\DetectsDuplicates;
+use App\Http\Controllers\Concerns\SortableAndGroupable;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreIssueRequest;
+use App\Http\Requests\UpdateIssueRequest;
 use App\Models\Issue;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\StoreIssueRequest;
-use App\Http\Requests\UpdateIssueRequest;
 
 class IssueController extends Controller
 {
-    use SortableAndGroupable;
     use DetectsDuplicates;
+    use SortableAndGroupable;
 
     /**
      * Display a listing of the resource.
@@ -38,7 +37,7 @@ class IssueController extends Controller
             $sortBy,
             $sortDir,
             [
-                'vehicle' => fn(Issue $i) => $i->vehicle?->internal_code ?? '',
+                'vehicle' => fn (Issue $i) => $i->vehicle?->internal_code ?? '',
                 'status' => 'status',
                 'date' => 'event_date',
             ]
@@ -60,9 +59,9 @@ class IssueController extends Controller
         });
 
         return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues') + [
-            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
-            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
-            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
+            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
+            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -71,7 +70,7 @@ class IssueController extends Controller
      */
     public function create()
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
         // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
 
@@ -118,7 +117,8 @@ class IssueController extends Controller
      */
     public function edit(Issue $issue)
     {
-        $vehicles = Vehicle::all();
+        $vehicles = Vehicle::forCurrentUser()->get();
+
         return view('admin.issues.edit', compact('issue', 'vehicles'));
     }
 
@@ -141,6 +141,7 @@ class IssueController extends Controller
     {
         $this->authorize('delete', $issue);
         $issue->delete();
+
         return redirect()->route('admin.issues.index')->with('status', 'Guasto eliminato con successo.');
     }
 

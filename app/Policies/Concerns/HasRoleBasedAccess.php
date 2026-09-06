@@ -7,12 +7,12 @@ use App\Models\User;
 trait HasRoleBasedAccess
 {
     /**
-     * Solo admin può fare qualsiasi operazione.
-     * Gli altri (worker, volounteer, manager) possono solo vedere.
+     * Solo chi può gestire i dati (capo/sottocapo) può fare qualsiasi operazione.
+     * Gli altri (membri base) possono solo vedere.
      */
     public function before(User $user): ?bool
     {
-        if ($user->role === 'admin') {
+        if ($user->canManageData()) {
             return true;
         }
 

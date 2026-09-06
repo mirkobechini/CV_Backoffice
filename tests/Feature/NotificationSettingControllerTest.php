@@ -13,7 +13,7 @@ class NotificationSettingControllerTest extends TestCase
 
     private function admin(): User
     {
-        return User::factory()->create(['role' => 'admin']);
+        return User::factory()->withRole('admin')->create();
     }
 
     public function test_edit_returns_view(): void
@@ -48,7 +48,7 @@ class NotificationSettingControllerTest extends TestCase
 
     public function test_worker_cannot_update(): void
     {
-        $worker = User::factory()->create(['role' => 'worker']);
+        $worker = User::factory()->withRole('member')->create();
 
         $this->actingAs($worker)
             ->patch(route('admin.notifications.update'), [

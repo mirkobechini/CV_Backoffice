@@ -133,6 +133,11 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li>
+                                <a class="dropdown-item" href="{{ route('admin.groups.index') }}">
+                                    <i class="fa-solid fa-users me-2"></i>{{ __('Gruppi') }}
+                                </a>
+                            </li>
+                            <li>
                                 <a class="dropdown-item" href="{{ route('admin.notifications.edit') }}">
                                     <i class="fa-solid fa-bell me-2"></i>{{ __('Notifiche') }}
                                 </a>

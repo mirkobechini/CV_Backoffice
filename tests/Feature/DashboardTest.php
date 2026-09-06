@@ -12,7 +12,7 @@ class DashboardTest extends TestCase
 
     public function test_dashboard_loads_for_authenticated_user(): void
     {
-        $user = User::factory()->create(['role' => 'admin']);
+        $user = User::factory()->withRole('admin')->create();
         $response = $this->actingAs($user)->get(route('dashboard'));
         $response->assertOk();
     }
