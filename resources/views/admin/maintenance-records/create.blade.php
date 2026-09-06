@@ -54,6 +54,25 @@
                             </div>
                         </div>
 
+                        <div class="mb-3" id="closed-issue-section" style="display: none;">
+                            <label class="form-label">Guasti risolti (per registrare riparazioni avvenute)</label>
+                            <div class="border rounded p-3 bg-body-secondary" id="closed-issue-checkboxes">
+                                @foreach ($closedIssues as $issue)
+                                    <div class="form-check closed-issue-checkbox"
+                                        data-vehicle-id="{{ $issue->vehicle_id }}" style="display: none;">
+                                        <input class="form-check-input" type="checkbox" name="issue_ids[]"
+                                            value="{{ $issue->id }}" id="closed_issue_{{ $issue->id }}">
+                                        <label class="form-check-label" for="closed_issue_{{ $issue->id }}">
+                                            {{ $issue->description }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="alert alert-info mt-2 d-none" id="no-closed-issue-msg">
+                                <small>Nessun guasto risolto per il veicolo selezionato.</small>
+                            </div>
+                        </div>
+
                         <div class="mb-3" id="deadline-section" style="display: none;">
                             <label class="form-label">Scadenze collegate</label>
                             <div class="border rounded p-3 bg-body-secondary" id="deadline-checkboxes">
@@ -129,8 +148,8 @@
                         <div class="mb-3">
                             <label for="mileage_at_service" class="form-label">Chilometraggio all'appuntamento</label>
                             <input type="number" class="form-control @error('mileage_at_service') is-invalid @enderror"
-                                id="mileage_at_service" name="mileage_at_service" value="{{ old('mileage_at_service') }}"
-                                min="0">
+                                id="mileage_at_service" name="mileage_at_service"
+                                value="{{ old('mileage_at_service') }}" min="0">
                             @error('mileage_at_service')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -185,6 +204,8 @@
             const deadlineSection = document.getElementById('deadline-section');
             const noIssueMsg = document.getElementById('no-issue-msg');
             const noDeadlineMsg = document.getElementById('no-deadline-msg');
+            const closedIssueSection = document.getElementById('closed-issue-section');
+            const noClosedIssueMsg = document.getElementById('no-closed-issue-msg');
 
             const filterByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
@@ -216,6 +237,30 @@
                     issueSection.style.display = '';
                     noIssueCta.style.display = 'none';
                     noIssueMsg.classList.add('d-none');
+                }
+
+                // Filtra guasti risolti
+                const closedIssueChecks = document.querySelectorAll('.closed-issue-checkbox');
+                let hasVisibleClosedIssue = false;
+                closedIssueChecks.forEach(el => {
+                    if (el.dataset.vehicleId === selectedVehicleId) {
+                        el.style.display = '';
+                        hasVisibleClosedIssue = true;
+                    } else {
+                        el.style.display = 'none';
+                        el.querySelector('input').checked = false;
+                    }
+                });
+
+                if (!selectedVehicleId) {
+                    closedIssueSection.style.display = 'none';
+                    noClosedIssueMsg.classList.add('d-none');
+                } else if (!hasVisibleClosedIssue) {
+                    closedIssueSection.style.display = '';
+                    noClosedIssueMsg.classList.remove('d-none');
+                } else {
+                    closedIssueSection.style.display = '';
+                    noClosedIssueMsg.classList.add('d-none');
                 }
 
                 // Filtra scadenze

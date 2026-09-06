@@ -8,13 +8,13 @@
 ])
 
 <div class="container py-4">
-    <div class="d-flex align-items-center mb-4">
+    <div class="d-flex flex-wrap align-items-center mb-4 gap-2">
         <h1 class="mb-0">{{ $title }}</h1>
         @isset($headingActions)
-            <div class="ms-3 pt-2">{{ $headingActions }}</div>
+            <div class="pt-2">{{ $headingActions }}</div>
         @endisset
         @if ($csvRoute)
-            <div class="ms-1 pt-2 d-none d-md-inline-block">
+            <div class="pt-2 d-none d-md-inline-block">
                 <a href="{{ $csvRoute }}" class="btn btn-sm btn-outline-secondary" title="Scarica CSV">
                     <i class="bi bi-download me-1"></i>CSV
                 </a>
@@ -28,7 +28,7 @@
                     @endforeach
                     <div class="input-group input-group-sm">
                         <input type="text" name="q" class="form-control" placeholder="{{ $searchPlaceholder }}"
-                            value="{{ request('q') }}" style="min-width: 220px;">
+                            value="{{ request('q') }}" style="min-width: 160px;">
                         <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
                         @if (request('q'))
                             <a href="{{ $searchRoute }}" class="btn btn-outline-danger"><i class="bi bi-x-lg"></i></a>
@@ -40,16 +40,18 @@
     </div>
 
     <div class="card my-0">
-        <table class="{{ $tableClass }}">
-            <thead>
-                <tr>
-                    {{ $head }}
-                </tr>
-            </thead>
-            <tbody>
-                {{ $rows }}
-            </tbody>
-        </table>
+        <div class="table-responsive">
+            <table class="{{ $tableClass }}">
+                <thead>
+                    <tr>
+                        {{ $head }}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ $rows }}
+                </tbody>
+            </table>
+        </div>
         @if ($paginator)
             <div class="d-flex justify-content-center py-3">
                 {{ $paginator->links() }}

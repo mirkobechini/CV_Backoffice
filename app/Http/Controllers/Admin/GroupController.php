@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\GroupInviteMail;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class GroupController extends Controller
 {
@@ -123,6 +125,32 @@ class GroupController extends Controller
         $group->update(['invite_code' => Group::generateInviteCode()]);
 
         return back()->with('status', 'Codice invito rigenerato.');
+    }
+
+    /**
+     * Invia un invito via email a un nuovo membro (solo il capo).
+     * Il codice invito viene inviato all'email indicata.
+     */
+    public function invite(Request $request, Group $group)
+    {
+        $this->authorizeGroup($group);
+
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può inviare inviti.');
+        }
+
+        $data = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        // Se il gruppo non ha un codice invito, lo genera.
+        if (! $group->invite_code) {
+            $group->update(['invite_code' => Group::generateInviteCode()]);
+        }
+
+        Mail::to($data['email'])->send(new GroupInviteMail($group->name, $group->invite_code));
+
+        return back()->with('status', "Invito inviato a {$data['email']}.");
     }
 
     /**

@@ -64,6 +64,39 @@
     }
 }
 
+/* Su schermi piccoli (<768px) — navbar compatta per mobile */
+@media (max-width: 767.98px) {
+    .navbar .brand-text {
+        display: none;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+        padding: 0.4rem 0;
+    }
+
+    .navbar-brand i {
+        font-size: 1.2rem;
+    }
+
+    /* Notifiche e theme toggle più compatti */
+    .navbar .btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    #theme-toggle {
+        width: 1.6rem;
+        height: 1.6rem;
+    }
+
+    /* Dropdown a schermo intero quando la navbar è espansa */
+    .navbar-collapse .dropdown-menu {
+        position: static;
+        width: 100%;
+    }
+}
+
 /* Dropdown più eleganti */
 .navbar .dropdown-menu {
     border: 1px solid rgba(0, 0, 0, 0.06);
