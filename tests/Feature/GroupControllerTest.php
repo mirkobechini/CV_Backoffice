@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
+use App\Models\CarModel;
 use App\Models\Group;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -191,5 +195,70 @@ class GroupControllerTest extends TestCase
         $response = $this->actingAs($capo)->delete(route('admin.groups.remove-member', [$group, $outsider]));
 
         $response->assertNotFound();
+    }
+
+    public function test_destroy_group_requires_vehicle_confirmation(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $brand = Brand::create(['name' => 'Fiat']);
+        $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $type = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'vehicle_type_id' => $type->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $group->id,
+        ]);
+
+        // Senza conferma, l'eliminazione viene bloccata
+        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group));
+        $response->assertSessionHasErrors('delete_vehicles');
+        $this->assertDatabaseHas('groups', ['id' => $group->id]);
+    }
+
+    public function test_destroy_group_with_vehicle_confirmation_deletes_vehicles(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $brand = Brand::create(['name' => 'Fiat']);
+        $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $type = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'vehicle_type_id' => $type->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $group->id,
+        ]);
+
+        // Con conferma, il gruppo e i veicoli vengono eliminati
+        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group), [
+            'delete_vehicles' => '1',
+        ]);
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('groups', ['id' => $group->id]);
+        $this->assertSoftDeleted('vehicles', ['id' => $vehicle->id]);
+    }
+
+    public function test_destroy_group_without_vehicles_succeeds(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group));
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('groups', ['id' => $group->id]);
     }
 }

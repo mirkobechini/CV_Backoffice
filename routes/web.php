@@ -37,6 +37,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/tokens', [ProfileController::class, 'createToken'])->name('profile.tokens.create');
     Route::delete('/profile/tokens/{token}', [ProfileController::class, 'revokeToken'])->name('profile.tokens.revoke');
 
+    // Export dati personali (GDPR)
+    Route::get('/profile/export', [ProfileController::class, 'exportData'])->name('profile.export');
+
     // Notifiche in-app (ogni utente vede le proprie)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
