@@ -377,7 +377,8 @@ class MaintenanceRecordController extends Controller
                         continue;
                     }
 
-                    $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
+                    // Tutte le scadenze partono dalla data di APPUNTAMENTO.
+                    $baseDate = Carbon::parse($maintenanceRecord->appointment_date ?? Carbon::today());
                     $nextDueDate = null;
                     if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
                         $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType?->regular_inspection_months;
