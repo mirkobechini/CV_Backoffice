@@ -375,7 +375,8 @@
                     <tr>
                         <td>{{ $record->appointment_date?->format('d/m/Y') ?? '—' }}</td>
                         <td>{{ $record->provider?->name ?? '—' }}</td>
-                        <td>{{ $record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? $record->activity_type }}
+                        <td>{{ $record->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $record->activity_type }}
+                        </td>
                         </td>
                     </tr>
                 @endforeach
