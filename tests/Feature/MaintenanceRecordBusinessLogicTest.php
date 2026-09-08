@@ -459,10 +459,12 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'due_date' => today()->addDays(10),
         ]);
 
+        $appointmentDate = Carbon::parse('2024-10-18');
         $maintenance = MaintenanceRecord::create([
             'vehicle_id' => $vehicle->id,
             'provider_id' => $provider->id,
-            'appointment_date' => today()->subDay(),
+            'appointment_date' => $appointmentDate,
+            'mileage_at_service' => 16000,
         ]);
         $maintenance->items()->create([
             'itemable_id' => $issue->id,
@@ -484,11 +486,41 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'is_renewed' => true,
         ]);
 
-        // Una nuova scadenza tagliando deve essere stata creata (12 mesi dopo)
+        // La nuova scadenza tagliando deve essere creata:
+        // - data = data appuntamento + 12 mesi (18/10/2024 → 18/10/2025)
+        // - last_mileage = km inseriti (16000)
+        // - interval_km = intervallo del tipo veicolo (default 20000)
         $this->assertDatabaseHas('deadlines', [
             'vehicle_id' => $vehicle->id,
             'type' => Deadline::TYPE_TAGLIANDO,
             'status' => 'pending',
+            'due_date' => '2025-10-18 00:00:00',
+            'last_mileage' => 16000,
+            'interval_km' => 20000,
         ]);
+    }
+
+    public function test_store_requires_mileage_when_tagliando_selected(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'status' => 'pending',
+            'due_date' => today()->addDays(10),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'deadline_ids' => [$deadline->id],
+            'appointment_date' => '2024/10/18',
+            // mileage_at_service mancante
+        ]);
+
+        $response->assertSessionHasErrors('mileage_at_service');
     }
 }
