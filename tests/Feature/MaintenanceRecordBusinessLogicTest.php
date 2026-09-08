@@ -464,6 +464,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'vehicle_id' => $vehicle->id,
             'provider_id' => $provider->id,
             'appointment_date' => $appointmentDate,
+            'return_date' => '2024-10-18',
             'mileage_at_service' => 16000,
         ]);
         $maintenance->items()->create([
@@ -487,7 +488,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         // La nuova scadenza tagliando deve essere creata:
-        // - data = data appuntamento + 12 mesi (18/10/2024 → 18/10/2025)
+        // - data = data rientro + 12 mesi (18/10/2024 → 18/10/2025)
         // - last_mileage = km inseriti (16000)
         // - interval_km = intervallo del tipo veicolo (default 20000)
         $this->assertDatabaseHas('deadlines', [
@@ -559,6 +560,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'vehicle_id' => $vehicle->id,
             'provider_id' => $provider->id,
             'appointment_date' => $appointmentDate,
+            'return_date' => '2024-10-18',
             'mileage_at_service' => 16000,
         ]);
         $maintenance->items()->create(['itemable_id' => $issue->id, 'itemable_type' => Issue::class]);
