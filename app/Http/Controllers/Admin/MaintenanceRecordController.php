@@ -109,12 +109,12 @@ class MaintenanceRecordController extends Controller
         // Guasti aperti o in lavorazione: selezionabili per nuovi appuntamenti.
         // Includiamo anche 'in_progress' così un guasto non risolto in un appuntamento
         // precedente resta selezionabile per un nuovo appuntamento.
-        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])->get(['id', 'vehicle_id', 'description']);
+        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])->get(['id', 'vehicle_id', 'description', 'event_date']);
         // Guasti risolti: per registrare riparazioni/appuntamenti già avvenuti.
         // Escludiamo quelli già collegati a un appuntamento.
         $closedIssues = Issue::where('status', 'closed')
             ->whereDoesntHave('maintenanceRecordItems')
-            ->get(['id', 'vehicle_id', 'description']);
+            ->get(['id', 'vehicle_id', 'description', 'event_date']);
 
         // Una sola deadline per tipo per veicolo: prendiamo l'ultima non rinnovata
         $pendingDeadlines = Deadline::whereIn('status', ['pending', 'expired', 'valid'])
@@ -207,7 +207,7 @@ class MaintenanceRecordController extends Controller
             ->pluck('itemable_id');
         $openIssues = Issue::whereIn('status', ['open'])
             ->orWhereIn('id', $linkedIssueIds)
-            ->get(['id', 'vehicle_id', 'description', 'status']);
+            ->get(['id', 'vehicle_id', 'description', 'status', 'event_date']);
 
         $linkedDeadlineIds = $maintenanceRecord->items
             ->where('itemable_type', Deadline::class)

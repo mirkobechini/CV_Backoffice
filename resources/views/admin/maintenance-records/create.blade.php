@@ -45,6 +45,9 @@
                                             {{ in_array((string) $issue->id, old('issue_ids', $preselectedIssueId ? [$preselectedIssueId] : [])) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="issue_{{ $issue->id }}">
                                             {{ $issue->description }}
+                                            @if ($issue->event_date)
+                                                — {{ $issue->event_date->format('d/m/Y') }}
+                                            @endif
                                         </label>
                                     </div>
                                 @endforeach
@@ -54,24 +57,29 @@
                             </div>
                         </div>
 
-                        <div class="mb-3" id="closed-issue-section" style="display: none;">
-                            <label class="form-label">Guasti risolti (per registrare riparazioni avvenute)</label>
-                            <div class="border rounded p-3 bg-body-secondary" id="closed-issue-checkboxes">
-                                @foreach ($closedIssues as $issue)
-                                    <div class="form-check closed-issue-checkbox"
-                                        data-vehicle-id="{{ $issue->vehicle_id }}" style="display: none;">
-                                        <input class="form-check-input" type="checkbox" name="issue_ids[]"
-                                            value="{{ $issue->id }}" id="closed_issue_{{ $issue->id }}">
-                                        <label class="form-check-label" for="closed_issue_{{ $issue->id }}">
-                                            {{ $issue->description }}
-                                        </label>
-                                    </div>
-                                @endforeach
+                        @if ($closedIssues->isNotEmpty())
+                            <div class="mb-3" id="closed-issue-section" style="display: none;">
+                                <label class="form-label">Guasti risolti (per registrare riparazioni avvenute)</label>
+                                <div class="border rounded p-3 bg-body-secondary" id="closed-issue-checkboxes">
+                                    @foreach ($closedIssues as $issue)
+                                        <div class="form-check closed-issue-checkbox"
+                                            data-vehicle-id="{{ $issue->vehicle_id }}" style="display: none;">
+                                            <input class="form-check-input" type="checkbox" name="issue_ids[]"
+                                                value="{{ $issue->id }}" id="closed_issue_{{ $issue->id }}">
+                                            <label class="form-check-label" for="closed_issue_{{ $issue->id }}">
+                                                {{ $issue->description }}
+                                                @if ($issue->event_date)
+                                                    — {{ $issue->event_date->format('d/m/Y') }}
+                                                @endif
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="alert alert-info mt-2 d-none" id="no-closed-issue-msg">
+                                    <small>Nessun guasto risolto per il veicolo selezionato.</small>
+                                </div>
                             </div>
-                            <div class="alert alert-info mt-2 d-none" id="no-closed-issue-msg">
-                                <small>Nessun guasto risolto per il veicolo selezionato.</small>
-                            </div>
-                        </div>
+                        @endif
 
                         <div class="mb-3" id="deadline-section" style="display: none;">
                             <label class="form-label">Scadenze collegate</label>
@@ -174,7 +182,6 @@
             const noDeadlineMsg = document.getElementById('no-deadline-msg');
             const closedIssueSection = document.getElementById('closed-issue-section');
             const noClosedIssueMsg = document.getElementById('no-closed-issue-msg');
-
             const filterByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
 
@@ -220,7 +227,9 @@
                     }
                 });
 
-                if (!selectedVehicleId) {
+                if (!closedIssueSection) {
+                    // Sezione non presente: nessun guasto risolto disponibile.
+                } else if (!selectedVehicleId) {
                     closedIssueSection.style.display = 'none';
                     noClosedIssueMsg.classList.add('d-none');
                 } else if (!hasVisibleClosedIssue) {

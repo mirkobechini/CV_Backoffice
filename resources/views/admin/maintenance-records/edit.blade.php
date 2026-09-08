@@ -53,6 +53,9 @@
                                             {{ in_array((string) $issue->id, old('issue_ids', $linkedIssueIds)) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="edit_issue_{{ $issue->id }}">
                                             {{ $issue->description }}
+                                            @if ($issue->event_date)
+                                                — {{ $issue->event_date->format('d/m/Y') }}
+                                            @endif
                                             @if ($issue->status !== 'open' && $issue->status !== 'in_progress')
                                                 <span class="badge bg-warning text-dark">({{ $issue->status }})</span>
                                             @endif
