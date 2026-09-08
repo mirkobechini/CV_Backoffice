@@ -604,4 +604,78 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'due_date' => '2026-10-18 00:00:00',
         ]);
     }
+
+    public function test_store_with_return_date_and_completed_tagliando_creates_next_deadline(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $tagliando = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'status' => 'pending',
+            'due_date' => '2023-12-30',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'deadline_ids' => [$tagliando->id],
+            'completed_deadline_ids' => [$tagliando->id],
+            'appointment_date' => '2024/10/18',
+            'return_date' => '2024/10/18',
+            'mileage_at_service' => 16156,
+        ]);
+
+        $response->assertRedirect();
+
+        // Il tagliando è rinnovato
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $tagliando->id,
+            'status' => 'renewed',
+            'is_renewed' => true,
+        ]);
+
+        // La nuova scadenza tagliando è creata (data appuntamento + 12 mesi)
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'status' => 'pending',
+            'due_date' => '2025-10-18 00:00:00',
+            'last_mileage' => 16156,
+            'interval_km' => 20000,
+        ]);
+    }
+
+    public function test_store_with_return_date_and_completed_issue_closes_issue(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $issue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Spia olio lampeggia',
+            'status' => 'closed',
+            'event_date' => '2024-10-16',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'issue_ids' => [$issue->id],
+            'completed_issue_ids' => [$issue->id],
+            'appointment_date' => '2024/10/18',
+            'return_date' => '2024/10/18',
+        ]);
+
+        $response->assertRedirect();
+
+        // Il guasto resta chiuso
+        $this->assertDatabaseHas('issues', [
+            'id' => $issue->id,
+            'status' => 'closed',
+        ]);
+    }
 }
