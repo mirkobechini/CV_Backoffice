@@ -62,15 +62,26 @@ class StoreMaintenanceRecordRequest extends FormRequest
             $issueIds = $this->input('issue_ids', []);
             $appointmentDate = $this->input('appointment_date');
 
-            if (empty($issueIds) || !$appointmentDate) {
-                return;
+            if (! empty($issueIds) && $appointmentDate) {
+                $issues = Issue::whereIn('id', $issueIds)->get();
+
+                foreach ($issues as $issue) {
+                    if ($issue->event_date && Carbon::parse($appointmentDate)->lt(Carbon::parse($issue->event_date))) {
+                        $validator->errors()->add('appointment_date', "La data dell'appuntamento non può essere precedente alla data del guasto '{$issue->description}'.");
+                    }
+                }
             }
 
-            $issues = Issue::whereIn('id', $issueIds)->get();
+            // Se è selezionato un tagliando, il chilometraggio è obbligatorio
+            // per calcolare la scadenza km del prossimo tagliando.
+            $deadlineIds = $this->input('deadline_ids', []);
+            if (! empty($deadlineIds)) {
+                $hasTagliando = \App\Models\Deadline::whereIn('id', $deadlineIds)
+                    ->where('type', \App\Models\Deadline::TYPE_TAGLIANDO)
+                    ->exists();
 
-            foreach ($issues as $issue) {
-                if ($issue->event_date && Carbon::parse($appointmentDate)->lt(Carbon::parse($issue->event_date))) {
-                    $validator->errors()->add('appointment_date', "La data dell'appuntamento non può essere precedente alla data del guasto '{$issue->description}'.");
+                if ($hasTagliando && $this->input('mileage_at_service') === null) {
+                    $validator->errors()->add('mileage_at_service', 'Il chilometraggio è obbligatorio quando è selezionato un tagliando.');
                 }
             }
         });

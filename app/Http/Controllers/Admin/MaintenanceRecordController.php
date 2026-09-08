@@ -368,15 +368,23 @@ class MaintenanceRecordController extends Controller
                     $deadline->status = 'renewed';
                     $deadline->is_renewed = true;
                     $deadline->save();
-                    $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
+
+                    // Il tagliando ha una logica dedicata: la scadenza temporale
+                    // parte dalla data di APPUNTAMENTO e la scadenza km dai km
+                    // inseriti + intervallo del tipo veicolo.
+                    if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
+                        $this->renewTagliandoDeadline($maintenanceRecord, $deadline);
+                        continue;
+                    }
+
+                    // Tutte le scadenze partono dalla data di APPUNTAMENTO.
+                    $baseDate = Carbon::parse($maintenanceRecord->appointment_date ?? Carbon::today());
                     $nextDueDate = null;
                     if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
                         $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType?->regular_inspection_months;
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
                     } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
                         $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
-                    } elseif ($deadline->type === Deadline::TYPE_TAGLIANDO) {
-                        $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
                     }
                     if ($nextDueDate) {
                         Deadline::firstOrCreate(
@@ -450,6 +458,51 @@ class MaintenanceRecordController extends Controller
                 'last_mileage' => $baseKm,
                 'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
                 'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+                'status' => Deadline::STATUS_PENDING,
+            ]);
+        }
+    }
+
+    /**
+     * Rinnova la scadenza del tagliando dopo il completamento.
+     *
+     * La scadenza temporale parte dalla data di APPUNTAMENTO del tagliando
+     * (es. 18/10/2024 → 18/10/2025), mentre la scadenza km parte dai km
+     * inseriti + l'intervallo del tipo veicolo (es. 16000 + 19000 = 35000).
+     */
+    private function renewTagliandoDeadline(MaintenanceRecord $maintenanceRecord, Deadline $renewedDeadline): void
+    {
+        // Base temporale: data di appuntamento (non di rientro)
+        $baseDate = Carbon::parse($maintenanceRecord->appointment_date ?? Carbon::today());
+        $dueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
+
+        // Base km: km inseriti all'appuntamento + intervallo del tipo veicolo
+        $baseKm = $maintenanceRecord->mileage_at_service;
+        $intervalKm = (int) ($maintenanceRecord->vehicle->vehicleType?->regular_tagliando_km ?? 20000);
+
+        $deadline = $maintenanceRecord->vehicle->deadlines()
+            ->where('type', Deadline::TYPE_TAGLIANDO)
+            ->where('id', '!=', $renewedDeadline->id)
+            ->first();
+
+        if ($deadline) {
+            // Aggiorna la scadenza esistente
+            $deadline->due_date = $dueDate->toDateString();
+            $deadline->last_mileage = $baseKm;
+            $deadline->interval_km = $intervalKm;
+            $deadline->interval_days = Deadline::TAGLIANDO_INTERVAL_MONTHS * 30;
+            $deadline->status = Deadline::STATUS_PENDING;
+            $deadline->is_renewed = false;
+            $deadline->save();
+        } else {
+            // Crea la nuova scadenza
+            Deadline::create([
+                'vehicle_id' => $maintenanceRecord->vehicle_id,
+                'type' => Deadline::TYPE_TAGLIANDO,
+                'due_date' => $dueDate->toDateString(),
+                'last_mileage' => $baseKm,
+                'interval_km' => $intervalKm,
+                'interval_days' => Deadline::TAGLIANDO_INTERVAL_MONTHS * 30,
                 'status' => Deadline::STATUS_PENDING,
             ]);
         }

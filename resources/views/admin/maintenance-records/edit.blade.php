@@ -181,7 +181,8 @@
                             @error('mileage_at_service')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                            <div class="form-text">Opzionale — km al momento del conferimento in officina.</div>
+                            <div class="form-text">Obbligatorio se è selezionato un tagliando — km al momento del
+                                conferimento in officina.</div>
                         </div>
                     </section>
                     <button id="maintenance-submit-btn" type="button" class="btn btn-primary" data-bs-toggle="modal"
