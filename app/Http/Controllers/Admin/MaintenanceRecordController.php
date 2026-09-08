@@ -42,8 +42,8 @@ class MaintenanceRecordController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
 
         $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']), $sortBy, $sortDir, [
-            'vehicle' => fn (MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn (MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
+            'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
+            'description' => fn(MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
@@ -58,9 +58,9 @@ class MaintenanceRecordController extends Controller
         });
 
         return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords') + [
-            'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
-            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
-            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -121,7 +121,7 @@ class MaintenanceRecordController extends Controller
             ->orderByDesc('due_date')
             ->get()
             ->unique(function ($item) {
-                return $item->vehicle_id.'-'.$item->type;
+                return $item->vehicle_id . '-' . $item->type;
             })
             ->values();
 
@@ -158,8 +158,6 @@ class MaintenanceRecordController extends Controller
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
             'mileage_at_service' => $data['mileage_at_service'] ?? null,
-            'recurrence_months' => $data['recurrence_months'] ?? null,
-            'recurrence_km' => $data['recurrence_km'] ?? null,
         ]);
 
         if (! empty($data['issue_ids'])) {
@@ -220,7 +218,7 @@ class MaintenanceRecordController extends Controller
             ->get(['id', 'vehicle_id', 'type', 'due_date'])
             // Una sola per veicolo+tipo (mantenendo quelle già collegate)
             ->unique(function ($item) {
-                return $item->vehicle_id.'-'.$item->type;
+                return $item->vehicle_id . '-' . $item->type;
             })
             ->values();
 
@@ -241,8 +239,6 @@ class MaintenanceRecordController extends Controller
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
             'mileage_at_service' => $data['mileage_at_service'] ?? null,
-            'recurrence_months' => $data['recurrence_months'] ?? null,
-            'recurrence_km' => $data['recurrence_km'] ?? null,
         ]);
 
         // Sincronizza gli item: cancella e ricrea
@@ -334,7 +330,11 @@ class MaintenanceRecordController extends Controller
         // Transazione unica: aggiornamento intervento/guasto/scadenza deve essere atomico.
         DB::transaction(function () use ($maintenanceRecord, $data, $issues, $deadlines) {
             // 1) complete maintenance
-            $maintenanceRecord->return_date = Carbon::today();
+            // Se l'utente ha già indicato una data di rientro (es. un tagliando
+            // registrato retroattivamente), la rispettiamo. Altrimenti usiamo oggi.
+            if (! $maintenanceRecord->return_date) {
+                $maintenanceRecord->return_date = Carbon::today();
+            }
             $maintenanceRecord->save();
 
             // 2) update issues
@@ -393,12 +393,6 @@ class MaintenanceRecordController extends Controller
             if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) $data['issue_resolved']) {
                 $this->renewTimingBeltDeadline($maintenanceRecord);
             }
-
-            // 5) Tagliando ricorrente: crea/aggiorna la scadenza del prossimo
-            //    tagliando in base a recurrence_months / recurrence_km.
-            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TAGLIANDO && (bool) $data['issue_resolved']) {
-                $this->renewTagliandoDeadline($maintenanceRecord);
-            }
         });
 
         return redirect()
@@ -443,55 +437,6 @@ class MaintenanceRecordController extends Controller
     }
 
     /**
-     * Crea/aggiorna la scadenza del prossimo tagliando dopo un tagliando
-     * ricorrente completato, in base a recurrence_months / recurrence_km.
-     */
-    private function renewTagliandoDeadline(MaintenanceRecord $maintenanceRecord): void
-    {
-        $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
-        $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
-
-        // Il tagliando scade anche dopo 1 anno (default) se non è specificata
-        // una ricorrenza mensile diversa.
-        $recurrenceMonths = $maintenanceRecord->recurrence_months
-            ? (int) $maintenanceRecord->recurrence_months
-            : Deadline::TAGLIANDO_INTERVAL_MONTHS;
-
-        $dueDate = $baseDate->copy()->addMonthsNoOverflow($recurrenceMonths);
-
-        $intervalKm = $maintenanceRecord->recurrence_km;
-
-        // Se non c'è né ricorrenza mensile né km, non creiamo una scadenza.
-        if (! $maintenanceRecord->recurrence_months && ! $intervalKm) {
-            return;
-        }
-
-        $deadline = $maintenanceRecord->vehicle->deadlines()
-            ->where('type', Deadline::TYPE_TAGLIANDO)
-            ->first();
-
-        if ($deadline) {
-            $deadline->due_date = $dueDate->toDateString();
-            $deadline->last_mileage = $baseKm;
-            $deadline->interval_km = $intervalKm;
-            $deadline->interval_days = $recurrenceMonths * 30;
-            $deadline->status = Deadline::STATUS_PENDING;
-            $deadline->is_renewed = false;
-            $deadline->save();
-        } else {
-            Deadline::create([
-                'vehicle_id' => $maintenanceRecord->vehicle_id,
-                'type' => Deadline::TYPE_TAGLIANDO,
-                'due_date' => $dueDate->toDateString(),
-                'last_mileage' => $baseKm,
-                'interval_km' => $intervalKm,
-                'interval_days' => $recurrenceMonths * 30,
-                'status' => Deadline::STATUS_PENDING,
-            ]);
-        }
-    }
-
-    /**
      * Mostra la vista calendario degli appuntamenti.
      */
     public function calendar()
@@ -527,7 +472,7 @@ class MaintenanceRecordController extends Controller
 
                 $title = $record->vehicle?->internal_code ?? 'N/A';
                 if ($record->activity_type) {
-                    $title .= ' - '.$record->activity_type;
+                    $title .= ' - ' . $record->activity_type;
                 }
 
                 return [
