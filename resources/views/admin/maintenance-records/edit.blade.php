@@ -185,45 +185,9 @@
                                 conferimento in officina.</div>
                         </div>
                     </section>
-                    <button id="maintenance-submit-btn" type="button" class="btn btn-primary" data-bs-toggle="modal"
-                        data-bs-target="#confirmMaintenanceUpdateModal" data-loading-text="Salvataggio...">Salva
-                        modifiche</button>
+                    <button id="maintenance-submit-btn" type="submit" class="btn btn-primary"
+                        data-loading-text="Salvataggio...">Salva modifiche</button>
                 </form>
-            </div>
-        </div>
-
-        <div class="modal fade" id="confirmMaintenanceUpdateModal" tabindex="-1"
-            aria-labelledby="confirmMaintenanceUpdateModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="confirmMaintenanceUpdateModalLabel">Conferma aggiornamento intervento
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
-                    </div>
-
-                    <div class="modal-body">
-                        <p class="mb-2"><strong>Il guasto è stato aggiustato?</strong></p>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="issue_resolved"
-                                id="edit_issue_resolved_yes" value="1" form="maintenance-record-form">
-                            <label class="form-check-label" for="edit_issue_resolved_yes">Sì</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="issue_resolved"
-                                id="edit_issue_resolved_no" value="0" form="maintenance-record-form">
-                            <label class="form-check-label" for="edit_issue_resolved_no">No</label>
-                        </div>
-                        <small class="text-muted d-block mt-2">Se non selezioni nulla, lo stato del guasto resta
-                            invariato.</small>
-                    </div>
-
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                        <button type="submit" class="btn btn-primary" form="maintenance-record-form">Conferma e
-                            salva</button>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -363,9 +327,6 @@
             const completionIssuesList = document.getElementById('completion-issues-list');
             const completionDeadlinesList = document.getElementById('completion-deadlines-list');
             const completionConfirmBtn = document.getElementById('completion-confirm-btn');
-            const confirmUpdateModalEl = document.getElementById('confirmMaintenanceUpdateModal');
-            const confirmUpdateModal = bootstrap.Modal.getInstance(confirmUpdateModalEl) || new bootstrap.Modal(
-                confirmUpdateModalEl);
 
             // Dati dei guasti e scadenze selezionabili (dal DOM)
             const issueData = [];
@@ -443,7 +404,6 @@
 
                 e.preventDefault();
                 pendingSubmit = true;
-                confirmUpdateModal.hide();
                 completionModal.show();
             });
 
