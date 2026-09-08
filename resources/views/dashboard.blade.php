@@ -86,6 +86,20 @@
                 </a>
             </div>
             <div class="col-6">
+                <a href="{{ route('admin.deadlines.index') }}" class="text-decoration-none">
+                    <div class="card stat-card shadow-sm p-3 h-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-calendar-x"></i>
+                            </div>
+                            <div>
+                                <div class="fs-3 fw-bold">{{ $expiredDeadlines->count() }}</div>
+                                <div class="text-muted small">Scadenze scadute</div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-6">
                 <a href="{{ route('admin.maintenance-records.index') }}" class="text-decoration-none">
                     <div class="card stat-card shadow-sm p-3 h-100">
                         <div class="d-flex align-items-center gap-3">
@@ -195,6 +209,49 @@
                 </div>
             </div>
         </div>
+
+        <!-- RIGA: Scadenze scadute e non rinnovate -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-calendar-x me-2 text-danger"></i>Scadenze scadute e non
+                            rinnovate</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @if ($expiredDeadlines->isEmpty())
+                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>Nessuna scadenza scaduta</strong><br>
+                                        <small class="text-muted">Tutte le scadenze sono in regola</small>
+                                    </div>
+                                </div>
+                            @else
+                                @foreach ($expiredDeadlines as $deadline)
+                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <strong>{{ $deadline->type }}</strong><br>
+                                            <small class="text-muted">{{ $deadline->vehicle->internal_code }} —
+                                                Scaduta da {{ floor(now()->diffInDays($deadline->due_date, false)) }}
+                                                giorni</small>
+                                        </div>
+                                        <span
+                                            class="badge badge-expired rounded-pill px-3 py-2">{{ $deadline->due_date->format('d/m/Y') }}</span>
+                                    </div>
+                                @endforeach
+                                <div class="mt-3 text-center">
+                                    <a href="{{ route('admin.deadlines.index') }}"
+                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte le
+                                        scadenze <i class="bi bi-arrow-right ms-1"></i></a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row row-cols-md-2 g-4 mt-2">
 
             <!-- Prossimi appuntamenti -->

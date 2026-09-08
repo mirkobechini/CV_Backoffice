@@ -29,6 +29,13 @@ class DashboardController extends Controller
                 ->upcoming()
                 ->get();
 
+            // Scadenze scadute e non ancora rinnovate
+            $expiredDeadlines = Deadline::with('vehicle')
+                ->where('status', Deadline::STATUS_EXPIRED)
+                ->where('is_renewed', false)
+                ->orderBy('due_date')
+                ->get();
+
             $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
                 ->whereNull('return_date')
                 ->where('appointment_date', '>=', now())
@@ -40,7 +47,7 @@ class DashboardController extends Controller
                 ->forCurrentUser()
                 ->whereHas('vehicleType.equipmentTypes')
                 ->get()
-                ->filter(fn ($v) => ! $v->hasAllRequiredEquipment());
+                ->filter(fn($v) => ! $v->hasAllRequiredEquipment());
 
             $expiringEquipment = Equipment::with('vehicle')
                 ->expiringSoon()
@@ -50,6 +57,7 @@ class DashboardController extends Controller
                 'totalVehicles',
                 'openIssues',
                 'upcomingDeadlines',
+                'expiredDeadlines',
                 'upcomingAppointments',
                 'incompleteVehicles',
                 'expiringEquipment'
