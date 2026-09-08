@@ -160,11 +160,15 @@ class MaintenanceRecordController extends Controller
             'mileage_at_service' => $data['mileage_at_service'] ?? null,
         ]);
 
+        $completedIssueIds = $data['completed_issue_ids'] ?? [];
+        $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
+
         if (! empty($data['issue_ids'])) {
             foreach ($data['issue_ids'] as $issueId) {
                 $newRecord->items()->create([
                     'itemable_id' => $issueId,
                     'itemable_type' => Issue::class,
+                    'completed' => in_array((string) $issueId, $completedIssueIds, true),
                 ]);
                 // Il guasto passa automaticamente in lavorazione
                 Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
@@ -175,8 +179,16 @@ class MaintenanceRecordController extends Controller
                 $newRecord->items()->create([
                     'itemable_id' => $deadlineId,
                     'itemable_type' => Deadline::class,
+                    'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
                 ]);
             }
+        }
+
+        // Se la data di rientro è compilata, l'appuntamento è considerato
+        // completato: aggiorna i guasti e rinnova le scadenze marcate come
+        // completate, partendo dalla data di rientro.
+        if ($newRecord->return_date) {
+            $this->processCompletedItems($newRecord, $completedIssueIds, $completedDeadlineIds);
         }
 
         return redirect()->route('admin.maintenance-records.show', $newRecord->id)->with('status', 'Intervento aggiunto con successo.');
@@ -256,12 +268,16 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecord->items()->delete();
 
+        $completedIssueIds = $data['completed_issue_ids'] ?? [];
+        $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
+
         $newIssueIds = [];
         if (! empty($data['issue_ids'])) {
             foreach ($data['issue_ids'] as $issueId) {
                 $maintenanceRecord->items()->create([
                     'itemable_id' => $issueId,
                     'itemable_type' => Issue::class,
+                    'completed' => in_array((string) $issueId, $completedIssueIds, true),
                 ]);
                 // Il guasto nuovo passa in lavorazione
                 Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
@@ -281,8 +297,14 @@ class MaintenanceRecordController extends Controller
                 $maintenanceRecord->items()->create([
                     'itemable_id' => $deadlineId,
                     'itemable_type' => Deadline::class,
+                    'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
                 ]);
             }
+        }
+
+        // Se la data di rientro è compilata, processa gli item completati
+        if ($maintenanceRecord->return_date) {
+            $this->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds);
         }
 
         return redirect()->route('admin.maintenance-records.show', $maintenanceRecord->id)->with('status', 'Intervento aggiornato con successo.');
@@ -365,37 +387,7 @@ class MaintenanceRecordController extends Controller
                 }
 
                 if ((bool) $data['issue_resolved']) {
-                    $deadline->status = 'renewed';
-                    $deadline->is_renewed = true;
-                    $deadline->save();
-
-                    // Il tagliando ha una logica dedicata: la scadenza temporale
-                    // parte dalla data di APPUNTAMENTO e la scadenza km dai km
-                    // inseriti + intervallo del tipo veicolo.
-                    if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
-                        $this->renewTagliandoDeadline($maintenanceRecord, $deadline);
-                        continue;
-                    }
-
-                    // Tutte le scadenze partono dalla data di APPUNTAMENTO.
-                    $baseDate = Carbon::parse($maintenanceRecord->appointment_date ?? Carbon::today());
-                    $nextDueDate = null;
-                    if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
-                        $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType?->regular_inspection_months;
-                        $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
-                    } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
-                        $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
-                    }
-                    if ($nextDueDate) {
-                        Deadline::firstOrCreate(
-                            [
-                                'vehicle_id' => $maintenanceRecord->vehicle_id,
-                                'type' => $deadline->type,
-                                'due_date' => $nextDueDate->toDateString(),
-                            ],
-                            ['status' => 'pending']
-                        );
-                    }
+                    $this->renewDeadline($maintenanceRecord, $deadline);
                 } else {
                     $deadline->status = 'pending';
                     $deadline->save();
@@ -415,6 +407,45 @@ class MaintenanceRecordController extends Controller
     }
 
     /**
+     * Rinnova una scadenza: la marca come rinnovata e crea la successiva.
+     * La base temporale è la data di APPUNTAMENTO (o di rientro se presente).
+     */
+    private function renewDeadline(MaintenanceRecord $maintenanceRecord, Deadline $deadline): void
+    {
+        $deadline->status = 'renewed';
+        $deadline->is_renewed = true;
+        $deadline->save();
+
+        // Il tagliando ha una logica dedicata: la scadenza temporale
+        // parte dalla data di APPUNTAMENTO e la scadenza km dai km
+        // inseriti + intervallo del tipo veicolo.
+        if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
+            $this->renewTagliandoDeadline($maintenanceRecord, $deadline);
+            return;
+        }
+
+        // Tutte le scadenze partono dalla data di APPUNTAMENTO.
+        $baseDate = Carbon::parse($maintenanceRecord->appointment_date ?? Carbon::today());
+        $nextDueDate = null;
+        if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
+            $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType?->regular_inspection_months;
+            $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
+        } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
+            $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
+        }
+        if ($nextDueDate) {
+            Deadline::firstOrCreate(
+                [
+                    'vehicle_id' => $maintenanceRecord->vehicle_id,
+                    'type' => $deadline->type,
+                    'due_date' => $nextDueDate->toDateString(),
+                ],
+                ['status' => 'pending']
+            );
+        }
+    }
+
+    /**
      * Restituisce le descrizioni di tutti i guasti collegati, separate da virgola.
      * Se non ci sono guasti, restituisce una stringa vuota.
      */
@@ -425,6 +456,38 @@ class MaintenanceRecordController extends Controller
             ->map(fn($item) => $item->itemable?->description)
             ->filter()
             ->implode(', ');
+    }
+
+    /**
+     * Processa gli item marcati come completati in un appuntamento con data
+     * di rientro: chiude i guasti e rinnova le scadenze.
+     */
+    private function processCompletedItems(MaintenanceRecord $maintenanceRecord, array $completedIssueIds, array $completedDeadlineIds): void
+    {
+        $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
+
+        // Chiudi i guasti completati
+        if (! empty($completedIssueIds)) {
+            Issue::whereIn('id', $completedIssueIds)->update(['status' => 'closed']);
+        }
+
+        // Rinnova le scadenze completate
+        $completedDeadlines = $maintenanceRecord->items
+            ->where('itemable_type', Deadline::class)
+            ->whereIn('itemable_id', $completedDeadlineIds)
+            ->map(fn($item) => $item->itemable)
+            ->filter();
+
+        foreach ($completedDeadlines as $deadline) {
+            if (in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
+                $this->renewDeadline($maintenanceRecord, $deadline);
+            }
+        }
+
+        // Cambio cinghia distribuzione
+        if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && ! empty($completedDeadlineIds)) {
+            $this->renewTimingBeltDeadline($maintenanceRecord);
+        }
     }
 
     /**

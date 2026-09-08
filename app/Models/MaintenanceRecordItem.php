@@ -11,6 +11,11 @@ class MaintenanceRecordItem extends Model
         'maintenance_record_id',
         'itemable_id',
         'itemable_type',
+        'completed',
+    ];
+
+    protected $casts = [
+        'completed' => 'boolean',
     ];
 
     public function maintenanceRecord()

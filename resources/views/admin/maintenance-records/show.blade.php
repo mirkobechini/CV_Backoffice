@@ -36,6 +36,51 @@
                         @if ($maintenanceRecord->activity_type !== null)
                             <p><strong>Tipo attività:</strong> {{ $maintenanceRecord->activity_type }}</p>
                         @endif
+
+                        @php
+                            $linkedIssues = $maintenanceRecord->items
+                                ->where('itemable_type', 'App\\Models\\Issue')
+                                ->map(fn($item) => $item->itemable)
+                                ->filter();
+                            $linkedDeadlines = $maintenanceRecord->items
+                                ->where('itemable_type', 'App\\Models\\Deadline')
+                                ->map(fn($item) => $item->itemable)
+                                ->filter();
+                        @endphp
+
+                        @if ($linkedIssues->isNotEmpty())
+                            <hr>
+                            <h6>Guasti collegati</h6>
+                            <ul class="mb-0">
+                                @foreach ($linkedIssues as $issue)
+                                    <li>
+                                        {{ $issue->description }}
+                                        @if ($issue->event_date)
+                                            — {{ $issue->event_date->format('d/m/Y') }}
+                                        @endif
+                                        <span
+                                            class="badge {{ match ($issue->status_color) {'red' => 'bg-danger text-light','yellow' => 'bg-warning text-dark','green' => 'bg-success',default => 'bg-secondary'} }} ms-1">{{ $issue->status_label }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+
+                        @if ($linkedDeadlines->isNotEmpty())
+                            <hr>
+                            <h6>Scadenze collegate</h6>
+                            <ul class="mb-0">
+                                @foreach ($linkedDeadlines as $deadline)
+                                    <li>
+                                        {{ $deadline->type }}
+                                        @if ($deadline->due_date)
+                                            — {{ $deadline->due_date->format('d/m/Y') }}
+                                        @endif
+                                        <span
+                                            class="badge {{ match ($deadline->status_color) {'red' => 'bg-danger text-light','yellow' => 'bg-warning text-dark','green' => 'bg-success',default => 'bg-secondary'} }} ms-1">{{ $deadline->status_label }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
                     </div>
                 </div>
             </div>
