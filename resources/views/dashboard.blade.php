@@ -217,7 +217,7 @@
                                 @foreach ($upcomingAppointments as $appointment)
                                     <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
                                         <div>
-                                            <strong>{{ $appointment->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? $appointment->activity_type }}</strong><br>
+                                            <strong>{{ $appointment->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $appointment->activity_type }}</strong><br>
                                             <small class="text-muted">{{ $appointment->vehicle->internal_code }} @
                                                 {{ $appointment->provider?->name }}</small>
                                         </div>

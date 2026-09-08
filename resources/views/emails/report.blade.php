@@ -292,7 +292,7 @@
                     <div class="section-item">
                         <div>
                             <div class="label">
-                                {{ $appointment->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? $appointment->activity_type }}
+                                {{ $appointment->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $appointment->activity_type }}
                             </div>
                             <div class="meta">{{ $appointment->vehicle->internal_code }} @
                                 {{ $appointment->provider->name }}</div>

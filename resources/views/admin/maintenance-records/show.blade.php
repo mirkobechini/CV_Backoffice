@@ -10,9 +10,19 @@
         <div class="row mb-3">
             <div class="col-12">
                 <div class="card my-4">
+                    @php
+                        $issueDescriptions = $maintenanceRecord->items
+                            ->where('itemable_type', 'App\\Models\\Issue')
+                            ->map(fn($item) => $item->itemable?->description)
+                            ->filter()
+                            ->implode(', ');
+                        $title =
+                            $issueDescriptions !== ''
+                                ? $issueDescriptions
+                                : $maintenanceRecord->activity_type ?? 'Intervento';
+                    @endphp
                     <div class="card-header">
-                        <h1>{{ $maintenanceRecord->items->where('itemable_type', 'App\\Models\\Issue')->first()?->itemable?->description ?? ($maintenanceRecord->activity_type ?? 'Intervento') }}
-                        </h1>
+                        <h1>{{ $title }}</h1>
                     </div>
                     <div class="card-body">
                         <p><strong>Mezzo:</strong> {{ $maintenanceRecord->vehicle?->internal_code ?? 'N/A' }}</p>

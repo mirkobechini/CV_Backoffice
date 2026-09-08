@@ -43,14 +43,14 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']), $sortBy, $sortDir, [
             'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn(MaintenanceRecord $r) => $r->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($r->activity_type ?? ''),
+            'description' => fn(MaintenanceRecord $r) => $this->issueDescriptions($r) !== '' ? $this->issueDescriptions($r) : ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
         $groupedMaintenanceRecords = $this->applyGrouping($maintenanceRecords, $groupBy, function (MaintenanceRecord $record) use ($groupBy) {
             return match ($groupBy) {
                 'vehicle' => $record->vehicle?->internal_code ?? 'N/A',
-                'description' => $record->items->where('itemable_type', Issue::class)->first()?->itemable?->description ?? ($record->activity_type ?? 'N/A'),
+                'description' => $this->issueDescriptions($record) !== '' ? $this->issueDescriptions($record) : ($record->activity_type ?? 'N/A'),
                 'date' => $record->appointment_date
                     ? ucfirst($record->appointment_date->locale('it')->translatedFormat('F Y'))
                     : 'N/A',
@@ -209,6 +209,12 @@ class MaintenanceRecordController extends Controller
             ->orWhereIn('id', $linkedIssueIds)
             ->get(['id', 'vehicle_id', 'description', 'status', 'event_date']);
 
+        // Guasti risolti non ancora collegati: selezionabili per registrare
+        // riparazioni già avvenute anche in modifica.
+        $closedIssues = Issue::where('status', 'closed')
+            ->whereDoesntHave('maintenanceRecordItems')
+            ->get(['id', 'vehicle_id', 'description', 'event_date']);
+
         $linkedDeadlineIds = $maintenanceRecord->items
             ->where('itemable_type', Deadline::class)
             ->pluck('itemable_id');
@@ -222,7 +228,7 @@ class MaintenanceRecordController extends Controller
             })
             ->values();
 
-        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues', 'pendingDeadlines'));
+        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines'));
     }
 
     /**
@@ -398,6 +404,19 @@ class MaintenanceRecordController extends Controller
         return redirect()
             ->route('admin.maintenance-records.show', $maintenanceRecord->id)
             ->with('status', 'Intervento completato con successo.');
+    }
+
+    /**
+     * Restituisce le descrizioni di tutti i guasti collegati, separate da virgola.
+     * Se non ci sono guasti, restituisce una stringa vuota.
+     */
+    private function issueDescriptions(MaintenanceRecord $maintenanceRecord): string
+    {
+        return $maintenanceRecord->items
+            ->where('itemable_type', Issue::class)
+            ->map(fn($item) => $item->itemable?->description)
+            ->filter()
+            ->implode(', ');
     }
 
     /**

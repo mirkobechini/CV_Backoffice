@@ -68,6 +68,30 @@
                             </div>
                         </div>
 
+                        @if ($closedIssues->isNotEmpty())
+                            <div class="mb-3" id="closed-issue-section" style="display: none;">
+                                <label class="form-label">Guasti risolti (per registrare riparazioni avvenute)</label>
+                                <div class="border rounded p-3 bg-body-secondary" id="closed-issue-checkboxes">
+                                    @foreach ($closedIssues as $issue)
+                                        <div class="form-check closed-issue-checkbox"
+                                            data-vehicle-id="{{ $issue->vehicle_id }}" style="display: none;">
+                                            <input class="form-check-input" type="checkbox" name="issue_ids[]"
+                                                value="{{ $issue->id }}" id="edit_closed_issue_{{ $issue->id }}">
+                                            <label class="form-check-label" for="edit_closed_issue_{{ $issue->id }}">
+                                                {{ $issue->description }}
+                                                @if ($issue->event_date)
+                                                    — {{ $issue->event_date->format('d/m/Y') }}
+                                                @endif
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="alert alert-info mt-2 d-none" id="no-closed-issue-msg">
+                                    <small>Nessun guasto risolto per il veicolo selezionato.</small>
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="mb-3" id="deadline-section" style="display: none;">
                             <label class="form-label">Scadenze collegate</label>
                             <div class="border rounded p-3 bg-body-secondary" id="deadline-checkboxes">
@@ -133,7 +157,8 @@
                         <div class="mb-3">
                             <label for="activity_type" class="form-label">Tipo attività</label>
                             <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
-                                name="activity_type" value="{{ old('activity_type', $maintenanceRecord->activity_type) }}">
+                                name="activity_type"
+                                value="{{ old('activity_type', $maintenanceRecord->activity_type) }}">
                                 <option value="">Seleziona una tipologia</option>
                                 @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
                                     <option value="{{ $item }}"
@@ -211,6 +236,8 @@
             const deadlineSection = document.getElementById('deadline-section');
             const noIssueMsg = document.getElementById('no-issue-msg');
             const noDeadlineMsg = document.getElementById('no-deadline-msg');
+            const closedIssueSection = document.getElementById('closed-issue-section');
+            const noClosedIssueMsg = document.getElementById('no-closed-issue-msg');
 
             const filterByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
@@ -242,6 +269,32 @@
                     issueSection.style.display = '';
                     noIssueCta.style.display = 'none';
                     noIssueMsg.classList.add('d-none');
+                }
+
+                // Filtra guasti risolti
+                const closedIssueChecks = document.querySelectorAll('.closed-issue-checkbox');
+                let hasVisibleClosedIssue = false;
+                closedIssueChecks.forEach(el => {
+                    if (el.dataset.vehicleId === selectedVehicleId) {
+                        el.style.display = '';
+                        hasVisibleClosedIssue = true;
+                    } else {
+                        el.style.display = 'none';
+                        el.querySelector('input').checked = false;
+                    }
+                });
+
+                if (!closedIssueSection) {
+                    // Sezione non presente: nessun guasto risolto disponibile.
+                } else if (!selectedVehicleId) {
+                    closedIssueSection.style.display = 'none';
+                    noClosedIssueMsg.classList.add('d-none');
+                } else if (!hasVisibleClosedIssue) {
+                    closedIssueSection.style.display = '';
+                    noClosedIssueMsg.classList.remove('d-none');
+                } else {
+                    closedIssueSection.style.display = '';
+                    noClosedIssueMsg.classList.add('d-none');
                 }
 
                 // Filtra scadenze

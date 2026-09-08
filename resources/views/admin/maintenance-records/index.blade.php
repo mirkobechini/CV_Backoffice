@@ -58,15 +58,19 @@
                 @endif
 
                 @foreach ($groupRecords as $record)
+                    @php
+                        $issueDescriptions = $record->items
+                            ->where('itemable_type', 'App\Models\Issue')
+                            ->map(fn($item) => $item->itemable?->description)
+                            ->filter()
+                            ->implode(', ');
+                        $description = $issueDescriptions !== '' ? $issueDescriptions : $record->activity_type ?? 'N/A';
+                    @endphp
                     <tr>
                         <td>{{ $record->vehicle->internal_code }}</td>
-                        <td>{{ $record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? ($record->activity_type ?? 'N/A') }}
-                        </td>
+                        <td>{{ $description }}</td>
                         <td>{{ $record->appointment_date_formatted ?? 'N/A' }}</td>
-                        <x-admin.row-actions :showUrl="route('admin.maintenance-records.show', $record->id)" :editUrl="route('admin.maintenance-records.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' .
-                            ($record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable
-                                ?->description ??
-                                ($record->activity_type ?? $record->id))" />
+                        <x-admin.row-actions :showUrl="route('admin.maintenance-records.show', $record->id)" :editUrl="route('admin.maintenance-records.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' . $description" />
                     </tr>
                     <x-admin.delete-modal type="maintenanceRecord" :object="$record" />
                 @endforeach

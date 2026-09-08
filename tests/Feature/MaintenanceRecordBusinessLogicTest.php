@@ -377,6 +377,68 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $response->assertSee('Guasto non risolto');
     }
 
+    public function test_edit_form_shows_closed_issues_for_selection(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        // Guasto risolto NON collegato: deve essere selezionabile in modifica
+        $closedIssue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto risolto da aggiungere',
+            'status' => 'closed',
+            'event_date' => '2025-03-10',
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.edit', $maintenance));
+
+        $response->assertOk();
+        // Il guasto risolto deve essere selezionabile in modifica
+        $response->assertSee('Guasto risolto da aggiungere');
+        // La data appare accanto alla descrizione
+        $response->assertSee('10/03/2025');
+    }
+
+    public function test_index_shows_all_issue_descriptions(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $issue1 = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Primo guasto',
+            'status' => 'in_progress',
+        ]);
+        $issue2 = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Secondo guasto',
+            'status' => 'in_progress',
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $maintenance->items()->create(['itemable_id' => $issue1->id, 'itemable_type' => Issue::class]);
+        $maintenance->items()->create(['itemable_id' => $issue2->id, 'itemable_type' => Issue::class]);
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.index'));
+
+        $response->assertOk();
+        // Entrambe le descrizioni dei guasti devono apparire
+        $response->assertSee('Primo guasto');
+        $response->assertSee('Secondo guasto');
+    }
+
     public function test_complete_with_issue_resolved_renews_tagliando(): void
     {
         $user = $this->createUser();
