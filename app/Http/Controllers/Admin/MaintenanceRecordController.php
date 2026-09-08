@@ -408,7 +408,7 @@ class MaintenanceRecordController extends Controller
 
     /**
      * Rinnova una scadenza: la marca come rinnovata e crea la successiva.
-     * La base temporale è la data di APPUNTAMENTO (o di rientro se presente).
+     * La base temporale è la data di RIENTRO (return_date).
      */
     private function renewDeadline(MaintenanceRecord $maintenanceRecord, Deadline $deadline): void
     {
@@ -417,15 +417,15 @@ class MaintenanceRecordController extends Controller
         $deadline->save();
 
         // Il tagliando ha una logica dedicata: la scadenza temporale
-        // parte dalla data di APPUNTAMENTO e la scadenza km dai km
+        // parte dalla data di RIENTRO e la scadenza km dai km
         // inseriti + intervallo del tipo veicolo.
         if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
             $this->renewTagliandoDeadline($maintenanceRecord, $deadline);
             return;
         }
 
-        // Tutte le scadenze partono dalla data di APPUNTAMENTO.
-        $baseDate = Carbon::parse($maintenanceRecord->appointment_date ?? Carbon::today());
+        // Tutte le scadenze partono dalla data di RIENTRO.
+        $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
         $nextDueDate = null;
         if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
             $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType?->regular_inspection_months;
@@ -529,14 +529,14 @@ class MaintenanceRecordController extends Controller
     /**
      * Rinnova la scadenza del tagliando dopo il completamento.
      *
-     * La scadenza temporale parte dalla data di APPUNTAMENTO del tagliando
+     * La scadenza temporale parte dalla data di RIENTRO del veicolo
      * (es. 18/10/2024 → 18/10/2025), mentre la scadenza km parte dai km
      * inseriti + l'intervallo del tipo veicolo (es. 16000 + 19000 = 35000).
      */
     private function renewTagliandoDeadline(MaintenanceRecord $maintenanceRecord, Deadline $renewedDeadline): void
     {
-        // Base temporale: data di appuntamento (non di rientro)
-        $baseDate = Carbon::parse($maintenanceRecord->appointment_date ?? Carbon::today());
+        // Base temporale: data di rientro
+        $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
         $dueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
 
         // Base km: km inseriti all'appuntamento + intervallo del tipo veicolo

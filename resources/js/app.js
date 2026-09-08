@@ -5,6 +5,8 @@ import '~icons/bootstrap-icons.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import * as bootstrap from 'bootstrap';
+// Espone bootstrap globalmente per gli script inline nelle viste
+window.bootstrap = bootstrap;
 import.meta.glob([
     '../img/**'
 ])
