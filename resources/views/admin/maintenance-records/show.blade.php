@@ -10,9 +10,19 @@
         <div class="row mb-3">
             <div class="col-12">
                 <div class="card my-4">
+                    @php
+                        $issueDescriptions = $maintenanceRecord->items
+                            ->where('itemable_type', 'App\\Models\\Issue')
+                            ->map(fn($item) => $item->itemable?->description)
+                            ->filter()
+                            ->implode(', ');
+                        $title =
+                            $issueDescriptions !== ''
+                                ? $issueDescriptions
+                                : $maintenanceRecord->activity_type ?? 'Intervento';
+                    @endphp
                     <div class="card-header">
-                        <h1>{{ $maintenanceRecord->items->where('itemable_type', 'App\\Models\\Issue')->first()?->itemable?->description ?? ($maintenanceRecord->activity_type ?? 'Intervento') }}
-                        </h1>
+                        <h1>{{ $title }}</h1>
                     </div>
                     <div class="card-body">
                         <p><strong>Mezzo:</strong> {{ $maintenanceRecord->vehicle?->internal_code ?? 'N/A' }}</p>
@@ -25,22 +35,6 @@
                         @endif
                         @if ($maintenanceRecord->activity_type !== null)
                             <p><strong>Tipo attività:</strong> {{ $maintenanceRecord->activity_type }}</p>
-                        @endif
-                        @if ($maintenanceRecord->recurrence_months || $maintenanceRecord->recurrence_km)
-                            <hr>
-                            <h6>Prossimo tagliando</h6>
-                            @if ($maintenanceRecord->next_due_date)
-                                <p class="mb-1"><strong>Scadenza:</strong>
-                                    {{ $maintenanceRecord->next_due_date->format('d/m/Y') }}
-                                    <span class="badge bg-{{ $maintenanceRecord->recurrence_status === 'expired' ? 'danger' : ($maintenanceRecord->recurrence_status === 'expiring' ? 'warning text-dark' : 'success') }} ms-2">
-                                        {{ $maintenanceRecord->recurrence_status_label }}
-                                    </span>
-                                </p>
-                            @endif
-                            @if ($maintenanceRecord->next_due_km)
-                                <p class="mb-0"><strong>Km scadenza:</strong>
-                                    {{ number_format($maintenanceRecord->next_due_km, 0, ',', '.') }}</p>
-                            @endif
                         @endif
                     </div>
                 </div>

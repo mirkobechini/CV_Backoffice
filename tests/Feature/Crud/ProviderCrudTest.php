@@ -92,6 +92,27 @@ class ProviderCrudTest extends TestCase
         ]);
     }
 
+    public function test_provider_can_be_stored_with_vetri_type(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user)->post(route('admin.providers.store'), [
+            'name' => 'Vetreria Test',
+            'contact_info' => '+39 3885245',
+            'address' => 'Via roma 2, Milano',
+            'type' => 'Vetri',
+        ]);
+
+        $provider = Provider::first();
+
+        $response->assertRedirect(route('admin.providers.show', $provider));
+        $this->assertDatabaseHas('providers', [
+            'id' => $provider->id,
+            'name' => 'Vetreria Test',
+            'type' => 'Vetri',
+        ]);
+    }
+
 
     public function test_provider_can_be_updated(): void
     {

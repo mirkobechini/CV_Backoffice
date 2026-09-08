@@ -39,7 +39,6 @@
                         title="Ordina per data">{{ $sortIcon('date') }}</a>
                 </div>
             </th>
-            <th scope="col">Prossimo tagliando</th>
             <th scope="col">Azioni</th>
         </x-slot:head>
 
@@ -54,35 +53,24 @@
             @foreach ($groups as $groupLabel => $groupRecords)
                 @if ($groupBy !== null)
                     <tr class="table-light">
-                        <td colspan="5"><strong>{{ $groupLabel }}</strong> ({{ $groupRecords->count() }})</td>
+                        <td colspan="4"><strong>{{ $groupLabel }}</strong> ({{ $groupRecords->count() }})</td>
                     </tr>
                 @endif
 
                 @foreach ($groupRecords as $record)
+                    @php
+                        $issueDescriptions = $record->items
+                            ->where('itemable_type', 'App\Models\Issue')
+                            ->map(fn($item) => $item->itemable?->description)
+                            ->filter()
+                            ->implode(', ');
+                        $description = $issueDescriptions !== '' ? $issueDescriptions : $record->activity_type ?? 'N/A';
+                    @endphp
                     <tr>
                         <td>{{ $record->vehicle->internal_code }}</td>
-                        <td>{{ $record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable?->description ?? ($record->activity_type ?? 'N/A') }}
-                        </td>
+                        <td>{{ $description }}</td>
                         <td>{{ $record->appointment_date_formatted ?? 'N/A' }}</td>
-                        <td>
-                            @if ($record->recurrence_months || $record->recurrence_km)
-                                <span class="badge bg-{{ $record->recurrence_status === 'expired' ? 'danger' : ($record->recurrence_status === 'expiring' ? 'warning text-dark' : 'success') }}">
-                                    {{ $record->recurrence_status_label }}
-                                </span>
-                                @if ($record->next_due_date)
-                                    <br><small class="text-muted">{{ $record->next_due_date->format('d/m/Y') }}</small>
-                                @endif
-                                @if ($record->next_due_km)
-                                    <br><small class="text-muted">{{ number_format($record->next_due_km, 0, ',', '.') }} km</small>
-                                @endif
-                            @else
-                                <span class="text-muted">—</span>
-                            @endif
-                        </td>
-                        <x-admin.row-actions :showUrl="route('admin.maintenance-records.show', $record->id)" :editUrl="route('admin.maintenance-records.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' .
-                            ($record->items->where('itemable_type', 'App\Models\Issue')->first()?->itemable
-                                ?->description ??
-                                ($record->activity_type ?? $record->id))" />
+                        <x-admin.row-actions :showUrl="route('admin.maintenance-records.show', $record->id)" :editUrl="route('admin.maintenance-records.edit', $record->id)" :deleteTarget="'#confirmDeleteModal-' . $record->id" :label="'manutenzione ' . $description" />
                     </tr>
                     <x-admin.delete-modal type="maintenanceRecord" :object="$record" />
                 @endforeach
