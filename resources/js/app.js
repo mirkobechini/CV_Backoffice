@@ -1,7 +1,5 @@
 import './bootstrap';
 import './vehicle-type-equipment';
-import '~resources/scss/app.scss';
-import '~icons/bootstrap-icons.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import * as bootstrap from 'bootstrap';
@@ -22,14 +20,15 @@ const applyTheme = (theme) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const themeToggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedTheme = localStorage.getItem('theme') || 'auto';
 
     applyTheme(savedTheme);
 
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
-            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'auto';
+            const order = ['auto', 'light', 'dark'];
+            const nextTheme = order[(order.indexOf(currentTheme) + 1) % order.length];
 
             localStorage.setItem('theme', nextTheme);
             applyTheme(nextTheme);
