@@ -19,6 +19,21 @@
                             {{ $deadline->vehicle->brand?->name ?? 'N/A' }}
                             {{ $deadline->vehicle->carModel?->name ?? 'N/A' }}</p>
                         <p><strong>Data di scadenza:</strong> {{ $deadline->due_date_formatted ?? 'N/A' }}</p>
+                        @if ($deadline->last_mileage !== null)
+                            <p><strong>Km all'ultimo cambio:</strong>
+                                {{ number_format($deadline->last_mileage, 0, ',', '.') }}</p>
+                        @endif
+                        @if ($deadline->interval_km !== null)
+                            <p><strong>Intervallo km:</strong>
+                                {{ number_format($deadline->interval_km, 0, ',', '.') }}</p>
+                        @endif
+                        @if ($deadline->last_mileage !== null && $deadline->interval_km !== null)
+                            <p><strong>Km di scadenza:</strong>
+                                {{ number_format($deadline->last_mileage + $deadline->interval_km, 0, ',', '.') }}</p>
+                        @endif
+                        @if ($deadline->interval_days !== null)
+                            <p><strong>Intervallo giorni:</strong> {{ $deadline->interval_days }}</p>
+                        @endif
                         <p><strong>Stato:</strong>
                             <span
                                 class="badge {{ match ($deadline->status_color) {'red' => 'bg-danger','yellow' => 'bg-warning text-dark','green' => 'bg-success',default => 'bg-secondary'} }}">{{ $deadline->status_label }}</span>
