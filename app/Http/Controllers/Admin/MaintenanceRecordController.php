@@ -328,11 +328,49 @@ class MaintenanceRecordController extends Controller
                 ->update(['status' => 'open']);
         }
 
+        // Ripristina lo stato precedente delle scadenze rinnovate da questo
+        // appuntamento: elimina la scadenza successiva creata dal rinnovo e
+        // riporta quella originale a pending.
+        $restoredDeadlines = [];
+        $renewedDeadlines = $maintenanceRecord->items
+            ->where('itemable_type', Deadline::class)
+            ->map(fn($item) => $item->itemable)
+            ->filter()
+            ->filter(fn($d) => $d->is_renewed);
+
+        foreach ($renewedDeadlines as $deadline) {
+            // Trova la scadenza successiva creata dal rinnovo (stesso veicolo/tipo,
+            // non rinnovata, con data successiva alla data dell'appuntamento).
+            $baseDate = Carbon::parse($maintenanceRecord->return_date ?? $maintenanceRecord->appointment_date ?? Carbon::today());
+            $nextDeadline = $maintenanceRecord->vehicle->deadlines()
+                ->where('type', $deadline->type)
+                ->where('is_renewed', false)
+                ->where('due_date', '>', $baseDate->toDateString())
+                ->orderBy('due_date')
+                ->first();
+
+            if ($nextDeadline) {
+                $nextDeadline->delete();
+            }
+
+            // Riporta la scadenza originale a pending
+            $deadline->status = Deadline::STATUS_PENDING;
+            $deadline->is_renewed = false;
+            $deadline->save();
+
+            $restoredDeadlines[] = $deadline->type;
+        }
+
         // Elimina gli item della pivot prima del soft-delete
         $maintenanceRecord->items()->delete();
         $maintenanceRecord->delete();
 
-        return redirect()->route('admin.maintenance-records.index')->with('status', 'Intervento eliminato con successo.');
+        $message = 'Intervento eliminato con successo.';
+        if (! empty($restoredDeadlines)) {
+            $message .= ' Ripristinate le scadenze: ' . implode(', ', array_unique($restoredDeadlines)) . '.';
+        }
+
+        return redirect()->route('admin.maintenance-records.index')->with('status', $message);
     }
 
     // --- CUSTOM METHOD ---

@@ -43,6 +43,7 @@
                         title="Ordina per data">{{ $sortIcon('date') }}</a>
                 </div>
             </th>
+            <th scope="col">Km di scadenza</th>
             <th scope="col">
                 <div class="d-inline-flex align-items-center gap-1">
                     <span>Status</span>
@@ -76,7 +77,7 @@
             @foreach ($groups as $groupLabel => $groupDeadlines)
                 @if ($groupBy !== null)
                     <tr class="table-light">
-                        <td colspan="5"><strong>{{ $groupLabel }}</strong> ({{ $groupDeadlines->count() }})</td>
+                        <td colspan="6"><strong>{{ $groupLabel }}</strong> ({{ $groupDeadlines->count() }})</td>
                     </tr>
                 @endif
 
@@ -84,6 +85,13 @@
                     <tr>
                         <td>{{ $deadline->type }}</td>
                         <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
+                        <td>
+                            @if ($deadline->last_mileage !== null && $deadline->interval_km !== null)
+                                {{ number_format($deadline->last_mileage + $deadline->interval_km, 0, ',', '.') }} km
+                            @else
+                                <span class="text-muted">—</span>
+                            @endif
+                        </td>
                         <td>
                             <span
                                 class="badge bg-{{ match ($deadline->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $deadline->status_label }}</span>
