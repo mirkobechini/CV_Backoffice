@@ -313,7 +313,7 @@ class MaintenanceRecordController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MaintenanceRecord $maintenanceRecord)
+    public function destroy(Request $request, MaintenanceRecord $maintenanceRecord)
     {
         $this->authorize('delete', $maintenanceRecord);
         $maintenanceRecord->loadMissing('items.itemable');
@@ -339,18 +339,28 @@ class MaintenanceRecordController extends Controller
             ->filter(fn($d) => $d->is_renewed);
 
         foreach ($renewedDeadlines as $deadline) {
-            // Trova la scadenza successiva creata dal rinnovo (stesso veicolo/tipo,
-            // non rinnovata, con data successiva alla data dell'appuntamento).
+            // La scadenza successiva creata dal rinnovo è quella con la data
+            // più vicina a (data rientro + intervallo) e non rinnovata.
             $baseDate = Carbon::parse($maintenanceRecord->return_date ?? $maintenanceRecord->appointment_date ?? Carbon::today());
-            $nextDeadline = $maintenanceRecord->vehicle->deadlines()
-                ->where('type', $deadline->type)
-                ->where('is_renewed', false)
-                ->where('due_date', '>', $baseDate->toDateString())
-                ->orderBy('due_date')
-                ->first();
 
-            if ($nextDeadline) {
-                $nextDeadline->delete();
+            // Calcola la data attesa della scadenza successiva
+            $expectedDueDate = match ($deadline->type) {
+                Deadline::TYPE_TAGLIANDO => $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS),
+                Deadline::TYPE_MINISTERIAL => $baseDate->copy()->addMonthsNoOverflow((int) ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0)),
+                Deadline::TYPE_OXYGEN => $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS),
+                default => null,
+            };
+
+            if ($expectedDueDate) {
+                $nextDeadline = $maintenanceRecord->vehicle->deadlines()
+                    ->where('type', $deadline->type)
+                    ->where('is_renewed', false)
+                    ->where('due_date', $expectedDueDate->toDateString())
+                    ->first();
+
+                if ($nextDeadline) {
+                    $nextDeadline->delete();
+                }
             }
 
             // Riporta la scadenza originale a pending
@@ -368,6 +378,11 @@ class MaintenanceRecordController extends Controller
         $message = 'Intervento eliminato con successo.';
         if (! empty($restoredDeadlines)) {
             $message .= ' Ripristinate le scadenze: ' . implode(', ', array_unique($restoredDeadlines)) . '.';
+        }
+
+        $back = $request->input('back');
+        if ($back) {
+            return redirect($back)->with('status', $message);
         }
 
         return redirect()->route('admin.maintenance-records.index')->with('status', $message);

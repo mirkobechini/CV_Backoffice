@@ -46,8 +46,8 @@ class DeadlineController extends Controller
             $deadlines = $deadlinesQuery
                 ->whereIn('type', [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN])
                 ->get()
-                ->sortByDesc(fn (Deadline $d) => $d->due_date?->format('Y-m-d') ?? '')
-                ->unique(fn (Deadline $d) => ($d->vehicle_id ?? 'N/A').'|'.($d->type ?? 'N/A'))
+                ->sortByDesc(fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '')
+                ->unique(fn(Deadline $d) => ($d->vehicle_id ?? 'N/A') . '|' . ($d->type ?? 'N/A'))
                 ->values();
         } else {
             $deadlines = $deadlinesQuery->get();
@@ -56,10 +56,10 @@ class DeadlineController extends Controller
         Deadline::syncStatusesFromRules($deadlines);
 
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
-            'type' => fn (Deadline $d) => $d->type,
-            'status' => fn (Deadline $d) => $d->automatic_status,
-            'vehicle' => fn (Deadline $d) => $d->vehicle?->internal_code ?? '',
-            'date' => fn (Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
+            'type' => fn(Deadline $d) => $d->type,
+            'status' => fn(Deadline $d) => $d->automatic_status,
+            'vehicle' => fn(Deadline $d) => $d->vehicle?->internal_code ?? '',
+            'date' => fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
         ]);
 
         $groupedDeadlines = $this->applyGrouping($deadlines, $groupBy, function (Deadline $deadline) use ($groupBy) {
@@ -78,9 +78,9 @@ class DeadlineController extends Controller
         });
 
         return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly') + [
-            'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.deadlines.index'),
-            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
-            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.deadlines.index'),
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -154,10 +154,15 @@ class DeadlineController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Deadline $deadline)
+    public function destroy(Request $request, Deadline $deadline)
     {
         $this->authorize('delete', $deadline);
         $deadline->delete();
+
+        $back = $request->input('back');
+        if ($back) {
+            return redirect($back)->with('success', 'Scadenza eliminata con successo.');
+        }
 
         return redirect()->route('admin.deadlines.index')->with('success', 'Scadenza eliminata con successo.');
     }
