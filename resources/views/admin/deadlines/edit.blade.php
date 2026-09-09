@@ -125,71 +125,58 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-                const vehicleSelect = document.getElementById('vehicle_id');
-                const typeSelect = document.getElementById('type');
-                const oxygenOption = document.getElementById('oxygen-type-option');
-                const dueDateGroup = document.getElementById('due-date-group');
-                const dueDateInput = document.getElementById('due_date');
-                const kmSettingsGroup = document.getElementById('km-settings-group');
-                const ministerialType = 'Revisione Ministeriale';
-                const oxygenType = 'Revisione Impianto Ossigeno';
-                const kmTypes = ['Tagliando', 'Cinghia Distribuzione'];
+            const vehicleSelect = document.getElementById('vehicle_id');
+            const typeSelect = document.getElementById('type');
+            const oxygenOption = document.getElementById('oxygen-type-option');
+            const dueDateGroup = document.getElementById('due-date-group');
+            const dueDateInput = document.getElementById('due_date');
+            const kmSettingsGroup = document.getElementById('km-settings-group');
+            const ministerialType = 'Revisione Ministeriale';
+            const oxygenType = 'Revisione Impianto Ossigeno';
+            const kmTypes = ['Tagliando', 'Cinghia Distribuzione'];
 
-                // Abilita revisione ossigeno solo per tipologie mezzo che la prevedono.
-                const selectedVehicleNeedsOxygenCheck = () => {
-                    const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+            // Abilita revisione ossigeno solo per tipologie mezzo che la prevedono.
+            const selectedVehicleNeedsOxygenCheck = () => {
+                const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
 
-                    if (!selectedOption) {
-                        return false;
-                    }
+                if (!selectedOption) {
+                    return false;
+                }
 
-                    return selectedOption.getAttribute('data-needs-oxygen-check') === '1';
-                };
+                return selectedOption.getAttribute('data-needs-oxygen-check') === '1';
+            };
 
-                const syncOxygenTypeAvailability = () => {
-                    const canUseOxygenType = selectedVehicleNeedsOxygenCheck();
-                    oxygenOption.disabled = !canUseOxygenType;
+            const syncOxygenTypeAvailability = () => {
+                const canUseOxygenType = selectedVehicleNeedsOxygenCheck();
+                oxygenOption.disabled = !canUseOxygenType;
 
-                    if (!canUseOxygenType && typeSelect.value === oxygenType) {
-                        typeSelect.value = '';
-                    }
-                };
+                if (!canUseOxygenType && typeSelect.value === oxygenType) {
+                    typeSelect.value = '';
+                }
+            };
 
-                // La data manuale è richiesta solo per scadenze non auto-calcolate.
-                const toggleVisibility = () => {
-                    const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
-                    const isKmType = kmTypes.includes(typeSelect.value);
+            // La data manuale è richiesta solo per scadenze non auto-calcolate.
+            const toggleVisibility = () => {
+                const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
+                const isKmType = kmTypes.includes(typeSelect.value);
 
-                    dueDateGroup.style.display = isAutoCalculated ? 'none' : '';
-                    dueDateInput.disabled = isAutoCalculated;
+                dueDateGroup.style.display = isAutoCalculated ? 'none' : '';
+                dueDateInput.disabled = isAutoCalculated;
 
-                    kmSettingsGroup.style.display = isKmType ? '' : 'none';
+                kmSettingsGroup.style.display = isKmType ? '' : 'none';
 
-                    if (isAutoCalculated) {
-                        dueDateInput.value = '';
-                    }
-                };
+                if (isAutoCalculated) {
+                    dueDateInput.value = '';
+                }
+            };
 
+            syncOxygenTypeAvailability();
+            toggleVisibility();
+            vehicleSelect.addEventListener('change', () => {
                 syncOxygenTypeAvailability();
                 toggleVisibility();
-                vehicleSelect.addEventListener('change', () => {
-                    syncOxygenTypeAvailability();
-                    toggleVisibility();
-                });
-                typeSelect.addEventListener('change', toggleVisibility);
-            } else {
-                dueDateGroup.style.display = '';
-                dueDateInput.disabled = false;
-            }
-        };
-
-        syncOxygenTypeAvailability();
-        toggleDueDateVisibility();
-        vehicleSelect.addEventListener('change', () => {
-            syncOxygenTypeAvailability();
-            toggleDueDateVisibility();
-        });
-        typeSelect.addEventListener('change', toggleDueDateVisibility);
+            });
+            typeSelect.addEventListener('change', toggleVisibility);
         });
     </script>
 @endsection
