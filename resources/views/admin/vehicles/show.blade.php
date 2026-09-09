@@ -53,29 +53,82 @@
                             </div>
                             <div class="col-12 col-md-5 mb-4 mb-md-0">
                                 <h5 class="mb-0 mb-md-3">Scadenze</h5>
+                                @php
+                                    $revisione = $deadlines->get($deadlinesTypes['revisione']);
+                                    $ossigeno = $deadlines->get($deadlinesTypes['ossigeno']);
+                                    $tagliando = $deadlines->get($deadlinesTypes['tagliando']);
+                                    $cinghia = $deadlines->get($deadlinesTypes['cinghia']);
+                                    $assicurazione = $deadlines->get('Assicurazione');
+                                @endphp
                                 <span class="card-text d-block"><strong>Revisione:</strong>
-                                    {{ $deadlines->get($deadlinesTypes['revisione'])?->due_date_formatted ?? 'N/A' }}
-                                    {!! $deadlines->get($deadlinesTypes['revisione'])?->getAutomaticStatusAttribute() === 'expired'
+                                    {{ $revisione?->due_date_formatted ?? 'N/A' }}
+                                    {!! $revisione?->getAutomaticStatusAttribute() === 'expired'
                                         ? '<i class="fa-solid fa-times text-danger"></i>'
                                         : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                    @if ($revisione)
+                                        <a class="btn btn-sm btn-outline-primary"
+                                            href="{{ route('admin.deadlines.show', $revisione->id) }}"><i
+                                                class="bi bi-eye"></i></a>
+                                        <a class="btn btn-sm btn-outline-warning"
+                                            href="{{ route('admin.deadlines.edit', $revisione->id) }}"><i
+                                                class="bi bi-pencil"></i></a>
+                                    @endif
                                 </span>
                                 @if ($vehicle->vehicleType?->needs_oxygen_check)
                                     <span class="card-text d-block"><strong>Revisione Ossigeno:</strong>
-                                        {{ $deadlines->get($deadlinesTypes['ossigeno'])?->due_date_formatted ?? 'N/A' }}
-                                        {!! $deadlines->get($deadlinesTypes['ossigeno'])?->getAutomaticStatusAttribute() === 'expired'
+                                        {{ $ossigeno?->due_date_formatted ?? 'N/A' }}
+                                        {!! $ossigeno?->getAutomaticStatusAttribute() === 'expired'
                                             ? '<i class="fa-solid fa-times text-danger"></i>'
                                             : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                        @if ($ossigeno)
+                                            <a class="btn btn-sm btn-outline-primary"
+                                                href="{{ route('admin.deadlines.show', $ossigeno->id) }}"><i
+                                                    class="bi bi-eye"></i></a>
+                                            <a class="btn btn-sm btn-outline-warning"
+                                                href="{{ route('admin.deadlines.edit', $ossigeno->id) }}"><i
+                                                    class="bi bi-pencil"></i></a>
+                                        @endif
                                     </span>
                                 @endif
-                                <span class="card-text d-block"><strong>Tagliando:</strong> </span>
+                                <span class="card-text d-block"><strong>Tagliando:</strong>
+                                    {{ $tagliando?->due_date_formatted ?? 'N/A' }}
+                                    {!! $tagliando?->getAutomaticStatusAttribute() === 'expired'
+                                        ? '<i class="fa-solid fa-times text-danger"></i>'
+                                        : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                    @if ($tagliando)
+                                        <a class="btn btn-sm btn-outline-primary"
+                                            href="{{ route('admin.deadlines.show', $tagliando->id) }}"><i
+                                                class="bi bi-eye"></i></a>
+                                        <a class="btn btn-sm btn-outline-warning"
+                                            href="{{ route('admin.deadlines.edit', $tagliando->id) }}"><i
+                                                class="bi bi-pencil"></i></a>
+                                    @endif
+                                </span>
                                 <span class="card-text d-block"><strong>Assicurazione:</strong>
-                                    {{ $deadlines->get('Assicurazione')?->due_date_formatted ?? 'N/A' }}</span>
+                                    {{ $assicurazione?->due_date_formatted ?? 'N/A' }}
+                                    @if ($assicurazione)
+                                        <a class="btn btn-sm btn-outline-primary"
+                                            href="{{ route('admin.deadlines.show', $assicurazione->id) }}"><i
+                                                class="bi bi-eye"></i></a>
+                                        <a class="btn btn-sm btn-outline-warning"
+                                            href="{{ route('admin.deadlines.edit', $assicurazione->id) }}"><i
+                                                class="bi bi-pencil"></i></a>
+                                    @endif
+                                </span>
                                 @if ($vehicle->has_timing_belt)
                                     <span class="card-text d-block"><strong>Cinghia Distribuzione:</strong>
-                                        {{ $deadlines->get($deadlinesTypes['cinghia'])?->due_date_formatted ?? 'N/A' }}
-                                        {!! $deadlines->get($deadlinesTypes['cinghia'])?->getAutomaticStatusAttribute() === 'expired'
+                                        {{ $cinghia?->due_date_formatted ?? 'N/A' }}
+                                        {!! $cinghia?->getAutomaticStatusAttribute() === 'expired'
                                             ? '<i class="fa-solid fa-times text-danger"></i>'
                                             : '<i class="fa-solid fa-check text-success"></i>' !!}
+                                        @if ($cinghia)
+                                            <a class="btn btn-sm btn-outline-primary"
+                                                href="{{ route('admin.deadlines.show', $cinghia->id) }}"><i
+                                                    class="bi bi-eye"></i></a>
+                                            <a class="btn btn-sm btn-outline-warning"
+                                                href="{{ route('admin.deadlines.edit', $cinghia->id) }}"><i
+                                                    class="bi bi-pencil"></i></a>
+                                        @endif
                                     </span>
                                 @endif
 

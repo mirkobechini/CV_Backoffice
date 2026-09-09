@@ -313,7 +313,7 @@ class MaintenanceRecordController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(MaintenanceRecord $maintenanceRecord)
+    public function destroy(Request $request, MaintenanceRecord $maintenanceRecord)
     {
         $this->authorize('delete', $maintenanceRecord);
         $maintenanceRecord->loadMissing('items.itemable');
@@ -339,18 +339,28 @@ class MaintenanceRecordController extends Controller
             ->filter(fn($d) => $d->is_renewed);
 
         foreach ($renewedDeadlines as $deadline) {
-            // Trova la scadenza successiva creata dal rinnovo (stesso veicolo/tipo,
-            // non rinnovata, con data successiva alla data dell'appuntamento).
+            // La scadenza successiva creata dal rinnovo è quella con la data
+            // più vicina a (data rientro + intervallo) e non rinnovata.
             $baseDate = Carbon::parse($maintenanceRecord->return_date ?? $maintenanceRecord->appointment_date ?? Carbon::today());
-            $nextDeadline = $maintenanceRecord->vehicle->deadlines()
-                ->where('type', $deadline->type)
-                ->where('is_renewed', false)
-                ->where('due_date', '>', $baseDate->toDateString())
-                ->orderBy('due_date')
-                ->first();
 
-            if ($nextDeadline) {
-                $nextDeadline->delete();
+            // Calcola la data attesa della scadenza successiva
+            $expectedDueDate = match ($deadline->type) {
+                Deadline::TYPE_TAGLIANDO => $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS),
+                Deadline::TYPE_MINISTERIAL => $baseDate->copy()->addMonthsNoOverflow((int) ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0)),
+                Deadline::TYPE_OXYGEN => $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS),
+                default => null,
+            };
+
+            if ($expectedDueDate) {
+                $nextDeadline = $maintenanceRecord->vehicle->deadlines()
+                    ->where('type', $deadline->type)
+                    ->where('is_renewed', false)
+                    ->where('due_date', $expectedDueDate->toDateString())
+                    ->first();
+
+                if ($nextDeadline) {
+                    $nextDeadline->delete();
+                }
             }
 
             // Riporta la scadenza originale a pending
@@ -368,6 +378,11 @@ class MaintenanceRecordController extends Controller
         $message = 'Intervento eliminato con successo.';
         if (! empty($restoredDeadlines)) {
             $message .= ' Ripristinate le scadenze: ' . implode(', ', array_unique($restoredDeadlines)) . '.';
+        }
+
+        $back = $request->input('back');
+        if ($back) {
+            return redirect($back)->with('status', $message);
         }
 
         return redirect()->route('admin.maintenance-records.index')->with('status', $message);
@@ -462,6 +477,12 @@ class MaintenanceRecordController extends Controller
             return;
         }
 
+        // La cinghia ha una logica dedicata (intervallo giorni + km).
+        if ($deadline->type === Deadline::TYPE_CINGHIA) {
+            $this->renewTimingBeltDeadline($maintenanceRecord);
+            return;
+        }
+
         // Tutte le scadenze partono dalla data di RIENTRO.
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
         $nextDueDate = null;
@@ -517,51 +538,31 @@ class MaintenanceRecordController extends Controller
             ->filter();
 
         foreach ($completedDeadlines as $deadline) {
-            if (in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
+            if (in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
                 $this->renewDeadline($maintenanceRecord, $deadline);
             }
-        }
-
-        // Cambio cinghia distribuzione
-        if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && ! empty($completedDeadlineIds)) {
-            $this->renewTimingBeltDeadline($maintenanceRecord);
         }
     }
 
     /**
      * Rinnova la scadenza della cinghia di distribuzione dopo un cambio.
      * La nuova scadenza riparte dalla data e dal chilometraggio del cambio.
+     * Crea SEMPRE una nuova scadenza per mantenere lo storico completo.
      */
     private function renewTimingBeltDeadline(MaintenanceRecord $maintenanceRecord): void
     {
-        $deadline = $maintenanceRecord->vehicle->deadlines()
-            ->where('type', Deadline::TYPE_CINGHIA)
-            ->first();
-
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
         $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
 
-        if ($deadline) {
-            // Aggiorna la scadenza esistente
-            $deadline->due_date = $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS);
-            $deadline->last_mileage = $baseKm;
-            $deadline->interval_km = Deadline::TIMING_BELT_INTERVAL_KM;
-            $deadline->interval_days = Deadline::TIMING_BELT_INTERVAL_DAYS;
-            $deadline->status = Deadline::STATUS_PENDING;
-            $deadline->is_renewed = false;
-            $deadline->save();
-        } else {
-            // Crea la scadenza se non esiste
-            Deadline::create([
-                'vehicle_id' => $maintenanceRecord->vehicle_id,
-                'type' => Deadline::TYPE_CINGHIA,
-                'due_date' => $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS)->toDateString(),
-                'last_mileage' => $baseKm,
-                'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
-                'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
-                'status' => Deadline::STATUS_PENDING,
-            ]);
-        }
+        Deadline::create([
+            'vehicle_id' => $maintenanceRecord->vehicle_id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'due_date' => $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS)->toDateString(),
+            'last_mileage' => $baseKm,
+            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+            'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+            'status' => Deadline::STATUS_PENDING,
+        ]);
     }
 
     /**

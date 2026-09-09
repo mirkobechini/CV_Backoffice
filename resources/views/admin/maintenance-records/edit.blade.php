@@ -280,12 +280,10 @@
 
                 if (!closedIssueSection) {
                     // Sezione non presente: nessun guasto risolto disponibile.
-                } else if (!selectedVehicleId) {
+                } else if (!selectedVehicleId || !hasVisibleClosedIssue) {
+                    // Nascondi completamente se nessun guasto risolto per il veicolo
                     closedIssueSection.style.display = 'none';
                     noClosedIssueMsg.classList.add('d-none');
-                } else if (!hasVisibleClosedIssue) {
-                    closedIssueSection.style.display = '';
-                    noClosedIssueMsg.classList.remove('d-none');
                 } else {
                     closedIssueSection.style.display = '';
                     noClosedIssueMsg.classList.add('d-none');
