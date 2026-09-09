@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.0.0] - 2026-09-09
+
+### Added
+
+- **E1** — Rinnovo di tutte le scadenze per selezione (tagliando, cinghia, ministeriale, ossigeno, ferie): ogni rinnovo crea un nuovo record preservando lo storico.
+- **E2** — La cinghia ora si rinnova per selezione (non più per `activity_type`) con chilometraggio obbligatorio, come i tagliandi.
+- **E3** — Rilevamento conflitti: gli appuntamenti sovrapposti per lo stesso veicolo vengono rifiutati con messaggio dedicato.
+- **E4** — Sezione guasti risolti nascosta quando non ci sono guasti risolti da collegare all'appuntamento.
+- **E5** — Badge versione nell'header, alimentato da `config('app.version')`.
+
 ### Fixed
 
 - **B1** — `syncStatusFromRules()` ora preserva lo stato delle scadenze marcate come rinnovate (`is_renewed = true`), aggiungendo un early return.

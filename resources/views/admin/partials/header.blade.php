@@ -4,6 +4,8 @@
             <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ route('dashboard') }}">
                 <i class="fa-solid fa-car me-2"></i>
                 <span class="brand-text">{{ config('app.name', 'CV Backoffice') }}</span>
+                <span class="badge text-bg-secondary ms-2 small"
+                    style="font-size: 0.65rem; vertical-align: middle;">{{ config('app.version') }}</span>
             </a>
 
             {{-- Notifiche --}}
