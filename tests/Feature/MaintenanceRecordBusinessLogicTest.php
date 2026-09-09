@@ -680,4 +680,53 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'status' => 'closed',
         ]);
     }
+
+    public function test_renewing_tagliando_twice_creates_two_new_deadlines(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $tagliando = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'status' => 'pending',
+            'due_date' => '2023-12-30',
+        ]);
+
+        // Primo rinnovo
+        $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'deadline_ids' => [$tagliando->id],
+            'completed_deadline_ids' => [$tagliando->id],
+            'appointment_date' => '2024/10/18',
+            'return_date' => '2024/10/18',
+            'mileage_at_service' => 16156,
+        ]);
+
+        // Secondo rinnovo (nuovo tagliando creato dal primo rinnovo)
+        $secondTagliando = Deadline::where('vehicle_id', $vehicle->id)
+            ->where('type', Deadline::TYPE_TAGLIANDO)
+            ->where('id', '!=', $tagliando->id)
+            ->first();
+
+        $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'deadline_ids' => [$secondTagliando->id],
+            'completed_deadline_ids' => [$secondTagliando->id],
+            'appointment_date' => '2025/10/18',
+            'return_date' => '2025/10/18',
+            'mileage_at_service' => 30000,
+        ]);
+
+        // Devono esserci 4 tagliandi totali:
+        // 1 dal VehicleObserver + 1 originale del test + 2 nuovi rinnovi
+        $count = Deadline::where('vehicle_id', $vehicle->id)
+            ->where('type', Deadline::TYPE_TAGLIANDO)
+            ->count();
+
+        $this->assertEquals(4, $count);
+    }
 }

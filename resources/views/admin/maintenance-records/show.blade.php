@@ -85,7 +85,10 @@
                 </div>
             </div>
             <div class="col-12">
-                @if ($maintenanceRecord->items->where('itemable_type', 'App\\Models\\Issue')->first()?->itemable?->status !== 'closed')
+                @if (
+                    $maintenanceRecord->return_date === null &&
+                        $maintenanceRecord->items->where('itemable_type', 'App\\Models\\Issue')->first()?->itemable?->status !==
+                            'closed')
                     <x-admin.complete-maintenance-modal :maintenanceRecord="$maintenanceRecord" />
                 @endif
                 @if ($maintenanceRecord?->getKey())
