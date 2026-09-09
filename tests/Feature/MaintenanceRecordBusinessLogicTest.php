@@ -729,4 +729,52 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
 
         $this->assertEquals(4, $count);
     }
+
+    public function test_store_rejects_overlapping_appointment(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        // Appuntamento esistente dal 26/09 al 02/10
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-09-26',
+            'return_date' => '2025-10-02',
+        ]);
+
+        // Nuovo appuntamento il 28/09 (sovrapposto)
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-09-28',
+        ]);
+
+        $response->assertSessionHasErrors('appointment_date');
+    }
+
+    public function test_store_allows_non_overlapping_appointment(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        // Appuntamento esistente dal 26/09 al 02/10
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-09-26',
+            'return_date' => '2025-10-02',
+        ]);
+
+        // Nuovo appuntamento il 05/10 (non sovrapposto)
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-10-05',
+        ]);
+
+        $response->assertRedirect();
+    }
 }
