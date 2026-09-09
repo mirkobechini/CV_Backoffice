@@ -777,4 +777,71 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
 
         $response->assertRedirect();
     }
+
+    public function test_store_with_completed_cinghia_creates_next_deadline(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $cinghia = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'due_date' => '2024-01-01',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'deadline_ids' => [$cinghia->id],
+            'completed_deadline_ids' => [$cinghia->id],
+            'appointment_date' => '2024/10/18',
+            'return_date' => '2024/10/18',
+            'mileage_at_service' => 50000,
+        ]);
+
+        $response->assertRedirect();
+
+        // La cinghia è rinnovata
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $cinghia->id,
+            'status' => 'renewed',
+            'is_renewed' => true,
+        ]);
+
+        // Una nuova scadenza cinghia è creata (data rientro + 3650 giorni)
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'last_mileage' => 50000,
+            'interval_km' => 100000,
+        ]);
+    }
+
+    public function test_store_requires_mileage_when_cinghia_selected(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $cinghia = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'due_date' => '2024-01-01',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'deadline_ids' => [$cinghia->id],
+            'appointment_date' => '2024/10/18',
+            'return_date' => '2024/10/18',
+            // mileage_at_service mancante
+        ]);
+
+        $response->assertSessionHasErrors('mileage_at_service');
+    }
 }
