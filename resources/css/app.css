@@ -1,0 +1,318 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================
+   Tema Dashboard Pro — variabili CSS
+   ============================================= */
+
+:root,
+[data-bs-theme="light"] {
+    --bg: #eef0f4;
+    --surface: #ffffff;
+    --surface-2: #f4f6f9;
+    --surface-3: #e9edf2;
+    --text: #0f172a;
+    --text-muted: #5b6472;
+    --border: #dbe0e8;
+    --primary: #4f46e5;
+    --primary-soft: #eef0ff;
+    --green: #059669;
+    --green-soft: #e7f5ef;
+    --red: #dc2626;
+    --red-soft: #fdecec;
+    --amber: #d97706;
+    --amber-soft: #fdf3e3;
+    --gray-soft: #eef0f4;
+    --blue: #2563eb;
+    --blue-soft: #eff4ff;
+    --purple: #7c3aed;
+    --purple-soft: #f3eefc;
+    --tagliando: #4f46e5;
+    --cinghia: #7c3aed;
+    --ministeriale: #0891b2;
+    --ossigeno: #16a34a;
+    --guasto: #dc2626;
+    --sidebar-bg: #111827;
+    --radius: 6px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+[data-bs-theme="dark"] {
+    --bg: #0b0f17;
+    --surface: #151a24;
+    --surface-2: #1a202c;
+    --surface-3: #222a38;
+    --text: #e5e9f0;
+    --text-muted: #8b93a3;
+    --border: #273043;
+    --primary: #6366f1;
+    --primary-soft: #23294a;
+    --green: #10b981;
+    --green-soft: #17392f;
+    --red: #f87171;
+    --red-soft: #3b1f1f;
+    --amber: #f59e0b;
+    --amber-soft: #3b2f17;
+    --gray-soft: #1e2530;
+    --blue: #60a5fa;
+    --blue-soft: #1e2f45;
+    --purple: #a78bfa;
+    --purple-soft: #2b2440;
+    --tagliando: #818cf8;
+    --cinghia: #a78bfa;
+    --ministeriale: #22d3ee;
+    --ossigeno: #34d399;
+    --guasto: #f87171;
+    --sidebar-bg: #0d1117;
+    --radius: 6px;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* =============================================
+   Base
+   ============================================= */
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family:
+        "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+}
+
+/* =============================================
+   Layout app (sidebar + main)
+   ============================================= */
+
+.app-dp {
+    display: flex;
+    min-height: 100vh;
+}
+
+.main-dp {
+    flex: 1;
+    min-width: 0;
+    padding: 18px 20px;
+    background-color: var(--bg);
+}
+
+/* =============================================
+   Sidebar
+   ============================================= */
+
+.sidebar-dp {
+    width: 200px;
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    flex-shrink: 0;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-weight: 700;
+    font-size: 14px;
+    color: #fff;
+    text-decoration: none;
+}
+
+.sidebar-logo {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--primary);
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.sidebar-section {
+    padding: 14px 14px 4px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #6b7280;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 14px;
+    color: #b0b7c4;
+    font-size: 13px;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition:
+        background-color 0.12s,
+        color 0.12s;
+}
+
+.sidebar-link:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e5e7eb;
+}
+
+.sidebar-link.active {
+    background: rgba(255, 255, 255, 0.07);
+    border-left-color: var(--primary);
+    color: #fff;
+    font-weight: 600;
+}
+
+.sidebar-link i {
+    width: 16px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 10px 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #e5e7eb;
+    font-size: 12.5px;
+}
+
+.sidebar-user-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--primary);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.sidebar-user-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+}
+
+.sidebar-logout {
+    color: #b0b7c4;
+    font-size: 13px;
+    text-decoration: none;
+    padding: 4px;
+    border-radius: 4px;
+}
+
+.sidebar-logout:hover {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+}
+
+/* =============================================
+   Topbar (notifiche + theme toggle)
+   ============================================= */
+
+.topbar-dp {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+}
+
+.topbar-spacer {
+    flex: 1;
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.topbar-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    cursor: pointer;
+    transition:
+        background-color 0.12s,
+        color 0.12s;
+}
+
+.topbar-btn:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+/* =============================================
+   Responsive sidebar
+   ============================================= */
+
+@media (max-width: 991.98px) {
+    .sidebar-dp {
+        display: none;
+    }
+
+    .main-dp {
+        padding: 14px;
+    }
+}
+
+/* =============================================
+   Componenti riutilizzabili (via @apply)
+   ============================================= */
+
+.card-dp {
+    @apply bg-surface border border-line rounded shadow;
+}
+
+.btn-dp {
+    @apply inline-flex items-center gap-2 font-semibold text-[12.5px] h-9 px-3 rounded border border-line bg-surface text-ink;
+}
+
+.btn-dp-primary {
+    @apply inline-flex items-center gap-2 font-semibold text-[12.5px] h-9 px-3 rounded bg-brand text-white border-brand;
+}
+
+.badge-dp {
+    @apply inline-flex items-center gap-1 text-[11px] font-semibold rounded-full px-2 py-0.5 whitespace-nowrap;
+}
+
+.input-dp {
+    @apply w-full h-10 px-3 rounded border border-line bg-surface text-ink text-[13.5px] outline-none;
+}
