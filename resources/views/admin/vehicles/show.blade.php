@@ -139,37 +139,41 @@
                 @if ($vehicle->deadlines->isEmpty())
                     <p class="card-text">Nessuna scadenza registrata per questo veicolo.</p>
                 @else
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover align-middle">
-                            <thead>
-                                <tr>
-                                    <th>Tipo</th>
-                                    <th>Data scadenza</th>
-                                    <th>Stato</th>
-                                    <th>Rinnovata</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($vehicle->deadlines->sortByDesc('due_date') as $deadline)
+                    @php
+                        $deadlinesByType = $vehicle->deadlines->sortByDesc('due_date')->groupBy('type');
+                    @endphp
+                    @foreach ($deadlinesByType as $type => $typeDeadlines)
+                        <h5 class="mt-3">{{ $type }}</h5>
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover align-middle">
+                                <thead>
                                     <tr>
-                                        <td>{{ $deadline->type }}</td>
-                                        <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
-                                        <td>
-                                            <span
-                                                class="badge bg-{{ match ($deadline->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $deadline->status_label }}</span>
-                                        </td>
-                                        <td>
-                                            @if ($deadline->is_renewed)
-                                                <i class="fa-solid fa-check text-success"></i>
-                                            @else
-                                                <i class="fa-solid fa-times text-muted"></i>
-                                            @endif
-                                        </td>
+                                        <th>Data scadenza</th>
+                                        <th>Stato</th>
+                                        <th>Rinnovata</th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody>
+                                    @foreach ($typeDeadlines as $deadline)
+                                        <tr>
+                                            <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
+                                            <td>
+                                                <span
+                                                    class="badge bg-{{ match ($deadline->status_color) {'red' => 'danger','yellow' => 'warning text-dark','green' => 'success',default => 'secondary'} }}">{{ $deadline->status_label }}</span>
+                                            </td>
+                                            <td>
+                                                @if ($deadline->is_renewed)
+                                                    <i class="fa-solid fa-check text-success"></i>
+                                                @else
+                                                    <i class="fa-solid fa-times text-muted"></i>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endforeach
                 @endif
             </div>
         </div>
