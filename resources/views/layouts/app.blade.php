@@ -39,10 +39,15 @@
         @include('admin.partials.header')
 
         <main class="main-dp">
-            {{-- Topbar: notifiche + theme toggle --}}
+            {{-- Topbar: azioni + theme switch --}}
             <div class="topbar-dp">
                 <div class="topbar-spacer"></div>
                 <div class="topbar-actions">
+                    <div class="theme-switch" id="theme-switch" role="group" aria-label="{{ __('Cambia tema') }}">
+                        <button type="button" data-theme="auto" class="on">{{ __('Auto') }}</button>
+                        <button type="button" data-theme="light" title="{{ __('Chiaro') }}">☀️</button>
+                        <button type="button" data-theme="dark" title="{{ __('Scuro') }}">🌙</button>
+                    </div>
                     <a href="{{ route('notifications.index') }}" class="topbar-btn position-relative"
                         title="{{ __('Notifiche') }}">
                         <i class="fa-solid fa-bell"></i>
@@ -51,9 +56,6 @@
                                 class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ auth()->user()?->notifications()->where('is_read', false)->count() }}</span>
                         @endif
                     </a>
-                    <button id="theme-toggle" class="topbar-btn" type="button" aria-label="{{ __('Cambia tema') }}">
-                        <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
-                    </button>
                 </div>
             </div>
 
