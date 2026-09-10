@@ -1,7 +1,5 @@
 import './bootstrap';
 import './vehicle-type-equipment';
-import '~resources/scss/app.scss';
-import '~icons/bootstrap-icons.scss';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
 import * as bootstrap from 'bootstrap';
@@ -12,25 +10,34 @@ import.meta.glob([
 ])
 
 const applyTheme = (theme) => {
-    document.documentElement.setAttribute('data-bs-theme', theme);
-    const icon = document.getElementById('theme-toggle-icon');
+    // 'auto' rispetta la preferenza di sistema
+    const effective = theme === 'auto'
+        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        : theme;
 
-    if (icon) {
-        icon.className = theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    document.documentElement.setAttribute('data-bs-theme', effective);
+
+    // Evidenzia il bottone attivo nel theme switch
+    const switchEl = document.getElementById('theme-switch');
+    if (switchEl) {
+        switchEl.querySelectorAll('button').forEach((btn) => {
+            btn.classList.toggle('on', btn.dataset.theme === theme);
+        });
     }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    const themeToggle = document.getElementById('theme-toggle');
-    const savedTheme = localStorage.getItem('theme') || 'light';
+    const themeSwitch = document.getElementById('theme-switch');
+    const savedTheme = localStorage.getItem('theme') || 'auto';
 
     applyTheme(savedTheme);
 
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-bs-theme') || 'light';
-            const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    if (themeSwitch) {
+        themeSwitch.addEventListener('click', (e) => {
+            const btn = e.target.closest('button[data-theme]');
+            if (!btn) return;
 
+            const nextTheme = btn.dataset.theme;
             localStorage.setItem('theme', nextTheme);
             applyTheme(nextTheme);
         });
