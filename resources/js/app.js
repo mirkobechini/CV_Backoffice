@@ -51,12 +51,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeSidebar = () => {
         sidebar?.classList.remove('is-open');
         sidebarBackdrop?.classList.remove('is-open');
+        sidebarToggle.hidden = false;
     };
 
     if (sidebar && sidebarToggle && sidebarBackdrop) {
         sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('is-open');
-            sidebarBackdrop.classList.toggle('is-open');
+            sidebar.classList.add('is-open');
+            sidebarBackdrop.classList.add('is-open');
+            // Nasconde l'hamburger mentre il menu è aperto: la sidebar
+            // stessa resta l'unico modo per navigare o chiuderla.
+            sidebarToggle.hidden = true;
         });
 
         sidebarBackdrop.addEventListener('click', closeSidebar);

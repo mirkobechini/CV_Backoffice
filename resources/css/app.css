@@ -1248,6 +1248,10 @@ body.modal-open {
         display: grid;
     }
 
+    .menu-toggle[hidden] {
+        display: none;
+    }
+
     .main-dp {
         padding: 14px;
     }
