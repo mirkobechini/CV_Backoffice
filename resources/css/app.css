@@ -83,6 +83,9 @@ body {
     font-family:
         "Inter", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
     font-size: 14px;
+    /* Rete di sicurezza: lo scroll orizzontale delle tabelle deve restare
+       confinato dentro .table-responsive, non trascinare l'intera pagina. */
+    overflow-x: hidden;
 }
 
 /* =============================================
@@ -1079,6 +1082,58 @@ body {
 }
 
 /* =============================================
+   Table card: responsive (mobile)
+   ============================================= */
+
+.table-responsive {
+    /* Scroll orizzontale confinato dentro la card invece di far
+       traboccare l'intera pagina (regola persa con Bootstrap). */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767.98px) {
+    .table-card table {
+        min-width: 620px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .toolbar-left {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .toolbar>.filters:last-child {
+        width: 100%;
+    }
+
+    .toolbar>.filters:last-child .search {
+        flex: 1;
+        width: auto;
+    }
+
+    .toolbar>.filters:last-child .search input {
+        width: 100%;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 8px;
+        align-items: stretch;
+        text-align: center;
+    }
+
+    .pagination nav {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* =============================================
    Dettaglio veicolo
    ============================================= */
 
@@ -1679,6 +1734,282 @@ body {
     .row3 {
         grid-template-columns: 1fr;
     }
+}
+
+/* =============================================
+   Scadenze: index (th sort/group toggle, gruppi)
+   ============================================= */
+
+.th-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.th-wrap .mini {
+    min-width: 26px;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background .12s, color .12s;
+}
+
+.th-wrap .mini:hover {
+    background: var(--surface-2);
+    color: var(--text);
+}
+
+.th-wrap .mini.on {
+    background: var(--primary);
+    color: #fff;
+    border-color: var(--primary);
+}
+
+.type-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.type-name {
+    font-weight: 600;
+    font-size: 12.5px;
+}
+
+.dl-badges {
+    display: inline-flex;
+    gap: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.group-row td {
+    background: var(--surface-3);
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+    padding: 8px 12px;
+}
+
+/* =============================================
+   Scadenze: dettaglio
+   ============================================= */
+
+.dl-header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+}
+
+.dl-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    color: #fff;
+    background: linear-gradient(135deg, var(--primary), var(--purple));
+    flex-shrink: 0;
+}
+
+.dl-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.dl-title .sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.dl-status {
+    margin-left: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.dl-status .hint {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.dl-countdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.dl-cd-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: var(--shadow);
+}
+
+.dl-cd-card .lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-weight: 600;
+}
+
+.dl-cd-card .val {
+    font-size: 24px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.dl-cd-card .sub {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.dl-cd-card .val.red {
+    color: var(--red);
+}
+
+.dl-cd-card .val.amber {
+    color: var(--amber);
+}
+
+.dl-cd-card .val.green {
+    color: var(--green);
+}
+
+.dl-info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-top: 16px;
+}
+
+.dl-info-card .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.dl-info-card .head h3 {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.dl-info-card .body {
+    padding: 6px 20px;
+}
+
+.dl-kv {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.dl-kv:last-child {
+    border-bottom: none;
+}
+
+.dl-kv .k {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.dl-kv .v {
+    font-size: 14px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.dl-veh-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.dl-veh-link .arrow {
+    color: var(--text-muted);
+}
+
+@media (max-width: 1000px) {
+    .dl-header {
+        flex-wrap: wrap;
+    }
+
+    .dl-status {
+        margin-left: 0;
+    }
+}
+
+/* =============================================
+   Scadenze: form (box km evidenziato)
+   ============================================= */
+
+.km-box {
+    border: 1.5px dashed var(--primary);
+    border-radius: var(--radius);
+    background: var(--primary-soft);
+    padding: 16px 20px;
+    margin-top: 6px;
+}
+
+.km-box .title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.km-box .title .ic {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--primary);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+}
+
+.km-box .hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
 }
 
 /* =============================================

@@ -21,7 +21,7 @@
                             <label for="vehicle_id" class="form-label">Veicolo</label>
                             <select class="form-select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
                                 name="vehicle_id" required>
-                                <option value="">Seleziona un veicolo</option>
+                                <option value="" disabled>Seleziona un veicolo</option>
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         {{ old('vehicle_id', $maintenanceRecord->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
@@ -139,7 +139,7 @@
                             <label for="provider_id" class="form-label">Officina</label>
                             <select class="form-select @error('provider_id') is-invalid @enderror" id="provider_id"
                                 name="provider_id" required>
-                                <option value="">Seleziona un'officina</option>
+                                <option value="" disabled>Seleziona un'officina</option>
                                 @foreach ($providers as $provider)
                                     <option value="{{ $provider->id }}"
                                         {{ old('provider_id', $maintenanceRecord->provider_id) == $provider->id ? 'selected' : '' }}>
@@ -159,7 +159,7 @@
                             <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
                                 name="activity_type"
                                 value="{{ old('activity_type', $maintenanceRecord->activity_type) }}">
-                                <option value="">Seleziona una tipologia</option>
+                                <option value="" disabled>Seleziona una tipologia</option>
                                 @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
                                     <option value="{{ $item }}"
                                         {{ old('activity_type', $maintenanceRecord->activity_type) == $item ? 'selected' : '' }}>

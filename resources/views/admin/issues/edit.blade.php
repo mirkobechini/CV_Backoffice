@@ -20,7 +20,7 @@
                             <label for="vehicle_id" class="form-label">Veicolo</label>
                             <select class="form-select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
                                 name="vehicle_id" required>
-                                <option value="">Seleziona un veicolo</option>
+                                <option value="" disabled>Seleziona un veicolo</option>
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         {{ old('vehicle_id', $issue->vehicle_id) == $vehicle->id ? 'selected' : '' }}>
@@ -38,7 +38,7 @@
                             <label for="status" class="form-label">Stato</label>
                             <select class="form-select @error('status') is-invalid @enderror" id="status" name="status"
                                 required>
-                                <option value="">Seleziona uno stato</option>
+                                <option value="" disabled>Seleziona uno stato</option>
                                 <option value="open" {{ old('status', $issue->status) == 'open' ? 'selected' : '' }}>
                                     Aperto</option>
                                 <option value="in_progress"

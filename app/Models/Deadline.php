@@ -166,6 +166,44 @@ class Deadline extends Model
         return '—';
     }
 
+    /**
+     * Etichetta dei giorni mancanti/scaduti rispetto a due_date, indipendente
+     * dal conteggio km. Usata per mostrare il badge "giorni" accanto a quello
+     * "km" quando la scadenza ha entrambe le condizioni (es. Tagliando).
+     */
+    public function getDateRemainingLabelAttribute(): ?string
+    {
+        if (! $this->due_date) {
+            return null;
+        }
+
+        $days = Carbon::today()->diffInDays($this->due_date, false);
+
+        return $days < 0 ? '+' . abs($days) . ' gg' : $days . ' gg';
+    }
+
+    /**
+     * Etichetta dei km mancanti/superati rispetto al target, indipendente
+     * dalla data. Usata per mostrare il badge "km" accanto a quello "giorni".
+     */
+    public function getKmRemainingLabelAttribute(): ?string
+    {
+        if ($this->interval_km === null || $this->last_mileage === null) {
+            return null;
+        }
+
+        $this->loadMissing('vehicle.latestMileageLog');
+        $currentMileage = $this->vehicle?->mileage;
+        if ($currentMileage === null) {
+            return null;
+        }
+
+        $remaining = ($this->last_mileage + $this->interval_km) - $currentMileage;
+        $formatted = number_format(abs($remaining), 0, ',', '.');
+
+        return $remaining <= 0 ? '+' . $formatted . ' km' : $formatted . ' km';
+    }
+
     public function getAutomaticStatusAttribute(): string
     {
         // Cachea il risultato: l'accessor può essere chiamato più volte

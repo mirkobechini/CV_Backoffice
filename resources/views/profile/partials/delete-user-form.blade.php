@@ -51,7 +51,7 @@
                                 <div class="mb-2">
                                     <label class="form-label">{{ $group->name }}</label>
                                     <select name="successor_{{ $group->id }}" class="form-select">
-                                        <option value="">{{ __('Seleziona un membro...') }}</option>
+                                        <option value="" disabled>{{ __('Seleziona un membro...') }}</option>
                                         @foreach ($group->users()->where('users.id', '!=', auth()->id())->get() as $member)
 <option value="{{ $member->id }}">{{ $member->name }} ({{ $member->email }})</option>
 @endforeach

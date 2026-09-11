@@ -37,7 +37,7 @@
                     <div class="mb-3">
                         <label for="entity" class="form-label">Tipo dati</label>
                         <select class="form-select" id="entity" name="entity" required>
-                            <option value="">Seleziona...</option>
+                            <option value="" disabled>Seleziona...</option>
                             <option value="issues" {{ old('entity') == 'issues' ? 'selected' : '' }}>Guasti</option>
                             <option value="mileage-logs" {{ old('entity') == 'mileage-logs' ? 'selected' : '' }}>
                                 Chilometraggi</option>
