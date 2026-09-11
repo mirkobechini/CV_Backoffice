@@ -53,6 +53,11 @@ class DashboardController extends Controller
                 ->expiringSoon()
                 ->get();
 
+            // Veicoli attualmente in officina: check-in avvenuto, non ancora rientrati.
+            $inWorkshopCount = MaintenanceRecord::whereNull('return_date')
+                ->where('appointment_date', '<=', now())
+                ->count();
+
             return compact(
                 'totalVehicles',
                 'openIssues',
@@ -60,7 +65,8 @@ class DashboardController extends Controller
                 'expiredDeadlines',
                 'upcomingAppointments',
                 'incompleteVehicles',
-                'expiringEquipment'
+                'expiringEquipment',
+                'inWorkshopCount'
             );
         });
 
