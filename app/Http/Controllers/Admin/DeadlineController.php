@@ -90,8 +90,9 @@ class DeadlineController extends Controller
     public function create()
     {
         $vehicles = Vehicle::with('vehicleType')->forCurrentUser()->get();
+        $selectedVehicleId = request('vehicle_id');
 
-        return view('admin.deadlines.create', compact('vehicles'));
+        return view('admin.deadlines.create', compact('vehicles', 'selectedVehicleId'));
     }
 
     /**

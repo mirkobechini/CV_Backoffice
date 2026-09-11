@@ -132,7 +132,23 @@ class VehicleController extends Controller
         $deadlines = $vehicle->deadlines_grouped;
         $deadlinesTypes = Vehicle::DEADLINE_TYPES;
 
-        return view('admin.vehicles.show', compact('vehicle', 'vehicleAppointments', 'deadlines', 'deadlinesTypes'));
+        // Officina collegata a ciascun guasto tramite l'appuntamento che lo referenzia,
+        // usata nella card "Guasti" del dettaglio veicolo.
+        $issueProviders = $vehicleAppointments
+            ->filter(fn ($record) => $record->provider_id)
+            ->flatMap(fn ($record) => $record->items
+                ->where('itemable_type', 'App\Models\Issue')
+                ->pluck('itemable_id')
+                ->mapWithKeys(fn ($issueId) => [$issueId => $record->provider]))
+        ;
+
+        return view('admin.vehicles.show', compact(
+            'vehicle',
+            'vehicleAppointments',
+            'deadlines',
+            'deadlinesTypes',
+            'issueProviders'
+        ));
     }
 
     /**
