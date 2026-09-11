@@ -43,6 +43,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Sidebar off-canvas su mobile (<992px): hamburger nella topbar
+    const sidebar = document.querySelector('.sidebar-dp');
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+    const closeSidebar = () => {
+        sidebar?.classList.remove('is-open');
+        sidebarBackdrop?.classList.remove('is-open');
+    };
+
+    if (sidebar && sidebarToggle && sidebarBackdrop) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('is-open');
+            sidebarBackdrop.classList.toggle('is-open');
+        });
+
+        sidebarBackdrop.addEventListener('click', closeSidebar);
+
+        // Chiude il menu quando si naviga verso un'altra pagina
+        sidebar.querySelectorAll('a').forEach((link) => {
+            link.addEventListener('click', closeSidebar);
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeSidebar();
+            }
+        });
+    }
+
     document.querySelectorAll('form[data-single-submit="true"]').forEach((form) => {
         form.addEventListener('submit', (event) => {
             if (form.dataset.submitting === 'true') {

@@ -253,6 +253,22 @@ body {
     flex: 1;
 }
 
+.topbar-start {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.menu-toggle {
+    display: none;
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
 .topbar-dp .breadcrumb {
     font-size: 12px;
     color: var(--text-muted);
@@ -1203,7 +1219,33 @@ body.modal-open {
 
 @media (max-width: 991.98px) {
     .sidebar-dp {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 110;
+        transform: translateX(-100%);
+        transition: transform 0.2s ease;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .sidebar-dp.is-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-backdrop {
         display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 105;
+        background: rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar-backdrop.is-open {
+        display: block;
+    }
+
+    .menu-toggle {
+        display: grid;
     }
 
     .main-dp {
