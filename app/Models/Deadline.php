@@ -120,6 +120,52 @@ class Deadline extends Model
         };
     }
 
+    /**
+     * Slug del tipo di scadenza, usato per le classi CSS dei dot colorati
+     * (es. "Tagliando" → "tagliando", "Cinghia Distribuzione" → "cinghia").
+     */
+    public function getTypeSlugAttribute(): string
+    {
+        return match ($this->type) {
+            self::TYPE_TAGLIANDO => 'tagliando',
+            self::TYPE_CINGHIA => 'cinghia',
+            self::TYPE_MINISTERIAL => 'revisione',
+            self::TYPE_OXYGEN => 'ossigeno',
+            default => \Illuminate\Support\Str::slug($this->type),
+        };
+    }
+
+    /**
+     * Etichetta dei giorni/km mancanti alla scadenza, per la colonna
+     * "prossima scadenza" dell'index veicoli.
+     */
+    public function getDaysLabelAttribute(): string
+    {
+        // Scadenze per km: mostra i km mancanti al target
+        if ($this->interval_km !== null && $this->last_mileage !== null) {
+            $this->loadMissing('vehicle.latestMileageLog');
+            $currentMileage = $this->vehicle?->mileage;
+            if ($currentMileage !== null) {
+                $remaining = ($this->last_mileage + $this->interval_km) - $currentMileage;
+                if ($remaining <= 0) {
+                    return '+' . number_format(abs($remaining), 0, ',', '.') . ' km';
+                }
+                return number_format($remaining, 0, ',', '.') . ' km';
+            }
+        }
+
+        // Scadenze per data: mostra i giorni alla scadenza
+        if ($this->due_date) {
+            $days = Carbon::today()->diffInDays($this->due_date, false);
+            if ($days < 0) {
+                return '+' . abs($days) . ' gg';
+            }
+            return $days . ' gg';
+        }
+
+        return '—';
+    }
+
     public function getAutomaticStatusAttribute(): string
     {
         // Cachea il risultato: l'accessor può essere chiamato più volte
