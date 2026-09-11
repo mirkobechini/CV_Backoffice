@@ -37,15 +37,22 @@
 <body>
     <div class="app-dp">
         @include('admin.partials.header')
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
         <main class="main-dp">
-            {{-- Topbar: breadcrumb + azioni + theme switch --}}
+            {{-- Topbar: menu mobile + breadcrumb + azioni + theme switch --}}
             <div class="topbar-dp">
-                @hasSection('breadcrumb')
-                    @yield('breadcrumb')
-                @else
-                    <div class="topbar-spacer"></div>
-                @endif
+                <div class="topbar-start">
+                    <button type="button" class="topbar-btn menu-toggle" id="sidebar-toggle"
+                        aria-label="{{ __('Apri il menu') }}">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    @hasSection('breadcrumb')
+                        @yield('breadcrumb')
+                    @else
+                        <div class="topbar-spacer"></div>
+                    @endif
+                </div>
                 <div class="topbar-actions">
                     <div class="theme-switch" id="theme-switch" role="group" aria-label="{{ __('Cambia tema') }}">
                         <button type="button" data-theme="auto" class="on">{{ __('Auto') }}</button>
