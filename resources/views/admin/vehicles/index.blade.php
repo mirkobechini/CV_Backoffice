@@ -1,4 +1,12 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Flotta')],
+        ['label' => __('Veicoli')],
+    ]" />
+@endsection
+
 @section('content')
 
     {{-- Stats KPI --}}

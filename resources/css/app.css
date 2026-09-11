@@ -240,16 +240,40 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 16px;
+    gap: 12px;
+    margin: -18px -20px 8px;
+    padding: 14px 20px 6px;
     position: sticky;
     top: 0;
     z-index: 20;
-    background-color: var(--surface);
-    border-bottom: 1px solid var(--border);
+    background-color: var(--bg);
 }
 
 .topbar-spacer {
     flex: 1;
+}
+
+.topbar-dp .breadcrumb {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.topbar-dp .breadcrumb b {
+    color: var(--text);
+}
+
+.topbar-dp .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+}
+
+.topbar-dp .breadcrumb a:hover {
+    color: var(--text);
+    text-decoration: underline;
+}
+
+.topbar-dp .breadcrumb .breadcrumb-sep {
+    margin: 0 4px;
 }
 
 .topbar-actions {

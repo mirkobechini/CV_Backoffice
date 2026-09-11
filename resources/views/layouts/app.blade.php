@@ -39,9 +39,13 @@
         @include('admin.partials.header')
 
         <main class="main-dp">
-            {{-- Topbar: azioni + theme switch --}}
+            {{-- Topbar: breadcrumb + azioni + theme switch --}}
             <div class="topbar-dp">
-                <div class="topbar-spacer"></div>
+                @hasSection('breadcrumb')
+                    @yield('breadcrumb')
+                @else
+                    <div class="topbar-spacer"></div>
+                @endif
                 <div class="topbar-actions">
                     <div class="theme-switch" id="theme-switch" role="group" aria-label="{{ __('Cambia tema') }}">
                         <button type="button" data-theme="auto" class="on">{{ __('Auto') }}</button>
