@@ -261,7 +261,7 @@ body {
     min-width: 0;
 }
 
-.menu-toggle {
+.topbar-btn.menu-toggle {
     display: none;
 }
 
@@ -1244,11 +1244,11 @@ body.modal-open {
         display: block;
     }
 
-    .menu-toggle {
+    .topbar-btn.menu-toggle {
         display: grid;
     }
 
-    .menu-toggle[hidden] {
+    .topbar-btn.menu-toggle[hidden] {
         display: none;
     }
 
