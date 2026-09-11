@@ -20,7 +20,7 @@
                             <label for="vehicle_id" class="form-label">Veicolo</label>
                             <select class="form-select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
                                 name="vehicle_id" required>
-                                <option value="">Seleziona un veicolo</option>
+                                <option value="" disabled>Seleziona un veicolo</option>
                                 @foreach ($vehicles as $vehicle)
                                     <option value="{{ $vehicle->id }}"
                                         data-needs-oxygen-check="{{ $vehicle->vehicleType?->needs_oxygen_check ? '1' : '0' }}"

@@ -45,7 +45,7 @@
                             <label for="type" class="form-label">Tipo</label>
                             <select class="form-select @error('type') is-invalid @enderror" id="type" name="type"
                                 required>
-                                <option value="">Seleziona tipo...</option>
+                                <option value="" disabled>Seleziona tipo...</option>
                                 @foreach (['Meccanico', 'Carrozziere', 'Gommista', 'Lavaggio', 'Allestitore', 'Vetri'] as $tipo)
                                     <option value="{{ $tipo }}"
                                         {{ old('type', $provider->type) == $tipo ? 'selected' : '' }}>{{ $tipo }}

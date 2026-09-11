@@ -56,7 +56,7 @@
                     <div class="field">
                         <label for="fuel_type">{{ __('Carburante') }}</label>
                         <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type">
-                            <option value="">{{ __('Seleziona un carburante') }}</option>
+                            <option value="" disabled>{{ __('Seleziona un carburante') }}</option>
                             <option value="benzina" {{ old('fuel_type') == 'benzina' ? 'selected' : '' }}>
                                 {{ __('Benzina') }}</option>
                             <option value="diesel" {{ old('fuel_type') == 'diesel' ? 'selected' : '' }}>
@@ -74,7 +74,7 @@
                         <label for="vehicle_type_id">{{ __('Tipologia') }} <span class="req">*</span></label>
                         <select class="select @error('vehicle_type_id') is-invalid @enderror" id="vehicle_type_id"
                             name="vehicle_type_id" required>
-                            <option value="">{{ __('Seleziona una tipologia') }}</option>
+                            <option value="" disabled>{{ __('Seleziona una tipologia') }}</option>
                             @foreach ($vehicleTypes as $type)
                                 <option value="{{ $type->id }}"
                                     {{ old('vehicle_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}

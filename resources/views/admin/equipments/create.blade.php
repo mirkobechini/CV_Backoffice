@@ -35,7 +35,7 @@
                             <label for="equipment_type_id" class="form-label">Tipo di attrezzatura</label>
                             <select class="form-select @error('equipment_type_id') is-invalid @enderror"
                                 id="equipment_type_id" name="equipment_type_id" required>
-                                <option value="">Seleziona un tipo di attrezzatura</option>
+                                <option value="" disabled>Seleziona un tipo di attrezzatura</option>
                                 @foreach ($equipmentTypes as $type)
                                     <option value="{{ $type->id }}"
                                         {{ old('equipment_type_id') == $type->id ? 'selected' : '' }}>
