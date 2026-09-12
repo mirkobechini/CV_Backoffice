@@ -759,6 +759,12 @@ body {
     background: var(--surface-2);
 }
 
+.btn.sm {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
 .btn:disabled {
     opacity: .5;
     cursor: not-allowed;
@@ -3163,6 +3169,128 @@ td .email {
     white-space: pre-wrap;
     word-break: break-word;
     color: var(--text);
+}
+
+/* Tabella "prima/dopo" leggibile nel modal di dettaglio del log attività */
+.prop-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    max-height: 420px;
+    display: block;
+    overflow-y: auto;
+}
+
+.prop-table thead th {
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    position: sticky;
+    top: 0;
+}
+
+.prop-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+
+.prop-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.prop-table .fname {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.prop-table .before {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--red);
+}
+
+.prop-table .after {
+    color: var(--green);
+    font-weight: 500;
+}
+
+/* Elenco notifiche (campanella) */
+.notif-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.notif-item:last-child {
+    border-bottom: none;
+}
+
+.notif-item.unread {
+    background: var(--primary-soft);
+}
+
+.notif-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.notif-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.notif-item.unread .notif-title {
+    color: var(--primary);
+}
+
+.notif-msg {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.notif-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.notif-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
 }
 
 @media (max-width: 1000px) {

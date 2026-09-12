@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Models\Issue;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
@@ -62,5 +64,49 @@ class ActivityLogTest extends TestCase
     {
         $response = $this->get(route('admin.activity-log.index'));
         $response->assertRedirect(route('login'));
+    }
+
+    public function test_property_rows_builds_before_after_diff_for_updates(): void
+    {
+        $properties = new Collection([
+            'old' => ['status' => 'renewed', 'is_renewed' => true, 'updated_at' => '2026-09-12T15:52:21.000000Z'],
+            'attributes' => ['status' => 'pending', 'is_renewed' => false, 'updated_at' => '2026-09-12T15:58:52.000000Z'],
+        ]);
+
+        $result = ActivityLogController::propertyRows($properties);
+
+        $this->assertSame('diff', $result['mode']);
+        // updated_at è un campo tecnico: va escluso dal confronto.
+        $this->assertCount(2, $result['rows']);
+
+        $statusRow = collect($result['rows'])->firstWhere('field', 'Stato');
+        $this->assertSame('renewed', $statusRow['before']);
+        $this->assertSame('pending', $statusRow['after']);
+
+        $renewedRow = collect($result['rows'])->firstWhere('field', 'Rinnovata');
+        $this->assertSame('Sì', $renewedRow['before']);
+        $this->assertSame('No', $renewedRow['after']);
+    }
+
+    public function test_property_rows_shows_flat_values_for_creation(): void
+    {
+        $properties = new Collection([
+            'attributes' => ['name' => 'Ducato', 'created_at' => '2026-09-12T15:52:21.000000Z'],
+        ]);
+
+        $result = ActivityLogController::propertyRows($properties);
+
+        $this->assertSame('flat', $result['mode']);
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame('Nome', $result['rows'][0]['field']);
+        $this->assertSame('Ducato', $result['rows'][0]['after']);
+    }
+
+    public function test_property_rows_handles_empty_properties(): void
+    {
+        $result = ActivityLogController::propertyRows(new Collection());
+
+        $this->assertSame('flat', $result['mode']);
+        $this->assertSame([], $result['rows']);
     }
 }

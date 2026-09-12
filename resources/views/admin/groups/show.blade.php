@@ -117,9 +117,11 @@
         </div>
     </div>
 
-    <div class="admin-card" style="margin-top:16px;">
-        <div class="head">
-            <h3>{{ __('Membri') }}</h3>
+    <div class="table-card" style="margin-top:16px;">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <h2>{{ __('Membri') }}</h2>
+            </div>
         </div>
         <div class="table-responsive">
             <table>

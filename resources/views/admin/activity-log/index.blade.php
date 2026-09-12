@@ -77,6 +77,9 @@
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
 
+                                    @php
+                                        $propertyData = \App\Http\Controllers\Admin\ActivityLogController::propertyRows($activity->properties);
+                                    @endphp
                                     <div class="modal fade" id="detailModal-{{ $activity->id }}" tabindex="-1"
                                         aria-hidden="true">
                                         <div class="modal-dialog modal-lg">
@@ -87,7 +90,34 @@
                                                         aria-label="{{ __('Chiudi') }}"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <pre class="log-detail">{{ json_encode($activity->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
+                                                    @if (count($propertyData['rows']) > 0)
+                                                        <table class="prop-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>{{ __('Campo') }}</th>
+                                                                    @if ($propertyData['mode'] === 'diff')
+                                                                        <th>{{ __('Prima') }}</th>
+                                                                        <th>{{ __('Dopo') }}</th>
+                                                                    @else
+                                                                        <th>{{ __('Valore') }}</th>
+                                                                    @endif
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($propertyData['rows'] as $row)
+                                                                    <tr>
+                                                                        <td class="fname">{{ $row['field'] }}</td>
+                                                                        @if ($propertyData['mode'] === 'diff')
+                                                                            <td class="before">{{ $row['before'] }}</td>
+                                                                        @endif
+                                                                        <td class="after">{{ $row['after'] }}</td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    @else
+                                                        <p class="hint" style="margin:0;">{{ __('Nessun dettaglio disponibile.') }}</p>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
