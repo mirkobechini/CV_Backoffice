@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreProviderRequest;
 use App\Http\Requests\UpdateProviderRequest;
 use App\Models\Provider;
+use Illuminate\Http\Request;
 
 class ProviderController extends Controller
 {
@@ -20,9 +21,9 @@ class ProviderController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $providers = Provider::paginate(20);
+        $providers = Provider::search($request->get('q'))->orderBy('name')->paginate(20)->withQueryString();
 
         return view('admin.providers.index', compact('providers'));
     }

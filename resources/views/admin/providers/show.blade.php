@@ -1,55 +1,105 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Servizi')],
+        ['label' => __('Officine'), 'url' => route('admin.providers.index')],
+        ['label' => $provider->name],
+    ]" />
+@endsection
+
+@php
+    $typeBadge = match ($provider->type) {
+        'Meccanico' => 'b-blue',
+        'Elettrauto' => 'b-green',
+        'Gommista' => 'b-purple',
+        'Lavaggio' => 'b-blue',
+        'Allestitore' => 'b-purple',
+        'Vetri' => 'b-green',
+        'Carrozziere' => 'b-gray',
+        'Centro Revisioni' => 'b-amber',
+        default => 'b-gray',
+    };
+@endphp
+
 @section('content')
-    <div class="container py-4">
-        <div class="row mb-3">
-            <div class="col-12">
-                <a href="{{ request('back', route('admin.providers.index')) }}" class="btn btn-secondary">Torna alla pagina
-                    precedente</a>
-            </div>
+
+    <div class="page-actions">
+        <a href="{{ request('back', route('admin.providers.index')) }}" class="btn ghost">
+            <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}
+        </a>
+        <a href="{{ route('admin.providers.edit', ['provider' => $provider->id, 'back' => url()->full()]) }}"
+            class="btn primary">
+            <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}
+        </a>
+        <button type="button" class="btn danger" data-bs-toggle="modal"
+            data-bs-target="#confirmDeleteModal-{{ $provider->id }}">
+            <i class="fa-solid fa-trash"></i> {{ __('Elimina') }}
+        </button>
+    </div>
+
+    <div class="dl-header">
+        <div class="dl-avatar" style="background:linear-gradient(135deg,var(--primary),var(--blue));"><i
+                class="fa-solid fa-wrench"></i></div>
+        <div class="dl-title">
+            <h1>{{ $provider->name }}</h1>
+            <div class="sub">{{ $provider->address ?: __('Indirizzo non specificato') }}</div>
         </div>
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="card my-4">
-                    <div class="card-header">
-                        <h1>{{ $provider->name }}</h1>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Contatti:</strong> {{ $provider->contact_info }}</p>
-                        <p><strong>Indirizzo:</strong> {{ $provider->address }}</p>
-                        <p><strong>Tipo:</strong> {{ $provider->type }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12">
-                <a href="{{ route('admin.providers.edit', ['provider' => $provider->id, 'back' => url()->full()]) }}"
-                    class="btn btn-primary">Modifica</a>
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal"
-                    data-bs-target="#confirmDeleteModal-{{ $provider->id }}">
-                    Elimina
-                </button>
-            </div>
-        </div>
-        <x-admin.delete-modal type="provider" :object="$provider" />
-        <div class="row mt-3">
-            <h2>Manutenzioni associate</h2>
-            @if ($provider->maintenanceRecords->isEmpty())
-                <p>Nessuna manutenzione associata a questa officina.</p>
-            @else
-                {{-- Raggruppare per fatti/da fare prima i da fare --}}
-                <ul class="list-group">
-                    @foreach ($provider->maintenanceRecords as $record)
-                        <li class="list-group-item d-flex gap-3">
-                            <p class="m-0">
-                                {{ $record->vehicle?->internal_code ?? 'N/A' }} -
-                                {{ $record->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $record->activity_type ?? 'N/A' }}
-                                ({{ $record->appointment_date_formatted ?? 'N/A' }})
-                            </p>
-                            <a href="{{ route('admin.maintenance-records.show', ['maintenanceRecord' => $record->id, 'back' => url()->full()]) }}"
-                                class="btn btn-sm btn-primary rounded-pill "><i class="bi bi-eye"></i></a>
-                        </li>
-                    @endforeach
-                </ul>
+        <div class="dl-status">
+            @if ($provider->type)
+                <span class="badge {{ $typeBadge }}">{{ $provider->type }}</span>
             @endif
         </div>
     </div>
+
+    <div class="dl-info-card">
+        <div class="head">
+            <h3>{{ __('Dettagli struttura') }}</h3>
+        </div>
+        <div class="body">
+            <div class="dl-kv">
+                <span class="k">{{ __('Contatti') }}</span>
+                <span class="v">{{ $provider->contact_info ?: 'N/A' }}</span>
+            </div>
+            <div class="dl-kv">
+                <span class="k">{{ __('Indirizzo') }}</span>
+                <span class="v">{{ $provider->address ?: 'N/A' }}</span>
+            </div>
+            <div class="dl-kv">
+                <span class="k">{{ __('Tipo') }}</span>
+                <span class="v">
+                    @if ($provider->type)
+                        <span class="badge {{ $typeBadge }}">{{ $provider->type }}</span>
+                    @else
+                        N/A
+                    @endif
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="dl-info-card">
+        <div class="head">
+            <h3>{{ __('Manutenzioni associate') }}</h3>
+        </div>
+        <div class="body">
+            @forelse ($provider->maintenanceRecords as $record)
+                <div class="dl-kv">
+                    <span class="k">{{ $record->vehicle?->internal_code ?? 'N/A' }} ·
+                        {{ $record->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $record->activity_type ?? 'N/A' }}
+                        <span class="cell-sub">{{ $record->appointment_date_formatted ?? 'N/A' }}</span>
+                    </span>
+                    <span class="v">
+                        <a class="mini-btn"
+                            href="{{ route('admin.maintenance-records.show', ['maintenanceRecord' => $record->id, 'back' => url()->full()]) }}"
+                            title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                    </span>
+                </div>
+            @empty
+                <p class="empty">{{ __('Nessuna manutenzione associata a questa officina.') }}</p>
+            @endforelse
+        </div>
+    </div>
+
+    <x-admin.delete-modal type="provider" :object="$provider" />
 @endsection
