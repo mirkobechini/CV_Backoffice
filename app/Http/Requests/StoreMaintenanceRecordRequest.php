@@ -36,6 +36,7 @@ class StoreMaintenanceRecordRequest extends FormRequest
             'return_date' => 'nullable|date|after_or_equal:appointment_date',
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'mileage_at_service' => 'nullable|integer|min:0',
+            'notes' => 'nullable|string|max:2000',
         ];
     }
 
@@ -57,6 +58,8 @@ class StoreMaintenanceRecordRequest extends FormRequest
             'activity_type.string' => 'Il campo tipologia attività deve essere una stringa.',
             'activity_type.max' => 'Il campo tipologia attività non può superare i 255 caratteri.',
             'activity_type.in' => 'La tipologia attività selezionata non è valida.',
+            'notes.string' => 'Il campo note deve essere testo.',
+            'notes.max' => 'Le note non possono superare i 2000 caratteri.',
         ];
     }
 

@@ -80,15 +80,16 @@
                 </div>
             </div>
 
-            {{-- Sezione 2: Impostazioni km (visibile per Tagliando/Cinghia) --}}
+            {{-- Sezione 2: Impostazioni km (visibile per Tagliando/Cinghia; per le
+            revisioni si mostra solo il km facoltativo di riferimento) --}}
             <div class="form-section" id="km-settings-group" style="display:none;">
-                <h2><span class="num">2</span> {{ __('Impostazioni km') }}</h2>
+                <h2><span class="num">2</span> {{ __('Chilometraggio') }}</h2>
                 <div class="km-box">
                     <div class="title"><span class="ic"><i class="fa-solid fa-gear"></i></span>
-                        {{ __('Scadenza per km e data') }}
+                        <span id="km-settings-title">{{ __('Scadenza per km e data') }}</span>
                     </div>
                     <div class="row3">
-                        <div class="field">
+                        <div class="field" id="interval-km-field">
                             <label for="interval_km">{{ __('Intervallo km') }}</label>
                             <input type="number" class="input @error('interval_km') is-invalid @enderror"
                                 id="interval_km" name="interval_km"
@@ -99,7 +100,7 @@
                             @enderror
                         </div>
                         <div class="field">
-                            <label for="last_mileage">{{ __("Km all'ultimo cambio") }}</label>
+                            <label for="last_mileage" id="last-mileage-label">{{ __("Km all'ultimo cambio") }}</label>
                             <input type="number" class="input @error('last_mileage') is-invalid @enderror"
                                 id="last_mileage" name="last_mileage"
                                 value="{{ old('last_mileage', $deadline->last_mileage) }}" min="0"
@@ -108,7 +109,7 @@
                                 <div class="field-error">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="field">
+                        <div class="field" id="interval-days-field">
                             <label for="interval_days">{{ __('Intervallo giorni') }}</label>
                             <input type="number" class="input @error('interval_days') is-invalid @enderror"
                                 id="interval_days" name="interval_days"
@@ -119,7 +120,7 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="hint">
+                    <div class="hint" id="km-settings-hint">
                         {{ __('La scadenza scatta al primo tra superamento km o raggiungimento data. Per la cinghia distribuzione: 100.000 km o 10 anni (3650 giorni).') }}
                     </div>
                 </div>
@@ -163,6 +164,11 @@
             const dueDateAlt = document.getElementById('due_date');
             const dueDateReal = document.querySelector('input[name="due_date"]');
             const kmSettingsGroup = document.getElementById('km-settings-group');
+            const intervalKmField = document.getElementById('interval-km-field');
+            const intervalDaysField = document.getElementById('interval-days-field');
+            const kmSettingsTitle = document.getElementById('km-settings-title');
+            const lastMileageLabel = document.getElementById('last-mileage-label');
+            const kmSettingsHint = document.getElementById('km-settings-hint');
             const ministerialType = 'Revisione Ministeriale';
             const oxygenType = 'Revisione Impianto Ossigeno';
             const kmTypes = ['Tagliando', 'Cinghia Distribuzione'];
@@ -198,14 +204,27 @@
                     dueDateAlt.disabled = isAutoCalculated;
                 }
 
-                kmSettingsGroup.style.display = isKmType ? '' : 'none';
+                // Per Tagliando/Cinghia servono intervallo km/giorni per calcolare
+                // la prossima scadenza; per le revisioni (data auto-calcolata) si
+                // mostra solo il km facoltativo come semplice annotazione.
+                kmSettingsGroup.style.display = (isKmType || isAutoCalculated) ? '' : 'none';
+                intervalKmField.style.display = isKmType ? '' : 'none';
+                intervalDaysField.style.display = isKmType ? '' : 'none';
 
                 if (isAutoCalculated) {
+                    kmSettingsTitle.textContent = '{{ __('Km alla revisione (facoltativo)') }}';
+                    lastMileageLabel.textContent = '{{ __('Km rilevati alla revisione') }}';
+                    kmSettingsHint.textContent = '{{ __('Annotazione facoltativa: il chilometraggio del veicolo al momento di questa revisione, solo per riferimento.') }}';
+
                     if (dueDateReal._flatpickr) {
                         dueDateReal._flatpickr.clear();
                     } else {
                         dueDateReal.value = '';
                     }
+                } else {
+                    kmSettingsTitle.textContent = '{{ __('Scadenza per km e data') }}';
+                    lastMileageLabel.textContent = '{{ __("Km all'ultimo cambio") }}';
+                    kmSettingsHint.textContent = '{{ __('La scadenza scatta al primo tra superamento km o raggiungimento data. Per la cinghia distribuzione: 100.000 km o 10 anni (3650 giorni).') }}';
                 }
             };
 
