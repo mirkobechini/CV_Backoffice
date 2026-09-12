@@ -34,7 +34,7 @@ class GenerateNotifications extends Command
 
         $adminUsers = User::whereHas('groups', function ($q) {
             $q->whereIn('group_user.role', [Group::ROLE_CAPO, Group::ROLE_SOTTOCAPO]);
-        })->get();
+        })->with('notificationSettings')->get();
 
         foreach ($adminUsers as $user) {
             $reminderDays = (int) $user->notificationSetting('reminder_days_before', 7);

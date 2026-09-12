@@ -55,4 +55,32 @@ class SettingsTest extends TestCase
         $files = Storage::disk('local')->files('backups');
         $this->assertNotEmpty($files);
     }
+
+    public function test_member_cannot_trigger_backup(): void
+    {
+        // Prima non c'era alcun controllo: qualunque utente autenticato,
+        // anche un membro base, poteva lanciare il backup direttamente
+        // sulla route.
+        Storage::fake('local');
+        [, $group] = $this->capoWithGroup();
+        $member = User::factory()->create();
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($member)->post(route('admin.settings.backup'));
+
+        $response->assertForbidden();
+        $this->assertEmpty(Storage::disk('local')->files('backups'));
+    }
+
+    public function test_member_does_not_see_backup_section(): void
+    {
+        [, $group] = $this->capoWithGroup();
+        $member = User::factory()->create();
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($member)->get(route('admin.settings.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('Crea backup');
+    }
 }

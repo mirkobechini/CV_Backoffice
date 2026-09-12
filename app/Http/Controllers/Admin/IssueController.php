@@ -39,7 +39,7 @@ class IssueController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
         $statusFilter = $validated['status_filter'] ?? 'all';
 
-        $issuesQuery = Issue::with('vehicle')->search($request->get('q'));
+        $issuesQuery = Issue::with('vehicle.brand', 'vehicle.carModel')->search($request->get('q'));
 
         if ($statusFilter !== 'all') {
             $issuesQuery->where('status', $statusFilter);
