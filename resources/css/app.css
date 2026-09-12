@@ -2248,6 +2248,164 @@ textarea.input {
 }
 
 /* =============================================
+   Chilometraggi: barra selezione multipla + celle km
+   ============================================= */
+
+.bulk-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--red-soft);
+    border: 1px solid var(--red);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+}
+
+.bulk-bar .txt {
+    font-size: 12.5px;
+    color: var(--red);
+    font-weight: 600;
+}
+
+.km-value {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.select-col {
+    width: 36px;
+}
+
+.select-col input,
+.select-checkbox-col input {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--primary);
+    cursor: pointer;
+}
+
+/* =============================================
+   Flatpickr (calendario date/mese) — tema Dashboard Pro
+   ============================================= */
+
+/* Input reale usato da Flatpickr per il valore: nascosto, l'utente vede
+   solo l'altInput generato (classe .input passata via data-alt-class). */
+.flatpickr-date,
+.flatpickr-month-input {
+    display: none;
+}
+
+.flatpickr-calendar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    color: var(--text);
+}
+
+.flatpickr-calendar.arrowTop:before,
+.flatpickr-calendar.arrowTop:after {
+    display: none;
+}
+
+.flatpickr-months {
+    background: var(--surface);
+}
+
+.flatpickr-months .flatpickr-month {
+    background: var(--surface);
+    color: var(--text);
+    fill: var(--text);
+}
+
+.flatpickr-months .flatpickr-prev-month,
+.flatpickr-months .flatpickr-next-month {
+    color: var(--text-muted);
+    fill: var(--text-muted);
+}
+
+.flatpickr-months .flatpickr-prev-month:hover svg,
+.flatpickr-months .flatpickr-next-month:hover svg {
+    fill: var(--primary);
+}
+
+.flatpickr-current-month {
+    color: var(--text);
+}
+
+.flatpickr-current-month input.cur-year,
+.flatpickr-current-month .flatpickr-monthDropdown-months {
+    color: var(--text);
+    background: transparent;
+}
+
+.flatpickr-current-month .flatpickr-monthDropdown-months option {
+    background: var(--surface);
+    color: var(--text);
+}
+
+.flatpickr-weekdays {
+    background: var(--surface);
+}
+
+span.flatpickr-weekday {
+    background: var(--surface);
+    color: var(--text-muted);
+}
+
+.flatpickr-day {
+    color: var(--text);
+    border-radius: 4px;
+}
+
+.flatpickr-day.flatpickr-disabled,
+.flatpickr-day.flatpickr-disabled:hover,
+.flatpickr-day.prevMonthDay,
+.flatpickr-day.nextMonthDay {
+    color: var(--text-muted);
+    opacity: .5;
+}
+
+.flatpickr-day:hover {
+    background: var(--surface-2);
+}
+
+.flatpickr-day.today {
+    border-color: var(--primary);
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.flatpickr-day.week.selected {
+    box-shadow: -5px 0 0 var(--primary), 5px 0 0 var(--primary);
+}
+
+/* Plugin monthSelect (data-input) */
+.flatpickr-monthSelect-months {
+    background: var(--surface);
+}
+
+.flatpickr-monthSelect-month {
+    color: var(--text);
+    border-radius: 4px;
+}
+
+.flatpickr-monthSelect-month.flatpickr-monthSelect-selected {
+    background: var(--primary);
+    color: #fff;
+}
+
+.flatpickr-monthSelect-month:hover {
+    background: var(--surface-2);
+}
+
+/* =============================================
    Modal (conferma eliminazione)
    ============================================= */
 
