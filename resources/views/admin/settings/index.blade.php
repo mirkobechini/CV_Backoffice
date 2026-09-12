@@ -17,32 +17,18 @@
         <div class="admin-card">
             <div class="head">
                 <h3><span class="ic" style="background:var(--primary-soft); color:var(--primary);"><i
-                            class="fa-solid fa-users"></i></span> {{ __('Associazione / Gruppo') }}</h3>
+                            class="fa-solid fa-user"></i></span> {{ __('Account') }}</h3>
             </div>
             <div class="body">
-                @if ($group)
-                    @if (auth()->user()->roleIn($group) === 'capo')
-                        <form method="POST" action="{{ route('admin.settings.group') }}">
-                            @csrf
-                            @method('PATCH')
-                            <div class="field">
-                                <label for="name">{{ __('Nome') }}</label>
-                                <input type="text" class="input @error('name') is-invalid @enderror" id="name"
-                                    name="name" value="{{ old('name', $group->name) }}" required>
-                                @error('name')
-                                    <div class="field-error">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <button type="submit" class="btn primary">{{ __('Salva') }}</button>
-                        </form>
-                    @else
-                        <p style="font-weight:600;">{{ $group->name }}</p>
-                        <p class="hint" style="margin-top:4px;">
-                            {{ __('Solo il capo può modificare le impostazioni del gruppo.') }}</p>
-                    @endif
-                @else
-                    <p class="hint">{{ __('Non appartieni a nessun gruppo.') }}</p>
-                @endif
+                <p class="hint" style="margin-bottom:10px;">
+                    {{ __('Nome, email, password e altre impostazioni personali del tuo account.') }}</p>
+                <a href="{{ route('profile.edit') }}" class="btn outline">
+                    <i class="fa-solid fa-arrow-right"></i> {{ __('Vai al tuo account') }}
+                </a>
+                <p class="hint" style="margin-top:14px;">
+                    {{ __('Per rinominare un gruppo, invitare membri o gestirne i ruoli, apri la pagina del gruppo da') }}
+                    <a href="{{ route('admin.groups.index') }}">{{ __('Gruppi') }}</a>.
+                </p>
             </div>
         </div>
 

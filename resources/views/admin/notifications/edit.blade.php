@@ -51,7 +51,7 @@
                 </div>
             </div>
 
-            <div class="form-section" style="margin-bottom:0;">
+            <div class="form-section">
                 <h2><span class="num">3</span> {{ __('Promemoria') }}</h2>
                 <div class="field" style="margin-bottom:0;">
                     <label for="reminder_days_before">{{ __('Quanti giorni prima avvisare per le scadenze') }} <span
@@ -66,6 +66,39 @@
                     <div class="hint">
                         {{ __('Le scadenze con data entro questo numero di giorni verranno incluse nel report come "in arrivo".') }}
                     </div>
+                </div>
+            </div>
+
+            <div class="form-section" style="margin-bottom:0;">
+                <h2><span class="num">4</span> {{ __('Tipi di notifica') }}</h2>
+                <div class="hint" style="margin:0 0 12px;">
+                    {{ __('Scegli per quali eventi vuoi ricevere notifiche in-app ed email (se configurate sopra).') }}
+                </div>
+
+                @php
+                    $notifyToggles = [
+                        'notify_on_deadline' => __('Scadenze'),
+                        'notify_on_issue' => __('Guasti'),
+                        'notify_on_maintenance' => __('Appuntamenti'),
+                        'notify_on_equipment' => __('Attrezzature'),
+                    ];
+                @endphp
+
+                <div class="row2">
+                    @foreach ($notifyToggles as $key => $label)
+                        <div>
+                            <input type="hidden" name="{{ $key }}" value="0">
+                            <label class="switch-field">
+                                <input type="checkbox" class="switch-input" id="{{ $key }}" name="{{ $key }}"
+                                    value="1" {{ old($key, $settings[$key] ?? true) ? 'checked' : '' }}>
+                                <span class="track"><span class="knob"></span></span>
+                                <span class="label">{{ $label }}</span>
+                            </label>
+                            @error($key)
+                                <div class="field-error">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endforeach
                 </div>
             </div>
 

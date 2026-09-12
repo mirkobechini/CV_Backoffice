@@ -76,11 +76,16 @@ class GroupController extends Controller
     }
 
     /**
-     * Aggiorna il nome del gruppo.
+     * Aggiorna il nome del gruppo (solo il capo).
      */
     public function update(Request $request, Group $group)
     {
         $this->authorizeGroup($group);
+
+        // Solo il capo può rinominare il gruppo.
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può rinominare il gruppo.');
+        }
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
