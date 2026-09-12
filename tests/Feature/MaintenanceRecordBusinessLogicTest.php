@@ -261,6 +261,43 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
     }
 
+    public function test_complete_rejects_appointment_not_yet_occurred(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $issue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Test issue',
+            'status' => 'in_progress',
+            'event_date' => '2025-01-02',
+        ]);
+
+        // Appuntamento la cui data non è ancora arrivata.
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->addDays(15),
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $issue->id,
+            'itemable_type' => Issue::class,
+        ]);
+
+        $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'issue_resolved' => '1',
+        ]);
+
+        // Il completamento va rifiutato: nessuna modifica al record o al guasto.
+        $maintenance->refresh();
+        $this->assertNull($maintenance->return_date);
+        $this->assertDatabaseHas('issues', [
+            'id' => $issue->id,
+            'status' => 'in_progress',
+        ]);
+    }
+
     public function test_create_form_excludes_closed_issues_already_linked(): void
     {
         $user = $this->createUser();

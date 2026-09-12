@@ -1,200 +1,226 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Servizi')],
+        ['label' => __('Appuntamenti'), 'url' => route('admin.maintenance-records.index')],
+        ['label' => __('Nuovo appuntamento')],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container py-4">
-        <div class="row mb-3">
-            <div class="col-12">
-                <a href="{{ request('back', route('admin.maintenance-records.index')) }}" class="btn btn-secondary">Torna alla
-                    pagina precedente</a>
-            </div>
-        </div>
-        <h1 class="mb-4">Aggiungi nuovo appuntamento</h1>
-        <div class="card my-0">
-            <div class="card-body">
-                <form id="maintenance-record-form" method="POST" action="{{ route('admin.maintenance-records.store') }}"
-                    enctype="multipart/form-data" data-single-submit="true">
-                    @csrf
-                    <section class="mb-3 row">
-                        <h2>Dettagli veicolo</h2>
-                        <div class="mb-3">
-                            <label for="vehicle_id" class="form-label">Veicolo</label>
-                            <select class="form-select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
-                                name="vehicle_id" required>
-                                <option value="" disabled selected>Seleziona un veicolo</option>
-                                @foreach ($vehicles as $vehicle)
-                                    <option value="{{ $vehicle->id }}"
-                                        {{ (string) old('vehicle_id', $preselectedVehicleId ?? '') === (string) $vehicle->id ? 'selected' : '' }}>
-                                        {{ $vehicle->internal_code }}</option>
-                                @endforeach
-                            </select>
-                            @error('vehicle_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
 
-                        <div class="mb-3" id="issue-section" style="display: none;">
-                            <label class="form-label">Guasti collegati</label>
-                            <div class="border rounded p-3 bg-body-secondary" id="issue-checkboxes">
-                                @error('issue_ids')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                                @foreach ($openIssues as $issue)
-                                    <div class="form-check issue-checkbox" data-vehicle-id="{{ $issue->vehicle_id }}"
-                                        style="display: none;">
-                                        <input class="form-check-input" type="checkbox" name="issue_ids[]"
-                                            value="{{ $issue->id }}" id="issue_{{ $issue->id }}"
-                                            {{ in_array((string) $issue->id, old('issue_ids', $preselectedIssueId ? [$preselectedIssueId] : [])) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="issue_{{ $issue->id }}">
-                                            {{ $issue->description }}
-                                            @if ($issue->event_date)
-                                                — {{ $issue->event_date->format('d/m/Y') }}
-                                            @endif
-                                        </label>
-                                    </div>
-                                @endforeach
-                            </div>
-                            <div class="alert alert-info mt-2 d-none" id="no-issue-msg">
-                                <small>Nessun guasto aperto per il veicolo selezionato.</small>
-                            </div>
-                        </div>
+    <div class="page-header">
+        <h1>{{ __('Aggiungi nuovo appuntamento') }}</h1>
+        <a href="{{ request('back', route('admin.maintenance-records.index')) }}" class="btn ghost">
+            <i class="fa-solid fa-arrow-left"></i> {{ __('Annulla') }}
+        </a>
+    </div>
 
-                        @if ($closedIssues->isNotEmpty())
-                            <div class="mb-3" id="closed-issue-section" style="display: none;">
-                                <label class="form-label">Guasti risolti (per registrare riparazioni avvenute)</label>
-                                <div class="border rounded p-3 bg-body-secondary" id="closed-issue-checkboxes">
-                                    @foreach ($closedIssues as $issue)
-                                        <div class="form-check closed-issue-checkbox"
-                                            data-vehicle-id="{{ $issue->vehicle_id }}" style="display: none;">
-                                            <input class="form-check-input" type="checkbox" name="issue_ids[]"
-                                                value="{{ $issue->id }}" id="closed_issue_{{ $issue->id }}">
-                                            <label class="form-check-label" for="closed_issue_{{ $issue->id }}">
-                                                {{ $issue->description }}
-                                                @if ($issue->event_date)
-                                                    — {{ $issue->event_date->format('d/m/Y') }}
-                                                @endif
-                                            </label>
-                                        </div>
-                                    @endforeach
+    <div class="form-card">
+        <form id="maintenance-record-form" method="POST" action="{{ route('admin.maintenance-records.store') }}"
+            enctype="multipart/form-data" data-single-submit="true">
+            @csrf
+
+            {{-- Sezione 1: Dettagli veicolo --}}
+            <div class="form-section">
+                <h2><span class="num">1</span> {{ __('Dettagli veicolo') }}</h2>
+                <div class="field">
+                    <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
+                    <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id"
+                        required>
+                        <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
+                        @foreach ($vehicles as $vehicle)
+                            <option value="{{ $vehicle->id }}"
+                                {{ (string) old('vehicle_id', $preselectedVehicleId ?? '') === (string) $vehicle->id ? 'selected' : '' }}>
+                                {{ $vehicle->internal_code }}</option>
+                        @endforeach
+                    </select>
+                    @error('vehicle_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="field" id="issue-section" style="display:none;">
+                    <label>{{ __('Guasti collegati') }}</label>
+                    <div class="check-list" id="issue-checkboxes">
+                        @error('issue_ids')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        @foreach ($openIssues as $issue)
+                            <div class="item issue-checkbox" data-vehicle-id="{{ $issue->vehicle_id }}"
+                                style="display:none;">
+                                <input type="checkbox" name="issue_ids[]" value="{{ $issue->id }}"
+                                    id="issue_{{ $issue->id }}"
+                                    {{ in_array((string) $issue->id, old('issue_ids', $preselectedIssueId ? [$preselectedIssueId] : [])) ? 'checked' : '' }}>
+                                <label class="lbl" for="issue_{{ $issue->id }}">
+                                    {{ $issue->description }}
+                                    @if ($issue->event_date)
+                                        <span class="meta">— {{ $issue->event_date->format('d/m/Y') }}</span>
+                                    @endif
+                                </label>
+                            </div>
+                        @endforeach
+                        <div class="empty" id="no-issue-msg" style="display:none;">
+                            {{ __('Nessun guasto aperto per il veicolo selezionato.') }}
+                        </div>
+                    </div>
+                </div>
+
+                @if ($closedIssues->isNotEmpty())
+                    <div class="field" id="closed-issue-section" style="display:none;">
+                        <label>{{ __('Guasti risolti (per registrare riparazioni avvenute)') }}</label>
+                        <div class="check-list" id="closed-issue-checkboxes">
+                            @foreach ($closedIssues as $issue)
+                                <div class="item closed-issue-checkbox" data-vehicle-id="{{ $issue->vehicle_id }}"
+                                    style="display:none;">
+                                    <input type="checkbox" name="issue_ids[]" value="{{ $issue->id }}"
+                                        id="closed_issue_{{ $issue->id }}">
+                                    <label class="lbl" for="closed_issue_{{ $issue->id }}">
+                                        {{ $issue->description }}
+                                        @if ($issue->event_date)
+                                            <span class="meta">— {{ $issue->event_date->format('d/m/Y') }}</span>
+                                        @endif
+                                    </label>
                                 </div>
-                                <div class="alert alert-info mt-2 d-none" id="no-closed-issue-msg">
-                                    <small>Nessun guasto risolto per il veicolo selezionato.</small>
-                                </div>
+                            @endforeach
+                            <div class="empty" id="no-closed-issue-msg" style="display:none;">
+                                {{ __('Nessun guasto risolto per il veicolo selezionato.') }}
                             </div>
-                        @endif
+                        </div>
+                    </div>
+                @endif
 
-                        <div class="mb-3" id="deadline-section" style="display: none;">
-                            <label class="form-label">Scadenze collegate</label>
-                            <div class="border rounded p-3 bg-body-secondary" id="deadline-checkboxes">
-                                @error('deadline_ids')
-                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                @enderror
-                                @foreach ($pendingDeadlines as $deadline)
-                                    <div class="form-check deadline-checkbox" data-vehicle-id="{{ $deadline->vehicle_id }}"
-                                        style="display: none;">
-                                        <input class="form-check-input" type="checkbox" name="deadline_ids[]"
-                                            value="{{ $deadline->id }}" id="deadline_{{ $deadline->id }}"
-                                            {{ in_array((string) $deadline->id, old('deadline_ids', [])) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="deadline_{{ $deadline->id }}">
-                                            {{ ucfirst($deadline->type) }} —
-                                            {{ $deadline->due_date?->format('d/m/Y') ?? 'N/A' }}
-                                        </label>
-                                    </div>
-                                @endforeach
+                <div class="field" id="deadline-section" style="display:none;">
+                    <label>{{ __('Scadenze collegate') }}</label>
+                    <div class="check-list" id="deadline-checkboxes">
+                        @error('deadline_ids')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        @foreach ($pendingDeadlines as $deadline)
+                            <div class="item deadline-checkbox" data-vehicle-id="{{ $deadline->vehicle_id }}"
+                                style="display:none;">
+                                <input type="checkbox" name="deadline_ids[]" value="{{ $deadline->id }}"
+                                    id="deadline_{{ $deadline->id }}"
+                                    {{ in_array((string) $deadline->id, old('deadline_ids', [])) ? 'checked' : '' }}>
+                                <label class="lbl" for="deadline_{{ $deadline->id }}">
+                                    {{ ucfirst($deadline->type) }} —
+                                    {{ $deadline->due_date?->format('d/m/Y') ?? 'N/A' }}
+                                </label>
                             </div>
-                            <div class="alert alert-info mt-2 d-none" id="no-deadline-msg">
-                                <small>Nessuna scadenza in sospeso per il veicolo selezionato.</small>
-                            </div>
+                        @endforeach
+                        <div class="empty" id="no-deadline-msg" style="display:none;">
+                            {{ __('Nessuna scadenza in sospeso per il veicolo selezionato.') }}
                         </div>
+                    </div>
+                </div>
 
-                        <div class="mb-3" id="no-issue-cta" style="display: none;">
-                            <div class="alert alert-info d-flex justify-content-between align-items-center mb-0">
-                                <span>Nessun guasto aperto per il veicolo selezionato.</span>
-                                <a id="create-issue-link" class="btn btn-sm btn-primary"
-                                    href="{{ route('admin.issues.create', ['back' => url()->full()]) }}">
-                                    Crea guasto
-                                </a>
-                            </div>
-                        </div>
-                    </section>
-                    <section class="mb-3 row">
-                        <h2>Dettagli officina</h2>
-                        <div class="mb-3">
-                            <label for="provider_id" class="form-label">Officina</label>
-                            <select class="form-select @error('provider_id') is-invalid @enderror" id="provider_id"
-                                name="provider_id" required>
-                                <option value="" disabled selected>Seleziona un'officina</option>
-                                @foreach ($providers as $provider)
-                                    <option value="{{ $provider->id }}"
-                                        {{ old('provider_id') == $provider->id ? 'selected' : '' }}>
-                                        {{ $provider->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('provider_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </section>
-                    <section class="mb-3 row">
-                        <h2>Dettagli Appuntamento</h2>
-                        <x-form.date-input name="appointment_date" label="Data Appuntamento" required />
-                        <div class="mb-3">
-                            <label for="activity_type" class="form-label">Tipo attività</label>
-                            <select class="form-select @error('activity_type') is-invalid @enderror" id="activity_type"
-                                name="activity_type" value="{{ old('activity_type') }}">
-                                <option value="" disabled selected>Seleziona una tipologia</option>
-                                @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
-                                    <option value="{{ $item }}"
-                                        {{ old('activity_type') == $item ? 'selected' : '' }}>
-                                        {{ $item }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('activity_type')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <x-form.date-input name="return_date" label="Data restituzione veicolo" />
-                        <div class="mb-3">
-                            <label for="mileage_at_service" class="form-label">Chilometraggio all'appuntamento</label>
-                            <input type="number" class="form-control @error('mileage_at_service') is-invalid @enderror"
-                                id="mileage_at_service" name="mileage_at_service"
-                                value="{{ old('mileage_at_service') }}" min="0">
-                            @error('mileage_at_service')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">Obbligatorio se è selezionato un tagliando — km al momento del
-                                conferimento in officina.</div>
-                        </div>
-                    </section>
-                    <button id="maintenance-submit-btn" type="submit" class="btn btn-primary"
-                        data-loading-text="Salvataggio...">Aggiungi</button>
-                </form>
+                <div class="field" id="no-issue-cta" style="display:none;">
+                    <div class="check-list" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                        <span class="hint" style="margin:0;">{{ __('Nessun guasto aperto per il veicolo selezionato.') }}</span>
+                        <a id="create-issue-link" class="btn primary"
+                            href="{{ route('admin.issues.create', ['back' => url()->full()]) }}">
+                            {{ __('Crea guasto') }}
+                        </a>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            {{-- Sezione 2: Dettagli officina --}}
+            <div class="form-section">
+                <h2><span class="num">2</span> {{ __('Dettagli officina') }}</h2>
+                <div class="field">
+                    <label for="provider_id">{{ __('Officina') }} <span class="req">*</span></label>
+                    <select class="select @error('provider_id') is-invalid @enderror" id="provider_id"
+                        name="provider_id" required>
+                        <option value="" disabled selected>{{ __("Seleziona un'officina") }}</option>
+                        @foreach ($providers as $provider)
+                            <option value="{{ $provider->id }}"
+                                {{ old('provider_id') == $provider->id ? 'selected' : '' }}>
+                                {{ $provider->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('provider_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            {{-- Sezione 3: Dettagli appuntamento --}}
+            <div class="form-section" style="margin-bottom:0;">
+                <h2><span class="num">3</span> {{ __('Dettagli appuntamento') }}</h2>
+                <div class="row2">
+                    <x-form.date-input name="appointment_date" label="{{ __('Data appuntamento') }}" required />
+                    <div class="field">
+                        <label for="activity_type">{{ __('Tipo attività') }}</label>
+                        <select class="select @error('activity_type') is-invalid @enderror" id="activity_type"
+                            name="activity_type">
+                            <option value="" disabled selected>{{ __('Seleziona...') }}</option>
+                            @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
+                                <option value="{{ $item }}" {{ old('activity_type') == $item ? 'selected' : '' }}>
+                                    {{ $item }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('activity_type')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <x-form.date-input name="return_date" label="{{ __('Data restituzione veicolo') }}" />
+                        <div class="hint">{{ __("Compila per segnare l'appuntamento come completato.") }}</div>
+                    </div>
+                    <div class="field">
+                        <label for="mileage_at_service">{{ __("Chilometraggio all'appuntamento") }}</label>
+                        <input type="number" class="input @error('mileage_at_service') is-invalid @enderror"
+                            id="mileage_at_service" name="mileage_at_service" value="{{ old('mileage_at_service') }}"
+                            min="0" placeholder="es. 87400">
+                        @error('mileage_at_service')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        <div class="hint">
+                            {{ __("Obbligatorio se è selezionato un tagliando — km al momento del conferimento in officina.") }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button id="maintenance-submit-btn" type="submit" class="btn primary lg"
+                    data-loading-text="{{ __('Salvataggio...') }}">
+                    <i class="fa-solid fa-plus"></i> {{ __('Aggiungi appuntamento') }}
+                </button>
+                <a href="{{ request('back', route('admin.maintenance-records.index')) }}"
+                    class="btn">{{ __('Annulla') }}</a>
+            </div>
+        </form>
     </div>
 
     {{-- Dialog completamento: appare quando la data di rientro è compilata --}}
-    <div class="modal fade" id="completionModal" tabindex="-1" aria-labelledby="completionModalLabel"
-        aria-hidden="true">
+    <div class="modal fade" id="completionModal" tabindex="-1" aria-labelledby="completionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="completionModalLabel">Completamento appuntamento</h5>
+                    <h5 class="modal-title" id="completionModalLabel">{{ __('Completamento appuntamento') }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Chiudi"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="text-muted">Segna quali guasti e scadenze sono stati completati in questo appuntamento.</p>
-                    <div id="completion-issues" class="mb-3">
-                        <h6 class="fw-bold">Guasti</h6>
+                    <p class="hint" style="margin-bottom:12px;">
+                        {{ __('Segna quali guasti e scadenze sono stati completati in questo appuntamento.') }}</p>
+                    <div id="completion-issues" style="margin-bottom:12px;">
+                        <h6 style="font-size:12.5px; font-weight:700; margin-bottom:8px;">{{ __('Guasti') }}</h6>
                         <div id="completion-issues-list"></div>
                     </div>
-                    <div id="completion-deadlines" class="mb-3">
-                        <h6 class="fw-bold">Scadenze</h6>
+                    <div id="completion-deadlines" style="margin-bottom:12px;">
+                        <h6 style="font-size:12.5px; font-weight:700; margin-bottom:8px;">{{ __('Scadenze') }}</h6>
                         <div id="completion-deadlines-list"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annulla</button>
-                    <button type="button" class="btn btn-success" id="completion-confirm-btn">Conferma</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Annulla') }}</button>
+                    <button type="button" class="btn btn-success" id="completion-confirm-btn">{{ __('Conferma') }}</button>
                 </div>
             </div>
         </div>
@@ -211,6 +237,7 @@
             const noDeadlineMsg = document.getElementById('no-deadline-msg');
             const closedIssueSection = document.getElementById('closed-issue-section');
             const noClosedIssueMsg = document.getElementById('no-closed-issue-msg');
+
             const filterByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
 
@@ -230,17 +257,17 @@
                 if (!selectedVehicleId) {
                     issueSection.style.display = 'none';
                     noIssueCta.style.display = 'none';
-                    noIssueMsg.classList.add('d-none');
+                    noIssueMsg.style.display = 'none';
                 } else if (!hasVisibleIssue) {
                     issueSection.style.display = '';
                     noIssueCta.style.display = '';
-                    noIssueMsg.classList.remove('d-none');
+                    noIssueMsg.style.display = '';
                     createIssueLink.href =
                         `{{ route('admin.issues.create') }}?vehicle_id=${selectedVehicleId}&back={{ urlencode(url()->full()) }}`;
                 } else {
                     issueSection.style.display = '';
                     noIssueCta.style.display = 'none';
-                    noIssueMsg.classList.add('d-none');
+                    noIssueMsg.style.display = 'none';
                 }
 
                 // Filtra guasti risolti
@@ -259,12 +286,11 @@
                 if (!closedIssueSection) {
                     // Sezione non presente: nessun guasto risolto disponibile.
                 } else if (!selectedVehicleId || !hasVisibleClosedIssue) {
-                    // Nascondi completamente se nessun guasto risolto per il veicolo
                     closedIssueSection.style.display = 'none';
-                    noClosedIssueMsg.classList.add('d-none');
+                    noClosedIssueMsg.style.display = 'none';
                 } else {
                     closedIssueSection.style.display = '';
-                    noClosedIssueMsg.classList.add('d-none');
+                    noClosedIssueMsg.style.display = 'none';
                 }
 
                 // Filtra scadenze
@@ -282,13 +308,13 @@
 
                 if (!selectedVehicleId) {
                     deadlineSection.style.display = 'none';
-                    noDeadlineMsg.classList.add('d-none');
+                    noDeadlineMsg.style.display = 'none';
                 } else if (!hasVisibleDeadline) {
                     deadlineSection.style.display = '';
-                    noDeadlineMsg.classList.remove('d-none');
+                    noDeadlineMsg.style.display = '';
                 } else {
                     deadlineSection.style.display = '';
-                    noDeadlineMsg.classList.add('d-none');
+                    noDeadlineMsg.style.display = 'none';
                 }
             };
 
@@ -328,20 +354,17 @@
 
             form.addEventListener('submit', function(e) {
                 const returnDate = returnDateInput ? returnDateInput.value : '';
-                const selectedVehicleId = vehicleSelect.value;
 
                 if (!returnDate || pendingSubmit) {
                     return; // nessun dialog, submit normale
                 }
 
-                // Popola il dialog con i guasti e le scadenze selezionati
                 const selectedIssues = issueData.filter(d => {
                     const cb = document.querySelector(`input[name="issue_ids[]"][value="${d.id}"]`);
                     return cb && cb.checked;
                 });
                 const selectedDeadlines = deadlineData.filter(d => {
-                    const cb = document.querySelector(
-                        `input[name="deadline_ids[]"][value="${d.id}"]`);
+                    const cb = document.querySelector(`input[name="deadline_ids[]"][value="${d.id}"]`);
                     return cb && cb.checked;
                 });
 
@@ -369,8 +392,7 @@
                     selectedDeadlines.forEach(deadline => {
                         const div = document.createElement('div');
                         div.className = 'form-check';
-                        div.innerHTML =
-                            `
+                        div.innerHTML = `
                             <input class="form-check-input completion-deadline" type="checkbox"
                                 value="${deadline.id}" id="comp_deadline_${deadline.id}">
                             <label class="form-check-label" for="comp_deadline_${deadline.id}">${deadline.label}</label>`;
@@ -384,9 +406,7 @@
             });
 
             completionConfirmBtn.addEventListener('click', function() {
-                // Rimuovi eventuali hidden input precedenti
-                form.querySelectorAll(
-                        'input[name="completed_issue_ids[]"], input[name="completed_deadline_ids[]"]')
+                form.querySelectorAll('input[name="completed_issue_ids[]"], input[name="completed_deadline_ids[]"]')
                     .forEach(el => el.remove());
 
                 document.querySelectorAll('.completion-issue:checked').forEach(cb => {
