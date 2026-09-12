@@ -7,6 +7,7 @@ use App\Http\Requests\StoreVehicleTypeRequest;
 use App\Http\Requests\UpdateVehicleTypeRequest;
 use App\Models\EquipmentType;
 use App\Models\VehicleType;
+use Illuminate\Http\Request;
 
 class VehicleTypeController extends Controller
 {
@@ -18,9 +19,12 @@ class VehicleTypeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $vehicleTypes = VehicleType::paginate(20);
+        $vehicleTypes = VehicleType::when(
+            $request->filled('q'),
+            fn ($query) => $query->where('name', 'like', '%' . $request->get('q') . '%')
+        )->orderBy('name')->paginate(20)->withQueryString();
 
         return view('admin.vehicle-types.index', compact('vehicleTypes'));
     }

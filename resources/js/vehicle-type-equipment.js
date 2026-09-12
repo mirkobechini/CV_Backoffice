@@ -75,13 +75,13 @@ const initializeVehicleTypeEquipmentManager = () => {
     // Crea una nuova riga composta da select, quantità e pulsante di rimozione.
     const appendEquipmentRow = (selectedValue = '', quantity = 1) => {
         const equipmentRow = document.createElement('div');
-        equipmentRow.className = 'equipment-row d-flex gap-2 mb-2';
+        equipmentRow.className = 'equipment-row eq-row';
         equipmentRow.innerHTML = `
-            <select class="form-select" name="required_equipment_types[]">
+            <select class="select" name="required_equipment_types[]">
                 ${buildEquipmentOptionsMarkup(selectedValue)}
             </select>
-            <input type="number" class="form-control" name="required_equipment_types_qty[]" value="${quantity}" min="0">
-            <button type="button" class="btn btn-outline-danger remove-equipment-btn">Rimuovi</button>
+            <input type="number" class="input qty" name="required_equipment_types_qty[]" value="${quantity}" min="0">
+            <button type="button" class="del remove-equipment-btn" title="Rimuovi"><i class="fa-solid fa-xmark"></i></button>
         `;
 
         equipmentRowsContainer.appendChild(equipmentRow);
