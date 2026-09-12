@@ -43,7 +43,21 @@ class MileageLogController extends Controller
             ]
         );
 
-        return view('admin.mileage-logs.index', compact('mileageLogs', 'sortBy', 'sortDir') + [
+        // Delta rispetto alla lettura precedente per lo stesso veicolo (mostrato
+        // come sotto-testo nella colonna Km). Calcolato su tutti i log per non
+        // dipendere dall'ordinamento/paginazione correnti della tabella.
+        $deltaByLogId = [];
+        foreach (MileageLog::orderBy('log_date')->get(['id', 'vehicle_id', 'mileage'])->groupBy('vehicle_id') as $logsForVehicle) {
+            $previous = null;
+            foreach ($logsForVehicle as $log) {
+                if ($previous !== null) {
+                    $deltaByLogId[$log->id] = $log->mileage - $previous->mileage;
+                }
+                $previous = $log;
+            }
+        }
+
+        return view('admin.mileage-logs.index', compact('mileageLogs', 'sortBy', 'sortDir', 'deltaByLogId') + [
             'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.mileage-logs.index'),
             'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
@@ -130,12 +144,6 @@ class MileageLogController extends Controller
                 ->pluck('id')
                 ->toArray();
 
-            // Pre-carica l'ultimo km per ogni veicolo coinvolto
-            $lastMileages = MileageLog::whereIn('vehicle_id', $validVehicleIds)
-                ->selectRaw('vehicle_id, MAX(mileage) as last_mileage')
-                ->groupBy('vehicle_id')
-                ->pluck('last_mileage', 'vehicle_id');
-
             foreach ($data['mileages'] as $vehicleId => $mileage) {
                 if ($mileage === null || $mileage === '' || $mileage < 0) {
                     continue;
@@ -147,12 +155,13 @@ class MileageLogController extends Controller
                     continue;
                 }
 
-                // Validazione: km devono essere >= ultimo registrato
-                $lastKm = $lastMileages[$vehicleId] ?? null;
-                if ($lastKm !== null && (int) $mileage < (int) $lastKm) {
+                // Validazione: coerenza cronologica con le altre letture del veicolo
+                // (non solo con l'ultima in assoluto, per permettere letture storiche).
+                $conflict = MileageLog::findChronologyConflict($vehicleId, $logDate, (int) $mileage);
+                if ($conflict !== null) {
                     $vehicle = Vehicle::find($vehicleId);
                     $label = $vehicle ? ($vehicle->internal_code.' - '.$vehicle->license_plate) : ('ID '.$vehicleId);
-                    $errors[] = "{$label}: {$mileage} km è inferiore all'ultimo registrato ({$lastKm} km).";
+                    $errors[] = "{$label}: {$conflict}";
 
                     continue;
                 }

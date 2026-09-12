@@ -8,6 +8,8 @@ use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Vehicle;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 
 class EquipmentController extends Controller
@@ -20,11 +22,44 @@ class EquipmentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $equipments = Equipment::with('vehicle', 'equipmentType')->paginate(20);
+        $validated = $request->validate([
+            'status_filter' => 'nullable|in:all,expired,pending,valid',
+        ]);
+        $statusFilter = $validated['status_filter'] ?? 'all';
 
-        return view('admin.equipments.index', compact('equipments'));
+        $query = Equipment::with('vehicle', 'equipmentType');
+
+        if ($q = $request->get('q')) {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('serial_number', 'like', "%{$q}%");
+            });
+        }
+
+        $allEquipments = $query->get();
+
+        // Lo stato è un accessor calcolato, non una colonna: filtriamo in memoria
+        // dopo aver caricato i risultati della ricerca.
+        if ($statusFilter !== 'all') {
+            $labelMap = ['expired' => 'Scaduta', 'pending' => 'In scadenza', 'valid' => 'Valida'];
+            $allEquipments = $allEquipments->filter(
+                fn (Equipment $e) => $e->status_label === $labelMap[$statusFilter]
+            )->values();
+        }
+
+        $perPage = 20;
+        $page = (int) $request->get('page', 1);
+        $equipments = new LengthAwarePaginator(
+            $allEquipments->forPage($page, $perPage)->values(),
+            $allEquipments->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('admin.equipments.index', compact('equipments', 'statusFilter'));
     }
 
     /**

@@ -1,91 +1,149 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Sistema')],
+        ['label' => __('Registro Attività')],
+    ]" />
+@endsection
+
+@php
+    $badgeClass = fn($type) => match ($type) {
+        \App\Models\Vehicle::class => 'b-blue',
+        \App\Models\Issue::class => 'b-red',
+        \App\Models\Deadline::class => 'b-amber',
+        \App\Models\MaintenanceRecord::class => 'b-green',
+        \App\Models\Equipment::class, \App\Models\EquipmentType::class => 'b-purple',
+        \App\Models\VehicleType::class => 'b-blue',
+        \App\Models\Provider::class => 'b-blue',
+        default => 'b-gray',
+    };
+@endphp
+
 @section('content')
-    <div class="container py-4">
-        <div class="d-flex align-items-center mb-4">
-            <h1 class="mb-0"><i class="bi bi-clock-history me-2"></i>Registro Attività</h1>
-            <div class="ms-auto">
-                <form action="{{ route('admin.activity-log.index') }}" method="GET" class="d-flex gap-2" id="search-form">
-                    <select name="log_name" class="form-select form-select-sm" style="min-width: 180px;">
-                        <option value="">Tutti i tipi</option>
-                        @foreach ($logNames as $name)
-                            <option value="{{ $name }}" {{ request('log_name') === $name ? 'selected' : '' }}>
-                                {{ ucfirst($name) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="input-group input-group-sm">
-                        <input type="text" name="q" class="form-control" placeholder="Cerca..."
-                            value="{{ request('q') }}" style="min-width: 200px;">
-                        <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i></button>
-                        @if (request('q') || request('log_name'))
-                            <a href="{{ route('admin.activity-log.index') }}" class="btn btn-outline-danger"><i
-                                    class="bi bi-x-lg"></i></a>
-                        @endif
-                    </div>
-                </form>
-            </div>
+
+    <div class="page-header">
+        <h1>{{ __('Registro Attività') }}</h1>
+        <div class="filters">
+            <form action="{{ route('admin.activity-log.index') }}" method="GET" class="filters"
+                style="align-items:center;">
+                <select name="subject_type" class="select" style="width:auto;" onchange="this.form.submit()">
+                    <option value="">{{ __('Tutti i tipi') }}</option>
+                    @foreach ($subjectTypes as $type => $label)
+                        <option value="{{ $type }}" {{ request('subject_type') === $type ? 'selected' : '' }}>
+                            {{ $label }}
+                        </option>
+                    @endforeach
+                </select>
+                <div class="search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="q" placeholder="{{ __('Cerca...') }}" value="{{ request('q') }}">
+                    @if (request('q') || request('subject_type'))
+                        <a href="{{ route('admin.activity-log.index') }}" class="clear-search"><i
+                                class="fa-solid fa-xmark"></i></a>
+                    @endif
+                </div>
+            </form>
         </div>
+    </div>
 
-        <div class="card my-0">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover my-0 align-middle">
-                    <thead>
+    <div class="table-card">
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Data/Ora') }}</th>
+                        <th>{{ __('Utente') }}</th>
+                        <th>{{ __('Tipo') }}</th>
+                        <th>{{ __('Descrizione') }}</th>
+                        <th>{{ __('Dettagli') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($activities as $activity)
                         <tr>
-                            <th>Data/Ora</th>
-                            <th>Utente</th>
-                            <th>Tipo</th>
-                            <th>Descrizione</th>
-                            <th>Dettagli</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($activities as $activity)
-                            <tr>
-                                <td class="text-nowrap small">
-                                    {{ $activity->created_at->locale('it')->translatedFormat('d/m/Y H:i') }}</td>
-                                <td>{{ $activity->causer?->name ?? 'Sistema' }}</td>
-                                <td><span class="badge bg-secondary">{{ $activity->log_name ?? 'N/A' }}</span></td>
-                                <td>{{ $activity->description }}</td>
-                                <td>
-                                    @if ($activity->properties && $activity->properties->isNotEmpty())
-                                        <button type="button" class="btn btn-sm btn-outline-info" data-bs-toggle="modal"
-                                            data-bs-target="#detailModal-{{ $activity->id }}">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
+                            <td class="code" style="white-space:nowrap;">
+                                {{ $activity->created_at->locale('it')->translatedFormat('d/m/Y H:i') }}</td>
+                            <td>{{ $activity->causer?->name ?? __('Sistema') }}</td>
+                            <td>
+                                <span
+                                    class="badge {{ $badgeClass($activity->subject_type) }}">{{ \App\Http\Controllers\Admin\ActivityLogController::subjectTypeLabel($activity->subject_type) }}</span>
+                            </td>
+                            <td>{{ $activity->description }}</td>
+                            <td>
+                                @if ($activity->properties && $activity->properties->isNotEmpty())
+                                    <button type="button" class="detail-btn" data-bs-toggle="modal"
+                                        data-bs-target="#detailModal-{{ $activity->id }}" title="{{ __('Dettagli') }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
 
-                                        {{-- Modal dettagli --}}
-                                        <div class="modal fade" id="detailModal-{{ $activity->id }}" tabindex="-1">
-                                            <div class="modal-dialog modal-lg">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Dettagli attività</h5>
-                                                        <button type="button" class="btn-close"
-                                                            data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <pre class="mb-0" style="font-size: 0.8rem; max-height: 400px; overflow-y: auto;">{{ json_encode($activity->properties, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
-                                                    </div>
+                                    @php
+                                        $propertyData = \App\Http\Controllers\Admin\ActivityLogController::propertyRows($activity->properties);
+                                    @endphp
+                                    <div class="modal fade" id="detailModal-{{ $activity->id }}" tabindex="-1"
+                                        aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">{{ __('Dettagli attività') }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                        aria-label="{{ __('Chiudi') }}"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    @if (count($propertyData['rows']) > 0)
+                                                        <table class="prop-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>{{ __('Campo') }}</th>
+                                                                    @if ($propertyData['mode'] === 'diff')
+                                                                        <th>{{ __('Prima') }}</th>
+                                                                        <th>{{ __('Dopo') }}</th>
+                                                                    @else
+                                                                        <th>{{ __('Valore') }}</th>
+                                                                    @endif
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach ($propertyData['rows'] as $row)
+                                                                    <tr>
+                                                                        <td class="fname">{{ $row['field'] }}</td>
+                                                                        @if ($propertyData['mode'] === 'diff')
+                                                                            <td class="before">{{ $row['before'] }}</td>
+                                                                        @endif
+                                                                        <td class="after">{{ $row['after'] }}</td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    @else
+                                                        <p class="hint" style="margin:0;">{{ __('Nessun dettaglio disponibile.') }}</p>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
-                                    @else
-                                        <span class="text-muted small">—</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="5" class="text-center py-4">Nessuna attività registrata.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            @if ($activities->hasPages())
-                <div class="d-flex justify-content-center py-3">
-                    {{ $activities->links() }}
-                </div>
-            @endif
+                                    </div>
+                                @else
+                                    <span class="hint" style="margin:0;">—</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="empty">{{ __('Nessuna attività registrata.') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
+
+        @if ($activities->hasPages())
+            <div class="pagination">
+                <span>{{ __('Pagina') }} {{ $activities->currentPage() }} / {{ $activities->lastPage() }} ·
+                    {{ $activities->total() }}</span>
+                <nav>
+                    {{ $activities->links() }}
+                </nav>
+            </div>
+        @endif
     </div>
 @endsection

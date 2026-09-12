@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
+use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Http\Request;
@@ -23,18 +24,64 @@ class VehicleController extends Controller
      */
     public function index(Request $request)
     {
+        $filter = $request->get('filter', 'all');
 
         $vehicles = Vehicle::query()
             ->forCurrentUser()
-            ->with(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment'])
+            ->with(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment', 'latestMileageLog'])
+            ->with(['mileageLogs' => function ($query) {
+                $query->orderByDesc('log_date')->limit(2);
+            }])
+            ->with(['deadlines' => function ($query) {
+                $query->where('is_renewed', false)
+                    ->orderBy('due_date');
+            }])
             ->withCount([
-                'issues as open_issues_count' => fn ($query) => $query->where('status', 'open'),
-                'issues as in_progress_issues_count' => fn ($query) => $query->where('status', 'in_progress'),
+                'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
+                'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
             ])
-            ->search($request->get('q'))
-            ->paginate(20);
+            ->search($request->get('q'));
 
-        return view('admin.vehicles.index', compact('vehicles'));
+        // Filtri chip (Tutti, Guasti, Scadenza prossima, Da integrare)
+        if ($filter === 'issues') {
+            $vehicles = $vehicles->whereHas('issues', fn($q) => $q->whereIn('status', ['open', 'in_progress']));
+        } elseif ($filter === 'deadline') {
+            $vehicles = $vehicles->whereHas('deadlines', fn($q) => $q->where('is_renewed', false)->whereIn('status', ['pending', 'expired']));
+        } elseif ($filter === 'incomplete') {
+            $incompleteIds = Vehicle::forCurrentUser()
+                ->with('vehicleType.equipmentTypes', 'equipment')
+                ->get()
+                ->reject(fn($v) => $v->hasAllRequiredEquipment())
+                ->pluck('id');
+            $vehicles = $vehicles->whereIn('id', $incompleteIds);
+        }
+
+        $vehicles = $vehicles->paginate(20);
+
+        // Stats per la toolbar
+        $totalVehicles = Vehicle::forCurrentUser()->count();
+        $openIssuesCount = Vehicle::forCurrentUser()
+            ->withCount(['issues as c' => fn($q) => $q->whereIn('status', ['open', 'in_progress'])])
+            ->get()
+            ->sum('c');
+        $deadlinesIn30 = Deadline::where('is_renewed', false)
+            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->upcoming(30)
+            ->count();
+        $completeFleet = Vehicle::forCurrentUser()
+            ->with('vehicleType.equipmentTypes', 'equipment')
+            ->get()
+            ->filter(fn($v) => $v->hasAllRequiredEquipment())
+            ->count();
+
+        return view('admin.vehicles.index', compact(
+            'vehicles',
+            'totalVehicles',
+            'openIssuesCount',
+            'deadlinesIn30',
+            'completeFleet',
+            'filter'
+        ));
     }
 
     /**
@@ -61,7 +108,7 @@ class VehicleController extends Controller
 
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');
-            $randomFileName = Str::random(40).'.'.$registrationCardFile->getClientOriginalExtension();
+            $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
             $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
         }
 
@@ -85,7 +132,23 @@ class VehicleController extends Controller
         $deadlines = $vehicle->deadlines_grouped;
         $deadlinesTypes = Vehicle::DEADLINE_TYPES;
 
-        return view('admin.vehicles.show', compact('vehicle', 'vehicleAppointments', 'deadlines', 'deadlinesTypes'));
+        // Officina collegata a ciascun guasto tramite l'appuntamento che lo referenzia,
+        // usata nella card "Guasti" del dettaglio veicolo.
+        $issueProviders = $vehicleAppointments
+            ->filter(fn ($record) => $record->provider_id)
+            ->flatMap(fn ($record) => $record->items
+                ->where('itemable_type', 'App\Models\Issue')
+                ->pluck('itemable_id')
+                ->mapWithKeys(fn ($issueId) => [$issueId => $record->provider]))
+        ;
+
+        return view('admin.vehicles.show', compact(
+            'vehicle',
+            'vehicleAppointments',
+            'deadlines',
+            'deadlinesTypes',
+            'issueProviders'
+        ));
     }
 
     /**
@@ -115,7 +178,7 @@ class VehicleController extends Controller
             }
 
             $registrationCardFile = $request->file('registration_card');
-            $randomFileName = Str::random(40).'.'.$registrationCardFile->getClientOriginalExtension();
+            $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
             $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
         }
 

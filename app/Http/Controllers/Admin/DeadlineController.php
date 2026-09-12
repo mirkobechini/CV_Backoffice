@@ -27,16 +27,24 @@ class DeadlineController extends Controller
     public function index(Request $request)
     {
         $validated = $request->validate([
-            'group_by' => 'nullable|in:type,status,vehicle,date',
+            'group_by' => 'nullable|in:type,status,vehicle,date,none',
             'sort_by' => 'nullable|in:type,status,vehicle,date',
             'sort_dir' => 'nullable|in:asc,desc',
             'latest_revision_only' => 'nullable|in:0,1',
+            'status_filter' => 'nullable|in:all,expired,pending,valid,renewed',
         ]);
 
-        $groupBy = $validated['group_by'] ?? null;
+        // Default atteso alla prima visita (nessun filtro in query string):
+        // raggruppato per tipo e limitato all'ultima revisione per veicolo.
+        // "none"/"0" espliciti nella query string permettono di disattivarli.
+        $groupBy = $validated['group_by'] ?? ($request->has('group_by') ? null : 'type');
+        if ($groupBy === 'none') {
+            $groupBy = null;
+        }
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
-        $latestRevisionOnly = ($validated['latest_revision_only'] ?? '0') === '1';
+        $latestRevisionOnly = $request->has('latest_revision_only') ? $validated['latest_revision_only'] === '1' : true;
+        $statusFilter = $validated['status_filter'] ?? 'all';
 
         $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')->search($request->get('q'));
 
@@ -54,6 +62,10 @@ class DeadlineController extends Controller
         }
 
         Deadline::syncStatusesFromRules($deadlines);
+
+        if ($statusFilter !== 'all') {
+            $deadlines = $deadlines->filter(fn(Deadline $d) => $d->automatic_status === $statusFilter)->values();
+        }
 
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
             'type' => fn(Deadline $d) => $d->type,
@@ -77,7 +89,7 @@ class DeadlineController extends Controller
             };
         });
 
-        return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly') + [
+        return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly', 'statusFilter') + [
             'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.deadlines.index'),
             'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
             'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
@@ -90,8 +102,9 @@ class DeadlineController extends Controller
     public function create()
     {
         $vehicles = Vehicle::with('vehicleType')->forCurrentUser()->get();
+        $selectedVehicleId = request('vehicle_id');
 
-        return view('admin.deadlines.create', compact('vehicles'));
+        return view('admin.deadlines.create', compact('vehicles', 'selectedVehicleId'));
     }
 
     /**

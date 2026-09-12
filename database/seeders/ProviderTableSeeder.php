@@ -19,7 +19,7 @@ class ProviderTableSeeder extends Seeder
                 'name' => $faker->company(),
                 'contact_info' => $faker->phoneNumber(),
                 'address' => $faker->address(),
-                'type' => $faker->randomElement(['Meccanico', 'Carrozziere', 'Gommista', 'Lavaggio', 'Allestitore', 'Vetri']),
+                'type' => $faker->randomElement(['Meccanico', 'Carrozziere', 'Gommista', 'Lavaggio', 'Allestitore', 'Vetri', 'Elettrauto', 'Centro Revisioni']),
             ]);
         }
     }

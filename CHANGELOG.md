@@ -4,6 +4,31 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.1.0] - 2026-09-12
+
+### Added
+
+- **Restyle completo "Dashboard Pro"**: tutta l'interfaccia (dashboard, veicoli, scadenze, guasti, appuntamenti, fornitori, km, attrezzature, tipi veicolo/attrezzatura, gruppi, utenti, impostazioni, notifiche, registro attività, login/auth, profilo) è stata migrata da Bootstrap al nuovo design system Dashboard Pro: sidebar + topbar, tema chiaro/scuro con switch a 3 posizioni, sidebar mobile a scomparsa, breadcrumb, tabelle e form uniformati.
+- Notifiche: impostazioni (`report_email`, frequenza, giorni di preavviso, toggle `notify_on_*`) rese personali per account invece che globali; i toggle sono ora letti realmente da `GenerateNotifications`/`SendSummaryReport`, riscritti per operare per-utente.
+- Pagina "Utenti" rimossa (duplicava i membri del gruppo): la creazione di un account ora avviene direttamente dalla pagina del gruppo ("Crea nuovo utente").
+- Profilo utente accessibile anche cliccando su nome/avatar in fondo alla sidebar.
+- Login e pagine di autenticazione: nuovo layout dedicato senza sidebar admin, occhiello mostra/nascondi password su ogni campo password dell'app.
+- Scadenze: possibilità di annotare il chilometraggio anche per le revisioni (ministeriale/ossigeno), campo facoltativo e indipendente dal calcolo automatico della data.
+- Appuntamenti (manutenzioni): nuovo campo "Note" facoltativo.
+- Registro attività: filtro/visualizzazione basati su `subject_type` invece del sempre uguale `log_name`; il dettaglio mostra ora un confronto prima/dopo leggibile invece del JSON grezzo.
+
+### Fixed
+
+- Aggiunti `lang/it/auth.php` e `lang/it/passwords.php`, assenti di default in Laravel 12: i messaggi di errore di login/reset password mostravano la chiave di traduzione grezza (es. "auth.failed") invece di un testo leggibile.
+- `reset-password.blade.php` inviava il form alla route sbagliata (`password.update`, autenticata, invece di `password.store`, per il link via email): il reset password da email non poteva mai funzionare.
+- `GroupController::update` (rinomina gruppo) non verificava che l'utente fosse capo: qualsiasi membro poteva rinominare il gruppo chiamando la route direttamente.
+- `GroupController::updateRole` non impediva di rimuovere l'ultimo capo di un gruppo.
+- Rimossa `auth/register.blade.php`, vista irraggiungibile (nessuna rotta di registrazione: gli account si creano solo su invito).
+
+### Removed
+
+- Sezione "Token API" nel profilo nascosta (nessun client la usa: l'app mobile ottiene il proprio token da `POST /api/login`); route/controller restano attivi per un uso futuro.
+
 ## [v1.0.0] - 2026-09-09
 
 ### Added

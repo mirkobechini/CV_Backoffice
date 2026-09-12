@@ -1,66 +1,63 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Sistema')],
+        ['label' => __('Impostazioni')],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container py-4">
-        <h1 class="mb-4">Impostazioni</h1>
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
+    <div class="page-header">
+        <h1>{{ __('Impostazioni') }}</h1>
+    </div>
 
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">Associazione / Gruppo</div>
-                    <div class="card-body">
-                        @if ($group)
-                            @if (auth()->user()->roleIn($group) === 'capo')
-                                <form method="POST" action="{{ route('admin.settings.group') }}">
-                                    @csrf
-                                    @method('PATCH')
-                                    <div class="mb-3">
-                                        <label for="name" class="form-label">Nome</label>
-                                        <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                            id="name" name="name" value="{{ old('name', $group->name) }}" required>
-                                        @error('name')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Salva</button>
-                                </form>
-                            @else
-                                <p class="mb-0"><strong>{{ $group->name }}</strong></p>
-                                <p class="text-muted">Solo il capo può modificare le impostazioni del gruppo.</p>
-                            @endif
-                        @else
-                            <p class="text-muted">Non appartieni a nessun gruppo.</p>
-                        @endif
-                    </div>
-                </div>
+    <div class="row2">
+        <div class="admin-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--primary-soft); color:var(--primary);"><i
+                            class="fa-solid fa-user"></i></span> {{ __('Account') }}</h3>
             </div>
+            <div class="body">
+                <p class="hint" style="margin-bottom:10px;">
+                    {{ __('Nome, email, password e altre impostazioni personali del tuo account.') }}</p>
+                <a href="{{ route('profile.edit') }}" class="btn outline">
+                    <i class="fa-solid fa-arrow-right"></i> {{ __('Vai al tuo account') }}
+                </a>
+                <p class="hint" style="margin-top:14px;">
+                    {{ __('Per rinominare un gruppo, invitare membri o gestirne i ruoli, apri la pagina del gruppo da') }}
+                    <a href="{{ route('admin.groups.index') }}">{{ __('Gruppi') }}</a>.
+                </p>
+            </div>
+        </div>
 
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">Backup database</div>
-                    <div class="card-body">
-                        <p class="text-muted">Crea un backup del database in formato JSON.</p>
-                        <form method="POST" action="{{ route('admin.settings.backup') }}">
-                            @csrf
-                            <button type="submit" class="btn btn-outline-primary">Crea backup</button>
-                        </form>
+        <div class="admin-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--blue-soft); color:var(--blue);"><i
+                            class="fa-solid fa-database"></i></span> {{ __('Backup database') }}</h3>
+            </div>
+            <div class="body">
+                <p class="hint" style="margin-bottom:10px;">{{ __('Crea un backup del database in formato JSON.') }}</p>
+                <form method="POST" action="{{ route('admin.settings.backup') }}" data-single-submit="true">
+                    @csrf
+                    <button type="submit" class="btn outline" data-loading-text="{{ __('Creazione...') }}">
+                        <i class="fa-solid fa-floppy-disk"></i> {{ __('Crea backup') }}
+                    </button>
+                </form>
 
-                        @if ($backups->isNotEmpty())
-                            <h6 class="mt-4">Backup recenti</h6>
-                            <ul class="list-group">
-                                @foreach ($backups as $backup)
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span>{{ $backup['name'] }}</span>
-                                        <span class="text-muted small">{{ round($backup['size'] / 1024, 1) }} KB</span>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
+                @if ($backups->isNotEmpty())
+                    <div class="backup-list">
+                        <h4>{{ __('Backup recenti') }}</h4>
+                        @foreach ($backups as $backup)
+                            <div class="b-item">
+                                <span class="ic"><i class="fa-solid fa-file-lines"></i></span>
+                                <span class="name">{{ $backup['name'] }}</span>
+                                <span class="size">{{ round($backup['size'] / 1024, 1) }} KB</span>
+                            </div>
+                        @endforeach
                     </div>
-                </div>
+                @endif
             </div>
         </div>
     </div>

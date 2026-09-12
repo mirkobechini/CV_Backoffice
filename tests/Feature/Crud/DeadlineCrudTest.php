@@ -162,6 +162,31 @@ class DeadlineCrudTest extends TestCase
         $this->assertSoftDeleted($deadline);
     }
 
+    public function test_ministerial_revision_can_optionally_record_mileage(): void
+    {
+        // Per le revisioni (data auto-calcolata) il km è solo un'annotazione
+        // facoltativa: non deve essere richiesto né bloccare il salvataggio.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'status' => 'renewed',
+            'last_mileage' => 87000,
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $deadline->id,
+            'type' => 'Revisione Ministeriale',
+            'last_mileage' => 87000,
+            'interval_km' => null,
+        ]);
+    }
+
     // VALIDAZIONE DEI CAMPI OBBLIGATORI
 
     public function test_deadline_type_is_required(): void

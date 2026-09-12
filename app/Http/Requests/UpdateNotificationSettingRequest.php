@@ -2,12 +2,20 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\AdminOnlyAccess;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateNotificationSettingRequest extends FormRequest
 {
-    use AdminOnlyAccess;
+    /**
+     * Ogni utente autenticato gestisce le proprie notifiche: sono
+     * impostazioni personali per account, non dati di gruppo, quindi qui
+     * non si applica la restrizione capo/sottocapo (AdminOnlyAccess) usata
+     * altrove per la gestione dei dati condivisi.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     /**
      * Get the validation rules that apply to the request.

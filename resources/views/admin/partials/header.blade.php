@@ -1,219 +1,104 @@
-<header>
-    <nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ route('dashboard') }}">
-                <i class="fa-solid fa-car me-2"></i>
-                <span class="brand-text">{{ config('app.name', 'CV Backoffice') }}</span>
-                <span class="badge text-bg-secondary ms-2 small"
-                    style="font-size: 0.65rem; vertical-align: middle;">{{ config('app.version') }}</span>
-            </a>
+<aside class="sidebar-dp">
+    {{-- Brand --}}
+    <a class="sidebar-brand" href="{{ route('dashboard') }}">
+        <span class="sidebar-logo"><i class="fa-solid fa-car"></i></span>
+        <span class="brand-text">{{ config('app.name', 'CV Backoffice') }}</span>
+        <span class="badge text-bg-secondary ms-auto small" style="font-size: 0.6rem;">{{ config('app.version') }}</span>
+    </a>
 
-            {{-- Notifiche --}}
-            <a href="{{ route('notifications.index') }}" class="btn btn-sm btn-outline-secondary position-relative me-2"
-                title="Notifiche">
-                <i class="fa-solid fa-bell"></i>
-                @if (auth()->user()?->notifications()->where('is_read', false)->count() > 0)
-                    <span
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">{{ auth()->user()?->notifications()->where('is_read', false)->count() }}</span>
-                @endif
-            </a>
-
-            {{-- Theme Toggle — sempre visibile --}}
-            <div class="d-flex align-items-center ms-auto">
-                <button id="theme-toggle" class="btn btn-sm btn-outline-secondary rounded-pill me-2" type="button"
-                    aria-label="Cambia tema">
-                    <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
-                </button>
-
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
-                    aria-expanded="false" aria-label="{{ __('Toggle navigation') }}">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-            </div>
-
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <!-- Left Side Of Navbar -->
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    {{-- Dashboard --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('dashboard') }}" title="{{ __('Dashboard') }}">
-                            <i class="fa-solid fa-gauge-high"></i>
-                            <span class="nav-label ms-1">{{ __('Dashboard') }}</span>
-                        </a>
-                    </li>
-
-                    {{-- Dropdown: Veicoli --}}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" title="{{ __('Veicoli') }}">
-                            <i class="fa-solid fa-truck"></i>
-                            <span class="nav-label ms-1">{{ __('Veicoli') }}</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.vehicles.index') }}">
-                                    <i class="fa-solid fa-car me-2"></i>{{ __('Veicoli') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.vehicle-types.index') }}">
-                                    <i class="fa-solid fa-tags me-2"></i>{{ __('Tipi di veicoli') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.mileage-logs.index') }}">
-                                    <i class="fa-solid fa-road me-2"></i>{{ __('Chilometraggi') }}
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    {{-- Dropdown: Manutenzione --}}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" title="{{ __('Manutenzione') }}">
-                            <i class="fa-solid fa-screwdriver-wrench"></i>
-                            <span class="nav-label ms-1">{{ __('Manutenzione') }}</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.providers.index') }}">
-                                    <i class="fa-solid fa-building me-2"></i>{{ __('Officine') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.issues.index') }}">
-                                    <i class="fa-solid fa-triangle-exclamation me-2"></i>{{ __('Guasti') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.maintenance-records.index') }}">
-                                    <i class="fa-solid fa-calendar-check me-2"></i>{{ __('Appuntamenti') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.maintenance-records.calendar') }}">
-                                    <i class="fa-solid fa-calendar-alt me-2"></i>{{ __('Calendario') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.deadlines.index') }}">
-                                    <i class="fa-solid fa-clock me-2"></i>{{ __('Scadenze') }}
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    {{-- Dropdown: Attrezzature --}}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" title="{{ __('Attrezzature') }}">
-                            <i class="fa-solid fa-toolbox"></i>
-                            <span class="nav-label ms-1">{{ __('Attrezzature') }}</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.equipments.index') }}">
-                                    <i class="fa-solid fa-toolbox me-2"></i>{{ __('Attrezzature') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.equipment-types.index') }}">
-                                    <i class="fa-solid fa-tag me-2"></i>{{ __('Tipi di Attrezzature') }}
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-
-                    {{-- Dropdown: Sistema --}}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
-                            aria-expanded="false" title="{{ __('Sistema') }}">
-                            <i class="fa-solid fa-gear"></i>
-                            <span class="nav-label ms-1">{{ __('Sistema') }}</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.users.index') }}">
-                                    <i class="fa-solid fa-user-gear me-2"></i>{{ __('Utenti') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.groups.index') }}">
-                                    <i class="fa-solid fa-users me-2"></i>{{ __('Gruppi') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.notifications.edit') }}">
-                                    <i class="fa-solid fa-bell me-2"></i>{{ __('Notifiche') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.activity-log.index') }}">
-                                    <i class="fa-solid fa-clock-rotate-left me-2"></i>{{ __('Registro Attività') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('admin.settings.index') }}">
-                                    <i class="fa-solid fa-gear me-2"></i>{{ __('Impostazioni') }}
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('privacy') }}">
-                                    <i class="fa-solid fa-shield-halved me-2"></i>{{ __('Privacy') }}
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-
-                <!-- Right Side Of Navbar -->
-                <ul class="navbar-nav ms-lg-auto align-items-lg-center">
-                    @guest
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ route('login') }}" title="{{ __('Login') }}">
-                                <i class="fa-solid fa-right-to-bracket"></i>
-                                <span class="nav-label ms-1">{{ __('Login') }}</span>
-                            </a>
-                        </li>
-                        @if (Route::has('register'))
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('register') }}" title="{{ __('Register') }}">
-                                    <i class="fa-solid fa-user-plus"></i>
-                                    <span class="nav-label ms-1">{{ __('Register') }}</span>
-                                </a>
-                            </li>
-                        @endif
-                    @else
-                        <li class="nav-item dropdown">
-                            <a id="navbarDropdown" class="nav-link dropdown-toggle d-flex align-items-center"
-                                href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true"
-                                aria-expanded="false" title="{{ Auth::user()->name }}">
-                                <i class="fa-solid fa-circle-user fs-5"></i>
-                                <span class="nav-label fw-semibold ms-1">{{ Auth::user()->name }}</span>
-                            </a>
-
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item" href="{{ url('profile') }}">
-                                    <i class="fa-solid fa-user me-2"></i>{{ __('Profile') }}
-                                </a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item text-danger" href="{{ route('logout') }}"
-                                    onclick="event.preventDefault();
-                                                     document.getElementById('logout-form').submit();">
-                                    <i class="fa-solid fa-right-from-bracket me-2"></i>{{ __('Logout') }}
-                                </a>
-
-                                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none"
-                                    data-single-submit="true">
-                                    @csrf
-                                </form>
-                            </div>
-                        </li>
-                    @endguest
-                </ul>
-            </div>
-        </div>
+    {{-- Sezione: Flotta --}}
+    <div class="sidebar-section">{{ __('Flotta') }}</div>
+    <nav class="sidebar-nav">
+        <a class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"
+            title="{{ __('Dashboard') }}">
+            <i class="fa-solid fa-gauge-high"></i><span>{{ __('Dashboard') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}"
+            href="{{ route('admin.vehicles.index') }}" title="{{ __('Veicoli') }}">
+            <i class="fa-solid fa-truck"></i><span>{{ __('Veicoli') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.vehicle-types.*') ? 'active' : '' }}"
+            href="{{ route('admin.vehicle-types.index') }}" title="{{ __('Tipi di veicoli') }}">
+            <i class="fa-solid fa-tags"></i><span>{{ __('Tipi') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.mileage-logs.*') ? 'active' : '' }}"
+            href="{{ route('admin.mileage-logs.index') }}" title="{{ __('Chilometraggi') }}">
+            <i class="fa-solid fa-road"></i><span>{{ __('Km') }}</span>
+        </a>
     </nav>
-</header>
+
+    {{-- Sezione: Servizi --}}
+    <div class="sidebar-section">{{ __('Servizi') }}</div>
+    <nav class="sidebar-nav">
+        <a class="sidebar-link {{ request()->routeIs('admin.providers.*') ? 'active' : '' }}"
+            href="{{ route('admin.providers.index') }}" title="{{ __('Officine') }}">
+            <i class="fa-solid fa-building"></i><span>{{ __('Officine') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.issues.*') ? 'active' : '' }}"
+            href="{{ route('admin.issues.index') }}" title="{{ __('Guasti') }}">
+            <i class="fa-solid fa-triangle-exclamation"></i><span>{{ __('Guasti') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.maintenance-records.*') ? 'active' : '' }}"
+            href="{{ route('admin.maintenance-records.index') }}" title="{{ __('Appuntamenti') }}">
+            <i class="fa-solid fa-calendar-check"></i><span>{{ __('Appuntamenti') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.deadlines.*') ? 'active' : '' }}"
+            href="{{ route('admin.deadlines.index') }}" title="{{ __('Scadenze') }}">
+            <i class="fa-solid fa-clock"></i><span>{{ __('Scadenze') }}</span>
+        </a>
+    </nav>
+
+    {{-- Sezione: Attrezzature --}}
+    <div class="sidebar-section">{{ __('Attrezzature') }}</div>
+    <nav class="sidebar-nav">
+        <a class="sidebar-link {{ request()->routeIs('admin.equipments.*') ? 'active' : '' }}"
+            href="{{ route('admin.equipments.index') }}" title="{{ __('Attrezzature') }}">
+            <i class="fa-solid fa-toolbox"></i><span>{{ __('Attrezzature') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.equipment-types.*') ? 'active' : '' }}"
+            href="{{ route('admin.equipment-types.index') }}" title="{{ __('Tipi di Attrezzature') }}">
+            <i class="fa-solid fa-tag"></i><span>{{ __('Tipi Attrezzature') }}</span>
+        </a>
+    </nav>
+
+    {{-- Sezione: Sistema --}}
+    <div class="sidebar-section">{{ __('Sistema') }}</div>
+    <nav class="sidebar-nav">
+        <a class="sidebar-link {{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
+            href="{{ route('admin.groups.index') }}" title="{{ __('Gruppi') }}">
+            <i class="fa-solid fa-users"></i><span>{{ __('Gruppi') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.notifications.*') ? 'active' : '' }}"
+            href="{{ route('admin.notifications.edit') }}" title="{{ __('Notifiche') }}">
+            <i class="fa-solid fa-bell"></i><span>{{ __('Notifiche') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.activity-log.*') ? 'active' : '' }}"
+            href="{{ route('admin.activity-log.index') }}" title="{{ __('Registro Attività') }}">
+            <i class="fa-solid fa-clock-rotate-left"></i><span>{{ __('Registro Attività') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"
+            href="{{ route('admin.settings.index') }}" title="{{ __('Impostazioni') }}">
+            <i class="fa-solid fa-gear"></i><span>{{ __('Impostazioni') }}</span>
+        </a>
+    </nav>
+
+    {{-- Footer sidebar: utente + logout --}}
+    <div class="sidebar-footer">
+        @auth
+            <div class="sidebar-user">
+                <a href="{{ route('profile.edit') }}" class="sidebar-user-link" title="{{ __('Il tuo account') }}">
+                    <span class="sidebar-user-avatar"><i class="fa-solid fa-circle-user"></i></span>
+                    <span class="sidebar-user-name">{{ Auth::user()->name }}</span>
+                </a>
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none"
+                    data-single-submit="true">
+                    @csrf
+                </form>
+                <a href="{{ route('logout') }}" class="sidebar-logout" title="{{ __('Logout') }}"
+                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        @endauth
+    </div>
+</aside>

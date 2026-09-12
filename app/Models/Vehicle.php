@@ -203,6 +203,26 @@ class Vehicle extends Model
         return $latestLog?->mileage;
     }
 
+    /**
+     * Il log di chilometraggio precedente all'ultimo, usato per mostrare
+     * la lettura precedente nell'index veicoli. Null se non esiste
+     * uno storico (un solo log o nessuno).
+     */
+    public function getPreviousMileageLogAttribute(): ?MileageLog
+    {
+        if ($this->relationLoaded('mileageLogs')) {
+            return $this->mileageLogs
+                ->sortByDesc('log_date')
+                ->values()
+                ->get(1);
+        }
+
+        return $this->mileageLogs()
+            ->orderByDesc('log_date')
+            ->skip(1)
+            ->first();
+    }
+
     public function getDeadlinesGroupedAttribute(): Collection
     {
         return $this->deadlines

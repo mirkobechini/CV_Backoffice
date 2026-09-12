@@ -15,11 +15,12 @@
     }
 @endphp
 
-<div class="mb-3">
-    <label for="{{ $inputId }}" class="form-label">{{ $label }}</label>
-    <input type="month" class="form-control @error($name) is-invalid @enderror" id="{{ $inputId }}"
-        name="{{ $name }}" value="{{ $inputValue }}" @if ($required) required @endif>
+<div class="field">
+    <label for="{{ $inputId }}">{{ $label }} @if ($required)<span class="req">*</span>@endif</label>
+    <input type="text" class="flatpickr-month-input" id="{{ $inputId }}" name="{{ $name }}" value="{{ $inputValue }}"
+        placeholder="mm/aaaa" autocomplete="off" data-alt-class="input @error($name) is-invalid @enderror"
+        @if ($required) required @endif>
     @error($name)
-        <div class="invalid-feedback">{{ $message }}</div>
+        <div class="field-error">{{ $message }}</div>
     @enderror
 </div>

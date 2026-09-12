@@ -20,7 +20,7 @@ class UpdateProviderRequest extends FormRequest
             'name' => 'required|string|max:255|unique:providers,name,' . $this->route('provider')?->id . ',id',
             'address' => 'nullable|string|max:255',
             'contact_info' => 'nullable|string|max:255',
-            'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore,Vetri',
+            'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore,Vetri,Elettrauto,Centro Revisioni',
         ];
     }
 
@@ -36,7 +36,7 @@ class UpdateProviderRequest extends FormRequest
             'contact_info.string' => 'Le informazioni di contatto devono essere una stringa.',
             'contact_info.max' => 'Le informazioni di contatto non possono superare i 255 caratteri.',
             'type.required' => 'Il tipo è obbligatorio.',
-            'type.in' => 'Il tipo selezionato non è valido. Deve essere uno dei seguenti: Meccanico, Carrozziere, Gommista, Lavaggio, Allestitore, Vetri.',
+            'type.in' => 'Il tipo selezionato non è valido. Deve essere uno dei seguenti: Meccanico, Carrozziere, Gommista, Lavaggio, Allestitore, Vetri, Elettrauto, Centro Revisioni.',
         ];
     }
 }

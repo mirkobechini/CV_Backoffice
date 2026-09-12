@@ -1,418 +1,257 @@
 @extends('layouts.app')
 
 @section('content')
-    <style>
-        .stat-card {
-            border-radius: 16px;
-            border: var(--bs-border-width) solid var(--bs-border-color);
-            transition: transform .2s;
-        }
 
-        .stat-card:hover {
-            transform: translateY(-3px);
-        }
+    {{-- Header: titolo + data odierna --}}
+    <div class="page-header">
+        <h1><i class="fa-solid fa-gauge-high"></i> {{ __('Dashboard') }}</h1>
+        <div class="date">{{ __('Oggi,') }} {{ now()->translatedFormat('l j F Y') }}</div>
+    </div>
 
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-        }
+    {{-- 6 KPI --}}
+    <div class="dash-kpis">
+        <a href="{{ route('admin.vehicles.index') }}" class="dash-kpi">
+            <div class="ic k1"><i class="fa-solid fa-truck"></i></div>
+            <div>
+                <div class="lbl">{{ __('Veicoli totali') }}</div>
+                <div class="val">{{ $totalVehicles }}</div>
+            </div>
+        </a>
+        <a href="{{ route('admin.issues.index') }}" class="dash-kpi">
+            <div class="ic k2"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+                <div class="lbl">{{ __('Guasti aperti') }}</div>
+                <div class="val">{{ $openIssues->count() }}</div>
+            </div>
+        </a>
+        <a href="{{ route('admin.deadlines.index') }}" class="dash-kpi">
+            <div class="ic k3"><i class="fa-solid fa-clock"></i></div>
+            <div>
+                <div class="lbl">{{ __('Scadenze imminenti') }}</div>
+                <div class="val">{{ $upcomingDeadlines->count() }}</div>
+            </div>
+        </a>
+        <a href="{{ route('admin.deadlines.index') }}" class="dash-kpi">
+            <div class="ic k4"><i class="fa-solid fa-calendar-xmark"></i></div>
+            <div>
+                <div class="lbl">{{ __('Scadenze scadute') }}</div>
+                <div class="val">{{ $expiredDeadlines->count() }}</div>
+            </div>
+        </a>
+        <a href="{{ route('admin.maintenance-records.index') }}" class="dash-kpi">
+            <div class="ic k5"><i class="fa-solid fa-wrench"></i></div>
+            <div>
+                <div class="lbl">{{ __('In officina') }}</div>
+                <div class="val">{{ $inWorkshopCount }}</div>
+            </div>
+        </a>
+        <a href="{{ route('admin.equipments.index') }}" class="dash-kpi">
+            <div class="ic k6"><i class="fa-solid fa-toolbox"></i></div>
+            <div>
+                <div class="lbl">{{ __('Attrez. in scadenza') }}</div>
+                <div class="val">{{ $expiringEquipment->count() }}</div>
+            </div>
+        </a>
+    </div>
 
-        .badge-expiring {
-            background-color: var(--bs-warning-bg-subtle);
-            color: var(--bs-warning-text-emphasis);
-        }
-
-        .badge-expired {
-            background-color: var(--bs-danger-bg-subtle);
-            color: var(--bs-danger-text-emphasis);
-        }
-
-        .badge-ok {
-            background-color: var(--bs-success-bg-subtle);
-            color: var(--bs-success-text-emphasis);
-        }
-    </style>
-    <div class="container py-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2"></i>{{ __('Dashboard') }}</h2>
-            <span class="text-muted small">Oggi, {{ \Carbon\Carbon::now()->locale('it')->translatedFormat('j F Y') }}</span>
-        </div>
-        <div class="row row-cols-md-4 g-3 mb-4">
-            <div class="col-6">
-                <a href="{{ route('admin.vehicles.index') }}" class="text-decoration-none">
-                    <div class="card stat-card shadow-sm p-3 h-100">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="bi bi-truck"></i></div>
-                            <div>
-                                <div class="fs-3 fw-bold">{{ $totalVehicles }}</div>
-                                <div class="text-muted small">Veicoli totali</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+    {{-- Riga 1: le due card scadenze (imminenti + scadute) affiancate --}}
+    <div class="dash-grid2">
+        <div class="dash-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--amber-soft);color:var(--amber)"><i
+                            class="fa-solid fa-clock"></i></span>{{ __('Scadenze imminenti') }}</h3>
             </div>
-            <div class="col-6">
-                <a href="{{ route('admin.issues.index') }}" class="text-decoration-none">
-                    <div class="card stat-card shadow-sm p-3 h-100">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i
-                                    class="bi bi-exclamation-triangle"></i></div>
-                            <div>
-                                <div class="fs-3 fw-bold">{{ $openIssues->count() }}</div>
-                                <div class="text-muted small">Guasti aperti</div>
+            <div class="body">
+                @forelse ($upcomingDeadlines as $deadline)
+                    <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="dash-list-item">
+                        <span class="dot leg-{{ $deadline->type_slug }}"></span>
+                        <div>
+                            <div class="name">{{ $deadline->type }}</div>
+                            <div class="meta">{{ $deadline->vehicle->internal_code }} ·
+                                {{ __('scade tra :days giorni', ['days' => floor(\Carbon\Carbon::today()->diffInDays($deadline->due_date, false))]) }}
                             </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6">
-                <a href="{{ route('admin.deadlines.index') }}" class="text-decoration-none">
-                    <div class="card stat-card shadow-sm p-3 h-100">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i
-                                    class="bi bi-calendar-check"></i>
-                            </div>
-                            <div>
-                                <div class="fs-3 fw-bold">{{ $upcomingDeadlines->count() }}</div>
-                                <div class="text-muted small">Scadenze imminenti</div>
-                            </div>
+                        <span class="badge b-amber">{{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</span>
+                    </a>
+                @empty
+                    <div class="dash-empty">
+                        <div>
+                            <div class="name">{{ __('Nessuna scadenza imminente') }}</div>
+                            <div class="meta">{{ __('Tutti i veicoli sono in regola') }}</div>
                         </div>
                     </div>
-                </a>
-            </div>
-            <div class="col-6">
-                <a href="{{ route('admin.deadlines.index') }}" class="text-decoration-none">
-                    <div class="card stat-card shadow-sm p-3 h-100">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="bi bi-calendar-x"></i>
-                            </div>
-                            <div>
-                                <div class="fs-3 fw-bold">{{ $expiredDeadlines->count() }}</div>
-                                <div class="text-muted small">Scadenze scadute</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6">
-                <a href="{{ route('admin.maintenance-records.index') }}" class="text-decoration-none">
-                    <div class="card stat-card shadow-sm p-3 h-100">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon bg-success bg-opacity-10 text-success"><i class="bi bi-wrench"></i></div>
-                            <div>
-                                <div class="fs-3 fw-bold">{{ $upcomingAppointments->count() }}</div>
-                                <div class="text-muted small">In officina</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-6">
-                <a href="{{ route('admin.equipments.index') }}" class="text-decoration-none">
-                    <div class="card stat-card shadow-sm p-3 h-100">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="stat-icon bg-info bg-opacity-10 text-info"><i class="bi bi-tools"></i></div>
-                            <div>
-                                <div class="fs-3 fw-bold">{{ $expiringEquipment->count() }}</div>
-                                <div class="text-muted small">Attrez. in scadenza</div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+                @endforelse
+                @if ($upcomingDeadlines->isNotEmpty())
+                    <a href="{{ route('admin.deadlines.index') }}" class="dash-see-all">{{ __('Vedi tutte le scadenze') }}
+                        ›</a>
+                @endif
             </div>
         </div>
-
-        <div class="row row-cols-md-2 g-4">
-
-            <!-- COLONNA SINISTRA: Scadenze imminenti -->
-            <div class="col">
-                <div class="card shadow-sm rounded-4 h-100">
-                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Scadenze imminenti
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            @if ($upcomingDeadlines->isEmpty())
-                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Nessuna scadenza imminente</strong><br>
-                                        <small class="text-muted">Tutti i veicoli sono in regola</small>
-                                    </div>
-                                </div>
-                            @else
-                                @foreach ($upcomingDeadlines as $deadline)
-                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ $deadline->type }}</strong><br>
-                                            <small class="text-muted">{{ $deadline->vehicle->internal_code }} —
-                                                Scade tra {{ floor(now()->diffInDays($deadline->due_date, false)) }}
-                                                giorni</small>
-                                        </div>
-                                        <span
-                                            class="badge badge-expiring rounded-pill px-3 py-2">{{ $deadline->due_date->format('d/m/Y') }}</span>
-                                    </div>
-                                @endforeach
-                                <div class="mt-3 text-center">
-                                    <a href="{{ route('admin.deadlines.index') }}"
-                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte
-                                        le
-                                        scadenze <i class="bi bi-arrow-right ms-1"></i></a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+        <div class="dash-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--red-soft);color:var(--red)"><i
+                            class="fa-solid fa-calendar-xmark"></i></span>{{ __('Scadenze scadute e non rinnovate') }}
+                </h3>
             </div>
-
-            <!-- COLONNA DESTRA: Guasti aperti -->
-            <div class="col">
-                <div class="card shadow-sm rounded-4 h-100">
-                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-exclamation-circle me-2 text-danger"></i>Guasti aperti
-                        </h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            @if ($openIssues->isEmpty())
-                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Nessun guasto aperto</strong><br>
-                                        <small class="text-muted">Tutti i veicoli sono funzionanti</small>
-                                    </div>
-                                </div>
-                            @else
-                                @foreach ($openIssues as $issue)
-                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ $issue->description }}</strong><br>
-                                            <small class="text-muted">{{ $issue->vehicle->internal_code }} —
-                                                {{ $issue->event_date->format('d/m/Y') }}</small>
-                                        </div>
-                                        <span
-                                            class="badge {{ match ($issue->status_color) {'red' => 'bg-danger text-light','yellow' => 'bg-warning text-dark','green' => 'bg-success',default => 'bg-secondary'} }} rounded-pill px-3 py-2">{{ $issue->status_label }}</span>
-                                    </div>
-                                @endforeach
-                                <div class="mt-3 text-center">
-                                    <a href="{{ route('admin.issues.index') }}"
-                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutti i guasti
-                                        <i class="bi bi-arrow-right ms-1"></i></a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- RIGA: Scadenze scadute e non rinnovate -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card shadow-sm rounded-4">
-                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-calendar-x me-2 text-danger"></i>Scadenze scadute e non
-                            rinnovate</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            @if ($expiredDeadlines->isEmpty())
-                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Nessuna scadenza scaduta</strong><br>
-                                        <small class="text-muted">Tutte le scadenze sono in regola</small>
-                                    </div>
-                                </div>
-                            @else
-                                @foreach ($expiredDeadlines as $deadline)
-                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ $deadline->type }}</strong><br>
-                                            <small class="text-muted">{{ $deadline->vehicle->internal_code }} —
-                                                Scaduta da {{ floor(now()->diffInDays($deadline->due_date, false)) }}
-                                                giorni</small>
-                                        </div>
-                                        <span
-                                            class="badge badge-expired rounded-pill px-3 py-2">{{ $deadline->due_date->format('d/m/Y') }}</span>
-                                    </div>
-                                @endforeach
-                                <div class="mt-3 text-center">
-                                    <a href="{{ route('admin.deadlines.index') }}"
-                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte le
-                                        scadenze <i class="bi bi-arrow-right ms-1"></i></a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row row-cols-md-2 g-4 mt-2">
-
-            <!-- Prossimi appuntamenti -->
-            <div class="col">
-                <div class="card shadow-sm rounded-4 h-100">
-                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-tools me-2 text-primary"></i>Prossimi appuntamenti in
-                            officina</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            @if ($upcomingAppointments->isEmpty())
-                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Nessun appuntamento imminente</strong><br>
-                                        <small class="text-muted">Tutti i veicoli sono in regola</small>
-                                    </div>
-                                </div>
-                            @else
-                                @foreach ($upcomingAppointments as $appointment)
-                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ $appointment->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $appointment->activity_type }}</strong><br>
-                                            <small class="text-muted">{{ $appointment->vehicle->internal_code }} @
-                                                {{ $appointment->provider?->name }}</small>
-                                        </div>
-                                        <span
-                                            class="badge bg-primary rounded-pill px-3 py-2">{{ $appointment->appointment_date->format('d/m/Y') }}</span>
-                                    </div>
-                                @endforeach
-                                <div class="mt-3 text-center">
-                                    <a href="{{ route('admin.maintenance-records.index') }}"
-                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutti
-                                        gli
-                                        appuntamenti <i class="bi bi-arrow-right ms-1"></i></a>
-                                </div>
-                            @endif
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Equipaggiamento da integrare -->
-            <div class="col">
-                <div class="card shadow-sm rounded-4 h-100">
-                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-backpack me-2 text-success"></i>Equipaggiamento</h5>
-                    </div>
-                    <div class="card-body d-flex flex-column">
-                        <div class="mb-2">
-                            <div class="d-flex justify-content-between">
-                                <span class="fw-bold fs-4">{{ $totalVehicles - $incompleteVehicles->count() }}</span>
-                                <span class="text-muted">/ {{ $totalVehicles }} mezzi</span>
-                            </div>
-                            <div class="progress mt-1" style="height: 8px;">
-                                <div class="progress-bar bg-success"
-                                    style="width: {{ $totalVehicles > 0 ? (($totalVehicles - $incompleteVehicles->count()) / $totalVehicles) * 100 : 0 }}%">
-                                </div>
-                            </div>
-                            <small class="text-muted">completi</small>
-                        </div>
-                        <div class="mt-auto">
-                            <div class="alert alert-warning py-2 mb-2 small">
-                                <i class="bi bi-exclamation-triangle me-1"></i>
-                                {{ $incompleteVehicles->count() }} mezzo/i con equipaggiamento da integrare
+            <div class="body">
+                @forelse ($expiredDeadlines as $deadline)
+                    <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="dash-list-item">
+                        <span class="dot leg-{{ $deadline->type_slug }}"></span>
+                        <div>
+                            <div class="name">{{ $deadline->type }}</div>
+                            <div class="meta">{{ $deadline->vehicle->internal_code }} ·
+                                {{ __('scaduta da :days giorni', ['days' => abs(floor(\Carbon\Carbon::today()->diffInDays($deadline->due_date, false)))]) }}
                             </div>
                         </div>
-                        <a href="{{ route('admin.vehicles.index') }}"
-                            class="btn btn-outline-secondary btn-sm rounded-pill mt-2 w-100">Dettagli</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-4">
-            <div class="col-md-12">
-                <div class="card shadow-sm rounded-4">
-                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-tools me-2 text-info"></i>Attrezzature in scadenza</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            @if ($expiringEquipment->isEmpty())
-                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Nessuna attrezzatura in scadenza</strong><br>
-                                        <small class="text-muted">Tutte le attrezzature sono in regola</small>
-                                    </div>
-                                </div>
-                            @else
-                                @foreach ($expiringEquipment as $equipment)
-                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ $equipment->name }}</strong><br>
-                                            <small class="text-muted">{{ $equipment->vehicle->internal_code }} —
-                                                {{ $equipment->equipmentType?->name ?? 'N/A' }}</small>
-                                        </div>
-                                        <span
-                                            class="badge {{ $equipment->expiration_date->isPast() ? 'bg-danger text-light' : 'bg-warning text-dark' }} rounded-pill px-3 py-2">
-                                            {{ $equipment->expiration_date->format('d/m/Y') }}
-                                        </span>
-                                    </div>
-                                @endforeach
-                                <div class="mt-3 text-center">
-                                    <a href="{{ route('admin.equipments.index') }}"
-                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte le
-                                        attrezzature <i class="bi bi-arrow-right ms-1"></i></a>
-                                </div>
-                            @endif
+                        <span class="badge b-red">{{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</span>
+                    </a>
+                @empty
+                    <div class="dash-empty">
+                        <div>
+                            <div class="name">{{ __('Nessuna scadenza scaduta') }}</div>
+                            <div class="meta">{{ __('Tutte le scadenze sono in regola') }}</div>
                         </div>
                     </div>
-                </div>
+                @endforelse
+                @if ($expiredDeadlines->isNotEmpty())
+                    <a href="{{ route('admin.deadlines.index') }}" class="dash-see-all">{{ __('Vedi tutte le scadenze') }}
+                        ›</a>
+                @endif
             </div>
         </div>
+    </div>
 
-        <!-- RIGA AGGIUNTIVA: Attrezzature in scadenza -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card shadow-sm rounded-4">
-                    <div class="card-header bg-transparent border-0 rounded-4 pb-0 pt-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-shield-exclamation me-2 text-warning"></i>Attrezzature in
-                            scadenza</h5>
+    {{-- Riga 2: Guasti aperti + Prossimi appuntamenti --}}
+    <div class="dash-grid2">
+        <div class="dash-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--red-soft);color:var(--red)"><i
+                            class="fa-solid fa-triangle-exclamation"></i></span>{{ __('Guasti aperti') }}</h3>
+            </div>
+            <div class="body">
+                @forelse ($openIssues as $issue)
+                    <a href="{{ route('admin.issues.show', $issue->id) }}" class="dash-list-item">
+                        <div>
+                            <div class="name">{{ $issue->description }}</div>
+                            <div class="meta">{{ $issue->vehicle->internal_code }} ·
+                                {{ $issue->event_date?->format('d/m/Y') }}</div>
+                        </div>
+                        <span
+                            class="badge {{ match ($issue->status_color) {
+                                'red' => 'b-red',
+                                'yellow' => 'b-amber',
+                                'green' => 'b-green',
+                                default => 'b-gray',
+                            } }}">{{ $issue->status_label }}</span>
+                    </a>
+                @empty
+                    <div class="dash-empty">
+                        <div>
+                            <div class="name">{{ __('Nessun guasto aperto') }}</div>
+                            <div class="meta">{{ __('Tutti i veicoli sono funzionanti') }}</div>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <div class="list-group list-group-flush">
-                            @if ($expiringEquipment->isEmpty())
-                                <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>Nessuna attrezzatura in scadenza</strong><br>
-                                        <small class="text-muted">Tutti gli equipaggiamenti sono in regola</small>
-                                    </div>
-                                </div>
-                            @else
-                                @foreach ($expiringEquipment as $equipment)
-                                    <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ $equipment->name }}</strong>
-                                            @if ($equipment->equipmentType)
-                                                <span
-                                                    class="badge bg-secondary ms-1">{{ $equipment->equipmentType->name }}</span>
-                                            @endif
-                                            <br>
-                                            <small class="text-muted">{{ $equipment->vehicle?->internal_code ?? 'N/A' }} —
-                                                Scadenza: {{ $equipment->expiration_date->format('d/m/Y') }}</small>
-                                        </div>
-                                        <span
-                                            class="badge {{ $equipment->expiration_date->isPast() ? 'bg-danger' : ($equipment->expiration_date->diffInDays(now()) <= 30 ? 'bg-warning text-dark' : 'bg-success') }} rounded-pill px-3 py-2">
-                                            {{ $equipment->expiration_date->isPast() ? 'Scaduta' : ($equipment->expiration_date->diffInDays(now()) <= 30 ? 'In scadenza' : 'Valida') }}
-                                        </span>
-                                    </div>
-                                @endforeach
-                                <div class="mt-3 text-center">
-                                    <a href="{{ route('admin.equipments.index') }}"
-                                        class="btn btn-outline-secondary btn-sm rounded-pill px-4">Vedi tutte le
-                                        attrezzature
-                                        <i class="bi bi-arrow-right ms-1"></i></a>
-                                </div>
-                            @endif
+                @endforelse
+                @if ($openIssues->isNotEmpty())
+                    <a href="{{ route('admin.issues.index') }}" class="dash-see-all">{{ __('Vedi tutti i guasti') }}
+                        ›</a>
+                @endif
+            </div>
+        </div>
+        <div class="dash-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--green-soft);color:var(--green)"><i
+                            class="fa-solid fa-calendar-check"></i></span>{{ __('Prossimi appuntamenti') }}</h3>
+            </div>
+            <div class="body">
+                @forelse ($upcomingAppointments as $appointment)
+                    <a href="{{ route('admin.maintenance-records.show', $appointment->id) }}" class="dash-list-item">
+                        <div>
+                            <div class="name">
+                                {{ $appointment->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $appointment->activity_type }}
+                            </div>
+                            <div class="meta">{{ $appointment->vehicle->internal_code }} ·
+                                {{ $appointment->appointment_date?->format('d/m/Y') }} · {{ $appointment->provider?->name }}
+                            </div>
+                        </div>
+                        <span class="badge b-green">{{ $appointment->appointment_date?->format('d/m') }}</span>
+                    </a>
+                @empty
+                    <div class="dash-empty">
+                        <div>
+                            <div class="name">{{ __('Nessun appuntamento imminente') }}</div>
+                            <div class="meta">{{ __('Tutti i veicoli sono in regola') }}</div>
+                        </div>
+                    </div>
+                @endforelse
+                @if ($upcomingAppointments->isNotEmpty())
+                    <a href="{{ route('admin.maintenance-records.index') }}"
+                        class="dash-see-all">{{ __('Vedi tutti gli appuntamenti') }} ›</a>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- Riga 3: Equipaggiamento (extra, non nel prototipo) + Attrezzature in scadenza --}}
+    <div class="dash-grid2">
+        <div class="dash-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--purple-soft);color:var(--purple)"><i
+                            class="fa-solid fa-boxes-stacked"></i></span>{{ __('Equipaggiamento') }}</h3>
+            </div>
+            <div class="body">
+                <div class="dash-list-item" style="align-items:flex-start;flex-direction:column;gap:6px;">
+                    <div style="display:flex;align-items:baseline;gap:6px;width:100%;">
+                        <span class="name" style="font-size:17px;">{{ $totalVehicles - $incompleteVehicles->count() }}</span>
+                        <span class="meta">/ {{ $totalVehicles }} {{ __('mezzi completi') }}</span>
+                        @if ($incompleteVehicles->isNotEmpty())
+                            <span class="badge b-amber" style="margin-left:auto;">
+                                {{ trans_choice('{1} :count mezzo da integrare|[2,*] :count mezzi da integrare', $incompleteVehicles->count(), ['count' => $incompleteVehicles->count()]) }}
+                            </span>
+                        @endif
+                    </div>
+                    <div style="width:100%;height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;">
+                        <div style="height:100%;background:var(--green);width:{{ $totalVehicles > 0 ? (($totalVehicles - $incompleteVehicles->count()) / $totalVehicles) * 100 : 0 }}%;">
                         </div>
                     </div>
                 </div>
+                <a href="{{ route('admin.vehicles.index', ['filter' => 'incomplete']) }}"
+                    class="dash-see-all">{{ __('Vedi veicoli da integrare') }} ›</a>
+            </div>
+        </div>
+        <div class="dash-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--blue-soft);color:var(--blue)"><i
+                            class="fa-solid fa-toolbox"></i></span>{{ __('Attrezzature in scadenza') }}</h3>
+            </div>
+            <div class="body">
+                @forelse ($expiringEquipment as $equipment)
+                    <a href="{{ route('admin.equipments.index') }}" class="dash-list-item">
+                        <div>
+                            <div class="name">{{ $equipment->name }}</div>
+                            <div class="meta">{{ $equipment->vehicle?->internal_code ?? '—' }} ·
+                                @if ($equipment->expiration_date?->isPast())
+                                    {{ __('scaduta') }}
+                                @else
+                                    {{ __('scade tra :days giorni', ['days' => \Carbon\Carbon::today()->diffInDays($equipment->expiration_date)]) }}
+                                @endif
+                            </div>
+                        </div>
+                        <span
+                            class="badge {{ $equipment->expiration_date?->isPast() ? 'b-red' : 'b-amber' }}">{{ $equipment->expiration_date?->isPast() ? __('Scaduta') : \Carbon\Carbon::today()->diffInDays($equipment->expiration_date) . ' ' . __('gg') }}</span>
+                    </a>
+                @empty
+                    <div class="dash-empty">
+                        <div>
+                            <div class="name">{{ __('Nessuna attrezzatura in scadenza') }}</div>
+                            <div class="meta">{{ __('Tutte le attrezzature sono in regola') }}</div>
+                        </div>
+                    </div>
+                @endforelse
+                @if ($expiringEquipment->isNotEmpty())
+                    <a href="{{ route('admin.equipments.index') }}"
+                        class="dash-see-all">{{ __('Vedi tutte le attrezzature') }} ›</a>
+                @endif
             </div>
         </div>
     </div>

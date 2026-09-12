@@ -1,27 +1,44 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Sistema')],
+        ['label' => __('Gruppi'), 'url' => route('admin.groups.index')],
+        ['label' => __('Nuovo gruppo')],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container py-4">
-        <div class="row mb-3">
-            <div class="col-12">
-                <a href="{{ route('admin.groups.index') }}" class="btn btn-secondary">Torna ai gruppi</a>
+
+    <div class="page-header">
+        <h1>{{ __('Crea nuovo gruppo') }}</h1>
+        <a href="{{ route('admin.groups.index') }}" class="btn ghost">
+            <i class="fa-solid fa-arrow-left"></i> {{ __('Annulla') }}
+        </a>
+    </div>
+
+    <div class="form-card">
+        <form method="POST" action="{{ route('admin.groups.store') }}" data-single-submit="true">
+            @csrf
+
+            <div class="form-section" style="margin-bottom:0;">
+                <h2><span class="num">1</span> {{ __('Dettagli gruppo') }}</h2>
+                <div class="field">
+                    <label for="name">{{ __('Nome del gruppo') }} <span class="req">*</span></label>
+                    <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
+                        value="{{ old('name') }}" placeholder="{{ __('es. Flotta Principale') }}" required>
+                    @error('name')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
-        </div>
-        <h1 class="mb-4">Crea nuovo gruppo</h1>
-        <div class="card my-0">
-            <div class="card-body">
-                <form method="POST" action="{{ route('admin.groups.store') }}" data-single-submit="true">
-                    @csrf
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Nome del gruppo</label>
-                        <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
-                            name="name" value="{{ old('name') }}" required>
-                        @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <button type="submit" class="btn btn-primary">Crea gruppo</button>
-                </form>
+
+            <div class="form-actions">
+                <button type="submit" class="btn primary lg" data-loading-text="{{ __('Salvataggio...') }}">
+                    <i class="fa-solid fa-plus"></i> {{ __('Crea gruppo') }}
+                </button>
+                <a href="{{ route('admin.groups.index') }}" class="btn">{{ __('Annulla') }}</a>
             </div>
-        </div>
+        </form>
     </div>
 @endsection

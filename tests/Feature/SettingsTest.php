@@ -31,32 +31,17 @@ class SettingsTest extends TestCase
         $response->assertSee('Impostazioni');
     }
 
-    public function test_capo_can_update_group_name(): void
+    public function test_settings_page_links_to_account_and_groups(): void
     {
-        [$capo, $group] = $this->capoWithGroup();
+        // Le impostazioni del gruppo si gestiscono solo dalla pagina del
+        // gruppo: qui restano solo il rimando all'account e il backup.
+        [$capo] = $this->capoWithGroup();
 
-        $response = $this->actingAs($capo)->patch(route('admin.settings.group'), [
-            'name' => 'Nuova Associazione',
-        ]);
+        $response = $this->actingAs($capo)->get(route('admin.settings.index'));
 
-        $response->assertRedirect();
-        $this->assertDatabaseHas('groups', [
-            'id' => $group->id,
-            'name' => 'Nuova Associazione',
-        ]);
-    }
-
-    public function test_member_cannot_update_group_name(): void
-    {
-        [$capo, $group] = $this->capoWithGroup();
-        $member = User::factory()->create();
-        $group->addUser($member, Group::ROLE_MEMBER);
-
-        $response = $this->actingAs($member)->patch(route('admin.settings.group'), [
-            'name' => 'Nuova Associazione',
-        ]);
-
-        $response->assertForbidden();
+        $response->assertOk();
+        $response->assertSee(route('profile.edit'), false);
+        $response->assertSee(route('admin.groups.index'), false);
     }
 
     public function test_backup_creates_file(): void

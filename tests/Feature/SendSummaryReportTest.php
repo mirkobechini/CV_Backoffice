@@ -4,8 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\CarModel;
-use App\Models\Deadline;
-use App\Models\Issue;
 use App\Models\NotificationSetting;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -38,7 +36,8 @@ class SendSummaryReportTest extends TestCase
     public function test_report_sends_email_when_recipient_configured(): void
     {
         Mail::fake();
-        NotificationSetting::create(['key' => 'report_email', 'value' => 'admin@example.com']);
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
 
         $this->vehicle();
 
@@ -61,7 +60,8 @@ class SendSummaryReportTest extends TestCase
     public function test_report_has_pdf_attachment(): void
     {
         Mail::fake();
-        NotificationSetting::create(['key' => 'report_email', 'value' => 'admin@example.com']);
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
 
         $this->vehicle();
 
@@ -73,5 +73,53 @@ class SendSummaryReportTest extends TestCase
             $this->assertStringContainsString('.pdf', $attachments[0]->as);
             return true;
         });
+    }
+
+    public function test_report_sends_to_each_configured_user_independently(): void
+    {
+        Mail::fake();
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        NotificationSetting::create(['user_id' => $userA->id, 'key' => 'report_email', 'value' => 'a@example.com']);
+        NotificationSetting::create(['user_id' => $userB->id, 'key' => 'report_email', 'value' => 'b@example.com']);
+
+        $this->vehicle();
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertSent(ReportMail::class, fn ($mail) => $mail->hasTo('a@example.com'));
+        Mail::assertSent(ReportMail::class, fn ($mail) => $mail->hasTo('b@example.com'));
+    }
+
+    public function test_report_skips_weekly_recipient_on_non_monday(): void
+    {
+        Mail::fake();
+        $this->travelTo(now()->next(\Carbon\Carbon::TUESDAY));
+
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'weekly@example.com']);
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_frequency', 'value' => 'weekly']);
+
+        $this->vehicle();
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertNotSent(ReportMail::class);
+    }
+
+    public function test_report_sends_to_weekly_recipient_on_monday(): void
+    {
+        Mail::fake();
+        $this->travelTo(now()->next(\Carbon\Carbon::MONDAY));
+
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'weekly@example.com']);
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_frequency', 'value' => 'weekly']);
+
+        $this->vehicle();
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertSent(ReportMail::class, fn ($mail) => $mail->hasTo('weekly@example.com'));
     }
 }

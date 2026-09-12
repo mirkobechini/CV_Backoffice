@@ -98,7 +98,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ```bash
 php artisan test
-# 296 tests, 606 assertions — all green ✅
+# 328 tests, 717 assertions — all green ✅
 ```
 
 ---

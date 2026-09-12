@@ -35,13 +35,41 @@ class MaintenanceRecordController extends Controller
             'group_by' => 'nullable|in:vehicle,description,date',
             'sort_by' => 'nullable|in:vehicle,description,date',
             'sort_dir' => 'nullable|in:asc,desc',
+            'status_filter' => 'nullable|in:all,scheduled,completed,with_issues',
+            'q' => 'nullable|string|max:255',
         ]);
 
         $groupBy = $validated['group_by'] ?? null;
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
+        $statusFilter = $validated['status_filter'] ?? 'all';
+        $q = $validated['q'] ?? null;
 
-        $maintenanceRecords = $this->applySorting(MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']), $sortBy, $sortDir, [
+        $query = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']);
+
+        $query->when($statusFilter === 'scheduled', fn($qr) => $qr->whereNull('return_date'))
+            ->when($statusFilter === 'completed', fn($qr) => $qr->whereNotNull('return_date'))
+            ->when(
+                $statusFilter === 'with_issues',
+                fn($qr) => $qr->whereHas('items', fn($iq) => $iq->where('itemable_type', Issue::class))
+            );
+
+        $query->when($q, function ($qr) use ($q) {
+            $qr->where(function ($sub) use ($q) {
+                $sub->whereHas('vehicle', function ($vq) use ($q) {
+                    $vq->where('internal_code', 'like', "%{$q}%")
+                        ->orWhere('license_plate', 'like', "%{$q}%");
+                })
+                    ->orWhere('activity_type', 'like', "%{$q}%")
+                    ->orWhereHas('items', function ($iq) use ($q) {
+                        $iq->whereHasMorph('itemable', [Issue::class], function ($mq) use ($q) {
+                            $mq->where('description', 'like', "%{$q}%");
+                        });
+                    });
+            });
+        });
+
+        $maintenanceRecords = $this->applySorting($query, $sortBy, $sortDir, [
             'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
             'description' => fn(MaintenanceRecord $r) => $this->issueDescriptions($r) !== '' ? $this->issueDescriptions($r) : ($r->activity_type ?? ''),
             'date' => 'appointment_date',
@@ -57,7 +85,7 @@ class MaintenanceRecordController extends Controller
             };
         });
 
-        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords') + [
+        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords', 'statusFilter') + [
             'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
             'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
             'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
@@ -158,6 +186,7 @@ class MaintenanceRecordController extends Controller
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
             'mileage_at_service' => $data['mileage_at_service'] ?? null,
+            'notes' => $data['notes'] ?? null,
         ]);
 
         $completedIssueIds = $data['completed_issue_ids'] ?? [];
@@ -257,6 +286,7 @@ class MaintenanceRecordController extends Controller
             'return_date' => $data['return_date'] ?? null,
             'activity_type' => $data['activity_type'] ?? null,
             'mileage_at_service' => $data['mileage_at_service'] ?? null,
+            'notes' => $data['notes'] ?? null,
         ]);
 
         // Sincronizza gli item: cancella e ricrea
@@ -404,6 +434,15 @@ class MaintenanceRecordController extends Controller
         );
 
         $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
+
+        // Se non c'è già una data di rientro, ne verrà impostata una automaticamente
+        // (oggi): impedisce di completare un appuntamento non ancora avvenuto, il che
+        // creerebbe una data di rientro precedente alla data di appuntamento.
+        if (! $maintenanceRecord->return_date && $maintenanceRecord->appointment_date && Carbon::today()->lt($maintenanceRecord->appointment_date)) {
+            return redirect()
+                ->back()
+                ->withErrors(['issue_resolved' => 'Non puoi completare un appuntamento la cui data non è ancora arrivata (' . $maintenanceRecord->appointment_date_formatted . ').']);
+        }
 
         $issues = $maintenanceRecord->items->where('itemable_type', Issue::class);
         $deadlines = $maintenanceRecord->items->where('itemable_type', Deadline::class);

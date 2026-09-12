@@ -1,30 +1,30 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 
 @section('content')
-    <div class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">{{ __('Verify Your Email Address') }}</div>
+    <h1 class="guest-title">{{ __('Verifica il tuo indirizzo email') }}</h1>
 
-                    <div class="card-body">
-                        @if (session('resent'))
-                            <div class="alert alert-success" role="alert">
-                                {{ __('A fresh verification link has been sent to your email address.') }}
-                            </div>
-                        @endif
-
-                        {{ __('Before proceeding, please check your email for a verification link.') }}
-                        {{ __('If you did not receive the email') }},
-                        <form class="d-inline" method="POST" action="{{ route('verification.send') }}"
-                            data-single-submit="true">
-                            @csrf
-                            <button type="submit" class="btn btn-link p-0 m-0 align-baseline"
-                                data-loading-text="Sending...">{{ __('click here to request another') }}</button>.
-                        </form>
-                    </div>
-                </div>
-            </div>
+    @if (session('resent'))
+        <div class="alert success" style="margin-top:14px;">
+            {{ __('Una nuova mail di verifica è stata inviata al tuo indirizzo email.') }}
         </div>
+    @endif
+
+    <p class="hint" style="margin:14px 0;">
+        {{ __('Prima di continuare, controlla la tua email per un link di verifica.') }}
+        {{ __('Se non hai ricevuto la mail,') }}
+    </p>
+
+    <form method="POST" action="{{ route('verification.send') }}" data-single-submit="true">
+        @csrf
+        <button type="submit" class="btn primary" data-loading-text="{{ __('Invio...') }}">
+            {{ __('Invia di nuovo la mail di verifica') }}
+        </button>
+    </form>
+
+    <div class="guest-footer">
+        <form method="POST" action="{{ route('logout') }}" data-single-submit="true">
+            @csrf
+            <button type="submit" class="btn ghost sm">{{ __('Esci') }}</button>
+        </form>
     </div>
 @endsection

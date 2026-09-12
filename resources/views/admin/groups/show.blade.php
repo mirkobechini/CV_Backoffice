@@ -1,171 +1,229 @@
 @extends('layouts.app')
+
+@php
+    $isCapo = auth()->user()->roleIn($group) === 'capo';
+    $roleBadge = fn($role) => match ($role) {
+        'capo' => 'b-red',
+        'sottocapo' => 'b-amber',
+        default => 'b-gray',
+    };
+    $roleLabel = fn($role) => match ($role) {
+        'capo' => __('Capo'),
+        'sottocapo' => __('Sottocapo'),
+        default => __('Membro'),
+    };
+@endphp
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Sistema')],
+        ['label' => __('Gruppi'), 'url' => route('admin.groups.index')],
+        ['label' => $group->name],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container py-4">
-        <div class="row mb-3">
-            <div class="col-12">
-                <a href="{{ route('admin.groups.index') }}" class="btn btn-secondary">Torna ai gruppi</a>
+
+    <div class="page-actions">
+        <a href="{{ route('admin.groups.index') }}" class="btn ghost">
+            <i class="fa-solid fa-arrow-left"></i> {{ __('Torna ai gruppi') }}
+        </a>
+    </div>
+
+    <div class="g-header">
+        <div class="g-avatar"><i class="fa-solid fa-users"></i></div>
+        <div class="g-title">
+            <h1>{{ $group->name }}</h1>
+            <div class="sub">
+                {{ __(':users membri · :vehicles veicoli', ['users' => $group->users->count(), 'vehicles' => $group->vehicles->count()]) }}
             </div>
         </div>
-
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
+        @if ($isCapo)
+            <div class="g-actions">
+                <button type="button" class="btn sm" onclick="document.getElementById('rename-group').hidden = !document.getElementById('rename-group').hidden">
+                    <i class="fa-solid fa-pen"></i> {{ __('Rinomina') }}
+                </button>
+                <button type="button" class="btn danger sm" data-bs-toggle="modal" data-bs-target="#deleteGroupModal">
+                    <i class="fa-solid fa-trash"></i> {{ __('Elimina gruppo') }}
+                </button>
+            </div>
         @endif
+    </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-2">
-                <h1 class="mb-0">{{ $group->name }}</h1>
-                @if (auth()->user()->roleIn($group) === 'capo')
-                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="collapse"
-                        data-bs-target="#rename-group" aria-expanded="false">
-                        <i class="fa-solid fa-pen"></i>
-                    </button>
+    @if ($isCapo)
+        <div id="rename-group" hidden style="margin-top:14px;">
+            <div class="form-card">
+                <form method="POST" action="{{ route('admin.groups.update', $group) }}" style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+                    @csrf
+                    @method('PATCH')
+                    <div class="field" style="flex:1; min-width:220px; margin-bottom:0;">
+                        <label for="name">{{ __('Nome del gruppo') }}</label>
+                        <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
+                            value="{{ old('name', $group->name) }}" required>
+                        @error('name')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <button type="submit" class="btn primary">{{ __('Rinomina') }}</button>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    @error('delete_vehicles')
+        <div class="field-error" style="margin-top:14px;">{{ $message }}</div>
+    @enderror
+
+    <div class="row2" style="margin-top:16px;">
+        <div class="admin-card">
+            <div class="head">
+                <h3>{{ __('Codice invito') }}</h3>
+            </div>
+            <div class="body">
+                <div class="invite-code">{{ $group->invite_code }}</div>
+                <div class="invite-hint">{{ __('Condividi questo codice per far entrare nuovi membri.') }}</div>
+                @if ($isCapo)
+                    <div class="invite-actions">
+                        <form method="POST" action="{{ route('admin.groups.invite-code', $group) }}">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn sm">
+                                <i class="fa-solid fa-rotate"></i> {{ __('Rigenera codice') }}
+                            </button>
+                        </form>
+                    </div>
+                    <div class="invite-email">
+                        <h4>{{ __('Invita via email') }}</h4>
+                        <form method="POST" action="{{ route('admin.groups.invite', $group) }}" class="email-row">
+                            @csrf
+                            <input type="email" name="email" class="input" placeholder="email@esempio.it" required>
+                            <button type="submit" class="btn primary sm">{{ __('Invia invito') }}</button>
+                        </form>
+                        @error('email')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="invite-email">
+                        <h4>{{ __('Oppure crea un account direttamente') }}</h4>
+                        <a href="{{ route('admin.groups.users.create', $group) }}" class="btn sm">
+                            <i class="fa-solid fa-user-plus"></i> {{ __('Crea nuovo utente') }}
+                        </a>
+                    </div>
                 @endif
             </div>
-            @if (auth()->user()->roleIn($group) === 'capo')
-                <form method="POST" action="{{ route('admin.groups.destroy', $group) }}"
-                    onsubmit="return confirm('Eliminare questo gruppo?');">
-                    @csrf
-                    @method('DELETE')
-                    @if ($group->vehicles->isNotEmpty())
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox" name="delete_vehicles" id="delete_vehicles"
-                                value="1" required>
-                            <label class="form-check-label" for="delete_vehicles">
-                                Elimina anche i {{ $group->vehicles->count() }} veicoli del gruppo
-                            </label>
-                        </div>
-                    @endif
-                    <button type="submit" class="btn btn-danger">Elimina gruppo</button>
-                </form>
-            @endif
         </div>
+        <div class="admin-card">
+            <div class="head">
+                <h3>{{ __('Veicoli del gruppo') }}</h3>
+            </div>
+            <div class="body">
+                <div class="veh-count"><span class="big">{{ $group->vehicles->count() }}</span>
+                    {{ __('veicoli assegnati a questo gruppo') }}</div>
+            </div>
+        </div>
+    </div>
 
-        @if (auth()->user()->roleIn($group) === 'capo')
-            <div class="collapse mb-3" id="rename-group">
-                <div class="card card-body">
-                    <form method="POST" action="{{ route('admin.groups.update', $group) }}">
+    <div class="table-card" style="margin-top:16px;">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <h2>{{ __('Membri') }}</h2>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Nome') }}</th>
+                        <th>{{ __('Email') }}</th>
+                        <th>{{ __('Ruolo') }}</th>
+                        @if ($isCapo)
+                            <th></th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($group->users as $member)
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <span class="avatar">{{ mb_strtoupper(mb_substr($member->name, 0, 1)) }}</span>
+                                    <span class="name">{{ $member->name }}</span>
+                                </div>
+                            </td>
+                            <td><span class="email">{{ $member->email }}</span></td>
+                            <td>
+                                @if ($isCapo && $member->pivot->role !== 'capo')
+                                    <form method="POST" action="{{ route('admin.groups.role', [$group, $member]) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <select name="role" class="role-select" onchange="this.form.submit()">
+                                            <option value="sottocapo" @selected($member->pivot->role === 'sottocapo')>
+                                                {{ __('Sottocapo') }}</option>
+                                            <option value="member" @selected($member->pivot->role === 'member')>
+                                                {{ __('Membro') }}</option>
+                                        </select>
+                                    </form>
+                                @else
+                                    <span class="badge {{ $roleBadge($member->pivot->role) }}">
+                                        {{ $roleLabel($member->pivot->role) }}
+                                    </span>
+                                @endif
+                            </td>
+                            @if ($isCapo)
+                                <td>
+                                    @if ($member->pivot->role !== 'capo')
+                                        <form method="POST"
+                                            action="{{ route('admin.groups.remove-member', [$group, $member]) }}"
+                                            onsubmit="return confirm('{{ __('Rimuovere questo membro?') }}');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn danger sm">{{ __('Rimuovi') }}</button>
+                                        </form>
+                                    @endif
+                                </td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if ($isCapo)
+        <div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-labelledby="deleteGroupModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('admin.groups.destroy', $group) }}">
                         @csrf
-                        @method('PATCH')
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-6">
-                                <label for="name" class="form-label">Nome del gruppo</label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                    id="name" name="name" value="{{ old('name', $group->name) }}" required>
-                                @error('name')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                            <div class="col-md-auto">
-                                <button type="submit" class="btn btn-primary">Rinomina</button>
-                            </div>
+                        @method('DELETE')
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="deleteGroupModalLabel">{{ __('Eliminare questo gruppo?') }}
+                            </h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="{{ __('Chiudi') }}"></button>
+                        </div>
+                        <div class="modal-body">
+                            {{ __('Questa azione non può essere annullata.') }}
+                            @if ($group->vehicles->isNotEmpty())
+                                <label class="check" style="margin-top:12px;">
+                                    <input type="checkbox" name="delete_vehicles" value="1" required>
+                                    <div>
+                                        <div class="label">
+                                            {{ __('Elimina anche i :n veicoli del gruppo', ['n' => $group->vehicles->count()]) }}
+                                        </div>
+                                        <div class="sub">{{ __('Necessario per procedere: il gruppo ha veicoli associati.') }}</div>
+                                    </div>
+                                </label>
+                            @endif
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Annulla') }}</button>
+                            <button type="submit" class="btn btn-danger">{{ __('Elimina definitivamente') }}</button>
                         </div>
                     </form>
                 </div>
             </div>
-        @endif
-
-        @error('delete_vehicles')
-            <div class="alert alert-danger">{{ $message }}</div>
-        @enderror
-
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">Codice invito</div>
-                    <div class="card-body">
-                        <p class="fs-4 text-center fw-bold">{{ $group->invite_code }}</p>
-                        <p class="text-muted text-center">Condividi questo codice per far entrare nuovi membri.</p>
-                        @if (auth()->user()->roleIn($group) === 'capo')
-                            <form method="POST" action="{{ route('admin.groups.invite-code', $group) }}"
-                                class="text-center">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Rigenera codice</button>
-                            </form>
-                            <hr>
-                            <h6 class="text-center">Invita via email</h6>
-                            <form method="POST" action="{{ route('admin.groups.invite', $group) }}">
-                                @csrf
-                                <div class="input-group">
-                                    <input type="email" name="email" class="form-control" placeholder="email@esempio.it"
-                                        required>
-                                    <button type="submit" class="btn btn-primary">Invia invito</button>
-                                </div>
-                                @error('email')
-                                    <div class="text-danger small mt-1">{{ $message }}</div>
-                                @enderror
-                            </form>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">Veicoli del gruppo</div>
-                    <div class="card-body">
-                        <p class="mb-0">{{ $group->vehicles->count() }} veicoli assegnati a questo gruppo.</p>
-                    </div>
-                </div>
-            </div>
         </div>
-
-        <div class="card">
-            <div class="card-header">Membri</div>
-            <div class="card-body">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Ruolo</th>
-                            @if (auth()->user()->roleIn($group) === 'capo')
-                                <th>Azioni</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($group->users as $member)
-                            <tr>
-                                <td>{{ $member->name }}</td>
-                                <td>{{ $member->email }}</td>
-                                <td>
-                                    @if (auth()->user()->roleIn($group) === 'capo' && $member->pivot->role !== 'capo')
-                                        <form method="POST" action="{{ route('admin.groups.role', [$group, $member]) }}"
-                                            class="d-inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <select name="role" class="form-select form-select-sm d-inline w-auto"
-                                                onchange="this.form.submit()">
-                                                <option value="sottocapo" @selected($member->pivot->role === 'sottocapo')>Sottocapo</option>
-                                                <option value="member" @selected($member->pivot->role === 'member')>Membro</option>
-                                            </select>
-                                        </form>
-                                    @else
-                                        <span
-                                            class="badge bg-{{ $member->pivot->role === 'capo' ? 'danger' : ($member->pivot->role === 'sottocapo' ? 'warning' : 'secondary') }}">
-                                            {{ ucfirst($member->pivot->role) }}
-                                        </span>
-                                    @endif
-                                </td>
-                                @if (auth()->user()->roleIn($group) === 'capo')
-                                    <td>
-                                        @if ($member->pivot->role !== 'capo')
-                                            <form method="POST"
-                                                action="{{ route('admin.groups.remove-member', [$group, $member]) }}"
-                                                onsubmit="return confirm('Rimuovere questo membro?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit"
-                                                    class="btn btn-sm btn-outline-danger">Rimuovi</button>
-                                            </form>
-                                        @endif
-                                    </td>
-                                @endif
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    @endif
 @endsection
