@@ -11,6 +11,7 @@ class MaintenanceRecordController extends Controller
     public function index(Request $request)
     {
         $records = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
+            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
             ->when($request->vehicle_id, fn($q, $id) => $q->where('vehicle_id', $id))
             ->when($request->status, function ($q, $status) {
                 if ($status === 'in_progress') {
@@ -25,8 +26,15 @@ class MaintenanceRecordController extends Controller
         return response()->json($records);
     }
 
-    public function show(MaintenanceRecord $maintenanceRecord)
+    public function show(Request $request, MaintenanceRecord $maintenanceRecord)
     {
+        // Vedi commento in Api\IssueController::show().
+        $groupId = $request->user()->activeGroup()?->id;
+
+        if ($groupId && $maintenanceRecord->vehicle?->group_id !== $groupId) {
+            abort(404);
+        }
+
         $maintenanceRecord->load(['vehicle', 'provider', 'items.itemable']);
         return response()->json($maintenanceRecord);
     }

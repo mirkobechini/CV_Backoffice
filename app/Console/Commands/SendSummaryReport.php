@@ -62,12 +62,20 @@ class SendSummaryReport extends Command
             ->get();
         $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')->distinct('vehicle_id')->count('vehicle_id');
 
+        // Frequenza e giorni di preavviso di tutti i destinatari in un'unica
+        // query, invece di due query per utente dentro il ciclo sotto.
+        $extraSettings = NotificationSetting::whereIn('user_id', $recipientRows->pluck('user_id'))
+            ->whereIn('key', ['report_frequency', 'reminder_days_before'])
+            ->get(['user_id', 'key', 'value'])
+            ->groupBy('user_id');
+
         $today = Carbon::today();
         $sentCount = 0;
 
         foreach ($recipientRows as $row) {
             $userId = $row->user_id;
-            $frequency = NotificationSetting::where('user_id', $userId)->where('key', 'report_frequency')->value('value') ?? 'daily';
+            $userSettings = $extraSettings->get($userId, collect());
+            $frequency = $userSettings->firstWhere('key', 'report_frequency')?->value ?? 'daily';
 
             $isSendDay = match ($frequency) {
                 'weekly' => $today->isMonday(),
@@ -79,7 +87,7 @@ class SendSummaryReport extends Command
                 continue;
             }
 
-            $reminderDays = (int) (NotificationSetting::where('user_id', $userId)->where('key', 'reminder_days_before')->value('value') ?? 7);
+            $reminderDays = (int) ($userSettings->firstWhere('key', 'reminder_days_before')?->value ?? 7);
 
             $data = [
                 'totalVehicles' => $totalVehicles,
