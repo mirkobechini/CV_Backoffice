@@ -1,33 +1,30 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Il tuo account')],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container">
-        <h2 class="fs-4 text-secondary my-4">
-            {{ __('Profile') }}
-        </h2>
-        <div class="card p-4 mb-4 shadow rounded-lg">
 
-            @include('profile.partials.update-profile-information-form')
+    <div class="page-header">
+        <h1>{{ __('Il tuo account') }}</h1>
+    </div>
 
-        </div>
+    <div class="admin-card" style="margin-bottom:16px;">
+        @include('profile.partials.update-profile-information-form')
+    </div>
 
-        <div class="card p-4 mb-4 shadow rounded-lg">
+    <div class="admin-card" style="margin-bottom:16px;">
+        @include('profile.partials.update-password-form')
+    </div>
 
+    <div class="admin-card" style="margin-bottom:16px;">
+        @include('profile.partials.api-tokens-form')
+    </div>
 
-            @include('profile.partials.update-password-form')
-
-        </div>
-
-        <div class="card p-4 mb-4 shadow rounded-lg">
-
-            @include('profile.partials.api-tokens-form')
-
-        </div>
-
-        <div class="card p-4 mb-4 shadow rounded-lg">
-
-
-            @include('profile.partials.delete-user-form')
-
-        </div>
+    <div class="admin-card">
+        @include('profile.partials.delete-user-form')
     </div>
 @endsection

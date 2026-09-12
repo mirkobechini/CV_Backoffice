@@ -145,6 +145,36 @@ class GroupControllerTest extends TestCase
         $response->assertForbidden();
     }
 
+    public function test_cannot_demote_last_capo(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->patch(route('admin.groups.role', [$group, $capo]), [
+            'role' => 'member',
+        ]);
+
+        $response->assertForbidden();
+        $this->assertEquals(Group::ROLE_CAPO, $capo->roleIn($group->fresh()));
+    }
+
+    public function test_can_demote_capo_when_another_capo_exists(): void
+    {
+        $capo = User::factory()->create();
+        $secondCapo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($secondCapo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->patch(route('admin.groups.role', [$group, $secondCapo]), [
+            'role' => 'member',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertEquals('member', $secondCapo->roleIn($group->fresh()));
+    }
+
     public function test_capo_can_remove_member(): void
     {
         $capo = User::factory()->create();

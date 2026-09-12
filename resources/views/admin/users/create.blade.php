@@ -3,7 +3,8 @@
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
         ['label' => __('Sistema')],
-        ['label' => __('Utenti'), 'url' => route('admin.users.index')],
+        ['label' => __('Gruppi'), 'url' => route('admin.groups.index')],
+        ['label' => $group->name, 'url' => route('admin.groups.show', $group)],
         ['label' => __('Nuovo utente')],
     ]" />
 @endsection
@@ -12,17 +13,20 @@
 
     <div class="page-header">
         <h1>{{ __('Crea nuovo utente') }}</h1>
-        <a href="{{ route('admin.users.index') }}" class="btn ghost">
+        <a href="{{ route('admin.groups.show', $group) }}" class="btn ghost">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Annulla') }}
         </a>
     </div>
 
     <div class="form-card">
-        <form method="POST" action="{{ route('admin.users.store') }}" data-single-submit="true">
+        <form method="POST" action="{{ route('admin.groups.users.store', $group) }}" data-single-submit="true">
             @csrf
 
             <div class="form-section" style="margin-bottom:0;">
                 <h2><span class="num">1</span> {{ __('Dettagli utente') }}</h2>
+                <div class="hint" style="margin:0 0 12px;">
+                    {{ __('Il nuovo account verrà aggiunto al gruppo :name.', ['name' => $group->name]) }}
+                </div>
                 <div class="field">
                     <label for="name">{{ __('Nome') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
@@ -54,7 +58,7 @@
                             placeholder="••••••••" required>
                     </div>
                 </div>
-                <div class="field">
+                <div class="field" style="margin-bottom:0;">
                     <label for="role">{{ __('Ruolo') }} <span class="req">*</span></label>
                     <select class="select @error('role') is-invalid @enderror" id="role" name="role" required>
                         <option value="member" @selected(old('role') === 'member')>{{ __('Membro') }}</option>
@@ -71,7 +75,7 @@
                 <button type="submit" class="btn primary lg" data-loading-text="{{ __('Salvataggio...') }}">
                     <i class="fa-solid fa-plus"></i> {{ __('Crea utente') }}
                 </button>
-                <a href="{{ route('admin.users.index') }}" class="btn">{{ __('Annulla') }}</a>
+                <a href="{{ route('admin.groups.show', $group) }}" class="btn">{{ __('Annulla') }}</a>
             </div>
         </form>
     </div>

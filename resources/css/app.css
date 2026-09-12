@@ -208,6 +208,24 @@ body {
     font-size: 12.5px;
 }
 
+.sidebar-user-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+}
+
+.sidebar-user-link:hover {
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+}
+
 .sidebar-user-avatar {
     width: 26px;
     height: 26px;
@@ -827,12 +845,14 @@ body {
 }
 
 /* Tabella */
-.table-card table {
+.table-card table,
+.admin-card table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.table-card thead th {
+.table-card thead th,
+.admin-card thead th {
     text-align: left;
     font-size: 10.5px;
     text-transform: uppercase;
@@ -845,18 +865,21 @@ body {
     white-space: nowrap;
 }
 
-.table-card tbody td {
+.table-card tbody td,
+.admin-card tbody td {
     padding: 10px 12px;
     border-bottom: 1px solid var(--border);
     font-size: 13px;
     vertical-align: middle;
 }
 
-.table-card tbody tr:last-child td {
+.table-card tbody tr:last-child td,
+.admin-card tbody tr:last-child td {
     border-bottom: none;
 }
 
-.table-card tbody tr:hover {
+.table-card tbody tr:hover,
+.admin-card tbody tr:hover {
     background: var(--surface-2);
 }
 
@@ -1658,6 +1681,68 @@ body {
     font-size: 11px;
     color: var(--red);
     margin-top: 4px;
+}
+
+/* Versioni "sciolte" (fuori da un .field) delle due classi sopra: stessa
+   resa visiva quando un hint/errore non è annidato in un campo form. */
+.hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.field-error {
+    font-size: 11.5px;
+    color: var(--red);
+    margin-top: 4px;
+}
+
+/* Alert generico (successo/errore/avviso/info) */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    border: 1px solid transparent;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.alert.success {
+    background: var(--green-soft);
+    border-color: var(--green);
+    color: var(--text);
+}
+
+.alert.danger {
+    background: var(--red-soft);
+    border-color: var(--red);
+    color: var(--text);
+}
+
+.alert.warning {
+    background: var(--amber-soft);
+    border-color: var(--amber);
+    color: var(--text);
+}
+
+.alert.info {
+    background: var(--blue-soft);
+    border-color: var(--blue);
+    color: var(--text);
+}
+
+.alert code {
+    display: block;
+    padding: 6px 10px;
+    margin-top: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    word-break: break-all;
 }
 
 .input,
@@ -3321,4 +3406,77 @@ td .email {
 
 .input-dp {
     @apply w-full h-10 px-3 rounded border border-line bg-surface text-ink text-[13.5px] outline-none;
+}
+
+/* =============================================
+   Pagine guest (login, registrazione, password...)
+   ============================================= */
+
+.guest-body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    padding: 24px 16px;
+}
+
+.guest-wrap {
+    width: 100%;
+    max-width: 420px;
+}
+
+.guest-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.guest-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.guest-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 26px;
+}
+
+.guest-title {
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.guest-footer {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.guest-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.guest-footer a:hover {
+    text-decoration: underline;
 }

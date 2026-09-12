@@ -179,6 +179,14 @@ class GroupController extends Controller
             abort(404, 'Utente non trovato in questo gruppo.');
         }
 
+        // Non si può retrocedere l'ultimo capo del gruppo.
+        if ($user->roleIn($group) === Group::ROLE_CAPO && $data['role'] !== Group::ROLE_CAPO) {
+            $capoCount = $group->users()->wherePivot('role', Group::ROLE_CAPO)->count();
+            if ($capoCount <= 1) {
+                abort(403, 'Non puoi retrocedere l\'ultimo capo del gruppo.');
+            }
+        }
+
         $group->setUserRole($user, $data['role']);
 
         return back()->with('status', 'Ruolo aggiornato.');

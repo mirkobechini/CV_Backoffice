@@ -103,6 +103,12 @@
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="invite-email">
+                        <h4>{{ __('Oppure crea un account direttamente') }}</h4>
+                        <a href="{{ route('admin.groups.users.create', $group) }}" class="btn sm">
+                            <i class="fa-solid fa-user-plus"></i> {{ __('Crea nuovo utente') }}
+                        </a>
+                    </div>
                 @endif
             </div>
         </div>
