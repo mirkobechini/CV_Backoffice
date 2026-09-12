@@ -17,8 +17,9 @@
 
 <div class="field">
     <label for="{{ $inputId }}">{{ $label }} @if ($required)<span class="req">*</span>@endif</label>
-    <input type="month" class="input @error($name) is-invalid @enderror" id="{{ $inputId }}" name="{{ $name }}"
-        value="{{ $inputValue }}" @if ($required) required @endif>
+    <input type="text" class="flatpickr-month-input" id="{{ $inputId }}" name="{{ $name }}" value="{{ $inputValue }}"
+        placeholder="mm/aaaa" autocomplete="off" data-alt-class="input @error($name) is-invalid @enderror"
+        @if ($required) required @endif>
     @error($name)
         <div class="field-error">{{ $message }}</div>
     @enderror

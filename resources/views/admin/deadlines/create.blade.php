@@ -149,7 +149,11 @@
             const typeSelect = document.getElementById('type');
             const oxygenOption = document.getElementById('oxygen-type-option');
             const dueDateGroup = document.getElementById('due-date-group');
-            const dueDateInput = document.getElementById('due_date');
+            // Flatpickr sposta l'id "due_date" sull'altInput visibile: per
+            // svuotare/disabilitare il valore reale che viene inviato dobbiamo
+            // usare il campo originale (nascosto), individuabile per name.
+            const dueDateAlt = document.getElementById('due_date');
+            const dueDateReal = document.querySelector('input[name="due_date"]');
             const kmSettingsGroup = document.getElementById('km-settings-group');
             const ministerialType = 'Revisione Ministeriale';
             const oxygenType = 'Revisione Impianto Ossigeno';
@@ -181,12 +185,19 @@
                 const isKmType = kmTypes.includes(typeSelect.value);
 
                 dueDateGroup.style.display = isAutoCalculated ? 'none' : '';
-                dueDateInput.disabled = isAutoCalculated;
+                dueDateReal.disabled = isAutoCalculated;
+                if (dueDateAlt) {
+                    dueDateAlt.disabled = isAutoCalculated;
+                }
 
                 kmSettingsGroup.style.display = isKmType ? '' : 'none';
 
                 if (isAutoCalculated) {
-                    dueDateInput.value = '';
+                    if (dueDateReal._flatpickr) {
+                        dueDateReal._flatpickr.clear();
+                    } else {
+                        dueDateReal.value = '';
+                    }
                 }
             };
 

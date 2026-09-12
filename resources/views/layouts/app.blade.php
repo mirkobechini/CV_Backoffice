@@ -28,7 +28,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Usando Vite -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- app.js prima di app.css: app.js importa anche il CSS di Flatpickr, che
+    deve essere sovrascritto dal nostro tema in app.css (l'ordine dei tag
+    <link> nel documento segue l'ordine qui, quindi l'ultimo vince a parità
+    di specificità). --}}
+    @vite(['resources/js/app.js', 'resources/css/app.css'])
 
     @livewireStyles
     @stack('styles')

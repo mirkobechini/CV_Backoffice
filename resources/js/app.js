@@ -1,6 +1,9 @@
 import './bootstrap';
 import './vehicle-type-equipment';
+import './date-pickers';
 import '@fortawesome/fontawesome-free/css/all.min.css';
+import 'flatpickr/dist/flatpickr.min.css';
+import 'flatpickr/dist/plugins/monthSelect/style.css';
 
 import * as bootstrap from 'bootstrap';
 // Espone bootstrap globalmente per gli script inline nelle viste

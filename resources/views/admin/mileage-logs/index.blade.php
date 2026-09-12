@@ -1,131 +1,175 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Flotta')],
+        ['label' => __('Chilometraggi')],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container py-4">
-        <div class="d-flex align-items-center mb-4">
-            <h1 class="mb-0">Chilometraggi</h1>
-            <div class="ms-3 pt-2">
-                <x-admin.create-button :href="route('admin.mileage-logs.create')" label="chilometraggio" />
-                <a href="{{ route('admin.mileage-logs.bulk') }}" class="btn btn-outline-primary btn-sm">Rilevazione
-                    mensile</a>
-                <a href="{{ route('admin.mileage-logs.pivot') }}" class="btn btn-outline-primary btn-sm">Vista mensile</a>
-                <a href="{{ route('admin.csv-import.index') }}"
-                    class="btn btn-outline-primary btn-sm d-none d-md-inline-block">Importa CSV</a>
-            </div>
-            <div class="ms-auto d-none d-md-inline-block">
-                <a href="{{ route('admin.csv.export', 'mileage-logs') }}" class="btn btn-sm btn-outline-secondary"
-                    title="Scarica CSV">
-                    <i class="bi bi-download me-1"></i>CSV
-                </a>
-            </div>
-        </div>
 
-        @if (session('status'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('status') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
+    {{-- Barra di selezione multipla (nascosta finché non si attiva la modalità selezione) --}}
+    <div class="bulk-bar" id="bulk-delete-bar" style="display:none;">
+        <button type="button" class="btn danger" id="bulk-delete-btn" disabled>
+            <i class="fa-solid fa-trash"></i> {{ __('Elimina') }} (<span id="selected-count">0</span>)
+        </button>
+        <span class="txt">{{ __('Seleziona le righe da eliminare') }}</span>
+    </div>
 
-        {{-- Toolbar sticky con solo pulsante Elimina --}}
-        <div class="sticky-top py-2 mb-2" style="z-index:10; background: var(--bs-body-bg);">
-            <div class="d-flex align-items-center gap-2 ms-2">
-                <button type="button" class="btn btn-danger btn-sm" id="toggle-select-mode">
-                    <i class="bi bi-trash"></i>
-                </button>
-                <span id="bulk-delete-bar" style="display:none;">
-                    <button type="button" class="btn btn-danger btn-sm" id="bulk-delete-btn" onclick="bulkDeleteSelected()"
-                        disabled>
-                        Elimina (<span id="selected-count">0</span>)
+    <form method="POST" action="{{ route('admin.mileage-logs.bulk-delete') }}" id="bulk-delete-form">
+        @csrf
+        @method('DELETE')
+
+        <div class="table-card">
+            <div class="toolbar">
+                <div class="toolbar-left">
+                    <h2>{{ __('Elenco chilometraggi') }}</h2>
+                </div>
+                <div class="filters">
+                    <button type="button" class="btn" id="toggle-select-mode">
+                        <i class="fa-solid fa-check-double"></i> {{ __('Seleziona') }}
                     </button>
-                </span>
+                    <a href="{{ route('admin.mileage-logs.bulk') }}" class="btn">
+                        <i class="fa-solid fa-calendar-days"></i> {{ __('Rilevazione mensile') }}
+                    </a>
+                    <a href="{{ route('admin.mileage-logs.pivot') }}" class="btn">
+                        <i class="fa-solid fa-table-cells"></i> {{ __('Vista mensile') }}
+                    </a>
+                    <a href="{{ route('admin.csv-import.index') }}" class="btn">
+                        <i class="fa-solid fa-file-import"></i> {{ __('Importa CSV') }}
+                    </a>
+                    <a href="{{ route('admin.csv.export', 'mileage-logs') }}" class="btn" title="{{ __('Scarica CSV') }}">
+                        <i class="fa-solid fa-download"></i> CSV
+                    </a>
+                    <a href="{{ route('admin.mileage-logs.create') }}" class="btn primary">
+                        <i class="fa-solid fa-plus"></i> {{ __('Nuovo chilometraggio') }}
+                    </a>
+                </div>
             </div>
-        </div>
 
-        <form method="POST" action="{{ route('admin.mileage-logs.bulk-delete') }}" id="bulk-delete-form">
-            @csrf
-            @method('DELETE')
-            <div class="card my-0">
-                <table class="table table-striped table-hover my-0 align-middle">
+            <div class="table-responsive">
+                <table>
                     <thead>
                         <tr>
-                            <th style="width:40px; display:none;" class="select-checkbox-col">
-                                <input type="checkbox" id="select-all" class="form-check-input"
-                                    onchange="document.querySelectorAll('.select-item').forEach(c => { c.checked = this.checked; }); updateSelectedCount();">
+                            <th class="select-checkbox-col select-col" style="display:none;">
+                                <input type="checkbox" id="select-all">
                             </th>
                             <th>
-                                <a href="{{ $sortToggleUrl('vehicle') }}" class="text-decoration-none">
-                                    Sigla {!! $sortIcon('vehicle') !!}
-                                </a>
+                                <div class="th-wrap"><span>{{ __('Sigla') }}</span>
+                                    <a href="{{ $sortToggleUrl('vehicle') }}"
+                                        class="mini {{ $sortBy === 'vehicle' ? 'on' : '' }}"
+                                        title="{{ __('Ordina per veicolo') }}">{{ $sortIcon('vehicle') }}</a>
+                                </div>
                             </th>
-                            <th>Targa</th>
+                            <th>{{ __('Targa') }}</th>
                             <th>
-                                <a href="{{ $sortToggleUrl('date') }}" class="text-decoration-none">
-                                    Data {!! $sortIcon('date') !!}
-                                </a>
+                                <div class="th-wrap"><span>{{ __('Data') }}</span>
+                                    <a href="{{ $sortToggleUrl('date') }}"
+                                        class="mini {{ $sortBy === 'date' ? 'on' : '' }}"
+                                        title="{{ __('Ordina per data') }}">{{ $sortIcon('date') }}</a>
+                                </div>
                             </th>
                             <th>
-                                <a href="{{ $sortToggleUrl('km') }}" class="text-decoration-none">
-                                    Km {!! $sortIcon('km') !!}
-                                </a>
+                                <div class="th-wrap"><span>{{ __('Km') }}</span>
+                                    <a href="{{ $sortToggleUrl('km') }}" class="mini {{ $sortBy === 'km' ? 'on' : '' }}"
+                                        title="{{ __('Ordina per km') }}">{{ $sortIcon('km') }}</a>
+                                </div>
                             </th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($mileageLogs as $mileageLog)
                             <tr>
-                                <td style="width:40px; display:none;" class="select-checkbox-col">
-                                    <input type="checkbox" class="form-check-input select-item" name="ids[]"
+                                <td class="select-checkbox-col select-col" style="display:none;">
+                                    <input type="checkbox" class="select-item" name="ids[]"
                                         value="{{ $mileageLog->id }}">
                                 </td>
-                                <td>{{ $mileageLog->vehicle->internal_code }}</td>
-                                <td>{{ $mileageLog->vehicle->license_plate }}</td>
-                                <td>{{ $mileageLog->log_date_formatted ?? $mileageLog->log_date }}</td>
-                                <td>{{ number_format($mileageLog->mileage, 0, ',', '.') }}</td>
+                                <td class="code">{{ $mileageLog->vehicle->internal_code ?? 'N/A' }}</td>
+                                <td class="code">{{ $mileageLog->vehicle->license_plate ?? 'N/A' }}</td>
+                                <td>{{ $mileageLog->log_date_formatted ?? 'N/A' }}</td>
+                                <td>
+                                    <div class="km-value">{{ number_format($mileageLog->mileage, 0, ',', '.') }}</div>
+                                    @php($delta = $deltaByLogId[$mileageLog->id] ?? null)
+                                    @if ($delta !== null)
+                                        <div class="cell-sub">
+                                            {{ $delta >= 0 ? '+' : '' }}{{ number_format($delta, 0, ',', '.') }}
+                                            {{ __('dal mese scorso') }}
+                                        </div>
+                                    @endif
+                                </td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a href="{{ route('admin.mileage-logs.show', $mileageLog->id) }}" class="mini-btn"
+                                            title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                                        <a href="{{ route('admin.mileage-logs.edit', $mileageLog->id) }}" class="mini-btn"
+                                            title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmDeleteModal-{{ $mileageLog->id }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4">Nessun chilometraggio registrato.</td>
+                                <td colspan="6" class="empty">{{ __('Nessun chilometraggio registrato.') }}</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
+
+    {{-- I modal di conferma eliminazione vanno fuori dal form di selezione multipla:
+    un <form> non può contenere altri <form> annidati (HTML non lo permette e il
+    browser scarta silenziosamente quello interno), quindi qui restano fuori. --}}
+    @foreach ($mileageLogs as $mileageLog)
+        <x-admin.delete-modal type="mileageLog" :object="$mileageLog" />
+    @endforeach
 
     <script>
-        document.getElementById('toggle-select-mode').addEventListener('click', function() {
-            const selectMode = document.querySelector('.select-checkbox-col').style.display !== 'none';
-            document.querySelectorAll('.select-checkbox-col').forEach(el => el.style.display = selectMode ? 'none' :
-                '');
-            document.getElementById('bulk-delete-bar').style.display = selectMode ? 'none' : 'inline';
-            if (!selectMode) {
-                document.querySelectorAll('.select-item').forEach(c => c.checked = false);
-                document.getElementById('select-all').checked = false;
-                updateSelectedCount();
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('toggle-select-mode');
+            const bulkBar = document.getElementById('bulk-delete-bar');
+            const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            const selectAll = document.getElementById('select-all');
+            const selectedCount = document.getElementById('selected-count');
+            const bulkForm = document.getElementById('bulk-delete-form');
+
+            function updateSelectedCount() {
+                const checked = document.querySelectorAll('.select-item:checked').length;
+                selectedCount.textContent = checked;
+                bulkDeleteBtn.disabled = checked === 0;
             }
-        });
 
-        document.getElementById('select-all')?.addEventListener('change', function() {
-            document.querySelectorAll('.select-item').forEach(c => {
-                c.checked = this.checked;
+            toggleBtn.addEventListener('click', function() {
+                const isSelectMode = document.querySelector('.select-checkbox-col').style.display !== 'none';
+                document.querySelectorAll('.select-checkbox-col').forEach(el => el.style.display = isSelectMode ?
+                    'none' : '');
+                bulkBar.style.display = isSelectMode ? 'none' : 'flex';
+                toggleBtn.classList.toggle('primary', !isSelectMode);
+                if (isSelectMode) {
+                    document.querySelectorAll('.select-item').forEach(c => c.checked = false);
+                    selectAll.checked = false;
+                    updateSelectedCount();
+                }
             });
-            updateSelectedCount();
+
+            selectAll?.addEventListener('change', function() {
+                document.querySelectorAll('.select-item').forEach(c => c.checked = this.checked);
+                updateSelectedCount();
+            });
+
+            document.querySelectorAll('.select-item').forEach(c => c.addEventListener('change', updateSelectedCount));
+
+            bulkDeleteBtn.addEventListener('click', function() {
+                if (!confirm('{{ __('Eliminare i record selezionati?') }}')) return;
+                bulkForm.submit();
+            });
         });
-
-        document.querySelectorAll('.select-item').forEach(c => {
-            c.addEventListener('change', updateSelectedCount);
-        });
-
-        function updateSelectedCount() {
-            const checked = document.querySelectorAll('.select-item:checked').length;
-            document.getElementById('selected-count').textContent = checked;
-            document.getElementById('bulk-delete-btn').disabled = checked === 0;
-        }
-
-        function bulkDeleteSelected() {
-            if (!confirm('Eliminare i record selezionati?')) return;
-            document.getElementById('bulk-delete-form').submit();
-        }
     </script>
 @endsection

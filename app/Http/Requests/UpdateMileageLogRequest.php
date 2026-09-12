@@ -41,20 +41,18 @@ class UpdateMileageLogRequest extends FormRequest
     {
         $validator->after(function (Validator $validator) {
             $vehicleId = $this->input('vehicle_id');
+            $logDate = $this->input('log_date');
             $newMileage = $this->input('mileage');
             $currentId = $this->route('mileageLog')?->id;
 
-            if (!$vehicleId || !$newMileage) {
+            if (!$vehicleId || !$logDate || !$newMileage) {
                 return;
             }
 
-            $lastMileage = MileageLog::where('vehicle_id', $vehicleId)
-                ->where('id', '!=', $currentId)
-                ->orderByDesc('log_date')
-                ->value('mileage');
+            $conflict = MileageLog::findChronologyConflict($vehicleId, $logDate, (int) $newMileage, $currentId);
 
-            if ($lastMileage !== null && (int) $newMileage < (int) $lastMileage) {
-                $validator->errors()->add('mileage', 'Il chilometraggio non può essere inferiore all\'ultimo registrato (' . number_format($lastMileage, 0, ',', '.') . ' km).');
+            if ($conflict !== null) {
+                $validator->errors()->add('mileage', $conflict);
             }
         });
     }
