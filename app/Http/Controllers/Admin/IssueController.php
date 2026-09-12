@@ -31,14 +31,22 @@ class IssueController extends Controller
             'group_by' => 'nullable|in:vehicle,status,date',
             'sort_by' => 'nullable|in:vehicle,status,date',
             'sort_dir' => 'nullable|in:asc,desc',
+            'status_filter' => 'nullable|in:all,open,in_progress,closed',
         ]);
 
         $groupBy = $validated['group_by'] ?? null;
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
+        $statusFilter = $validated['status_filter'] ?? 'all';
+
+        $issuesQuery = Issue::with('vehicle')->search($request->get('q'));
+
+        if ($statusFilter !== 'all') {
+            $issuesQuery->where('status', $statusFilter);
+        }
 
         $issues = $this->applySorting(
-            Issue::with('vehicle')->search($request->get('q')),
+            $issuesQuery,
             $sortBy,
             $sortDir,
             [
@@ -63,7 +71,7 @@ class IssueController extends Controller
             };
         });
 
-        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues') + [
+        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues', 'statusFilter') + [
             'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
             'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
             'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
