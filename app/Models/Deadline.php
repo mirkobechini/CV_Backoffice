@@ -61,6 +61,7 @@ class Deadline extends Model
         'due_date',
         'status',
         'is_renewed',
+        'renews_deadline_id',
         'interval_km',
         'last_mileage',
         'interval_days',
@@ -91,6 +92,24 @@ class Deadline extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    /**
+     * La scadenza precedente che questa ha automaticamente rinnovato alla
+     * creazione (es. la vecchia Revisione Ministeriale chiusa quando ne è
+     * stata creata una nuova per lo stesso veicolo).
+     */
+    public function renewsDeadline()
+    {
+        return $this->belongsTo(Deadline::class, 'renews_deadline_id');
+    }
+
+    /**
+     * La scadenza successiva che ha rinnovato questa (relazione inversa).
+     */
+    public function renewedByDeadline()
+    {
+        return $this->hasOne(Deadline::class, 'renews_deadline_id');
     }
 
     public function getStatusColorAttribute(): string

@@ -190,6 +190,96 @@ class DeadlineCrudTest extends TestCase
         $response->assertRedirect(route('admin.deadlines.index') . '?status_filter=expired');
     }
 
+    public function test_ministerial_due_date_can_be_set_manually_instead_of_auto_calculated(): void
+    {
+        // Prima del fix, per i tipi a calcolo automatico il campo due_date
+        // veniva ignorato: qualunque valore inviato non aveva alcun effetto.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2030-06',
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertEquals('2030-06-30', $deadline->due_date->toDateString());
+    }
+
+    public function test_creating_new_ministerial_revision_auto_renews_previous_one(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        // createVehicle() fa scattare VehicleObserver, che genera già in
+        // automatico delle scadenze (inclusa una Revisione Ministeriale
+        // futura): le rimuoviamo per partire da uno stato pulito e
+        // controllato in questo test.
+        Deadline::where('vehicle_id', $vehicle->id)->forceDelete();
+
+        $current = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'status' => 'expired',
+            'due_date' => '2020-06-30',
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2030-06',
+        ]);
+
+        $newDeadline = Deadline::latest('id')->first();
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertNotEquals($current->id, $newDeadline->id);
+        $this->assertEquals($current->id, $newDeadline->renews_deadline_id);
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $current->id,
+            'is_renewed' => true,
+            'status' => 'renewed',
+        ]);
+    }
+
+    public function test_deleting_auto_renewing_deadline_reverts_previous_to_expired(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        // Vedi commento in test_creating_new_ministerial_revision_auto_renews_previous_one.
+        Deadline::where('vehicle_id', $vehicle->id)->forceDelete();
+
+        $current = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'status' => 'expired',
+            'due_date' => '2020-06-30',
+            'is_renewed' => false,
+        ]);
+
+        $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2030-06',
+        ]);
+        $newDeadline = Deadline::latest('id')->first();
+
+        $response = $this->actingAs($user)->delete(route('admin.deadlines.destroy', $newDeadline));
+
+        $response->assertRedirect(route('admin.deadlines.index'));
+        $this->assertSoftDeleted($newDeadline);
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $current->id,
+            'is_renewed' => false,
+            'status' => 'expired',
+        ]);
+    }
+
     public function test_ministerial_revision_can_optionally_record_mileage(): void
     {
         // Per le revisioni (data auto-calcolata) il km è solo un'annotazione
