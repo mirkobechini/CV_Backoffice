@@ -44,18 +44,24 @@
                     @enderror
                 </div>
                 <div class="row2">
-                    <div class="field">
+                    <div class="field password-field">
                         <label for="password">{{ __('Password') }} <span class="req">*</span></label>
                         <input type="password" class="input @error('password') is-invalid @enderror" id="password"
                             name="password" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
                         @error('password')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="field">
+                    <div class="field password-field">
                         <label for="password_confirmation">{{ __('Conferma password') }} <span class="req">*</span></label>
                         <input type="password" class="input" id="password_confirmation" name="password_confirmation"
                             placeholder="••••••••" required>
+                        <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="field" style="margin-bottom:0;">

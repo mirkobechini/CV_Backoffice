@@ -1781,6 +1781,35 @@ textarea.input {
     font-family: inherit;
 }
 
+/* Campo password con occhiello per mostrare/nascondere il valore */
+.password-field {
+    position: relative;
+}
+
+.password-field .input {
+    padding-right: 40px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.password-toggle:hover {
+    color: var(--text);
+}
+
 .autocomplete-results {
     position: absolute;
     z-index: 20;

@@ -9,28 +9,37 @@
         @csrf
         @method('put')
 
-        <div class="field">
+        <div class="field password-field">
             <label for="current_password">{{ __('Password attuale') }}</label>
             <input class="input @error('current_password', 'updatePassword') is-invalid @enderror" type="password"
                 name="current_password" id="current_password" autocomplete="current-password">
+            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                <i class="fa-solid fa-eye"></i>
+            </button>
             @error('current_password', 'updatePassword')
                 <div class="field-error">{{ $message }}</div>
             @enderror
         </div>
 
-        <div class="field">
+        <div class="field password-field">
             <label for="password">{{ __('Nuova password') }}</label>
             <input class="input @error('password', 'updatePassword') is-invalid @enderror" type="password"
                 name="password" id="password" autocomplete="new-password">
+            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                <i class="fa-solid fa-eye"></i>
+            </button>
             @error('password', 'updatePassword')
                 <div class="field-error">{{ $message }}</div>
             @enderror
         </div>
 
-        <div class="field">
+        <div class="field password-field">
             <label for="password_confirmation">{{ __('Conferma password') }}</label>
             <input class="input" type="password" name="password_confirmation" id="password_confirmation"
                 autocomplete="new-password">
+            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                <i class="fa-solid fa-eye"></i>
+            </button>
             @error('password_confirmation', 'updatePassword')
                 <div class="field-error">{{ $message }}</div>
             @enderror
