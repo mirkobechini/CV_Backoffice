@@ -1,77 +1,104 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Sistema')],
+        ['label' => __('Utenti')],
+    ]" />
+@endsection
+
+@php
+    $isCapo = auth()->user()->roleIn($group ?? null) === 'capo';
+    $roleBadge = fn($role) => match ($role) {
+        'capo' => 'b-red',
+        'sottocapo' => 'b-amber',
+        default => 'b-gray',
+    };
+    $roleLabel = fn($role) => match ($role) {
+        'capo' => __('Capo'),
+        'sottocapo' => __('Sottocapo'),
+        default => __('Membro'),
+    };
+@endphp
+
 @section('content')
-    <div class="container py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="mb-0">Utenti</h1>
-            @if (auth()->user()->roleIn($group ?? null) === 'capo')
-                <a href="{{ route('admin.users.create') }}" class="btn btn-primary">Nuovo utente</a>
-            @endif
+
+    <div class="page-header">
+        <h1>{{ __('Utenti') }}</h1>
+        @if ($isCapo)
+            <a href="{{ route('admin.users.create') }}" class="btn primary">
+                <i class="fa-solid fa-plus"></i> {{ __('Nuovo utente') }}
+            </a>
+        @endif
+    </div>
+
+    <div class="table-card">
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <h2>{{ __('Elenco utenti') }}</h2>
+            </div>
         </div>
 
-        @if (session('status'))
-            <div class="alert alert-success">{{ session('status') }}</div>
-        @endif
-
-        @if ($users->isEmpty())
-            <div class="alert alert-info">Non ci sono utenti nel gruppo.</div>
-        @else
-            <div class="card">
-                <div class="card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Ruolo</th>
-                                @if (auth()->user()->roleIn($group ?? null) === 'capo')
-                                    <th>Azioni</th>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Nome') }}</th>
+                        <th>{{ __('Email') }}</th>
+                        <th>{{ __('Ruolo') }}</th>
+                        @if ($isCapo)
+                            <th></th>
+                        @endif
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($users as $user)
+                        <tr>
+                            <td>
+                                <div class="user-cell">
+                                    <span class="avatar">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</span>
+                                    <span class="name">{{ $user->name }}</span>
+                                </div>
+                            </td>
+                            <td><span class="email">{{ $user->email }}</span></td>
+                            <td>
+                                @if ($isCapo && $user->pivot->role !== 'capo')
+                                    <form method="POST" action="{{ route('admin.users.role', $user) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <select name="role" class="role-select" onchange="this.form.submit()">
+                                            <option value="sottocapo" @selected($user->pivot->role === 'sottocapo')>
+                                                {{ __('Sottocapo') }}</option>
+                                            <option value="member" @selected($user->pivot->role === 'member')>
+                                                {{ __('Membro') }}</option>
+                                        </select>
+                                    </form>
+                                @else
+                                    <span class="badge {{ $roleBadge($user->pivot->role) }}">
+                                        {{ $roleLabel($user->pivot->role) }}
+                                    </span>
                                 @endif
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($users as $user)
-                                <tr>
-                                    <td>{{ $user->name }}</td>
-                                    <td>{{ $user->email }}</td>
-                                    <td>
-                                        @if (auth()->user()->roleIn($group ?? null) === 'capo' && $user->pivot->role !== 'capo')
-                                            <form method="POST" action="{{ route('admin.users.role', $user) }}"
-                                                class="d-inline">
-                                                @csrf
-                                                @method('PATCH')
-                                                <select name="role" class="form-select form-select-sm d-inline w-auto"
-                                                    onchange="this.form.submit()">
-                                                    <option value="sottocapo" @selected($user->pivot->role === 'sottocapo')>Sottocapo
-                                                    </option>
-                                                    <option value="member" @selected($user->pivot->role === 'member')>Membro</option>
-                                                </select>
-                                            </form>
-                                        @else
-                                            <span
-                                                class="badge bg-{{ $user->pivot->role === 'capo' ? 'danger' : ($user->pivot->role === 'sottocapo' ? 'warning' : 'secondary') }}">
-                                                {{ ucfirst($user->pivot->role) }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    @if (auth()->user()->roleIn($group ?? null) === 'capo')
-                                        <td>
-                                            @if ($user->pivot->role !== 'capo')
-                                                <form method="POST" action="{{ route('admin.users.destroy', $user) }}"
-                                                    onsubmit="return confirm('Rimuovere questo utente?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                        class="btn btn-sm btn-outline-danger">Rimuovi</button>
-                                                </form>
-                                            @endif
-                                        </td>
+                            </td>
+                            @if ($isCapo)
+                                <td>
+                                    @if ($user->pivot->role !== 'capo')
+                                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}"
+                                            onsubmit="return confirm('{{ __('Rimuovere questo utente?') }}');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn danger">{{ __('Rimuovi') }}</button>
+                                        </form>
                                     @endif
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        @endif
+                                </td>
+                            @endif
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="empty">{{ __('Non ci sono utenti nel gruppo.') }}</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 @endsection

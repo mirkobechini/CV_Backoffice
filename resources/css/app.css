@@ -2789,6 +2789,389 @@ body.modal-open {
 }
 
 /* =============================================
+   Sistema: utenti, gruppi, impostazioni, log attività
+   ============================================= */
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary);
+}
+
+.user-cell .name {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.user-cell .email,
+td .email {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.role-select {
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12.5px;
+    outline: none;
+}
+
+/* Card generica con intestazione (impostazioni, dettaglio gruppo) */
+.admin-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.admin-card .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-card .head h3 {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-card .head .ic {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+}
+
+.admin-card .body {
+    padding: 16px 20px;
+}
+
+/* Gruppi: card "entra con codice" + griglia gruppi */
+.join-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 20px;
+    margin-bottom: 18px;
+}
+
+.join-card h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.join-card h3 .ic {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+}
+
+.join-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.join-row .input {
+    flex: 1;
+    min-width: 160px;
+    text-transform: uppercase;
+}
+
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.g-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    transition: transform .12s, border-color .12s;
+}
+
+.g-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+}
+
+.g-card .g-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    margin-bottom: 12px;
+}
+
+.g-card .g-name {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.g-card .g-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.g-card .g-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+}
+
+.g-card .g-btn:hover {
+    background: var(--surface-2);
+    color: var(--primary);
+}
+
+/* Dettaglio gruppo: header con avatar grande */
+.g-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+}
+
+.g-header .g-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    flex-shrink: 0;
+}
+
+.g-header .g-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.g-header .g-title .sub {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.g-header .g-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.invite-code {
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: .15em;
+    color: var(--primary);
+    background: var(--primary-soft);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.invite-hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.invite-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.invite-email {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+}
+
+.invite-email h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.email-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.email-row .input {
+    flex: 1;
+    min-width: 160px;
+}
+
+.veh-count {
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.veh-count .big {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Backup database (impostazioni) */
+.backup-list {
+    margin-top: 14px;
+}
+
+.backup-list h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.b-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    margin-bottom: 6px;
+}
+
+.b-item:last-child {
+    margin-bottom: 0;
+}
+
+.b-item .ic {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.b-item .name {
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.b-item .size {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+/* Registro attività */
+.detail-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    display: grid;
+    place-items: center;
+}
+
+.detail-btn:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+.log-detail {
+    font-size: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+}
+
+@media (max-width: 1000px) {
+    .groups-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =============================================
    Componenti riutilizzabili (via @apply)
    ============================================= */
 
