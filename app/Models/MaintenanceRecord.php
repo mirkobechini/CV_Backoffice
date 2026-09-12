@@ -40,6 +40,7 @@ class MaintenanceRecord extends Model
         'return_date',
         'activity_type',
         'mileage_at_service',
+        'notes',
     ];
 
     protected $casts = [

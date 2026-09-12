@@ -218,6 +218,70 @@ class MaintenanceRecordCrudTest extends TestCase
         ]);
     }
 
+    public function test_maintenance_can_be_stored_with_notes(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $issueData = $this->createIssue();
+        $vehicle = $issueData['vehicle'];
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025/01/03',
+            'notes' => 'Il meccanico ha segnalato usura ai freni anteriori.',
+        ]);
+
+        $maintenance = MaintenanceRecord::first();
+
+        $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
+        $this->assertDatabaseHas('maintenance_records', [
+            'id' => $maintenance->id,
+            'notes' => 'Il meccanico ha segnalato usura ai freni anteriori.',
+        ]);
+    }
+
+    public function test_maintenance_notes_are_optional(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $issueData = $this->createIssue();
+        $vehicle = $issueData['vehicle'];
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025/01/03',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('notes');
+        $this->assertDatabaseHas('maintenance_records', [
+            'notes' => null,
+        ]);
+    }
+
+    public function test_maintenance_notes_can_be_updated(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createMaintenance();
+        $maintenance = $data['maintenance'];
+        $vehicle = $data['vehicle'];
+        $provider = $data['provider'];
+
+        $response = $this->actingAs($user)->put(route('admin.maintenance-records.update', $maintenance), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025/01/03',
+            'notes' => 'Aggiornamento: sostituiti i tergicristalli.',
+        ]);
+
+        $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
+        $this->assertDatabaseHas('maintenance_records', [
+            'id' => $maintenance->id,
+            'notes' => 'Aggiornamento: sostituiti i tergicristalli.',
+        ]);
+    }
+
     // VALIDAZIONE DEI CAMPI OBBLIGATORI
 
     public function test_maintenance_provider_id_is_required(): void

@@ -37,6 +37,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'issue_resolved' => 'nullable|boolean',
             'mileage_at_service' => 'nullable|integer|min:0',
+            'notes' => 'nullable|string|max:2000',
         ];
     }
 
@@ -59,6 +60,8 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'activity_type.max' => 'Il campo tipologia attività non può superare i 255 caratteri.',
             'activity_type.in' => 'La tipologia attività selezionata non è valida.',
             'issue_resolved.boolean' => 'Il valore selezionato per la risoluzione del guasto non è valido.',
+            'notes.string' => 'Il campo note deve essere testo.',
+            'notes.max' => 'Le note non possono superare i 2000 caratteri.',
         ];
     }
 

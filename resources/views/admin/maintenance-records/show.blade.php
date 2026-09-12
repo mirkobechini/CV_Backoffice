@@ -126,6 +126,13 @@
         </div>
     </div>
 
+    @if ($maintenanceRecord->notes)
+        <div class="notes-card">
+            <h4>{{ __('Note') }}</h4>
+            <p>{{ $maintenanceRecord->notes }}</p>
+        </div>
+    @endif
+
     @if ($linkedIssues->isNotEmpty())
         <div class="dl-info-card">
             <div class="head">
