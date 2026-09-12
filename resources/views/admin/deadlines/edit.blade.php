@@ -32,7 +32,7 @@
                         <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
                         <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
                             name="vehicle_id" required>
-                            <option value="" disabled>{{ __('Seleziona un veicolo') }}</option>
+                            <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                             @foreach ($vehicles as $vehicle)
                                 <option value="{{ $vehicle->id }}"
                                     data-needs-oxygen-check="{{ $vehicle->vehicleType?->needs_oxygen_check ? '1' : '0' }}"
@@ -49,7 +49,7 @@
                     <div class="field">
                         <label for="type">{{ __('Tipologia') }} <span class="req">*</span></label>
                         <select class="select @error('type') is-invalid @enderror" id="type" name="type" required>
-                            <option value="" disabled>{{ __('Seleziona una tipologia') }}</option>
+                            <option value="" disabled selected>{{ __('Seleziona una tipologia') }}</option>
                             <option value="Assicurazione"
                                 {{ old('type', $deadline->type) == 'Assicurazione' ? 'selected' : '' }}>
                                 {{ __('Assicurazione') }}</option>
