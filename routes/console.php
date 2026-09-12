@@ -8,19 +8,14 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-
+// Il report riassuntivo è personale per account: gira ogni giorno e il
+// comando stesso decide, per ciascun destinatario, se "oggi" è il suo
+// giorno di invio in base alla propria frequenza (daily/weekly/monthly).
 Schedule::command('app:send-summary-report')
-    ->when(fn() => notification_setting('report_frequency', 'daily') === 'daily')
     ->dailyAt('8:00');
 
-Schedule::command('app:send-summary-report')
-    ->when(fn() => notification_setting('report_frequency', 'daily') === 'weekly')
-    ->weeklyOn(1, '8:00');
-
-Schedule::command('app:send-summary-report')
-    ->when(fn() => notification_setting('report_frequency', 'daily') === 'monthly')
-    ->monthlyOn(1, '8:00');
-
-// Notifiche in-app + email automatiche per scadenze, guasti e attrezzature
+// Notifiche in-app + email automatiche per scadenze, guasti, attrezzature e
+// appuntamenti in arrivo: anche qui ogni utente admin/sottocapo viene
+// valutato con le proprie preferenze (giorni di preavviso, tipi di evento).
 Schedule::command('app:generate-notifications --email')
     ->dailyAt('8:15');

@@ -3,8 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Group;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 
@@ -12,11 +10,13 @@ class SettingsController extends Controller
 {
     /**
      * Mostra la pagina impostazioni generali.
+     *
+     * Le impostazioni del gruppo (nome, codice invito, membri) si gestiscono
+     * solo dalla pagina del gruppo stesso; qui restano solo le azioni di
+     * sistema che non sono né personali né di un gruppo specifico.
      */
     public function index()
     {
-        $group = auth()->user()->activeGroup();
-
         $backups = collect(Storage::disk('local')->files('backups'))
             ->map(fn ($file) => [
                 'name' => basename($file),
@@ -26,32 +26,7 @@ class SettingsController extends Controller
             ->sortByDesc('modified')
             ->take(10);
 
-        return view('admin.settings.index', compact('group', 'backups'));
-    }
-
-    /**
-     * Aggiorna il nome del gruppo (associazione).
-     */
-    public function updateGroup(Request $request)
-    {
-        $group = auth()->user()->activeGroup();
-
-        if (! $group) {
-            abort(403, 'Non appartieni a nessun gruppo.');
-        }
-
-        // Solo il capo può modificare le impostazioni del gruppo.
-        if (auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può modificare le impostazioni.');
-        }
-
-        $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-        ]);
-
-        $group->update(['name' => $data['name']]);
-
-        return back()->with('status', 'Impostazioni aggiornate.');
+        return view('admin.settings.index', compact('backups'));
     }
 
     /**

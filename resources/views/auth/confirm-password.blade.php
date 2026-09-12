@@ -1,52 +1,34 @@
-@extends('layouts.app')
+@extends('layouts.guest')
 
 @section('content')
-    <div class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">{{ __('Confirm Password') }}</div>
+    <h1 class="guest-title">{{ __('Conferma password') }}</h1>
+    <p class="hint" style="margin-bottom:20px;">
+        {{ __('Per proseguire, conferma la tua password prima di continuare.') }}</p>
 
-                    <div class="card-body">
-                        {{ __('Please confirm your password before continuing.') }}
+    <form method="POST" action="{{ route('password.confirm') }}" data-single-submit="true">
+        @csrf
 
-                        <form method="POST" action="{{ route('password.confirm') }}" data-single-submit="true">
-                            @csrf
-
-                            <div class="mb-4 row">
-                                <label for="password"
-                                    class="col-md-4 col-form-label text-md-right">{{ __('Password') }}</label>
-
-                                <div class="col-md-6">
-                                    <input id="password" type="password"
-                                        class="form-control @error('password') is-invalid @enderror" name="password"
-                                        required autocomplete="current-password">
-
-                                    @error('password')
-                                        <span class="invalid-feedback" role="alert">
-                                            <strong>{{ $message }}</strong>
-                                        </span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="mb-4 row mb-0">
-                                <div class="col-md-8 offset-md-4">
-                                    <button type="submit" class="btn btn-primary" data-loading-text="Confirming...">
-                                        {{ __('Confirm Password') }}
-                                    </button>
-
-                                    @if (Route::has('password.request'))
-                                        <a class="btn btn-link" href="{{ route('password.request') }}">
-                                            {{ __('Forgot Your Password?') }}
-                                        </a>
-                                    @endif
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <div class="field password-field">
+            <label for="password">{{ __('Password') }}</label>
+            <input id="password" type="password" class="input @error('password') is-invalid @enderror"
+                name="password" required autocomplete="current-password" autofocus>
+            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+            @error('password')
+                <div class="field-error">{{ $message }}</div>
+            @enderror
         </div>
-    </div>
+
+        <button type="submit" class="btn primary lg" data-loading-text="{{ __('Conferma...') }}"
+            style="width:100%; justify-content:center;">
+            {{ __('Conferma') }}
+        </button>
+
+        @if (Route::has('password.request'))
+            <div class="guest-footer">
+                <a href="{{ route('password.request') }}">{{ __('Password dimenticata?') }}</a>
+            </div>
+        @endif
+    </form>
 @endsection

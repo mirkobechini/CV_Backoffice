@@ -24,55 +24,84 @@ class SendSummaryReport extends Command
 
     /**
      * Execute the console command.
+     *
+     * Il report è personale per account: ogni utente ha una propria email
+     * destinataria, frequenza e numero di giorni di preavviso. Il comando
+     * viene lanciato ogni giorno dallo scheduler; qui si decide, per ciascun
+     * destinatario configurato, se "oggi" è il suo giorno di invio.
      */
     public function handle()
     {
-        $totalVehicles = Vehicle::count();
+        $recipientRows = NotificationSetting::where('key', 'report_email')
+            ->whereNotNull('value')
+            ->where('value', '!=', '')
+            ->get(['user_id', 'value']);
 
-        // Carichiamo tutti i veicoli con le relazioni necessarie in una sola query
-        $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')->get();
+        if ($recipientRows->isEmpty()) {
+            $this->warn('Nessun destinatario configurato. Ogni utente imposta la propria email nelle impostazioni notifiche.');
 
-        // Veicoli senza guasti aperti/in lavorazione (ok)
-        $vehicleIdsWithOpenIssues = Issue::open()
-            ->distinct('vehicle_id')
-            ->pluck('vehicle_id');
-        $vehiclesOk = $allVehicles->reject(fn($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count();
-
-        // Veicoli con equipaggiamento incompleto (dalla collection già caricata)
-        $incompleteVehicles = $allVehicles->filter(fn($v) => !$v->hasAllRequiredEquipment());
-
-        // Giorni di preavviso configurabili (default 30)
-        $reminderDays = (int) (NotificationSetting::where('key', 'reminder_days_before')->value('value') ?? 30);
-
-        $openIssues = Issue::with('vehicle')->open()->get();
-        $expiredDeadlines = Deadline::where('status', Deadline::STATUS_EXPIRED)->where('is_renewed', false)->get();
-        $upcomingDeadlines = Deadline::with('vehicle')->upcoming($reminderDays)->get();
-        $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')->whereNull('return_date')->where('appointment_date', '>=', today())->orderBy('appointment_date')->take(5)->get();
-        $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')
-            ->distinct('vehicle_id')
-            ->count('vehicle_id');
-        $expiringEquipment = Equipment::with('vehicle')->expiringSoon($reminderDays)->get();
-
-        $data = [
-            'totalVehicles' => $totalVehicles,
-            'vehiclesOk' => $vehiclesOk,
-            'openIssues' => $openIssues,
-            'expiredDeadlines' => $expiredDeadlines,
-            'upcomingDeadlines' => $upcomingDeadlines,
-            'upcomingAppointments' => $upcomingAppointments,
-            'incompleteVehicles' => $incompleteVehicles,
-            'vehiclesInMaintenance' => $vehiclesInMaintenance,
-            'expiringEquipment' => $expiringEquipment,
-        ];
-
-        $recipientEmail = NotificationSetting::where('key', 'report_email')->value('value');
-
-        if (!$recipientEmail) {
-            $this->warn('Nessun destinatario configurato. Imposta report_email nelle impostazioni notifiche.');
             return Command::SUCCESS;
         }
 
-        Mail::to($recipientEmail)->send(new ReportMail($data));
-        $this->info("Report inviato con successo a {$recipientEmail}!");
+        // Parti del report indipendenti dai giorni di preavviso: calcolate una
+        // sola volta e riutilizzate per tutti i destinatari.
+        $totalVehicles = Vehicle::count();
+        $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')->get();
+
+        $vehicleIdsWithOpenIssues = Issue::open()->distinct('vehicle_id')->pluck('vehicle_id');
+        $vehiclesOk = $allVehicles->reject(fn ($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count();
+
+        $incompleteVehicles = $allVehicles->filter(fn ($v) => ! $v->hasAllRequiredEquipment());
+        $openIssues = Issue::with('vehicle')->open()->get();
+        $expiredDeadlines = Deadline::where('status', Deadline::STATUS_EXPIRED)->where('is_renewed', false)->get();
+        $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')
+            ->whereNull('return_date')
+            ->where('appointment_date', '>=', today())
+            ->orderBy('appointment_date')
+            ->take(5)
+            ->get();
+        $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')->distinct('vehicle_id')->count('vehicle_id');
+
+        $today = Carbon::today();
+        $sentCount = 0;
+
+        foreach ($recipientRows as $row) {
+            $userId = $row->user_id;
+            $frequency = NotificationSetting::where('user_id', $userId)->where('key', 'report_frequency')->value('value') ?? 'daily';
+
+            $isSendDay = match ($frequency) {
+                'weekly' => $today->isMonday(),
+                'monthly' => $today->day === 1,
+                default => true, // daily
+            };
+
+            if (! $isSendDay) {
+                continue;
+            }
+
+            $reminderDays = (int) (NotificationSetting::where('user_id', $userId)->where('key', 'reminder_days_before')->value('value') ?? 7);
+
+            $data = [
+                'totalVehicles' => $totalVehicles,
+                'vehiclesOk' => $vehiclesOk,
+                'openIssues' => $openIssues,
+                'expiredDeadlines' => $expiredDeadlines,
+                'upcomingDeadlines' => Deadline::with('vehicle')->upcoming($reminderDays)->get(),
+                'upcomingAppointments' => $upcomingAppointments,
+                'incompleteVehicles' => $incompleteVehicles,
+                'vehiclesInMaintenance' => $vehiclesInMaintenance,
+                'expiringEquipment' => Equipment::with('vehicle')->expiringSoon($reminderDays)->get(),
+            ];
+
+            Mail::to($row->value)->send(new ReportMail($data));
+            $this->info("Report inviato con successo a {$row->value}!");
+            $sentCount++;
+        }
+
+        if ($sentCount === 0) {
+            $this->info('Nessun report da inviare oggi.');
+        }
+
+        return Command::SUCCESS;
     }
 }

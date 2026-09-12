@@ -76,11 +76,16 @@ class GroupController extends Controller
     }
 
     /**
-     * Aggiorna il nome del gruppo.
+     * Aggiorna il nome del gruppo (solo il capo).
      */
     public function update(Request $request, Group $group)
     {
         $this->authorizeGroup($group);
+
+        // Solo il capo può rinominare il gruppo.
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può rinominare il gruppo.');
+        }
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -172,6 +177,14 @@ class GroupController extends Controller
         // L'utente target deve appartenere al gruppo.
         if (! $user->roleIn($group)) {
             abort(404, 'Utente non trovato in questo gruppo.');
+        }
+
+        // Non si può retrocedere l'ultimo capo del gruppo.
+        if ($user->roleIn($group) === Group::ROLE_CAPO && $data['role'] !== Group::ROLE_CAPO) {
+            $capoCount = $group->users()->wherePivot('role', Group::ROLE_CAPO)->count();
+            if ($capoCount <= 1) {
+                abort(403, 'Non puoi retrocedere l\'ultimo capo del gruppo.');
+            }
         }
 
         $group->setUserRole($user, $data['role']);

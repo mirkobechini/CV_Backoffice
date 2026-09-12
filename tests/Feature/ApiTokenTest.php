@@ -10,15 +10,19 @@ class ApiTokenTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_profile_page_shows_tokens(): void
+    public function test_profile_page_loads_even_with_existing_tokens(): void
     {
+        // La sezione "Token API" è nascosta nella vista profilo (nessun client
+        // la usa: l'app mobile ottiene il proprio token da POST /api/login),
+        // ma le route restano attive per un eventuale uso futuro (es.
+        // integrazioni di terze parti create a mano). Verifichiamo solo che
+        // la pagina non si rompa quando l'utente ha già dei token.
         $user = User::factory()->create();
         $user->createToken('App mobile');
 
         $response = $this->actingAs($user)->get('/profile');
 
         $response->assertOk();
-        $response->assertSee('App mobile');
     }
 
     public function test_user_can_create_token(): void

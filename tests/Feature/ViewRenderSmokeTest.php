@@ -71,7 +71,6 @@ class ViewRenderSmokeTest extends TestCase
             'admin.deadlines.index',
             'admin.equipments.index',
             'admin.equipment-types.index',
-            'admin.users.index',
             'admin.groups.index',
             'admin.activity-log.index',
             'admin.settings.index',
@@ -156,12 +155,16 @@ class ViewRenderSmokeTest extends TestCase
             'admin.deadlines.create',
             'admin.equipments.create',
             'admin.equipment-types.create',
-            'admin.users.create',
         ];
 
         foreach ($routes as $route) {
             $response = $this->actingAs($this->admin)->get(route($route));
             $response->assertOk();
         }
+
+        // La creazione di un nuovo utente è sotto il gruppo specifico.
+        $group = $this->admin->activeGroup();
+        $response = $this->actingAs($this->admin)->get(route('admin.groups.users.create', $group));
+        $response->assertOk();
     }
 }

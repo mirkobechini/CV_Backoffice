@@ -6,13 +6,15 @@ use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Issue;
+use App\Models\MaintenanceRecord;
 use App\Models\Notification;
+use App\Models\NotificationSetting;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Mail\EventNotificationMail;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -112,6 +114,25 @@ class GenerateNotificationsCommandTest extends TestCase
         ]);
     }
 
+    public function test_generates_notification_for_upcoming_maintenance_appointment(): void
+    {
+        $this->admin();
+        $vehicle = $this->vehicle();
+        $provider = Provider::create(['name' => 'Officina Rossi', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => Carbon::today()->addDays(2),
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseHas('notifications', [
+            'type' => Notification::TYPE_MAINTENANCE,
+            'is_read' => false,
+        ]);
+    }
+
     public function test_ignores_renewed_deadlines(): void
     {
         $this->admin();
@@ -129,9 +150,28 @@ class GenerateNotificationsCommandTest extends TestCase
         $this->assertDatabaseCount('notifications', 0);
     }
 
+    public function test_respects_per_user_notify_toggle(): void
+    {
+        // Un utente che ha disattivato le notifiche sui guasti non deve
+        // riceverne, anche se il guasto esiste ed è aperto.
+        $admin = $this->admin();
+        NotificationSetting::create(['user_id' => $admin->id, 'key' => 'notify_on_issue', 'value' => '0']);
+
+        $vehicle = $this->vehicle();
+        Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Motore non parte',
+            'status' => 'open',
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseCount('notifications', 0);
+    }
+
     public function test_sends_email_when_email_option_and_recipient_configured(): void
     {
-        $this->admin();
+        $admin = $this->admin();
         $vehicle = $this->vehicle();
         Deadline::create([
             'vehicle_id' => $vehicle->id,
@@ -140,10 +180,7 @@ class GenerateNotificationsCommandTest extends TestCase
             'status' => Deadline::STATUS_PENDING,
             'is_renewed' => false,
         ]);
-        DB::table('notification_settings')->insert([
-            'key' => 'report_email',
-            'value' => 'admin@example.com',
-        ]);
+        NotificationSetting::create(['user_id' => $admin->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
 
         Mail::fake();
 
@@ -156,7 +193,7 @@ class GenerateNotificationsCommandTest extends TestCase
 
     public function test_does_not_send_email_without_email_option(): void
     {
-        $this->admin();
+        $admin = $this->admin();
         $vehicle = $this->vehicle();
         Deadline::create([
             'vehicle_id' => $vehicle->id,
@@ -165,10 +202,7 @@ class GenerateNotificationsCommandTest extends TestCase
             'status' => Deadline::STATUS_PENDING,
             'is_renewed' => false,
         ]);
-        DB::table('notification_settings')->insert([
-            'key' => 'report_email',
-            'value' => 'admin@example.com',
-        ]);
+        NotificationSetting::create(['user_id' => $admin->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
 
         Mail::fake();
 

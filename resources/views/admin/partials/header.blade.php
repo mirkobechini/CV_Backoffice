@@ -64,10 +64,6 @@
     {{-- Sezione: Sistema --}}
     <div class="sidebar-section">{{ __('Sistema') }}</div>
     <nav class="sidebar-nav">
-        <a class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
-            href="{{ route('admin.users.index') }}" title="{{ __('Utenti') }}">
-            <i class="fa-solid fa-user-gear"></i><span>{{ __('Utenti') }}</span>
-        </a>
         <a class="sidebar-link {{ request()->routeIs('admin.groups.*') ? 'active' : '' }}"
             href="{{ route('admin.groups.index') }}" title="{{ __('Gruppi') }}">
             <i class="fa-solid fa-users"></i><span>{{ __('Gruppi') }}</span>
@@ -90,8 +86,10 @@
     <div class="sidebar-footer">
         @auth
             <div class="sidebar-user">
-                <span class="sidebar-user-avatar"><i class="fa-solid fa-circle-user"></i></span>
-                <span class="sidebar-user-name">{{ Auth::user()->name }}</span>
+                <a href="{{ route('profile.edit') }}" class="sidebar-user-link" title="{{ __('Il tuo account') }}">
+                    <span class="sidebar-user-avatar"><i class="fa-solid fa-circle-user"></i></span>
+                    <span class="sidebar-user-name">{{ Auth::user()->name }}</span>
+                </a>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none"
                     data-single-submit="true">
                     @csrf

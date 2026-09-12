@@ -1,65 +1,58 @@
-<section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Update Password') }}
-        </h2>
+<div class="head">
+    <h3>{{ __('Aggiorna password') }}</h3>
+</div>
+<div class="body">
+    <p class="hint" style="margin-bottom:14px;">
+        {{ __('Usa una password lunga e casuale per mantenere sicuro il tuo account.') }}</p>
 
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __('Ensure your account is using a long, random password to stay secure.') }}
-        </p>
-    </header>
-
-    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6" data-single-submit="true">
+    <form method="post" action="{{ route('password.update') }}" data-single-submit="true">
         @csrf
         @method('put')
 
-        <div class="mb-2">
-            <label for="current_password">{{ __('Current Password') }}</label>
-            <input class="mt-1 form-control" type="password" name="current_password" id="current_password"
-                autocomplete="current-password">
-            @error('current_password')
-                <span class="invalid-feedback mt-2" role="alert">
-                    <strong>{{ $errors->updatePassword->get('current_password') }}</strong>
-                </span>
+        <div class="field password-field">
+            <label for="current_password">{{ __('Password attuale') }}</label>
+            <input class="input @error('current_password', 'updatePassword') is-invalid @enderror" type="password"
+                name="current_password" id="current_password" autocomplete="current-password">
+            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+            @error('current_password', 'updatePassword')
+                <div class="field-error">{{ $message }}</div>
             @enderror
         </div>
 
-        <div class="mb-2">
-            <label for="password">{{ __('New Password') }}</label>
-            <input class="mt-1 form-control" type="password" name="password" id="password" autocomplete="new-password">
-            @error('password')
-                <span class="invalid-feedback mt-2" role="alert">
-                    <strong>{{ $errors->updatePassword->get('password') }}</strong>
-                </span>
+        <div class="field password-field">
+            <label for="password">{{ __('Nuova password') }}</label>
+            <input class="input @error('password', 'updatePassword') is-invalid @enderror" type="password"
+                name="password" id="password" autocomplete="new-password">
+            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+            @error('password', 'updatePassword')
+                <div class="field-error">{{ $message }}</div>
             @enderror
         </div>
 
-        <div class="mb-2">
-
-            <label for="password_confirmation">{{ __('Confirm Password') }}</label>
-            <input class="mt-2 form-control" type="password" name="password_confirmation" id="password_confirmation"
+        <div class="field password-field">
+            <label for="password_confirmation">{{ __('Conferma password') }}</label>
+            <input class="input" type="password" name="password_confirmation" id="password_confirmation"
                 autocomplete="new-password">
-            @error('password_confirmation')
-                <span class="invalid-feedback mt-2" role="alert">
-                    <strong>{{ $errors->updatePassword->get('password_confirmation') }}</strong>
-                </span>
+            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+            @error('password_confirmation', 'updatePassword')
+                <div class="field-error">{{ $message }}</div>
             @enderror
         </div>
 
-        <div class="d-flex align-items-center gap-4">
-            <button type="submit" class="btn btn-primary" data-loading-text="Saving...">{{ __('Save') }}</button>
+        <div class="form-actions">
+            <button type="submit" class="btn primary" data-loading-text="{{ __('Salvataggio...') }}">
+                {{ __('Salva') }}
+            </button>
 
             @if (session('status') === 'password-updated')
-                <script>
-                    const show = true;
-                    setTimeout(() => show = false, 2000)
-                    const el = document.getElementById('status')
-                    if (show) {
-                        el.style.display = 'block';
-                    }
-                </script>
-                <p id='status' class=" fs-5 text-muted">{{ __('Saved.') }}</p>
+                <span class="hint">{{ __('Salvato.') }}</span>
             @endif
         </div>
     </form>
-</section>
+</div>

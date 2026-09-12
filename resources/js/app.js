@@ -80,6 +80,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Occhiello mostra/nascondi password: delegato, funziona su qualunque
+    // campo con markup .password-field > input + button.password-toggle
+    document.addEventListener('click', (event) => {
+        const toggle = event.target.closest('.password-toggle');
+        if (!toggle) return;
+
+        const input = toggle.closest('.password-field')?.querySelector('input');
+        if (!input) return;
+
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        toggle.querySelector('i')?.classList.replace(showing ? 'fa-eye-slash' : 'fa-eye', showing ? 'fa-eye' : 'fa-eye-slash');
+        toggle.setAttribute('aria-label', showing ? 'Mostra password' : 'Nascondi password');
+    });
+
     document.querySelectorAll('form[data-single-submit="true"]').forEach((form) => {
         form.addEventListener('submit', (event) => {
             if (form.dataset.submitting === 'true') {

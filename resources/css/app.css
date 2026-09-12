@@ -208,6 +208,24 @@ body {
     font-size: 12.5px;
 }
 
+.sidebar-user-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+}
+
+.sidebar-user-link:hover {
+    background: rgba(255, 255, 255, .06);
+    color: #fff;
+}
+
 .sidebar-user-avatar {
     width: 26px;
     height: 26px;
@@ -759,6 +777,12 @@ body {
     background: var(--surface-2);
 }
 
+.btn.sm {
+    height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
 .btn:disabled {
     opacity: .5;
     cursor: not-allowed;
@@ -821,12 +845,14 @@ body {
 }
 
 /* Tabella */
-.table-card table {
+.table-card table,
+.admin-card table {
     width: 100%;
     border-collapse: collapse;
 }
 
-.table-card thead th {
+.table-card thead th,
+.admin-card thead th {
     text-align: left;
     font-size: 10.5px;
     text-transform: uppercase;
@@ -839,18 +865,21 @@ body {
     white-space: nowrap;
 }
 
-.table-card tbody td {
+.table-card tbody td,
+.admin-card tbody td {
     padding: 10px 12px;
     border-bottom: 1px solid var(--border);
     font-size: 13px;
     vertical-align: middle;
 }
 
-.table-card tbody tr:last-child td {
+.table-card tbody tr:last-child td,
+.admin-card tbody tr:last-child td {
     border-bottom: none;
 }
 
-.table-card tbody tr:hover {
+.table-card tbody tr:hover,
+.admin-card tbody tr:hover {
     background: var(--surface-2);
 }
 
@@ -1654,6 +1683,68 @@ body {
     margin-top: 4px;
 }
 
+/* Versioni "sciolte" (fuori da un .field) delle due classi sopra: stessa
+   resa visiva quando un hint/errore non è annidato in un campo form. */
+.hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.field-error {
+    font-size: 11.5px;
+    color: var(--red);
+    margin-top: 4px;
+}
+
+/* Alert generico (successo/errore/avviso/info) */
+.alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    border: 1px solid transparent;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.alert.success {
+    background: var(--green-soft);
+    border-color: var(--green);
+    color: var(--text);
+}
+
+.alert.danger {
+    background: var(--red-soft);
+    border-color: var(--red);
+    color: var(--text);
+}
+
+.alert.warning {
+    background: var(--amber-soft);
+    border-color: var(--amber);
+    color: var(--text);
+}
+
+.alert.info {
+    background: var(--blue-soft);
+    border-color: var(--blue);
+    color: var(--text);
+}
+
+.alert code {
+    display: block;
+    padding: 6px 10px;
+    margin-top: 6px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    word-break: break-all;
+}
+
 .input,
 .select {
     width: 100%;
@@ -1688,6 +1779,35 @@ textarea.input {
     padding: 10px 12px;
     resize: vertical;
     font-family: inherit;
+}
+
+/* Campo password con occhiello per mostrare/nascondere il valore */
+.password-field {
+    position: relative;
+}
+
+.password-field .input {
+    padding-right: 40px;
+}
+
+.password-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.password-toggle:hover {
+    color: var(--text);
 }
 
 .autocomplete-results {
@@ -2789,6 +2909,511 @@ body.modal-open {
 }
 
 /* =============================================
+   Sistema: utenti, gruppi, impostazioni, log attività
+   ============================================= */
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--primary);
+}
+
+.user-cell .name {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.user-cell .email,
+td .email {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.role-select {
+    height: 32px;
+    padding: 0 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 12.5px;
+    outline: none;
+}
+
+/* Card generica con intestazione (impostazioni, dettaglio gruppo) */
+.admin-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.admin-card .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.admin-card .head h3 {
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.admin-card .head .ic {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+}
+
+.admin-card .body {
+    padding: 16px 20px;
+}
+
+/* Gruppi: card "entra con codice" + griglia gruppi */
+.join-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 20px;
+    margin-bottom: 18px;
+}
+
+.join-card h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.join-card h3 .ic {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: grid;
+    place-items: center;
+    font-size: 12px;
+}
+
+.join-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.join-row .input {
+    flex: 1;
+    min-width: 160px;
+    text-transform: uppercase;
+}
+
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.g-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    transition: transform .12s, border-color .12s;
+}
+
+.g-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--primary);
+}
+
+.g-card .g-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    margin-bottom: 12px;
+}
+
+.g-card .g-name {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.g-card .g-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.g-card .g-btn {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    padding: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: transparent;
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+}
+
+.g-card .g-btn:hover {
+    background: var(--surface-2);
+    color: var(--primary);
+}
+
+/* Dettaglio gruppo: header con avatar grande */
+.g-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    box-shadow: var(--shadow);
+    flex-wrap: wrap;
+}
+
+.g-header .g-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    font-size: 24px;
+    color: #fff;
+    background: linear-gradient(135deg, #6366f1, #a78bfa);
+    flex-shrink: 0;
+}
+
+.g-header .g-title h1 {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.g-header .g-title .sub {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.g-header .g-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+}
+
+.invite-code {
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: .15em;
+    color: var(--primary);
+    background: var(--primary-soft);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.invite-hint {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: 12px;
+}
+
+.invite-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.invite-email {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+}
+
+.invite-email h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.email-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.email-row .input {
+    flex: 1;
+    min-width: 160px;
+}
+
+.veh-count {
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.veh-count .big {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+/* Backup database (impostazioni) */
+.backup-list {
+    margin-top: 14px;
+}
+
+.backup-list h4 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.b-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    margin-bottom: 6px;
+}
+
+.b-item:last-child {
+    margin-bottom: 0;
+}
+
+.b-item .ic {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: var(--blue-soft);
+    color: var(--blue);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.b-item .name {
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.b-item .size {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+/* Registro attività */
+.detail-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    display: grid;
+    place-items: center;
+}
+
+.detail-btn:hover {
+    background: var(--surface-3);
+    color: var(--text);
+}
+
+.log-detail {
+    font-size: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+}
+
+/* Tabella "prima/dopo" leggibile nel modal di dettaglio del log attività */
+.prop-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    max-height: 420px;
+    display: block;
+    overflow-y: auto;
+}
+
+.prop-table thead th {
+    text-align: left;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-2);
+    position: sticky;
+    top: 0;
+}
+
+.prop-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+
+.prop-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.prop-table .fname {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.prop-table .before {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--red);
+}
+
+.prop-table .after {
+    color: var(--green);
+    font-weight: 500;
+}
+
+/* Elenco notifiche (campanella) */
+.notif-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+}
+
+.notif-item:last-child {
+    border-bottom: none;
+}
+
+.notif-item.unread {
+    background: var(--primary-soft);
+}
+
+.notif-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.notif-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.notif-item.unread .notif-title {
+    color: var(--primary);
+}
+
+.notif-msg {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.notif-time {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.notif-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+@media (max-width: 1000px) {
+    .groups-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =============================================
    Componenti riutilizzabili (via @apply)
    ============================================= */
 
@@ -2810,4 +3435,77 @@ body.modal-open {
 
 .input-dp {
     @apply w-full h-10 px-3 rounded border border-line bg-surface text-ink text-[13.5px] outline-none;
+}
+
+/* =============================================
+   Pagine guest (login, registrazione, password...)
+   ============================================= */
+
+.guest-body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    padding: 24px 16px;
+}
+
+.guest-wrap {
+    width: 100%;
+    max-width: 420px;
+}
+
+.guest-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 20px;
+}
+
+.guest-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 15px;
+    flex-shrink: 0;
+}
+
+.guest-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 26px;
+}
+
+.guest-title {
+    font-size: 19px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.guest-footer {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+}
+
+.guest-footer a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.guest-footer a:hover {
+    text-decoration: underline;
 }

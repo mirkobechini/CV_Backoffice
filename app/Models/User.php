@@ -72,6 +72,32 @@ class User extends Authenticatable
     }
 
     /**
+     * Impostazioni di notifica personali dell'utente (report email,
+     * frequenza, promemoria, tipi di evento da notificare).
+     */
+    public function notificationSettings()
+    {
+        return $this->hasMany(NotificationSetting::class);
+    }
+
+    /**
+     * Legge una singola impostazione di notifica dell'utente, con un
+     * valore di default se non è mai stata impostata.
+     */
+    public function notificationSetting(string $key, mixed $default = null): mixed
+    {
+        $value = $this->notificationSettings()->where('key', $key)->value('value');
+
+        if ($value === null) {
+            return $default;
+        }
+
+        $booleanKeys = ['notify_on_maintenance', 'notify_on_deadline', 'notify_on_issue', 'notify_on_equipment'];
+
+        return in_array($key, $booleanKeys, true) ? filter_var($value, FILTER_VALIDATE_BOOLEAN) : $value;
+    }
+
+    /**
      * Il ruolo dell'utente in un determinato gruppo.
      */
     public function roleIn(?Group $group): ?string

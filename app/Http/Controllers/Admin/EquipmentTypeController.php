@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEquipmentTypeRequest;
 use App\Http\Requests\UpdateEquipmentTypeRequest;
 use App\Models\EquipmentType;
+use Illuminate\Http\Request;
 
 class EquipmentTypeController extends Controller
 {
@@ -17,9 +18,12 @@ class EquipmentTypeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $equipmentTypes = EquipmentType::paginate(20);
+        $equipmentTypes = EquipmentType::when(
+            $request->filled('q'),
+            fn ($query) => $query->where('name', 'like', '%' . $request->get('q') . '%')
+        )->orderBy('name')->paginate(20)->withQueryString();
 
         return view('admin.equipment-types.index', compact('equipmentTypes'));
     }

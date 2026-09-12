@@ -46,16 +46,26 @@ class NotificationSettingControllerTest extends TestCase
         ]);
     }
 
-    public function test_worker_cannot_update(): void
+    public function test_member_can_update_own_notification_settings(): void
     {
-        $worker = User::factory()->withRole('member')->create();
+        // Le impostazioni di notifica sono personali per account: a
+        // differenza dei dati di gruppo, un membro base può gestire le
+        // proprie senza dover essere capo/sottocapo.
+        $member = User::factory()->withRole('member')->create();
 
-        $this->actingAs($worker)
+        $this->actingAs($member)
             ->patch(route('admin.notifications.update'), [
-                'report_email' => 'test@example.com',
+                'report_email' => 'member@example.com',
                 'report_frequency' => 'daily',
                 'reminder_days_before' => 7,
             ])
-            ->assertForbidden();
+            ->assertRedirect()
+            ->assertSessionHas('status');
+
+        $this->assertDatabaseHas('notification_settings', [
+            'user_id' => $member->id,
+            'key' => 'report_email',
+            'value' => 'member@example.com',
+        ]);
     }
 }

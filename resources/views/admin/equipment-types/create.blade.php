@@ -1,57 +1,67 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Flotta')],
+        ['label' => __('Attrezzature'), 'url' => route('admin.equipments.index')],
+        ['label' => __('Tipi Attrezzature'), 'url' => route('admin.equipment-types.index')],
+        ['label' => __('Nuovo tipo')],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container py-4">
-        <div class="row mb-3">
-            <div class="col-12">
-                <a href="{{ request('back', route('admin.equipment-types.index')) }}" class="btn btn-secondary">Torna alla pagina
-                    precedente</a>
-            </div>
-        </div>
-        <h1 class="mb-4">Aggiungi nuova tipologia di attrezzatura</h1>
-        <div class="card my-0">
-            <div class="card-body">
-                <form id="equipmenttype-form" method="POST" action="{{ route('admin.equipment-types.store') }}"
-                    enctype="multipart/form-data" data-single-submit="true">
-                    @csrf
-                    <section class="mb-3 row">
-                        <h2>Dettagli Tipologia di attrezzatura</h2>
-                        <div class="mb-3">
-                            <label for="name" class="form-label">Nome</label>
-                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="name"
-                                name="name" value="{{ old('name') }}" required>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="first_inspection_months" class="form-label">Prima revisione (mesi)</label>
-                            <input type="text" class="form-control @error('first_inspection_months') is-invalid @enderror" id="first_inspection_months"
-                                name="first_inspection_months" value="{{ old('first_inspection_months') }}" required>
-                            @error('first_inspection_months')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="regular_inspection_months" class="form-label">Revisione regolare (mesi)</label>
-                            <input type="text" class="form-control @error('regular_inspection_months') is-invalid @enderror"
-                                id="regular_inspection_months" name="regular_inspection_months" value="{{ old('regular_inspection_months') }}">
-                            @error('regular_inspection_months')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </section>
-                    <button id="equipmenttype-submit-btn" type="submit" class="btn btn-primary"
-                        data-loading-text="Salvataggio...">Salva</button>
-                </form>
-            </div>
-        </div>
+
+    <div class="page-header">
+        <h1>{{ __('Aggiungi nuova tipologia di attrezzatura') }}</h1>
+        <a href="{{ request('back', route('admin.equipment-types.index')) }}" class="btn ghost">
+            <i class="fa-solid fa-arrow-left"></i> {{ __('Annulla') }}
+        </a>
     </div>
 
-    <script>
-        document.getElementById('equipmenttype-form').addEventListener('submit', function() {
-            const submitButton = document.getElementById('equipmenttype-submit-btn');
-            submitButton.disabled = true;
-            submitButton.innerText = submitButton.getAttribute('data-loading-text');
-        });
-    </script>
+    <div class="form-card">
+        <form id="equipmenttype-form" method="POST" action="{{ route('admin.equipment-types.store') }}"
+            enctype="multipart/form-data" data-single-submit="true">
+            @csrf
+
+            <div class="form-section" style="margin-bottom:0;">
+                <h2><span class="num">1</span> {{ __('Dettagli tipologia di attrezzatura') }}</h2>
+                <div class="field">
+                    <label for="name">{{ __('Nome') }} <span class="req">*</span></label>
+                    <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
+                        value="{{ old('name') }}" required>
+                    @error('name')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="first_inspection_months">{{ __('Dopo quanti mesi la prima revisione') }}</label>
+                        <input type="number" class="input @error('first_inspection_months') is-invalid @enderror"
+                            id="first_inspection_months" name="first_inspection_months"
+                            value="{{ old('first_inspection_months') }}" min="0" placeholder="{{ __('es. 12') }}">
+                        @error('first_inspection_months')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="regular_inspection_months">{{ __('Dopo quanti mesi le successive revisioni') }}</label>
+                        <input type="number" class="input @error('regular_inspection_months') is-invalid @enderror"
+                            id="regular_inspection_months" name="regular_inspection_months"
+                            value="{{ old('regular_inspection_months') }}" min="0" placeholder="{{ __('es. 12') }}">
+                        @error('regular_inspection_months')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button id="equipmenttype-submit-btn" type="submit" class="btn primary lg"
+                    data-loading-text="{{ __('Salvataggio...') }}">
+                    <i class="fa-solid fa-plus"></i> {{ __('Salva') }}
+                </button>
+                <a href="{{ request('back', route('admin.equipment-types.index')) }}" class="btn">{{ __('Annulla') }}</a>
+            </div>
+        </form>
+    </div>
 @endsection

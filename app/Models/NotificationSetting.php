@@ -6,7 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class NotificationSetting extends Model
 {
-    protected $fillable = ['key', 'value'];
+    protected $fillable = ['user_id', 'key', 'value'];
+
+    /**
+     * Le impostazioni notifica sono personali: ogni riga appartiene a un
+     * utente specifico.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * I valori noti vengono automaticamente castati al tipo corretto.
