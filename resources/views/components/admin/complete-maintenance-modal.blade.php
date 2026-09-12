@@ -1,14 +1,18 @@
-@props(['maintenanceRecord'])
+@props(['maintenanceRecord', 'disabledReason' => null])
 
 @php
     $routeParameterValue = $maintenanceRecord?->getRouteKey();
     $modalIdSuffix = $routeParameterValue ?? 'missing-maintenance';
 @endphp
 
-@if ($routeParameterValue)
-    <button type="button" class="btn btn-success" data-bs-toggle="modal"
+@if ($disabledReason)
+    <button type="button" class="btn success" disabled title="{{ $disabledReason }}">
+        <i class="fa-solid fa-check"></i> Completato
+    </button>
+@elseif ($routeParameterValue)
+    <button type="button" class="btn success" data-bs-toggle="modal"
         data-bs-target="#completeMaintenanceModal-{{ $modalIdSuffix }}">
-        Completato
+        <i class="fa-solid fa-check"></i> Completato
     </button>
 
     <div class="modal fade" id="completeMaintenanceModal-{{ $modalIdSuffix }}" tabindex="-1"
@@ -55,5 +59,5 @@
         </div>
     </div>
 @else
-    <button type="button" class="btn btn-success" disabled>Completato</button>
+    <button type="button" class="btn success" disabled>Completato</button>
 @endif

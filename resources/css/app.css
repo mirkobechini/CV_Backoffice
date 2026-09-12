@@ -759,6 +759,15 @@ body {
     background: var(--surface-2);
 }
 
+.btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.btn:disabled:hover {
+    background: var(--surface);
+}
+
 .btn.primary {
     background: var(--primary);
     color: #fff;
@@ -2122,6 +2131,168 @@ textarea.input {
 }
 
 /* =============================================
+   Appuntamenti: index (descrizione + data) e form
+   (checklist guasti/scadenze collegati)
+   ============================================= */
+
+.desc-cell {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.date-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.date-main {
+    font-weight: 600;
+    font-size: 12.5px;
+}
+
+.date-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.check-list {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 12px 16px;
+    margin-top: 6px;
+}
+
+.check-list .empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 8px 0;
+}
+
+.check-list .item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    margin-bottom: 6px;
+}
+
+.check-list .item:last-child {
+    margin-bottom: 0;
+}
+
+.check-list .item input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+}
+
+.check-list .item .lbl {
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+.check-list .item .meta {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.check-list .item .tag {
+    margin-left: auto;
+}
+
+/* Calendario appuntamenti: adatta FullCalendar al tema Dashboard Pro */
+.cal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 20px;
+}
+
+.cal-card .fc {
+    --fc-border-color: var(--border);
+    --fc-page-bg-color: var(--surface);
+    --fc-neutral-bg-color: var(--surface-2);
+    --fc-list-event-hover-bg-color: var(--surface-2);
+    --fc-today-bg-color: var(--primary-soft);
+    --fc-event-text-color: #fff;
+    color: var(--text);
+    font-family: inherit;
+}
+
+.cal-card .fc .fc-toolbar-title {
+    color: var(--text);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.cal-card .fc .fc-button {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12.5px;
+    font-weight: 600;
+    box-shadow: none;
+    text-transform: capitalize;
+}
+
+.cal-card .fc .fc-button:hover {
+    background: var(--surface-2);
+}
+
+.cal-card .fc .fc-button:focus,
+.cal-card .fc .fc-button:active:focus {
+    box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
+.cal-card .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+}
+
+.cal-card .fc .fc-daygrid-day-number,
+.cal-card .fc .fc-col-header-cell-cushion {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.cal-card .fc .fc-col-header-cell-cushion {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.cal-card .fc .fc-daygrid-day.fc-day-today {
+    background: var(--primary-soft);
+}
+
+.cal-card .fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+    opacity: .4;
+}
+
+.cal-card .fc .fc-event {
+    border: none;
+    font-size: 10.5px;
+    padding: 1px 4px;
+}
+
+.cal-card .fc-theme-standard td,
+.cal-card .fc-theme-standard th,
+.cal-card .fc-theme-standard .fc-scrollgrid {
+    border-color: var(--border);
+}
+
+/* =============================================
    Tipi di veicolo: switch on/off + righe equipaggiamento
    ============================================= */
 
@@ -2507,7 +2678,8 @@ span.flatpickr-weekday {
 }
 
 .modal-footer .btn-secondary,
-.modal-footer .btn-danger {
+.modal-footer .btn-danger,
+.modal-footer .btn-success {
     border: none;
     cursor: pointer;
     font-weight: 600;
@@ -2534,6 +2706,34 @@ span.flatpickr-weekday {
 
 .modal-footer .btn-danger:hover {
     opacity: .9;
+}
+
+.modal-footer .btn-success {
+    background: var(--green);
+    color: #fff;
+}
+
+.modal-footer .btn-success:hover {
+    opacity: .9;
+}
+
+/* Radio/checkbox nei modal (es. completamento appuntamento) */
+.modal-body .form-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.modal-body .form-check-input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    flex-shrink: 0;
+}
+
+.modal-body .form-check-label {
+    font-size: 13px;
 }
 
 body.modal-open {

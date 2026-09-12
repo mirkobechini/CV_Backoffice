@@ -1,68 +1,30 @@
 @extends('layouts.app')
+
+@section('breadcrumb')
+    <x-admin.breadcrumb :items="[
+        ['label' => __('Servizi')],
+        ['label' => __('Appuntamenti'), 'url' => route('admin.maintenance-records.index')],
+        ['label' => __('Calendario')],
+    ]" />
+@endsection
+
 @section('content')
-    <div class="container py-4">
-        <div class="d-flex align-items-center mb-4">
-            <h1 class="mb-0"><i class="bi bi-calendar-event me-2"></i>Calendario Appuntamenti</h1>
-            <div class="ms-auto">
-                <a href="{{ route('admin.maintenance-records.index') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-list me-1"></i>Vista lista
-                </a>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-body" id="calendar-container">
-                <div id="calendar"></div>
-            </div>
-        </div>
+
+    <div class="page-header">
+        <h1>{{ __('Calendario Appuntamenti') }}</h1>
+        <a href="{{ route('admin.maintenance-records.index') }}" class="btn">
+            <i class="fa-solid fa-list"></i> {{ __('Vista lista') }}
+        </a>
+    </div>
+
+    <div class="cal-card" id="calendar-container">
+        <div id="calendar"></div>
     </div>
 @endsection
 
 @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.15/index.global.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.15/index.global.min.css" rel="stylesheet">
-    <style>
-        /* Adatta FullCalendar al tema scuro usando le variabili Bootstrap */
-        [data-bs-theme="dark"] .fc {
-            --fc-border-color: var(--bs-border-color);
-            --fc-page-bg-color: var(--bs-body-bg);
-            --fc-neutral-bg-color: var(--bs-tertiary-bg);
-            --fc-list-event-hover-bg-color: var(--bs-tertiary-bg);
-            --fc-today-bg-color: rgba(13, 110, 253, 0.15);
-            color: var(--bs-body-color);
-        }
-
-        [data-bs-theme="dark"] .fc .fc-toolbar-title {
-            color: var(--bs-body-color);
-        }
-
-        [data-bs-theme="dark"] .fc .fc-button {
-            background-color: var(--bs-secondary-bg);
-            border-color: var(--bs-border-color);
-            color: var(--bs-body-color);
-        }
-
-        [data-bs-theme="dark"] .fc .fc-button:hover {
-            background-color: var(--bs-tertiary-bg);
-        }
-
-        [data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled).fc-button-active {
-            background-color: var(--bs-primary);
-            border-color: var(--bs-primary);
-        }
-
-        [data-bs-theme="dark"] .fc .fc-daygrid-day-number,
-        [data-bs-theme="dark"] .fc .fc-col-header-cell-cushion {
-            color: var(--bs-body-color);
-        }
-
-        [data-bs-theme="dark"] .fc .fc-daygrid-day.fc-day-today {
-            background-color: rgba(13, 110, 253, 0.15);
-        }
-
-        [data-bs-theme="dark"] .fc .fc-daygrid-day.fc-day-other {
-            opacity: 0.4;
-        }
-    </style>
 @endpush
 
 @push('scripts')
@@ -97,10 +59,11 @@
                     }
                 },
                 loading: function(isLoading) {
+                    const container = document.getElementById('calendar-container');
                     if (isLoading) {
-                        document.getElementById('calendar-container').classList.add('opacity-50');
+                        container.style.opacity = '0.5';
                     } else {
-                        document.getElementById('calendar-container').classList.remove('opacity-50');
+                        container.style.opacity = '1';
                     }
                 }
             });
