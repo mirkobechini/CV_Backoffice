@@ -69,8 +69,8 @@
                 </div>
                 <div id="due-date-group">
                     <x-form.month-input name="due_date" id="due_date" label="{{ __('Data di scadenza') }}" />
-                    <div class="hint">
-                        {{ __('Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno" la data viene calcolata automaticamente.') }}
+                    <div class="hint" id="due-date-hint">
+                        {{ __('Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno" la data viene calcolata automaticamente se lasciata vuota; compilala per impostarla manualmente.') }}
                     </div>
                 </div>
             </div>
@@ -149,12 +149,12 @@
             const vehicleSelect = document.getElementById('vehicle_id');
             const typeSelect = document.getElementById('type');
             const oxygenOption = document.getElementById('oxygen-type-option');
-            const dueDateGroup = document.getElementById('due-date-group');
             // Flatpickr sposta l'id "due_date" sull'altInput visibile: per
-            // svuotare/disabilitare il valore reale che viene inviato dobbiamo
-            // usare il campo originale (nascosto), individuabile per name.
-            const dueDateAlt = document.getElementById('due_date');
+            // svuotare il valore reale che viene inviato dobbiamo usare il
+            // campo originale (nascosto), individuabile per name.
             const dueDateReal = document.querySelector('input[name="due_date"]');
+            const dueDateLabel = document.getElementById('due_date-label');
+            const dueDateHint = document.getElementById('due-date-hint');
             const kmSettingsGroup = document.getElementById('km-settings-group');
             const intervalKmField = document.getElementById('interval-km-field');
             const intervalDaysField = document.getElementById('interval-days-field');
@@ -185,15 +185,19 @@
                 }
             };
 
-            // La data manuale è richiesta solo per scadenze non auto-calcolate.
+            // Il campo data resta sempre visibile e modificabile: per le
+            // revisioni (ministeriale/ossigeno) è facoltativo e, se
+            // compilato, sovrascrive il calcolo automatico.
             const toggleVisibility = () => {
                 const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
                 const isKmType = kmTypes.includes(typeSelect.value);
 
-                dueDateGroup.style.display = isAutoCalculated ? 'none' : '';
-                dueDateReal.disabled = isAutoCalculated;
-                if (dueDateAlt) {
-                    dueDateAlt.disabled = isAutoCalculated;
+                if (isAutoCalculated) {
+                    dueDateLabel.textContent = @json(__('Data di scadenza (facoltativa)'));
+                    dueDateHint.textContent = @json(__('Lascia vuoto per calcolarla automaticamente in base all\'ultima revisione, oppure compilala per impostarla manualmente.'));
+                } else {
+                    dueDateLabel.textContent = @json(__('Data di scadenza'));
+                    dueDateHint.textContent = @json(__('Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno" la data viene calcolata automaticamente se lasciata vuota; compilala per impostarla manualmente.'));
                 }
 
                 // Per Tagliando/Cinghia servono intervallo km/giorni per calcolare
@@ -204,19 +208,25 @@
                 intervalDaysField.style.display = isKmType ? '' : 'none';
 
                 if (isAutoCalculated) {
-                    kmSettingsTitle.textContent = '{{ __('Km alla revisione (facoltativo)') }}';
-                    lastMileageLabel.textContent = '{{ __('Km rilevati alla revisione') }}';
-                    kmSettingsHint.textContent = '{{ __('Annotazione facoltativa: il chilometraggio del veicolo al momento di questa revisione, solo per riferimento.') }}';
-
-                    if (dueDateReal._flatpickr) {
-                        dueDateReal._flatpickr.clear();
-                    } else {
-                        dueDateReal.value = '';
-                    }
+                    kmSettingsTitle.textContent = @json(__('Km alla revisione (facoltativo)'));
+                    lastMileageLabel.textContent = @json(__('Km rilevati alla revisione'));
+                    kmSettingsHint.textContent = @json(__('Annotazione facoltativa: il chilometraggio del veicolo al momento di questa revisione, solo per riferimento.'));
                 } else {
-                    kmSettingsTitle.textContent = '{{ __('Scadenza per km e data') }}';
-                    lastMileageLabel.textContent = '{{ __("Km all'ultimo cambio") }}';
-                    kmSettingsHint.textContent = '{{ __('La scadenza scatta al primo tra superamento km o raggiungimento data. Per la cinghia distribuzione: 100.000 km o 10 anni (3650 giorni).') }}';
+                    kmSettingsTitle.textContent = @json(__('Scadenza per km e data'));
+                    lastMileageLabel.textContent = @json(__("Km all'ultimo cambio"));
+                    kmSettingsHint.textContent = @json(__('La scadenza scatta al primo tra superamento km o raggiungimento data. Per la cinghia distribuzione: 100.000 km o 10 anni (3650 giorni).'));
+                }
+            };
+
+            // Cambiare tipologia svuota la data manuale già inserita: una
+            // data valida per il tipo precedente non ha senso riportata su
+            // uno diverso (solo un cambio esplicito di tipo la azzera, non
+            // il caricamento iniziale della pagina).
+            const clearDueDate = () => {
+                if (dueDateReal._flatpickr) {
+                    dueDateReal._flatpickr.clear();
+                } else {
+                    dueDateReal.value = '';
                 }
             };
 
@@ -226,7 +236,10 @@
                 syncOxygenTypeAvailability();
                 toggleVisibility();
             });
-            typeSelect.addEventListener('change', toggleVisibility);
+            typeSelect.addEventListener('change', () => {
+                clearDueDate();
+                toggleVisibility();
+            });
         });
     </script>
 @endsection

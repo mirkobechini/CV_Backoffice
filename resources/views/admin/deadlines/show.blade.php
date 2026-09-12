@@ -163,6 +163,30 @@
                 <span class="k">{{ __('Stato') }}</span>
                 <span class="v"><span class="badge {{ $badgeClass }}">{{ $deadline->status_label }}</span></span>
             </div>
+            @if ($deadline->renewsDeadline)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Rinnova') }}</span>
+                    <span class="v">
+                        <a class="dl-veh-link"
+                            href="{{ route('admin.deadlines.show', $deadline->renewsDeadline) }}">
+                            {{ __('Scadenza del :d', ['d' => $deadline->renewsDeadline->due_date_formatted ?? 'N/A']) }}
+                            <span class="arrow">›</span>
+                        </a>
+                    </span>
+                </div>
+            @endif
+            @if ($deadline->renewedByDeadline)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Rinnovata da') }}</span>
+                    <span class="v">
+                        <a class="dl-veh-link"
+                            href="{{ route('admin.deadlines.show', $deadline->renewedByDeadline) }}">
+                            {{ __('Scadenza del :d', ['d' => $deadline->renewedByDeadline->due_date_formatted ?? 'N/A']) }}
+                            <span class="arrow">›</span>
+                        </a>
+                    </span>
+                </div>
+            @endif
         </div>
     </div>
 

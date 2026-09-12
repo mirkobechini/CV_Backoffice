@@ -16,7 +16,8 @@
 @endphp
 
 <div class="field">
-    <label for="{{ $inputId }}">{{ $label }} @if ($required)<span class="req">*</span>@endif</label>
+    <label for="{{ $inputId }}" id="{{ $inputId }}-label">{{ $label }} @if ($required)<span
+            class="req">*</span>@endif</label>
     <input type="text" class="flatpickr-month-input" id="{{ $inputId }}" name="{{ $name }}" value="{{ $inputValue }}"
         placeholder="mm/aaaa" autocomplete="off" data-alt-class="input @error($name) is-invalid @enderror"
         @if ($required) required @endif>

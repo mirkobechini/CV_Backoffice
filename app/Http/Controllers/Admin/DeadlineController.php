@@ -180,7 +180,19 @@ class DeadlineController extends Controller
         // torniamo all'indice invece di seguirlo.
         $showUrl = route('admin.deadlines.show', $deadline);
 
+        // Se questa scadenza aveva rinnovato automaticamente quella
+        // precedente (creazione di una nuova Revisione Ministeriale/Ossigeno
+        // per lo stesso veicolo), eliminandola la precedente torna ad essere
+        // quella attuale: annulliamo il rinnovo e ricalcoliamo lo stato, che
+        // risulterà "scaduta" dato che la sua data è già passata.
+        $previousDeadline = $deadline->renewsDeadline;
+
         $deadline->delete();
+
+        if ($previousDeadline) {
+            $previousDeadline->update(['is_renewed' => false]);
+            $previousDeadline->syncStatusFromRules();
+        }
 
         $back = $request->input('back');
         if ($back && ! str_starts_with($back, $showUrl)) {
