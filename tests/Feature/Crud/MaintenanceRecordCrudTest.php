@@ -218,6 +218,22 @@ class MaintenanceRecordCrudTest extends TestCase
         ]);
     }
 
+    public function test_deleting_from_show_page_redirects_to_index_not_404(): void
+    {
+        // Il modale di conferma imposta "back" sull'URL della pagina
+        // corrente: eliminando dalla show, "back" punterebbe all'appuntamento
+        // appena cancellato (404) se seguito alla lettera.
+        $user = $this->createUser();
+        $maintenance = $this->createMaintenance()['maintenance'];
+
+        $response = $this->actingAs($user)->delete(route('admin.maintenance-records.destroy', $maintenance), [
+            'back' => route('admin.maintenance-records.show', $maintenance),
+        ]);
+
+        $response->assertRedirect(route('admin.maintenance-records.index'));
+        $this->assertSoftDeleted($maintenance);
+    }
+
     public function test_maintenance_can_be_stored_with_notes(): void
     {
         $user = $this->createUser();

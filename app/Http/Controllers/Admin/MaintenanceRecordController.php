@@ -346,6 +346,11 @@ class MaintenanceRecordController extends Controller
     public function destroy(Request $request, MaintenanceRecord $maintenanceRecord)
     {
         $this->authorize('delete', $maintenanceRecord);
+
+        // Come in DeadlineController::destroy: se "back" punta alla show
+        // dell'appuntamento appena eliminato, il redirect darebbe 404.
+        $showUrl = route('admin.maintenance-records.show', $maintenanceRecord);
+
         $maintenanceRecord->loadMissing('items.itemable');
 
         // I guasti in lavorazione tornano in open
@@ -411,7 +416,7 @@ class MaintenanceRecordController extends Controller
         }
 
         $back = $request->input('back');
-        if ($back) {
+        if ($back && ! str_starts_with($back, $showUrl)) {
             return redirect($back)->with('status', $message);
         }
 

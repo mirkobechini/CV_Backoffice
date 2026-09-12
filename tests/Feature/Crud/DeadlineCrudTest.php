@@ -162,6 +162,34 @@ class DeadlineCrudTest extends TestCase
         $this->assertSoftDeleted($deadline);
     }
 
+    public function test_deleting_from_show_page_redirects_to_index_not_404(): void
+    {
+        // Il modale di conferma imposta "back" sull'URL della pagina
+        // corrente: eliminando dalla show, "back" punterebbe alla scadenza
+        // appena cancellata (404) se seguito alla lettera.
+        $user = $this->createUser();
+        $deadline = $this->createDeadline()['deadline'];
+
+        $response = $this->actingAs($user)->delete(route('admin.deadlines.destroy', $deadline), [
+            'back' => route('admin.deadlines.show', $deadline),
+        ]);
+
+        $response->assertRedirect(route('admin.deadlines.index'));
+        $this->assertSoftDeleted($deadline);
+    }
+
+    public function test_deleting_respects_back_when_it_is_not_the_deleted_show_page(): void
+    {
+        $user = $this->createUser();
+        $deadline = $this->createDeadline()['deadline'];
+
+        $response = $this->actingAs($user)->delete(route('admin.deadlines.destroy', $deadline), [
+            'back' => route('admin.deadlines.index') . '?status_filter=expired',
+        ]);
+
+        $response->assertRedirect(route('admin.deadlines.index') . '?status_filter=expired');
+    }
+
     public function test_ministerial_revision_can_optionally_record_mileage(): void
     {
         // Per le revisioni (data auto-calcolata) il km è solo un'annotazione
@@ -185,6 +213,41 @@ class DeadlineCrudTest extends TestCase
             'last_mileage' => 87000,
             'interval_km' => null,
         ]);
+    }
+
+    public function test_index_shows_all_types_by_default_not_only_revisions(): void
+    {
+        // Il filtro "ultima revisione per veicolo" (attivo di default) deve
+        // solo deduplicare per veicolo+tipo, non nascondere del tutto i tipi
+        // diversi da ministeriale/ossigeno.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'status' => 'renewed',
+            'due_date' => '2025-06',
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'status' => 'renewed',
+            'due_date' => '2025-07',
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Cinghia Distribuzione',
+            'status' => 'renewed',
+            'due_date' => '2025-08',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.index'));
+
+        $response->assertOk();
+        $response->assertSee('Assicurazione');
+        $response->assertSee('Tagliando');
+        $response->assertSee('Cinghia Distribuzione');
     }
 
     // VALIDAZIONE DEI CAMPI OBBLIGATORI

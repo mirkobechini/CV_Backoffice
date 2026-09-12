@@ -48,11 +48,14 @@ class DeadlineController extends Controller
 
         $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')->search($request->get('q'));
 
-        // Se latestRevisionOnly, carichiamo solo le ultime revisioni per veicolo
-        // filtrando a monte per tipo, così il DB fa il lavoro pesante.
+        // Se latestRevisionOnly, teniamo solo l'ultima scadenza per
+        // veicolo+tipo: si applica a tutte le tipologie (non solo
+        // ministeriale/ossigeno), dato che anche il tagliando si rinnova
+        // creando un nuovo record e accumula storico allo stesso modo.
+        // Prima filtrava solo su ministeriale/ossigeno, nascondendo del
+        // tutto tagliando/cinghia/assicurazione dalla vista di default.
         if ($latestRevisionOnly) {
             $deadlines = $deadlinesQuery
-                ->whereIn('type', [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN])
                 ->get()
                 ->sortByDesc(fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '')
                 ->unique(fn(Deadline $d) => ($d->vehicle_id ?? 'N/A') . '|' . ($d->type ?? 'N/A'))
@@ -170,10 +173,17 @@ class DeadlineController extends Controller
     public function destroy(Request $request, Deadline $deadline)
     {
         $this->authorize('delete', $deadline);
+
+        // Il modale di conferma imposta sempre "back" sull'URL della pagina
+        // corrente: se l'eliminazione parte dalla show, "back" punta alla
+        // scadenza appena eliminata e il redirect darebbe 404. In quel caso
+        // torniamo all'indice invece di seguirlo.
+        $showUrl = route('admin.deadlines.show', $deadline);
+
         $deadline->delete();
 
         $back = $request->input('back');
-        if ($back) {
+        if ($back && ! str_starts_with($back, $showUrl)) {
             return redirect($back)->with('success', 'Scadenza eliminata con successo.');
         }
 

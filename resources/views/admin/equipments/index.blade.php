@@ -66,7 +66,7 @@
                         <tr>
                             <td>
                                 <div class="vin">
-                                    <span class="thumb t{{ ($loop->index % 5) + 1 }}"><i
+                                    <span class="thumb t{{ ($equipment->id % 5) + 1 }}"><i
                                             class="fa-solid fa-fire-extinguisher"></i></span>
                                     <div class="vin-name">{{ $equipment->name ?: ($equipment->equipmentType->name ?? 'N/A') }}
                                     </div>
