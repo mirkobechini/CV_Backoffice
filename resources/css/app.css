@@ -845,7 +845,7 @@ body {
     background: var(--surface-2);
 }
 
-.table-card .empty {
+.empty {
     color: var(--text-muted);
     font-style: italic;
     text-align: center;
@@ -898,6 +898,13 @@ body {
 .vin-sub {
     font-size: 11px;
     color: var(--text-muted);
+}
+
+/* Riga secondaria generica per celle tabella (es. email sotto al telefono) */
+.cell-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
 }
 
 .code {
