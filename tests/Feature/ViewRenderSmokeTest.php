@@ -37,6 +37,19 @@ class ViewRenderSmokeTest extends TestCase
         $this->admin = User::factory()->withRole('admin')->create();
     }
 
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * i veicoli devono appartenervi per essere visibili/accessibili
+     * all'utente di questi test (le route sono scoperte per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
+
     private function createVehicle(): Vehicle
     {
         $brand = Brand::create(['name' => 'Fiat']);
@@ -54,6 +67,7 @@ class ViewRenderSmokeTest extends TestCase
             'car_model_id' => $model->id,
             'vehicle_type_id' => $type->id,
             'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
         ]);
     }
 

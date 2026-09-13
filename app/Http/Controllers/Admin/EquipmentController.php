@@ -29,7 +29,14 @@ class EquipmentController extends Controller
         ]);
         $statusFilter = $validated['status_filter'] ?? 'all';
 
-        $query = Equipment::with('vehicle', 'equipmentType');
+        // L'attrezzatura non assegnata a un veicolo (vehicle_id null) non ha
+        // un gruppo proprio: resta visibile a tutti, come un veicolo senza
+        // gruppo. Solo quella assegnata viene filtrata sul gruppo del veicolo.
+        $query = Equipment::with('vehicle', 'equipmentType')
+            ->where(function ($q) {
+                $q->whereDoesntHave('vehicle')
+                    ->orWhereHas('vehicle', fn($vq) => $vq->forCurrentUser());
+            });
 
         if ($q = $request->get('q')) {
             $query->where(function ($sub) use ($q) {

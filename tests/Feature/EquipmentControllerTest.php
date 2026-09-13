@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use App\Models\Group;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -19,10 +20,23 @@ class EquipmentControllerTest extends TestCase
         return User::factory()->withRole('admin')->create();
     }
 
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * i veicoli devono appartenervi per essere visibili/accessibili
+     * all'utente di questi test (le route sono scoperte per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
+
     private function vehicle(): Vehicle
     {
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
-        return Vehicle::create(['license_plate' => 'AB123CD', 'vehicle_type_id' => $vt->id, 'internal_code' => '1234', 'brand_id' => null, 'car_model_id' => null, 'fuel_type' => 'diesel', 'immatricolation_date' => '2024-01-01']);
+        return Vehicle::create(['license_plate' => 'AB123CD', 'vehicle_type_id' => $vt->id, 'internal_code' => '1234', 'brand_id' => null, 'car_model_id' => null, 'fuel_type' => 'diesel', 'immatricolation_date' => '2024-01-01', 'group_id' => $this->defaultGroup()->id]);
     }
 
     public function test_index_returns_view(): void

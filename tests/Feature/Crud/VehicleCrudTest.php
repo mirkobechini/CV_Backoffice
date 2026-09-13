@@ -5,6 +5,7 @@ namespace Tests\Feature\Crud;
 use App\Models\User;
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Group;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -19,6 +20,19 @@ class VehicleCrudTest extends TestCase
     private function createUser(): User
     {
         return User::factory()->withRole('admin')->create();
+    }
+
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * i veicoli devono appartenervi per essere visibili/accessibili
+     * all'utente di questi test (le route sono scoperte per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
     }
 
     private function createVehicleDependencies(): array
@@ -57,6 +71,7 @@ class VehicleCrudTest extends TestCase
             'car_model_id' => $carModel->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
         ]);
 
         return compact('brand', 'carModel', 'vehicleType', 'vehicle');
@@ -231,6 +246,7 @@ class VehicleCrudTest extends TestCase
             'car_model_id' => $carModel->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
         ]);
 
         // Forza il ritorno alla form di modifica in caso di errore.

@@ -46,7 +46,9 @@ class DeadlineController extends Controller
         $latestRevisionOnly = $request->has('latest_revision_only') ? $validated['latest_revision_only'] === '1' : true;
         $statusFilter = $validated['status_filter'] ?? 'all';
 
-        $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')->search($request->get('q'));
+        $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')
+            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->search($request->get('q'));
 
         // Se latestRevisionOnly, teniamo solo l'ultima scadenza per
         // veicolo+tipo: si applica a tutte le tipologie (non solo

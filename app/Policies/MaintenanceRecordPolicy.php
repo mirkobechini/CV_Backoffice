@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Models\MaintenanceRecord;
-use App\Policies\Concerns\HasRoleBasedAccess;
+use App\Policies\Concerns\HasGroupScopedAccess;
 
 class MaintenanceRecordPolicy
 {
-    use HasRoleBasedAccess;
+    use HasGroupScopedAccess;
 }

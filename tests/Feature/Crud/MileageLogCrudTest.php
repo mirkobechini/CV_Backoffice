@@ -4,6 +4,7 @@ namespace Tests\Feature\Crud;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Group;
 use App\Models\MileageLog;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -18,6 +19,19 @@ class MileageLogCrudTest extends TestCase
     private function createUser(): User
     {
         return User::factory()->withRole('admin')->create();
+    }
+
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * i veicoli devono appartenervi per essere visibili/accessibili
+     * all'utente di questi test (le route sono scoperte per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
     }
 
     private function createVehicle(): Vehicle
@@ -46,6 +60,7 @@ class MileageLogCrudTest extends TestCase
             'car_model_id' => $carModel->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
         ]);
     }
 

@@ -45,7 +45,8 @@ class MaintenanceRecordController extends Controller
         $statusFilter = $validated['status_filter'] ?? 'all';
         $q = $validated['q'] ?? null;
 
-        $query = MaintenanceRecord::with(['vehicle.brand', 'vehicle.carModel', 'provider', 'items.itemable']);
+        $query = MaintenanceRecord::with(['vehicle.brand', 'vehicle.carModel', 'provider', 'items.itemable'])
+            ->whereHas('vehicle', fn($vq) => $vq->forCurrentUser());
 
         $query->when($statusFilter === 'scheduled', fn($qr) => $qr->whereNull('return_date'))
             ->when($statusFilter === 'completed', fn($qr) => $qr->whereNotNull('return_date'))

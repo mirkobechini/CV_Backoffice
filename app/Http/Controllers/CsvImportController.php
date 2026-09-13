@@ -234,10 +234,13 @@ class CsvImportController extends Controller
                 continue;
             }
 
-            // Trova veicolo
+            // Trova veicolo (solo nel proprio gruppo: senza forCurrentUser()
+            // qui, un capo poteva importare dati su un veicolo di un altro
+            // gruppo indovinandone sigla/targa).
             if (!isset($vehiclesCache[$vehicleRef])) {
-                $vehiclesCache[$vehicleRef] = Vehicle::where('internal_code', $vehicleRef)
-                    ->orWhere('license_plate', $vehicleRef)
+                $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('internal_code', $vehicleRef)
+                    ->orWhere('license_plate', $vehicleRef))
+                    ->forCurrentUser()
                     ->first();
             }
             $vehicle = $vehiclesCache[$vehicleRef];
@@ -325,8 +328,10 @@ class CsvImportController extends Controller
                 $result['errors'][] = 'Veicolo (targa/sigla) mancante.';
             } else {
                 if (!isset($vehiclesCache[$vehicleRef])) {
-                    $vehiclesCache[$vehicleRef] = Vehicle::where('license_plate', $vehicleRef)
-                        ->orWhere('internal_code', $vehicleRef)
+                    // forCurrentUser(): vedi commento in validateMileageLogsPivot().
+                    $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('license_plate', $vehicleRef)
+                        ->orWhere('internal_code', $vehicleRef))
+                        ->forCurrentUser()
                         ->first();
                 }
                 $vehicle = $vehiclesCache[$vehicleRef];
@@ -419,8 +424,10 @@ class CsvImportController extends Controller
             // Veicolo: usa il parametro se fornito, altrimenti cerca nel file
             if ($vehicleRef) {
                 if (!isset($vehiclesCache[$vehicleRef])) {
-                    $vehiclesCache[$vehicleRef] = Vehicle::where('internal_code', $vehicleRef)
-                        ->orWhere('license_plate', $vehicleRef)
+                    // forCurrentUser(): vedi commento in validateMileageLogsPivot().
+                    $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('internal_code', $vehicleRef)
+                        ->orWhere('license_plate', $vehicleRef))
+                        ->forCurrentUser()
                         ->first();
                 }
                 $vehicle = $vehiclesCache[$vehicleRef];

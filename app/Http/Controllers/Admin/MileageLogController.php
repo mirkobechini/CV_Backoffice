@@ -33,7 +33,7 @@ class MileageLogController extends Controller
         $sortDir = $validated['sort_dir'] ?? 'desc';
 
         $mileageLogs = $this->applySorting(
-            MileageLog::with('vehicle'),
+            MileageLog::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser()),
             $sortBy,
             $sortDir,
             [
@@ -140,7 +140,11 @@ class MileageLogController extends Controller
         $errors = [];
 
         if (! empty($data['mileages'])) {
+            // forCurrentUser(): senza filtrare per gruppo qui, un capo
+            // poteva scrivere un chilometraggio per un veicolo di un altro
+            // gruppo passandone direttamente l'id nella richiesta.
             $validVehicleIds = Vehicle::whereIn('id', array_keys($data['mileages']))
+                ->forCurrentUser()
                 ->pluck('id')
                 ->toArray();
 
@@ -215,7 +219,13 @@ class MileageLogController extends Controller
             'ids.*' => 'exists:mileage_logs,id',
         ]);
 
-        $count = MileageLog::whereIn('id', $data['ids'])->delete();
+        // L'autorizzazione sopra è "di classe" (nessuna istanza specifica):
+        // senza filtrare anche qui per gruppo, un capo potrebbe cancellare
+        // id di chilometraggi di un altro gruppo passandoli direttamente
+        // nella richiesta.
+        $count = MileageLog::whereIn('id', $data['ids'])
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->delete();
 
         return redirect()->route('admin.mileage-logs.index')
             ->with('status', "{$count} chilometraggi eliminati con successo.");
@@ -255,10 +265,14 @@ class MileageLogController extends Controller
             'mileages.*.*' => 'nullable|integer|min:0',
         ]);
 
-        // Valida che le chiavi vehicle_id esistano davvero, per evitare
-        // errori di foreign key (500) con ID inesistenti.
+        // Valida che le chiavi vehicle_id esistano davvero (per evitare
+        // errori di foreign key con ID inesistenti) e appartengano al
+        // gruppo dell'utente: senza forCurrentUser() qui, un capo poteva
+        // scrivere chilometraggi per un veicolo di un altro gruppo passando
+        // direttamente il suo id nella richiesta.
         if (! empty($data['mileages'])) {
             $validVehicleIds = Vehicle::whereIn('id', array_keys($data['mileages']))
+                ->forCurrentUser()
                 ->pluck('id')
                 ->toArray();
         }
