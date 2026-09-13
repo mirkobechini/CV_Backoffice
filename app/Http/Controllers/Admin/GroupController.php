@@ -111,7 +111,17 @@ class GroupController extends Controller
             return back()->withErrors(['invite_code' => 'Codice invito non valido.']);
         }
 
-        $group->addUser($this->currentUser(), Group::ROLE_MEMBER);
+        $user = $this->currentUser();
+
+        // addUser()/syncWithoutDetaching() aggiorna il ruolo anche per un
+        // utente già nel gruppo: senza questo controllo, un capo o
+        // sottocapo che riusa un vecchio link di invito (es. un segnalibro)
+        // veniva silenziosamente retrocesso a membro semplice.
+        if ($user->roleIn($group)) {
+            return redirect()->route('admin.groups.show', $group)->with('status', 'Fai già parte di questo gruppo.');
+        }
+
+        $group->addUser($user, Group::ROLE_MEMBER);
 
         return redirect()->route('admin.groups.show', $group)->with('status', 'Sei entrato nel gruppo.');
     }

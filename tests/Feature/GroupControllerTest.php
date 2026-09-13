@@ -97,6 +97,28 @@ class GroupControllerTest extends TestCase
         ]);
     }
 
+    public function test_rejoining_own_group_does_not_downgrade_capo(): void
+    {
+        // Group::addUser()/syncWithoutDetaching() aggiorna il ruolo anche
+        // per un utente già nel gruppo: senza una guardia in join(), un
+        // capo che riusa un vecchio link di invito (es. un segnalibro)
+        // veniva silenziosamente retrocesso a membro semplice.
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->post(route('admin.groups.join'), [
+            'invite_code' => 'AAAA1111',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('group_user', [
+            'user_id' => $capo->id,
+            'group_id' => $group->id,
+            'role' => Group::ROLE_CAPO,
+        ]);
+    }
+
     public function test_join_group_with_invalid_code_fails(): void
     {
         $user = User::factory()->create();
