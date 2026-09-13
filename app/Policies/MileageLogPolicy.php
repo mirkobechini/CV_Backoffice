@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Models\MileageLog;
-use App\Policies\Concerns\HasRoleBasedAccess;
+use App\Policies\Concerns\HasGroupScopedAccess;
 
 class MileageLogPolicy
 {
-    use HasRoleBasedAccess;
+    use HasGroupScopedAccess;
 }
