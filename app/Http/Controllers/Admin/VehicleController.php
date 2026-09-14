@@ -8,14 +8,16 @@ use App\Http\Requests\UpdateVehicleRequest;
 use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
+use App\Services\DeadlineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class VehicleController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        private readonly DeadlineService $deadlineService,
+    ) {
         $this->authorizeResource(Vehicle::class, 'vehicle');
     }
 
@@ -182,9 +184,70 @@ class VehicleController extends Controller
             $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
         }
 
+        $hadTimingBelt = (bool) $vehicle->has_timing_belt;
+
         $vehicle->update($data);
 
+        // Il flag cinghia da solo non crea/elimina nulla: se è appena
+        // cambiato, lo segnaliamo con un banner che chiede conferma prima
+        // di creare la scadenza (calcolata dalla data di immatricolazione)
+        // o di eliminare quella esistente, invece di farlo in automatico.
+        $this->flagTimingBeltMismatch($vehicle, $hadTimingBelt, (bool) $vehicle->has_timing_belt);
+
         return redirect()->route('admin.vehicles.show', $vehicle->id)->with('status', 'Veicolo aggiornato con successo.');
+    }
+
+    /**
+     * Se has_timing_belt è appena cambiato, verifica se il veicolo ha (o
+     * non ha) già una scadenza cinghia coerente con il nuovo valore, e
+     * imposta un banner di conferma per l'azione da compiere.
+     */
+    private function flagTimingBeltMismatch(Vehicle $vehicle, bool $before, bool $after): void
+    {
+        if ($before === $after) {
+            return;
+        }
+
+        if ($after) {
+            $alreadyExists = $vehicle->deadlines()->where('type', Deadline::TYPE_CINGHIA)->exists();
+
+            if (! $alreadyExists) {
+                session()->flash('timingBeltPrompt', ['action' => 'create', 'vehicle_id' => $vehicle->id]);
+            }
+
+            return;
+        }
+
+        $active = $vehicle->deadlines()
+            ->where('type', Deadline::TYPE_CINGHIA)
+            ->where('is_renewed', false)
+            ->latest('due_date')
+            ->first();
+
+        if ($active) {
+            session()->flash('timingBeltPrompt', [
+                'action' => 'delete',
+                'deadline_id' => $active->id,
+                'due_date' => $active->due_date_formatted,
+            ]);
+        }
+    }
+
+    /**
+     * Crea la scadenza cinghia iniziale per il veicolo, su conferma
+     * dell'utente dal banner mostrato dopo aver attivato has_timing_belt.
+     */
+    public function createTimingBeltDeadline(Vehicle $vehicle)
+    {
+        $this->authorize('update', $vehicle);
+
+        $alreadyExists = $vehicle->deadlines()->where('type', Deadline::TYPE_CINGHIA)->exists();
+
+        if (! $alreadyExists) {
+            $this->deadlineService->createInitialTimingBeltDeadline($vehicle);
+        }
+
+        return redirect()->route('admin.vehicles.show', $vehicle->id)->with('status', 'Scadenza cinghia di distribuzione creata con successo.');
     }
 
     /**
