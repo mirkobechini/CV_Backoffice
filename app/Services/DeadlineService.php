@@ -77,7 +77,7 @@ class DeadlineService
      * Aggiorna una scadenza esistente con ricalcolo della data.
      *
      * Se la scadenza viene marcata come rinnovata (is_renewed) e appartiene a
-     * un tipo con rinnovo periodico (ministeriale/ossigeno), crea
+     * un tipo con rinnovo periodico (ministeriale/ossigeno/tagliando), crea
      * automaticamente la scadenza successiva. La data di rinnovo può essere
      * fornita (due_date) oppure calcolata in automatico.
      */
@@ -86,6 +86,12 @@ class DeadlineService
         $this->validateOxygenForVehicle($data, $vehicle);
 
         $isRenewed = (bool) ($data['is_renewed'] ?? false);
+        // La scadenza successiva va creata solo al passaggio effettivo a
+        // rinnovata, non ad ogni salvataggio: senza questo controllo,
+        // riaprire in modifica una scadenza già rinnovata (es. per
+        // aggiungere solo il km di riferimento) e salvare rieseguiva la
+        // creazione della "prossima" scadenza, duplicandola.
+        $wasRenewed = $deadline->is_renewed;
 
         // resolveDueDate() dà sempre la precedenza a una data esplicita,
         // sia in caso di rinnovo che di semplice correzione manuale;
@@ -96,7 +102,7 @@ class DeadlineService
             throw new \RuntimeException('Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.');
         }
 
-        $deadline->update([
+        $updateData = [
             'vehicle_id' => $vehicle->id,
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
@@ -104,13 +110,28 @@ class DeadlineService
             'interval_km' => $data['interval_km'] ?? null,
             'last_mileage' => $data['last_mileage'] ?? null,
             'interval_days' => $data['interval_days'] ?? null,
-        ]);
+        ];
+
+        // syncStatusFromRules() non tocca lo stato di una scadenza rinnovata
+        // (esce subito se is_renewed): senza impostarlo esplicitamente qui,
+        // una scadenza marcata rinnovata da questo form restava con lo
+        // stato precedente (es. "pending") invece di "renewed", disallineata
+        // dal flag is_renewed e invisibile alle query che cercano l'ultima
+        // scadenza rinnovata (calculateMinisterialDueDateForVehicle e affini).
+        if ($isRenewed) {
+            $updateData['status'] = Deadline::STATUS_RENEWED;
+        }
+
+        $deadline->update($updateData);
 
         $deadline->syncStatusFromRules();
 
         // Crea automaticamente la scadenza successiva per i tipi periodici
-        // quando la scadenza corrente viene marcata come rinnovata.
-        if ($isRenewed && in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
+        // solo al momento in cui la scadenza corrente viene marcata come
+        // rinnovata per la prima volta (non ad ogni modifica successiva).
+        $justRenewed = $isRenewed && ! $wasRenewed;
+
+        if ($justRenewed && in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
             $this->createNextDeadlineAfterRenewal($deadline, $vehicle);
         }
 
@@ -119,18 +140,30 @@ class DeadlineService
 
     /**
      * Crea la scadenza successiva dopo un rinnovo, se non esiste già.
+     *
+     * Calcola la prossima data direttamente dalla data della scadenza appena
+     * rinnovata (che è per definizione l'ultima), invece di ricercarla tra le
+     * scadenze con status "renewed" escludendo quella corrente: quella
+     * ricerca, pensata per calcolare la data di UNA scadenza a partire dalle
+     * altre già rinnovate, escludeva qui proprio la scadenza da cui si
+     * doveva partire, facendo ripiegare il calcolo sulla data di
+     * immatricolazione (o su un rinnovo ancora precedente) invece che su
+     * quella appena effettuata.
      */
     private function createNextDeadlineAfterRenewal(Deadline $renewedDeadline, Vehicle $vehicle): void
     {
-        $nextDueDate = null;
-
-        if ($renewedDeadline->type === Deadline::TYPE_MINISTERIAL) {
-            $nextDueDate = Deadline::calculateMinisterialDueDateForVehicle($vehicle, $renewedDeadline->id);
-        } elseif ($renewedDeadline->type === Deadline::TYPE_OXYGEN) {
-            $nextDueDate = Deadline::calculateOxygenDueDateForVehicle($vehicle, $renewedDeadline->id);
-        } elseif ($renewedDeadline->type === Deadline::TYPE_TAGLIANDO) {
-            $nextDueDate = Deadline::calculateTagliandoDueDateForVehicle($vehicle, $renewedDeadline->id);
+        if (! $renewedDeadline->due_date) {
+            return;
         }
+
+        $nextDueDate = match ($renewedDeadline->type) {
+            Deadline::TYPE_MINISTERIAL => $vehicle->vehicleType
+                ? $renewedDeadline->due_date->copy()->addMonthsNoOverflow((int) $vehicle->vehicleType->regular_inspection_months)
+                : null,
+            Deadline::TYPE_OXYGEN => $renewedDeadline->due_date->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS),
+            Deadline::TYPE_TAGLIANDO => $renewedDeadline->due_date->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS),
+            default => null,
+        };
 
         if (! $nextDueDate) {
             return;
