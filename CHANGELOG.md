@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.10] - 2026-09-14
+
+### Added
+
+- Nuovo comando `php artisan mileage-logs:timeline {vehicle}`: mostra in ordine cronologico ogni lettura km nota per un veicolo (storico chilometraggi, scadenze ministeriale/ossigeno, appuntamenti), segnalando quelle inferiori alla precedente — utile per capire un conflitto segnalato da `mileage-logs:backfill --interactive`.
+
 ## [v1.2.9] - 2026-09-14
 
 ### Added
