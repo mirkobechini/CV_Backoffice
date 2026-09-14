@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Group;
 use App\Models\NotificationSetting;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -121,5 +122,44 @@ class SendSummaryReportTest extends TestCase
         $this->artisan('app:send-summary-report');
 
         Mail::assertSent(ReportMail::class, fn ($mail) => $mail->hasTo('weekly@example.com'));
+    }
+
+    public function test_report_excludes_another_groups_vehicles_and_issues(): void
+    {
+        // Prima del fix il report era calcolato una sola volta su TUTTI i
+        // veicoli/guasti/scadenze e inviato identico a ogni destinatario,
+        // indipendentemente dal gruppo del destinatario stesso.
+        Mail::fake();
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $userA = User::factory()->create();
+        $groupA->addUser($userA, Group::ROLE_CAPO);
+        NotificationSetting::create(['user_id' => $userA->id, 'key' => 'report_email', 'value' => 'capoA@example.com']);
+
+        $vehicleA = $this->vehicle();
+        $vehicleA->update(['group_id' => $groupA->id, 'internal_code' => 'A001']);
+        $vehicleB = Vehicle::create([
+            'license_plate' => 'ZZ999ZZ',
+            'vehicle_type_id' => $vehicleA->vehicle_type_id,
+            'internal_code' => 'B001',
+            'brand_id' => $vehicleA->brand_id,
+            'car_model_id' => $vehicleA->car_model_id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $groupB->id,
+        ]);
+
+        \App\Models\Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'status' => 'open', 'event_date' => '2025-01-01']);
+        \App\Models\Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'status' => 'open', 'event_date' => '2025-01-01']);
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertSent(ReportMail::class, function (ReportMail $mail) {
+            $this->assertSame(1, $mail->data['totalVehicles']);
+            $this->assertTrue($mail->data['openIssues']->contains('description', 'Guasto gruppo A'));
+            $this->assertFalse($mail->data['openIssues']->contains('description', 'Guasto gruppo B'));
+
+            return $mail->hasTo('capoA@example.com');
+        });
     }
 }
