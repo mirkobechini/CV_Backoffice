@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.13] - 2026-09-14
+
+### Added
+
+- Elenco appuntamenti: filtro per veicolo (accanto alla ricerca testuale).
+
+### Fixed
+
+- Elenco appuntamenti: le scadenze collegate (tagliando, revisione, ecc.) non comparivano affatto nella descrizione se l'appuntamento non aveva anche un guasto collegato. Ora vengono mostrate insieme, con un badge "Scadenza" dedicato; la ricerca testuale ora trova anche il tipo di scadenza collegata.
+
 ## [v1.2.12] - 2026-09-14
 
 ### Changed
