@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.2] - 2026-09-14
+
+### Fixed
+
+- Il fix di v1.2.1 non copriva tutti i casi: modificare la più vecchia di due Revisioni Ministeriali già rinnovate in catena (es. per aggiungere solo il km) poteva ricreare la scadenza che la rinnova già, anche se esisteva. Aggiunta una seconda guardia indipendente: se una scadenza dello stesso tipo rinnova già quella in modifica (`renews_deadline_id`), non ne viene creata un'altra, a prescindere dalla data ricalcolata.
+
 ## [v1.2.1] - 2026-09-14
 
 ### Fixed
