@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.12] - 2026-09-14
+
+### Changed
+
+- La conferma per creare/eliminare la scadenza cinghia dopo aver attivato/disattivato "dotato di cinghia di distribuzione" ora appare come finestra modale invece che come banner in cima alla pagina, più visibile.
+
 ## [v1.2.11] - 2026-09-14
 
 ### Fixed
