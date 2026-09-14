@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.8] - 2026-09-14
+
+### Fixed
+
+- Lo storico chilometraggi abbinava il km di ogni scadenza (last_mileage) alla sua data di scadenza (due_date), corretto solo per Revisione Ministeriale/Impianto Ossigeno. Per tagliando/cinghia last_mileage è il km dell'ULTIMO cambio (una lettura passata), mentre due_date è la data FUTURA della prossima scadenza: l'abbinamento produceva letture false, in conflitto con quasi ogni lettura reale successiva. Per questi due tipi la lettura corretta arriva già, con la data giusta, dall'appuntamento che li genera.
+
 ## [v1.2.7] - 2026-09-14
 
 ### Fixed
