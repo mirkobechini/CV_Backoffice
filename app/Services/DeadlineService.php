@@ -64,7 +64,12 @@ class DeadlineService
             'is_renewed' => (bool) ($data['is_renewed'] ?? false),
             'renews_deadline_id' => $previousDeadline?->id,
             'interval_km' => $data['interval_km'] ?? null,
-            'last_mileage' => $data['last_mileage'] ?? null,
+            // Se stiamo rinnovando una scadenza precedente ($previousDeadline),
+            // il km inserito nel form è quello della revisione appena
+            // effettuata (quella precedente), non di questa — che
+            // rappresenta la prossima, futura, e il cui km non è ancora
+            // noto. Va sulla precedente, non qui.
+            'last_mileage' => $previousDeadline ? null : ($data['last_mileage'] ?? null),
             'interval_days' => $data['interval_days'] ?? null,
         ]);
 
@@ -74,11 +79,17 @@ class DeadlineService
             $previousDeadline->update([
                 'is_renewed' => true,
                 'status' => Deadline::STATUS_RENEWED,
+                'last_mileage' => $data['last_mileage'] ?? $previousDeadline->last_mileage,
             ]);
         }
 
-        if (in_array($deadline->type, self::MILEAGE_DATE_MATCHES_DUE_DATE_TYPES, true)) {
-            $this->mileageLogService->recordReading($vehicle, $deadline->due_date, $deadline->last_mileage);
+        // La lettura km+data da registrare è quella della scadenza appena
+        // effettuata: $previousDeadline se stiamo rinnovando, altrimenti
+        // questa stessa (primo record del suo tipo per il veicolo).
+        $mileageSource = $previousDeadline ?? $deadline;
+
+        if (in_array($mileageSource->type, self::MILEAGE_DATE_MATCHES_DUE_DATE_TYPES, true)) {
+            $this->mileageLogService->recordReading($vehicle, $mileageSource->due_date, $mileageSource->last_mileage);
         }
 
         return $deadline;

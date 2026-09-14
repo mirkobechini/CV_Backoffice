@@ -300,8 +300,10 @@ class DeadlineCrudTest extends TestCase
     {
         // Per le revisioni (data auto-calcolata) il km è solo un'annotazione
         // facoltativa: non deve essere richiesto né bloccare il salvataggio.
+        // Nessuna scadenza precedente da rinnovare: il km resta su questa.
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
+        Deadline::where('vehicle_id', $vehicle->id)->where('type', 'Revisione Ministeriale')->forceDelete();
 
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
@@ -590,9 +592,11 @@ class DeadlineCrudTest extends TestCase
         // Il km inserito su una scadenza restava isolato nel record: non
         // compariva come "ultimo km" del veicolo. Per ministeriale/ossigeno
         // due_date (una volta rinnovata) è la data della revisione, quindi
-        // la coppia km+data è affidabile.
+        // la coppia km+data è affidabile. Nessuna scadenza precedente da
+        // rinnovare qui: è la prima del suo tipo per il veicolo.
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
+        Deadline::where('vehicle_id', $vehicle->id)->where('type', 'Revisione Ministeriale')->forceDelete();
 
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
@@ -614,6 +618,7 @@ class DeadlineCrudTest extends TestCase
     {
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
+        Deadline::where('vehicle_id', $vehicle->id)->where('type', 'Revisione Ministeriale')->forceDelete();
 
         // Lettura successiva già presente, con km più basso.
         MileageLog::create([
@@ -637,6 +642,53 @@ class DeadlineCrudTest extends TestCase
         $response->assertSessionDoesntHaveErrors();
         $this->assertDatabaseMissing('mileage_logs', ['mileage' => 45000]);
         $this->assertDatabaseHas('mileage_logs', ['vehicle_id' => $vehicle->id, 'mileage' => 40000]);
+    }
+
+    public function test_creating_a_new_ministerial_revision_records_mileage_against_the_renewed_one_not_the_new_one(): void
+    {
+        // Bug reale: creare una "Nuova scadenza" ministeriale mentre ce
+        // n'era già una in attesa rinnovava quella vecchia e ne creava una
+        // nuova (futura), ma il km inserito nel form finiva sulla nuova
+        // (la cui data non è ancora avvenuta) invece che su quella appena
+        // rinnovata — a cui quel km si riferisce davvero.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle(); // regular_inspection_months = 24
+        Deadline::where('vehicle_id', $vehicle->id)->where('type', 'Revisione Ministeriale')->forceDelete();
+
+        $current = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'status' => 'pending',
+            'due_date' => '2025-06-30',
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2027-06',
+            'last_mileage' => 45000,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $current->id,
+            'is_renewed' => true,
+            'last_mileage' => 45000,
+        ]);
+        $newDeadline = Deadline::latest('id')->first();
+        $this->assertNull($newDeadline->last_mileage);
+
+        // La lettura va registrata alla data della scadenza rinnovata
+        // (2025-06-30, quando la revisione è realmente avvenuta), non a
+        // quella della nuova scadenza futura (2027-06-30).
+        $this->assertDatabaseHas('mileage_logs', [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-06-30 00:00:00',
+            'mileage' => 45000,
+        ]);
+        $this->assertDatabaseMissing('mileage_logs', ['log_date' => '2027-06-30 00:00:00']);
     }
 
     public function test_setting_mileage_on_a_tagliando_deadline_does_not_record_a_false_reading(): void
