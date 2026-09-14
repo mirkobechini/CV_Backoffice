@@ -4,6 +4,36 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.0] - 2026-09-14
+
+### Security
+
+- **Isolamento tra gruppi applicato in modo sistematico su tutta l'applicazione.** Fino a questa versione lo scoping per gruppo esisteva solo nelle liste principali del backoffice; l'accesso a un singolo record, l'API mobile, gli export, la cache e i comandi schedulati non lo applicavano affatto, permettendo — a seconda del punto — a un utente autenticato di vedere, modificare o ricevere via email dati di un gruppo diverso dal proprio conoscendo/indovinando un id.
+  - **API mobile** (`Api\VehicleController/IssueController/DeadlineController/MaintenanceRecordController`): `show()`/`index()` non filtravano per gruppo.
+  - **Pannello admin**: le Policies (view/update/delete) verificavano solo il ruolo, mai l'appartenenza al gruppo del record — introdotto `HasGroupScopedAccess`, applicato a 6 Policies; scoping aggiunto anche a 5 controller `index()`, export CSV, import CSV, azioni bulk sui chilometraggi.
+  - **Dashboard**: quasi nessun widget era filtrato per gruppo e il risultato era cachato sotto un'unica chiave globale, condivisa da tutti i gruppi per 5 minuti.
+  - **Export PDF veicolo**: nessun controllo di gruppo sulla rotta.
+  - **Notifiche schedulate ed email di riepilogo** (`app:generate-notifications`, `app:send-summary-report`): girano come comandi da console, senza utente autenticato, quindi lo scoping basato su `Auth::user()` non si applicava affatto — un capo/sottocapo riceveva notifiche ed email (con allegato PDF) su scadenze, guasti, attrezzature e appuntamenti di ogni gruppo, non solo del proprio.
+- Rientrare in un proprio gruppo con il codice invito poteva retrocedere silenziosamente un capo/sottocapo a membro semplice (comportamento di `syncWithoutDetaching` sul pivot ruolo).
+- Il backup del database via comando/pulsante non verificava alcuna autorizzazione.
+
+### Fixed
+
+- Corrette diverse N+1 query nella generazione notifiche e nell'invio report.
+- Colore icona veicolo incoerente, tipi nascosti nell'elenco scadenze, 404 nell'eliminazione da pagina di dettaglio.
+
+### Added
+
+- Scadenze "Revisione": data di rinnovo modificabile manualmente, con catena di auto-rinnovo.
+
+### Removed
+
+- `RegisteredUserController`, codice morto irraggiungibile (nessuna rotta di registrazione pubblica: gli account si creano solo su invito/dal backoffice).
+
+### Docs
+
+- README aggiornato (versione Laravel, conteggio test, endpoint API, nota sull'assenza di registrazione pubblica).
+
 ## [v1.1.0] - 2026-09-12
 
 ### Added
