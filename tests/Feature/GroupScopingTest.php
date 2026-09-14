@@ -200,4 +200,49 @@ class GroupScopingTest extends TestCase
         $response->assertSee('Guasto gruppo A');
         $response->assertDontSee('Guasto gruppo B');
     }
+
+    public function test_dashboard_excludes_another_groups_data_and_cache_is_segmented_by_group(): void
+    {
+        // DashboardController cachava tutto sotto un'unica chiave globale
+        // ('dashboard.stats'), e quasi nessuna query era filtrata per
+        // gruppo: la prima richiesta calcolava (e cachava) i dati di TUTTI
+        // i gruppi, serviti poi a chiunque visitasse la dashboard.
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        $groupA->addUser($userA, Group::ROLE_CAPO);
+        $groupB->addUser($userB, Group::ROLE_CAPO);
+        $vehicleA = $this->vehicle('AB123CD', '0001', $groupA);
+        $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
+        \App\Models\Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'status' => 'open', 'event_date' => '2025-01-01']);
+        \App\Models\Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'status' => 'open', 'event_date' => '2025-01-01']);
+
+        // userA per primo: se la cache fosse ancora globale, la sua
+        // risposta (senza "Guasto gruppo B") verrebbe servita anche a userB.
+        $this->actingAs($userA)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Guasto gruppo A')
+            ->assertDontSee('Guasto gruppo B');
+
+        $this->actingAs($userB)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Guasto gruppo B')
+            ->assertDontSee('Guasto gruppo A');
+    }
+
+    public function test_vehicle_pdf_returns_404_for_another_groups_vehicle(): void
+    {
+        // PdfExportController::vehiclePdf() risolveva il veicolo per id
+        // senza alcun filtro di gruppo.
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $userA = User::factory()->create();
+        $groupA->addUser($userA, Group::ROLE_CAPO);
+        $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
+
+        $response = $this->actingAs($userA)->get(route('admin.vehicles.pdf', $vehicleB));
+
+        $response->assertNotFound();
+    }
 }
