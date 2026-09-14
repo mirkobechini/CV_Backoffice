@@ -18,18 +18,18 @@
 - **Dashboard interattiva**: statistiche, scadenze imminenti, guasti aperti, equipaggiamento incompleto
 - **Calendario appuntamenti**: vista mese/settimana con colori per tipo attività
 - **Export PDF e CSV**: scheda veicolo PDF, export CSV per tutte le entità
-- **API REST**: 11 endpoint protetti da token (Sanctum)
+- **API REST**: 12 endpoint protetti da token (Sanctum), pensati per un'eventuale app mobile
 - **Audit log**: tracciamento completo di tutte le modifiche
 - **Notifiche in-app**: campanella con badge, elenco notifiche, segna come letto
 - **Notifiche email**: report giornaliero/settimanale/mensile configurabile con allegato PDF + email automatiche su eventi (scadenze, guasti, attrezzature)
-- **Gruppi e ruoli**: ogni utente appartiene a un gruppo (capo/sottocapo/membro), scoping dati per gruppo, inviti via codice
+- **Multi-tenancy per gruppo**: ogni utente appartiene a un gruppo (capo/sottocapo/membro), inviti via codice; l'isolamento dei dati tra gruppi è applicato in modo coerente su ogni superficie — pagine admin, Policies, API mobile, export CSV/PDF, cache, notifiche ed email schedulate
 - **Gestione utenti**: creazione e gestione ruoli dal backoffice (solo capo)
 - **Token API**: creazione e revoca dal profilo
 - **Privacy/GDPR**: pagina privacy, cookie banner, export dati personali, trasferimento ruolo capo al delete account
 - **Backup database**: comando Artisan + pulsante nella pagina impostazioni
 - **Rate limiting**: protezione su login, route admin e API
 - **Tema chiaro/scuro**: persistente in localStorage
-- **296 test, 606 assertions — tutti verdi** ✅
+- **354 test, 778 assertions — tutti verdi** ✅
 
 ---
 
@@ -37,7 +37,7 @@
 
 | Tecnologia                       | Scopo                               |
 | :------------------------------- | :---------------------------------- |
-| **Laravel 11 (PHP 8.2+)**        | Core applicativo e logica backend   |
+| **Laravel 12 (PHP 8.2+)**        | Core applicativo e logica backend   |
 | **Blade + Bootstrap 5 (Breeze)** | Interfaccia amministrativa          |
 | **Livewire 4**                   | Componenti dinamici (VehicleSelect) |
 | **MySQL / SQLite**               | Persistenza dati                    |
@@ -74,7 +74,10 @@ php artisan key:generate
 php artisan storage:link
 php artisan migrate --seed
 php artisan import:car-data
+php artisan make:admin
 ```
+
+> **Nota:** non esiste una pagina di registrazione pubblica. Il primo account si crea con `php artisan make:admin` (diventa capo di un gruppo di default); da lì in poi i nuovi utenti vengono creati dal backoffice da un capo/sottocapo, oppure si uniscono a un gruppo esistente con il relativo codice invito.
 
 ### Avvio
 
@@ -98,7 +101,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ```bash
 php artisan test
-# 328 tests, 717 assertions — all green ✅
+# 354 tests, 778 assertions — all green ✅
 ```
 
 ---
