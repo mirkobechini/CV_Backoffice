@@ -44,7 +44,7 @@
         </div>
         <div class="veh-badges">
             @if ($vehicle->open_issues->isNotEmpty())
-                <span class="badge b-red">⚠ {{ $vehicle->open_issues->count() }}
+                <span class="badge b-red">⚠
                     {{ __(':count guasto/i aperto/i', ['count' => $vehicle->open_issues->count()]) }}</span>
             @endif
             @if (!$vehicle->vehicleType)
