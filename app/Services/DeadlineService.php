@@ -156,22 +156,6 @@ class DeadlineService
             return;
         }
 
-        // Guardia esplicita, indipendente dal controllo "appena rinnovata"
-        // in updateDeadline(): se una scadenza dello stesso tipo rinnova
-        // già questa (renews_deadline_id), non ne creiamo un'altra. Senza
-        // questo controllo, un ricalcolo che produce una data anche solo
-        // leggermente diversa da quella già creata (es. dopo una modifica
-        // alla configurazione del tipo veicolo, o un dato storico non
-        // perfettamente allineato) aggirerebbe il matching per data esatta
-        // di firstOrCreate() più sotto e ne creerebbe comunque un duplicato.
-        $alreadyHasNext = Deadline::where('renews_deadline_id', $renewedDeadline->id)
-            ->where('type', $renewedDeadline->type)
-            ->exists();
-
-        if ($alreadyHasNext) {
-            return;
-        }
-
         $nextDueDate = match ($renewedDeadline->type) {
             Deadline::TYPE_MINISTERIAL => $vehicle->vehicleType
                 ? $renewedDeadline->due_date->copy()->addMonthsNoOverflow((int) $vehicle->vehicleType->regular_inspection_months)
@@ -185,16 +169,52 @@ class DeadlineService
             return;
         }
 
-        Deadline::firstOrCreate(
+        $this->createNextOccurrence($renewedDeadline, $vehicle, $nextDueDate);
+    }
+
+    /**
+     * Crea la scadenza che rinnova $renewedDeadline, con la stessa guardia
+     * anti-duplicati usata dal rinnovo via form di modifica (vedi sopra).
+     *
+     * Pubblico e con data esplicita perché non tutti i rinnovi calcolano la
+     * prossima data allo stesso modo: il completamento di un appuntamento in
+     * officina (MaintenanceRecordController) la calcola dalla data di
+     * RIENTRO effettiva, non da quella originariamente pianificata su
+     * $renewedDeadline. Centralizzare qui la guardia (invece di lasciare che
+     * ogni chiamante reimplementi il proprio controllo) è ciò che è mancato
+     * quando quel controller aveva una propria logica di rinnovo separata:
+     * senza renews_deadline_id impostato in modo uniforme, la guardia non
+     * poteva riconoscere una scadenza già creata da lì.
+     *
+     * $extra permette di impostare altri campi sulla nuova scadenza (es.
+     * last_mileage/interval_km per tagliando e cinghia) nella stessa
+     * chiamata, senza un update separato.
+     */
+    public function createNextOccurrence(Deadline $renewedDeadline, Vehicle $vehicle, Carbon $nextDueDate, array $extra = []): ?Deadline
+    {
+        // Se una scadenza dello stesso tipo rinnova già questa
+        // (renews_deadline_id), non ne creiamo un'altra: evita duplicati
+        // anche quando il ricalcolo della data differisce leggermente da
+        // quella già creata, aggirando il matching per data esatta di
+        // firstOrCreate() più sotto.
+        $alreadyHasNext = Deadline::where('renews_deadline_id', $renewedDeadline->id)
+            ->where('type', $renewedDeadline->type)
+            ->exists();
+
+        if ($alreadyHasNext) {
+            return null;
+        }
+
+        return Deadline::firstOrCreate(
             [
                 'vehicle_id' => $vehicle->id,
                 'type' => $renewedDeadline->type,
                 'due_date' => $nextDueDate->toDateString(),
             ],
-            [
+            array_merge([
                 'status' => Deadline::STATUS_PENDING,
                 'renews_deadline_id' => $renewedDeadline->id,
-            ]
+            ], $extra)
         );
     }
 
