@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.5] - 2026-09-14
+
+### Fixed
+
+- Elenco scadenze: il dropdown "tipologia" era annidato dentro il box di ricerca e ne usciva schiacciato/con doppio bordo; ora è affiancato ad esso.
+- Elenco scadenze: le intestazioni dei sotto-gruppi annidati (es. tipologia dentro veicolo) avevano lo stesso stile in grassetto di quelle di primo livello, facili da confondere con un nuovo gruppo. Ora hanno uno stile più leggero e distinto, e le intestazioni di primo livello hanno un bordo di stacco dalla riga precedente.
+
 ## [v1.2.4] - 2026-09-14
 
 ### Added
