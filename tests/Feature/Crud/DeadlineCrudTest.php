@@ -437,6 +437,61 @@ class DeadlineCrudTest extends TestCase
         ]);
     }
 
+    public function test_renewal_still_skipped_when_a_next_occurrence_already_exists_even_if_the_transition_guard_is_bypassed(): void
+    {
+        // Scenario reale segnalato: un veicolo con più Revisioni Ministeriali
+        // in catena (rinnovate in sequenza). Aggiungere solo il km alla PIÙ
+        // VECCHIA delle rinnovate ricreava la scadenza che la rinnova già,
+        // anche se esisteva già.
+        //
+        // Il controllo "solo al passaggio a rinnovata" (updateDeadline) da
+        // solo non è sufficiente a garantirlo in ogni caso (es. dati storici
+        // dove `is_renewed` risulta momentaneamente falso pur avendo già una
+        // scadenza figlia): questo test forza quella condizione per
+        // verificare che la guardia in createNextDeadlineAfterRenewal — non
+        // creare se esiste già una scadenza con renews_deadline_id verso
+        // questa — la copra comunque, indipendentemente dal motivo per cui
+        // la prima guardia non ha bloccato la chiamata.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle(); // regular_inspection_months = 24
+        Deadline::where('vehicle_id', $vehicle->id)->forceDelete();
+
+        $oldest = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'status' => 'pending',
+            'due_date' => '2022-09-30',
+            'is_renewed' => false,
+        ]);
+
+        // Primo rinnovo: crea normalmente la scadenza successiva (2024-09-30).
+        $this->actingAs($user)->put(route('admin.deadlines.update', $oldest), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2022-09',
+            'is_renewed' => '1',
+        ]);
+        $this->assertEquals(2, Deadline::where('vehicle_id', $vehicle->id)->count());
+        $next = Deadline::where('renews_deadline_id', $oldest->id)->firstOrFail();
+
+        // Forza is_renewed a falso direttamente sul record (bypassando il
+        // form), per simulare qualunque causa renda inefficace il controllo
+        // "appena passata a rinnovata" al salvataggio successivo.
+        $oldest->forceFill(['is_renewed' => false])->save();
+
+        $response = $this->actingAs($user)->put(route('admin.deadlines.update', $oldest), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2022-09',
+            'is_renewed' => '1',
+            'last_mileage' => 60000,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertEquals(2, Deadline::where('vehicle_id', $vehicle->id)->count());
+        $this->assertDatabaseHas('deadlines', ['id' => $next->id, 'due_date' => '2024-09-30 00:00:00']);
+    }
+
     // VALIDAZIONE DEI CAMPI OBBLIGATORI
 
     public function test_deadline_type_is_required(): void
