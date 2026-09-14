@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.7] - 2026-09-14
+
+### Fixed
+
+- Lo storico chilometraggi trattava il valore 0 come una lettura km reale: `VehicleObserver` crea le scadenze iniziali di tagliando/cinghia con `last_mileage=0` come segnaposto "non ancora noto", producendo solo falsi conflitti con la cronologia reale (sia al salvataggio che nel comando di backfill). 0 ora viene ignorato come null.
+
+### Added
+
+- `mileage-logs:backfill` supporta `--interactive` (insieme a `--apply`): per ogni conflitto reale chiede come procedere — saltarlo, registrarlo comunque ignorando la cronologia, o inserire un valore km diverso — invece di poterlo solo saltare automaticamente.
+
 ## [v1.2.6] - 2026-09-14
 
 ### Added
