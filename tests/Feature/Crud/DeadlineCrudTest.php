@@ -585,20 +585,21 @@ class DeadlineCrudTest extends TestCase
         $response->assertSee('group-row-sub', false);
     }
 
-    public function test_setting_mileage_on_a_deadline_records_it_in_the_vehicle_mileage_history(): void
+    public function test_setting_mileage_on_a_ministerial_deadline_records_it_in_the_vehicle_mileage_history(): void
     {
         // Il km inserito su una scadenza restava isolato nel record: non
-        // compariva come "ultimo km" del veicolo né alimentava il calcolo
-        // automatico dello stato per tagliando/cinghia.
+        // compariva come "ultimo km" del veicolo. Per ministeriale/ossigeno
+        // due_date (una volta rinnovata) è la data della revisione, quindi
+        // la coppia km+data è affidabile.
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
 
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
-            'type' => 'Tagliando',
+            'type' => 'Revisione Ministeriale',
             'due_date' => '2025-06',
             'last_mileage' => 45000,
-            'interval_km' => 20000,
+            'is_renewed' => '1',
         ]);
 
         $response->assertSessionDoesntHaveErrors();
@@ -627,6 +628,30 @@ class DeadlineCrudTest extends TestCase
         // sovrascrivere lo storico.
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2025-06',
+            'last_mileage' => 45000,
+            'is_renewed' => '1',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseMissing('mileage_logs', ['mileage' => 45000]);
+        $this->assertDatabaseHas('mileage_logs', ['vehicle_id' => $vehicle->id, 'mileage' => 40000]);
+    }
+
+    public function test_setting_mileage_on_a_tagliando_deadline_does_not_record_a_false_reading(): void
+    {
+        // Per tagliando/cinghia, last_mileage è il km dell'ULTIMO cambio
+        // (una lettura passata), mentre due_date è la data FUTURA in cui la
+        // prossima scadenza è prevista: abbinarli produrrebbe una lettura
+        // falsa (il km del cambio precedente spacciato per quello alla data
+        // futura). Non va registrato nulla da qui — solo dall'appuntamento
+        // che genera effettivamente quella lettura.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
             'type' => 'Tagliando',
             'due_date' => '2025-06',
             'last_mileage' => 45000,
@@ -634,7 +659,6 @@ class DeadlineCrudTest extends TestCase
         ]);
 
         $response->assertSessionDoesntHaveErrors();
-        $this->assertDatabaseMissing('mileage_logs', ['mileage' => 45000]);
-        $this->assertDatabaseHas('mileage_logs', ['vehicle_id' => $vehicle->id, 'mileage' => 40000]);
+        $this->assertDatabaseCount('mileage_logs', 0);
     }
 }

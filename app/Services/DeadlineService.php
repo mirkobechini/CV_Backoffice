@@ -20,6 +20,21 @@ class DeadlineService
     private const AUTO_RENEW_TYPES = [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN];
 
     /**
+     * Tipi per cui last_mileage rappresenta il km ALLA data di questa
+     * scadenza (una volta rinnovata, due_date È la data della revisione):
+     * l'unico caso in cui ha senso registrare quella coppia km+data nello
+     * storico chilometraggi. Per tagliando/cinghia, invece, last_mileage è
+     * il km dell'ULTIMO cambio (una lettura passata, tenuta come base per
+     * calcolare la prossima soglia), mentre due_date è la data FUTURA in
+     * cui la prossima scadenza è prevista: abbinarli produrrebbe una
+     * lettura falsa (il km del cambio precedente, spacciato per quello di
+     * un anno dopo). Per quei due tipi, l'unica data affidabile per un km
+     * noto è quella dell'appuntamento che l'ha registrato — già gestita
+     * direttamente da MaintenanceRecordController.
+     */
+    private const MILEAGE_DATE_MATCHES_DUE_DATE_TYPES = [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN];
+
+    /**
      * Crea una nuova scadenza con calcolo automatico della data.
      *
      * Per i tipi periodici (Revisione Ministeriale/Impianto Ossigeno), se il
@@ -62,10 +77,9 @@ class DeadlineService
             ]);
         }
 
-        // Il km della scadenza è una lettura reale del contachilometri alla
-        // sua data: la registriamo nello storico chilometraggi del veicolo
-        // (vedi MileageLogService), non solo sul singolo record.
-        $this->mileageLogService->recordReading($vehicle, $deadline->due_date, $deadline->last_mileage);
+        if (in_array($deadline->type, self::MILEAGE_DATE_MATCHES_DUE_DATE_TYPES, true)) {
+            $this->mileageLogService->recordReading($vehicle, $deadline->due_date, $deadline->last_mileage);
+        }
 
         return $deadline;
     }
@@ -145,10 +159,9 @@ class DeadlineService
             $this->createNextDeadlineAfterRenewal($deadline, $vehicle);
         }
 
-        // Il km della scadenza è una lettura reale del contachilometri alla
-        // sua data: la registriamo nello storico chilometraggi del veicolo
-        // (vedi MileageLogService), non solo sul singolo record.
-        $this->mileageLogService->recordReading($vehicle, $deadline->due_date, $deadline->last_mileage);
+        if (in_array($deadline->type, self::MILEAGE_DATE_MATCHES_DUE_DATE_TYPES, true)) {
+            $this->mileageLogService->recordReading($vehicle, $deadline->due_date, $deadline->last_mileage);
+        }
 
         return $deadline;
     }

@@ -34,8 +34,18 @@ class BackfillMileageLogs extends Command
         // così, quando una lettura successiva viene verificata, quelle
         // precedenti dello stesso veicolo sono già state applicate (se
         // --apply) e la verifica di coerenza cronologica le vede.
+        //
+        // Solo ministeriale/ossigeno: per quei tipi due_date, una volta
+        // rinnovata la scadenza, È la data della revisione, quindi si può
+        // abbinare a last_mileage. Per tagliando/cinghia last_mileage è il
+        // km dell'ULTIMO cambio (una lettura passata, tenuta come base per
+        // la prossima soglia), mentre due_date è la data FUTURA in cui la
+        // prossima scadenza è prevista: abbinarli produrrebbe una lettura
+        // falsa. La loro lettura reale arriva già, con la data corretta,
+        // dall'appuntamento che li ha generati (vedi $maintenanceRecords).
         $deadlines = Deadline::whereNotNull('last_mileage')
             ->whereNotNull('due_date')
+            ->whereIn('type', [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN])
             ->with('vehicle')
             ->when($vehicleId, fn($q) => $q->where('vehicle_id', $vehicleId))
             ->get()
