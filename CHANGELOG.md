@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.1] - 2026-09-14
+
+### Fixed
+
+- Riaprire in modifica una scadenza periodica (Revisione Ministeriale/Impianto Ossigeno/Tagliando) già rinnovata e salvare di nuovo (es. per annotare solo il km) creava un duplicato della scadenza successiva già generata al momento del rinnovo, invece di lasciarla invariata.
+- Marcare una scadenza come rinnovata dal form di modifica non allineava più la colonna `status` a `renewed` (restava sullo stato precedente), disallineata dal flag `is_renewed` e invisibile al calcolo automatico della prossima data.
+
 ## [v1.2.0] - 2026-09-14
 
 ### Security
