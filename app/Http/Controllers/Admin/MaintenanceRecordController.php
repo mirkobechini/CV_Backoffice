@@ -12,6 +12,8 @@ use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\Vehicle;
+use App\Services\DeadlineService;
+use App\Services\MileageLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -21,8 +23,10 @@ class MaintenanceRecordController extends Controller
     use DetectsDuplicates;
     use SortableAndGroupable;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly DeadlineService $deadlineService,
+        private readonly MileageLogService $mileageLogService,
+    ) {
         $this->authorizeResource(MaintenanceRecord::class, 'maintenanceRecord');
     }
 
@@ -375,29 +379,14 @@ class MaintenanceRecordController extends Controller
             ->filter(fn($d) => $d->is_renewed);
 
         foreach ($renewedDeadlines as $deadline) {
-            // La scadenza successiva creata dal rinnovo è quella con la data
-            // più vicina a (data rientro + intervallo) e non rinnovata.
-            $baseDate = Carbon::parse($maintenanceRecord->return_date ?? $maintenanceRecord->appointment_date ?? Carbon::today());
-
-            // Calcola la data attesa della scadenza successiva
-            $expectedDueDate = match ($deadline->type) {
-                Deadline::TYPE_TAGLIANDO => $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS),
-                Deadline::TYPE_MINISTERIAL => $baseDate->copy()->addMonthsNoOverflow((int) ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0)),
-                Deadline::TYPE_OXYGEN => $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS),
-                default => null,
-            };
-
-            if ($expectedDueDate) {
-                $nextDeadline = $maintenanceRecord->vehicle->deadlines()
-                    ->where('type', $deadline->type)
-                    ->where('is_renewed', false)
-                    ->where('due_date', $expectedDueDate->toDateString())
-                    ->first();
-
-                if ($nextDeadline) {
-                    $nextDeadline->delete();
-                }
-            }
+            // La scadenza successiva creata dal rinnovo è quella collegata
+            // tramite renews_deadline_id (impostato uniformemente da
+            // DeadlineService::createNextOccurrence per tutti i tipi,
+            // cinghia inclusa). Prima veniva ricercata ricalcolando la data
+            // attesa e cercando una corrispondenza esatta: fragile, non
+            // copriva la cinghia, e poteva non trovare/cancellare nulla se
+            // il ricalcolo non tornava esattamente la stessa data.
+            Deadline::where('renews_deadline_id', $deadline->id)->delete();
 
             // Riporta la scadenza originale a pending
             $deadline->status = Deadline::STATUS_PENDING;
@@ -512,19 +501,39 @@ class MaintenanceRecordController extends Controller
     {
         $deadline->status = 'renewed';
         $deadline->is_renewed = true;
+        // Il km rilevato all'appuntamento (se inserito) è il km del
+        // veicolo al momento di QUESTA revisione: va sulla scadenza appena
+        // rinnovata, non su quella successiva (che non è ancora avvenuta).
+        // Prima veniva riportato solo per tagliando/cinghia, mai per
+        // ministeriale/ossigeno.
+        if ($maintenanceRecord->mileage_at_service !== null) {
+            $deadline->last_mileage = $maintenanceRecord->mileage_at_service;
+        }
         $deadline->save();
+
+        // Il km rilevato all'appuntamento è una lettura reale del
+        // contachilometri: la registriamo nello storico chilometraggi del
+        // veicolo (vedi MileageLogService), non solo sulla scadenza. Una
+        // sola chiamata qui copre tutti i tipi (ministeriale/ossigeno/
+        // tagliando/cinghia), a prescindere da dove il km finisce salvato
+        // più sotto.
+        $this->mileageLogService->recordReading(
+            $maintenanceRecord->vehicle,
+            $maintenanceRecord->return_date ?? Carbon::today(),
+            $maintenanceRecord->mileage_at_service,
+        );
 
         // Il tagliando ha una logica dedicata: la scadenza temporale
         // parte dalla data di RIENTRO e la scadenza km dai km
         // inseriti + intervallo del tipo veicolo.
         if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
-            $this->renewTagliandoDeadline($maintenanceRecord);
+            $this->renewTagliandoDeadline($maintenanceRecord, $deadline);
             return;
         }
 
         // La cinghia ha una logica dedicata (intervallo giorni + km).
         if ($deadline->type === Deadline::TYPE_CINGHIA) {
-            $this->renewTimingBeltDeadline($maintenanceRecord);
+            $this->renewTimingBeltDeadline($maintenanceRecord, $deadline);
             return;
         }
 
@@ -538,14 +547,12 @@ class MaintenanceRecordController extends Controller
             $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
         }
         if ($nextDueDate) {
-            Deadline::firstOrCreate(
-                [
-                    'vehicle_id' => $maintenanceRecord->vehicle_id,
-                    'type' => $deadline->type,
-                    'due_date' => $nextDueDate->toDateString(),
-                ],
-                ['status' => 'pending']
-            );
+            // Stessa guardia anti-duplicati del rinnovo via form di
+            // modifica (renews_deadline_id): prima questo controller aveva
+            // una propria creazione senza quel collegamento, quindi la
+            // guardia non poteva riconoscere una scadenza già creata da
+            // qui, ed era possibile ottenerne un duplicato.
+            $this->deadlineService->createNextOccurrence($deadline, $maintenanceRecord->vehicle, $nextDueDate);
         }
     }
 
@@ -592,22 +599,25 @@ class MaintenanceRecordController extends Controller
     /**
      * Rinnova la scadenza della cinghia di distribuzione dopo un cambio.
      * La nuova scadenza riparte dalla data e dal chilometraggio del cambio.
-     * Crea SEMPRE una nuova scadenza per mantenere lo storico completo.
+     * Crea SEMPRE una nuova scadenza per mantenere lo storico completo (una
+     * per cambio effettuato), ma solo se questa non ne ha già una
+     * successiva collegata (guardia in DeadlineService::createNextOccurrence).
      */
-    private function renewTimingBeltDeadline(MaintenanceRecord $maintenanceRecord): void
+    private function renewTimingBeltDeadline(MaintenanceRecord $maintenanceRecord, Deadline $deadline): void
     {
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
         $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
 
-        Deadline::create([
-            'vehicle_id' => $maintenanceRecord->vehicle_id,
-            'type' => Deadline::TYPE_CINGHIA,
-            'due_date' => $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS)->toDateString(),
-            'last_mileage' => $baseKm,
-            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
-            'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
-            'status' => Deadline::STATUS_PENDING,
-        ]);
+        $this->deadlineService->createNextOccurrence(
+            $deadline,
+            $maintenanceRecord->vehicle,
+            $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS),
+            [
+                'last_mileage' => $baseKm,
+                'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+                'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+            ]
+        );
     }
 
     /**
@@ -616,8 +626,10 @@ class MaintenanceRecordController extends Controller
      * La scadenza temporale parte dalla data di RIENTRO del veicolo
      * (es. 18/10/2024 → 18/10/2025), mentre la scadenza km parte dai km
      * inseriti + l'intervallo del tipo veicolo (es. 16000 + 19000 = 35000).
+     * Crea SEMPRE una nuova scadenza (una per tagliando effettuato), ma
+     * solo se questa non ne ha già una successiva collegata.
      */
-    private function renewTagliandoDeadline(MaintenanceRecord $maintenanceRecord): void
+    private function renewTagliandoDeadline(MaintenanceRecord $maintenanceRecord, Deadline $deadline): void
     {
         // Base temporale: data di rientro
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
@@ -627,18 +639,16 @@ class MaintenanceRecordController extends Controller
         $baseKm = $maintenanceRecord->mileage_at_service;
         $intervalKm = (int) ($maintenanceRecord->vehicle->vehicleType?->regular_tagliando_km ?? 20000);
 
-        // Crea SEMPRE una nuova scadenza per mantenere lo storico completo.
-        // Non aggiornare quella esistente, altrimenti i tagliandi passati
-        // verrebbero sovrascritti e nella index ne vedresti solo uno.
-        Deadline::create([
-            'vehicle_id' => $maintenanceRecord->vehicle_id,
-            'type' => Deadline::TYPE_TAGLIANDO,
-            'due_date' => $dueDate->toDateString(),
-            'last_mileage' => $baseKm,
-            'interval_km' => $intervalKm,
-            'interval_days' => Deadline::TAGLIANDO_INTERVAL_MONTHS * 30,
-            'status' => Deadline::STATUS_PENDING,
-        ]);
+        $this->deadlineService->createNextOccurrence(
+            $deadline,
+            $maintenanceRecord->vehicle,
+            $dueDate,
+            [
+                'last_mileage' => $baseKm,
+                'interval_km' => $intervalKm,
+                'interval_days' => Deadline::TAGLIANDO_INTERVAL_MONTHS * 30,
+            ]
+        );
     }
 
     /**
