@@ -331,4 +331,74 @@ class VehicleCrudTest extends TestCase
             'Guasto chiuso recente', // chiuso: ultimo nonostante la data più recente
         ]);
     }
+
+    public function test_turning_on_timing_belt_prompts_to_create_the_deadline(): void
+    {
+        // has_timing_belt da solo non doveva creare/eliminare nulla: qui
+        // verifichiamo solo che compaia il banner di conferma, non che la
+        // scadenza venga creata in automatico.
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+
+        $response = $this->actingAs($user)->from(route('admin.vehicles.edit', $vehicle))->put(route('admin.vehicles.update', $vehicle), [
+            'license_plate' => $vehicle->license_plate,
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => $vehicle->internal_code,
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => $vehicle->immatricolation_date->format('Y-m-d'),
+            'has_timing_belt' => '1',
+        ]);
+
+        $response->assertSessionHas('timingBeltPrompt', fn($prompt) => $prompt['action'] === 'create');
+        $this->assertDatabaseMissing('deadlines', ['vehicle_id' => $vehicle->id, 'type' => \App\Models\Deadline::TYPE_CINGHIA]);
+    }
+
+    public function test_confirming_timing_belt_prompt_creates_the_deadline_from_immatriculation_date(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update(['immatricolation_date' => '2020-01-15']);
+        $expectedDueDate = \Carbon\Carbon::parse('2020-01-15')->addDays(\App\Models\Deadline::TIMING_BELT_INTERVAL_DAYS);
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.timing-belt-deadline.create', $vehicle));
+
+        $response->assertRedirect(route('admin.vehicles.show', $vehicle));
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'due_date' => $expectedDueDate->format('Y-m-d 00:00:00'),
+        ]);
+    }
+
+    public function test_turning_off_timing_belt_prompts_to_delete_the_active_deadline(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update(['has_timing_belt' => true]);
+        $deadline = \App\Models\Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'due_date' => '2030-01-15',
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
+            'license_plate' => $vehicle->license_plate,
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => $vehicle->internal_code,
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => $vehicle->immatricolation_date->format('Y-m-d'),
+            'has_timing_belt' => '0',
+        ]);
+
+        $response->assertSessionHas('timingBeltPrompt', fn($prompt) => $prompt['action'] === 'delete' && $prompt['deadline_id'] === $deadline->id);
+        $this->assertDatabaseHas('deadlines', ['id' => $deadline->id, 'deleted_at' => null]);
+    }
 }
