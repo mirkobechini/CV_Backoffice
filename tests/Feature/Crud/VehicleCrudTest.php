@@ -269,4 +269,29 @@ class VehicleCrudTest extends TestCase
         ]); // Conferma che il secondo veicolo mantenga la sua targa originale.
 
     }
+
+    public function test_open_issues_badge_shows_the_count_only_once(): void
+    {
+        // Il conteggio veniva stampato due volte: una volta a mano subito
+        // dopo l'icona, e una seconda volta dentro la stringa tradotta
+        // (segnaposto :count), producendo un badge tipo "⚠ 3 3 guasto/i aperto/i".
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        \App\Models\Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Motore non parte',
+            'status' => 'open',
+        ]);
+        \App\Models\Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Freni da controllare',
+            'status' => 'open',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('2 guasto/i aperto/i');
+        $response->assertDontSee('2 2 guasto/i aperto/i');
+    }
 }
