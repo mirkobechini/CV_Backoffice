@@ -294,4 +294,41 @@ class VehicleCrudTest extends TestCase
         $response->assertSee('2 guasto/i aperto/i');
         $response->assertDontSee('2 2 guasto/i aperto/i');
     }
+
+    public function test_open_and_in_progress_issues_are_listed_before_closed_ones(): void
+    {
+        // La card guasti era ordinata solo per data: un guasto aperto più
+        // vecchio finiva sotto uno chiuso più recente, invece di comparire
+        // sempre in cima a prescindere dalla data.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+
+        \App\Models\Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto chiuso recente',
+            'status' => 'closed',
+            'event_date' => '2025-06-01',
+        ]);
+        \App\Models\Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto aperto vecchio',
+            'status' => 'open',
+            'event_date' => '2024-01-01',
+        ]);
+        \App\Models\Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto in lavorazione',
+            'status' => 'in_progress',
+            'event_date' => '2024-06-01',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'Guasto in lavorazione', // più recente tra i non chiusi
+            'Guasto aperto vecchio',
+            'Guasto chiuso recente', // chiuso: ultimo nonostante la data più recente
+        ]);
+    }
 }
