@@ -41,10 +41,10 @@ class BackfillMileageLogsCommandTest extends TestCase
         $vehicle = $this->vehicle();
         Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => '2024-05-15',
             'last_mileage' => 60000,
-            'interval_km' => 20000,
+            'is_renewed' => true,
         ]);
 
         $this->artisan('mileage-logs:backfill')
@@ -61,10 +61,10 @@ class BackfillMileageLogsCommandTest extends TestCase
 
         Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => '2024-05-15',
             'last_mileage' => 60000,
-            'interval_km' => 20000,
+            'is_renewed' => true,
         ]);
 
         MaintenanceRecord::create([
@@ -91,10 +91,10 @@ class BackfillMileageLogsCommandTest extends TestCase
         // incoerente, va scartata.
         Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => '2024-01-01',
             'last_mileage' => 90000,
-            'interval_km' => 20000,
+            'is_renewed' => true,
         ]);
 
         $this->artisan('mileage-logs:backfill --apply')->assertExitCode(0);
@@ -110,17 +110,17 @@ class BackfillMileageLogsCommandTest extends TestCase
 
         Deadline::create([
             'vehicle_id' => $vehicleA->id,
-            'type' => Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => '2024-05-15',
             'last_mileage' => 60000,
-            'interval_km' => 20000,
+            'is_renewed' => true,
         ]);
         Deadline::create([
             'vehicle_id' => $vehicleB->id,
-            'type' => Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => '2024-05-15',
             'last_mileage' => 70000,
-            'interval_km' => 20000,
+            'is_renewed' => true,
         ]);
 
         $this->artisan("mileage-logs:backfill --vehicle={$vehicleA->id} --apply")->assertExitCode(0);
@@ -136,17 +136,46 @@ class BackfillMileageLogsCommandTest extends TestCase
         // km: registrarlo come lettura vera produrrebbe solo falsi
         // conflitti con la cronologia reale.
         $vehicle = $this->vehicle();
-        Deadline::create([
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
             'vehicle_id' => $vehicle->id,
-            'type' => Deadline::TYPE_CINGHIA,
-            'due_date' => '2024-05-15',
-            'last_mileage' => 0,
-            'interval_km' => 100000,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2024-05-15',
+            'return_date' => '2024-05-15',
+            'mileage_at_service' => 0,
         ]);
 
         $this->artisan('mileage-logs:backfill --apply')->assertExitCode(0);
 
         $this->assertDatabaseCount('mileage_logs', 0);
+    }
+
+    public function test_tagliando_and_cinghia_deadlines_are_never_used_as_candidates(): void
+    {
+        // last_mileage su tagliando/cinghia è il km dell'ULTIMO cambio (una
+        // lettura passata), mentre due_date è la data FUTURA in cui la
+        // prossima scadenza è prevista: abbinarli produrrebbe una lettura
+        // falsa. La loro lettura reale arriva solo dall'appuntamento che le
+        // genera (già coperto dagli altri test tramite MaintenanceRecord).
+        $vehicle = $this->vehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => '2025-06-15',
+            'last_mileage' => 60000,
+            'interval_km' => 20000,
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'due_date' => '2030-06-15',
+            'last_mileage' => 60000,
+            'interval_km' => 100000,
+        ]);
+
+        $this->artisan('mileage-logs:backfill')
+            ->expectsOutputToContain('Nessuna lettura km da registrare.')
+            ->assertExitCode(0);
     }
 
     public function test_interactive_conflict_can_be_forced(): void
@@ -156,10 +185,10 @@ class BackfillMileageLogsCommandTest extends TestCase
 
         Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => '2024-01-01',
             'last_mileage' => 90000,
-            'interval_km' => 20000,
+            'is_renewed' => true,
         ]);
 
         $this->artisan('mileage-logs:backfill --apply --interactive')
@@ -180,10 +209,10 @@ class BackfillMileageLogsCommandTest extends TestCase
 
         Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => '2024-01-01',
             'last_mileage' => 90000,
-            'interval_km' => 20000,
+            'is_renewed' => true,
         ]);
 
         $this->artisan('mileage-logs:backfill --apply --interactive')
