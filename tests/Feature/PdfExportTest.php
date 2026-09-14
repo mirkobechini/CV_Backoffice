@@ -2,6 +2,7 @@
 namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Group;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -17,6 +18,13 @@ class PdfExportTest extends TestCase
         $brand = Brand::create(['name' => 'Fiat']);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
         $type = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 12, 'regular_inspection_months' => 12]);
+        // Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+        // il veicolo deve appartenervi per essere accessibile (route scoperta
+        // per gruppo).
+        $group = Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
         $vehicle = Vehicle::create([
             'license_plate' => 'AB123CD',
             'internal_code' => '0001',
@@ -24,6 +32,7 @@ class PdfExportTest extends TestCase
             'car_model_id' => $model->id,
             'vehicle_type_id' => $type->id,
             'immatricolation_date' => Carbon::today()->subYears(2),
+            'group_id' => $group->id,
         ]);
         $response = $this->actingAs($user)->get(route('admin.vehicles.pdf', $vehicle->id));
         $response->assertOk();

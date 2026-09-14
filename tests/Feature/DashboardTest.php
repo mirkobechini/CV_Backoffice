@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Deadline;
+use App\Models\Group;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,6 +12,19 @@ use Tests\TestCase;
 class DashboardTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * il veicolo deve appartenervi per essere visibile all'utente di
+     * questi test (le query della dashboard sono filtrate per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
 
     public function test_dashboard_loads_for_authenticated_user(): void
     {
@@ -31,9 +45,8 @@ class DashboardTest extends TestCase
         $vehicle = Vehicle::create([
             'license_plate' => 'AB123CD',
             'internal_code' => '0001',
-            'brand' => 'Fiat',
-            'model' => 'Ducato',
             'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
         ]);
         Deadline::create([
             'vehicle_id' => $vehicle->id,

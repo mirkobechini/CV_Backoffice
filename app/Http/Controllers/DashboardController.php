@@ -16,27 +16,40 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $data = Cache::remember('dashboard.stats', 300, function () {
-            $totalVehicles = Vehicle::count();
+        // La cache va segmentata per gruppo: quasi nessuna delle query sotto
+        // era filtrata per gruppo (solo incompleteVehicles lo era), e la
+        // chiave era un'unica stringa globale condivisa da tutti — la prima
+        // richiesta calcolava i dati (di TUTTI i gruppi) e li serviva a
+        // chiunque altro visitasse la dashboard nei 5 minuti successivi,
+        // indipendentemente dal proprio gruppo.
+        $groupId = auth()->user()?->activeGroup()?->id ?? 'none';
+        $cacheKey = "dashboard.stats.{$groupId}";
+
+        $data = Cache::remember($cacheKey, 300, function () {
+            $totalVehicles = Vehicle::forCurrentUser()->count();
 
             $openIssues = Issue::with('vehicle')
+                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->open()
                 ->orderByDesc('event_date')
                 ->take(20)
                 ->get();
 
             $upcomingDeadlines = Deadline::with('vehicle')
+                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->upcoming()
                 ->get();
 
             // Scadenze scadute e non ancora rinnovate
             $expiredDeadlines = Deadline::with('vehicle')
+                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->where('status', Deadline::STATUS_EXPIRED)
                 ->where('is_renewed', false)
                 ->orderBy('due_date')
                 ->get();
 
             $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
+                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->whereNull('return_date')
                 ->where('appointment_date', '>=', now())
                 ->orderBy('appointment_date')
@@ -49,12 +62,19 @@ class DashboardController extends Controller
                 ->get()
                 ->filter(fn($v) => ! $v->hasAllRequiredEquipment());
 
+            // L'attrezzatura non assegnata a un veicolo non ha un gruppo
+            // proprio: resta inclusa, come nell'indice attrezzature.
             $expiringEquipment = Equipment::with('vehicle')
+                ->where(function ($q) {
+                    $q->whereDoesntHave('vehicle')
+                        ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
+                })
                 ->expiringSoon()
                 ->get();
 
             // Veicoli attualmente in officina: check-in avvenuto, non ancora rientrati.
-            $inWorkshopCount = MaintenanceRecord::whereNull('return_date')
+            $inWorkshopCount = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->whereNull('return_date')
                 ->where('appointment_date', '<=', now())
                 ->count();
 
