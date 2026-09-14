@@ -156,6 +156,22 @@ class DeadlineService
             return;
         }
 
+        // Guardia esplicita, indipendente dal controllo "appena rinnovata"
+        // in updateDeadline(): se una scadenza dello stesso tipo rinnova
+        // già questa (renews_deadline_id), non ne creiamo un'altra. Senza
+        // questo controllo, un ricalcolo che produce una data anche solo
+        // leggermente diversa da quella già creata (es. dopo una modifica
+        // alla configurazione del tipo veicolo, o un dato storico non
+        // perfettamente allineato) aggirerebbe il matching per data esatta
+        // di firstOrCreate() più sotto e ne creerebbe comunque un duplicato.
+        $alreadyHasNext = Deadline::where('renews_deadline_id', $renewedDeadline->id)
+            ->where('type', $renewedDeadline->type)
+            ->exists();
+
+        if ($alreadyHasNext) {
+            return;
+        }
+
         $nextDueDate = match ($renewedDeadline->type) {
             Deadline::TYPE_MINISTERIAL => $vehicle->vehicleType
                 ? $renewedDeadline->due_date->copy()->addMonthsNoOverflow((int) $vehicle->vehicleType->regular_inspection_months)
