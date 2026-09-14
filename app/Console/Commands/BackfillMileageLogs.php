@@ -9,10 +9,11 @@ use Illuminate\Console\Command;
 
 class BackfillMileageLogs extends Command
 {
-    // php artisan mileage-logs:backfill [--vehicle=ID] [--apply]
+    // php artisan mileage-logs:backfill [--vehicle=ID] [--apply] [--interactive]
     protected $signature = 'mileage-logs:backfill
         {--vehicle= : Limita il backfill a un singolo veicolo (id)}
-        {--apply : Applica davvero le modifiche (di default viene solo mostrata un\'anteprima)}';
+        {--apply : Applica davvero le modifiche (di default viene solo mostrata un\'anteprima)}
+        {--interactive : Per ogni conflitto (con --apply), chiede come procedere invece di saltarlo automaticamente}';
 
     protected $description = 'Registra nello storico chilometraggi (mileage_logs) le letture km già presenti su scadenze (last_mileage) e appuntamenti (mileage_at_service) ma mai riportate lì, per dati inseriti prima che questo collegamento esistesse.';
 
@@ -25,6 +26,7 @@ class BackfillMileageLogs extends Command
     public function handle(): int
     {
         $apply = (bool) $this->option('apply');
+        $interactive = $apply && (bool) $this->option('interactive');
         $vehicleId = $this->option('vehicle');
 
         // Un unico elenco di letture candidate (veicolo, data, km, etichetta
@@ -67,7 +69,7 @@ class BackfillMileageLogs extends Command
             return self::SUCCESS;
         }
 
-        $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'conflict' => 0];
+        $counts = ['created' => 0, 'updated' => 0, 'unchanged' => 0, 'conflict' => 0, 'forced' => 0];
 
         foreach ($candidates as $candidate) {
             $result = $this->mileageLogService->recordReading(
@@ -76,6 +78,10 @@ class BackfillMileageLogs extends Command
                 $candidate['mileage'],
                 $apply,
             );
+
+            if ($result === 'conflict' && $interactive) {
+                $result = $this->resolveConflictInteractively($candidate);
+            }
 
             if (! isset($counts[$result])) {
                 continue;
@@ -89,6 +95,7 @@ class BackfillMileageLogs extends Command
             $icon = match ($result) {
                 'created' => $apply ? '[OK]' : '[dry-run: da creare]',
                 'updated' => $apply ? '[OK]' : '[dry-run: da aggiornare]',
+                'forced' => '[OK: registrata ignorando il conflitto]',
                 'conflict' => '[saltato: incoerente con la cronologia]',
                 default => '',
             };
@@ -106,11 +113,12 @@ class BackfillMileageLogs extends Command
 
         $this->newLine();
         $this->info(sprintf(
-            '%s: %d, aggiornati: %d, invariati: %d, saltati per conflitto: %d.',
+            '%s: %d, aggiornati: %d, invariati: %d, registrati forzando un conflitto: %d, saltati per conflitto: %d.',
             $apply ? 'Registrati' : 'Da registrare',
             $counts['created'],
             $counts['updated'],
             $counts['unchanged'],
+            $counts['forced'],
             $counts['conflict'],
         ));
 
@@ -118,6 +126,47 @@ class BackfillMileageLogs extends Command
             $this->warn('Anteprima: rilancia con --apply per applicare davvero.');
         }
 
+        if ($apply && ! $interactive && $counts['conflict'] > 0) {
+            $this->warn("{$counts['conflict']} lettura/e saltata/e per conflitto con la cronologia esistente. Rilancia con --apply --interactive per decidere caso per caso.");
+        }
+
         return self::SUCCESS;
+    }
+
+    /**
+     * Mostra il dettaglio del conflitto e chiede come procedere: saltare,
+     * registrare comunque ignorando la cronologia, o inserire un valore km
+     * diverso da quello trovato sul record originale.
+     */
+    private function resolveConflictInteractively(array $candidate): string
+    {
+        $this->newLine();
+        $this->warn(sprintf(
+            'Conflitto — Veicolo #%d, %s, %s km (%s): incoerente con una lettura già registrata nello storico.',
+            $candidate['vehicle']->id,
+            $candidate['date']->toDateString(),
+            number_format($candidate['mileage'], 0, ',', '.'),
+            $candidate['label'],
+        ));
+
+        $choice = $this->choice(
+            'Come vuoi procedere?',
+            ['Salta questa lettura', 'Registrala comunque (ignora la cronologia)', 'Inserisci un valore km diverso'],
+            0,
+        );
+
+        if ($choice === 'Registrala comunque (ignora la cronologia)') {
+            $this->mileageLogService->recordReading($candidate['vehicle'], $candidate['date'], $candidate['mileage'], true, true);
+
+            return 'forced';
+        }
+
+        if ($choice === 'Inserisci un valore km diverso') {
+            $newMileage = (int) $this->ask('Nuovo valore km per questa data');
+
+            return $this->mileageLogService->recordReading($candidate['vehicle'], $candidate['date'], $newMileage, true);
+        }
+
+        return 'conflict';
     }
 }
