@@ -128,4 +128,74 @@ class BackfillMileageLogsCommandTest extends TestCase
         $this->assertDatabaseHas('mileage_logs', ['vehicle_id' => $vehicleA->id, 'mileage' => 60000]);
         $this->assertDatabaseMissing('mileage_logs', ['vehicle_id' => $vehicleB->id, 'mileage' => 70000]);
     }
+
+    public function test_zero_mileage_is_never_registered(): void
+    {
+        // VehicleObserver crea le scadenze iniziali di tagliando/cinghia con
+        // last_mileage=0 come segnaposto "non ancora noto", non un vero 0
+        // km: registrarlo come lettura vera produrrebbe solo falsi
+        // conflitti con la cronologia reale.
+        $vehicle = $this->vehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'due_date' => '2024-05-15',
+            'last_mileage' => 0,
+            'interval_km' => 100000,
+        ]);
+
+        $this->artisan('mileage-logs:backfill --apply')->assertExitCode(0);
+
+        $this->assertDatabaseCount('mileage_logs', 0);
+    }
+
+    public function test_interactive_conflict_can_be_forced(): void
+    {
+        $vehicle = $this->vehicle();
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2024-02-01', 'mileage' => 50000]);
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => '2024-01-01',
+            'last_mileage' => 90000,
+            'interval_km' => 20000,
+        ]);
+
+        $this->artisan('mileage-logs:backfill --apply --interactive')
+            ->expectsQuestion('Come vuoi procedere?', 'Registrala comunque (ignora la cronologia)')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('mileage_logs', [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2024-01-01 00:00:00',
+            'mileage' => 90000,
+        ]);
+    }
+
+    public function test_interactive_conflict_can_be_resolved_with_a_different_value(): void
+    {
+        $vehicle = $this->vehicle();
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2024-02-01', 'mileage' => 50000]);
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => '2024-01-01',
+            'last_mileage' => 90000,
+            'interval_km' => 20000,
+        ]);
+
+        $this->artisan('mileage-logs:backfill --apply --interactive')
+            ->expectsQuestion('Come vuoi procedere?', 'Inserisci un valore km diverso')
+            ->expectsQuestion('Nuovo valore km per questa data', '45000')
+            ->assertExitCode(0);
+
+        $this->assertDatabaseHas('mileage_logs', [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2024-01-01 00:00:00',
+            'mileage' => 45000,
+        ]);
+        $this->assertDatabaseMissing('mileage_logs', ['mileage' => 90000]);
+    }
 }

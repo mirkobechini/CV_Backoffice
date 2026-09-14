@@ -27,16 +27,25 @@ class MileageLogService
      * regola usata dall'inserimento manuale) viene semplicemente saltata,
      * per non rompere lo storico né bloccare l'azione principale (rinnovo
      * scadenza/completamento appuntamento) con un errore di validazione su
-     * un campo diverso da quello che l'utente sta effettivamente compilando.
+     * un campo diverso da quello che l'utente sta effettivamente compilando
+     * — a meno che $force non sia esplicitamente richiesto (usato dal
+     * comando di backfill quando l'utente sceglie di registrarla comunque).
+     *
+     * 0 non è mai considerato un chilometraggio reale: VehicleObserver crea
+     * le scadenze iniziali di tagliando/cinghia con last_mileage=0 come
+     * segnaposto "non ancora noto" (non un vero 0 km), quindi trattarlo
+     * come lettura vera produrrebbe in pratica solo falsi conflitti.
      *
      * @param  bool  $apply  Se false, non scrive nulla: restituisce solo
      *                       cosa farebbe (usato dal comando di backfill per
      *                       l'anteprima).
+     * @param  bool  $force  Se true, ignora un eventuale conflitto di
+     *                       cronologia e registra comunque la lettura.
      * @return string  'created'|'updated'|'unchanged'|'conflict'|'no_mileage'
      */
-    public function recordReading(Vehicle $vehicle, string|CarbonInterface $date, ?int $mileage, bool $apply = true): string
+    public function recordReading(Vehicle $vehicle, string|CarbonInterface $date, ?int $mileage, bool $apply = true, bool $force = false): string
     {
-        if ($mileage === null) {
+        if ($mileage === null || $mileage <= 0) {
             return 'no_mileage';
         }
 
@@ -51,7 +60,7 @@ class MileageLogService
                 return 'unchanged';
             }
 
-            if (MileageLog::findChronologyConflict($vehicle->id, $logDate, $mileage, $existing->id)) {
+            if (! $force && MileageLog::findChronologyConflict($vehicle->id, $logDate, $mileage, $existing->id)) {
                 return 'conflict';
             }
 
@@ -62,7 +71,7 @@ class MileageLogService
             return 'updated';
         }
 
-        if (MileageLog::findChronologyConflict($vehicle->id, $logDate, $mileage)) {
+        if (! $force && MileageLog::findChronologyConflict($vehicle->id, $logDate, $mileage)) {
             return 'conflict';
         }
 
