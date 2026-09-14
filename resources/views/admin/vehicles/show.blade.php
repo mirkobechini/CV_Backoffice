@@ -224,8 +224,21 @@
                     class="veh-btn-add" title="{{ __('Nuovo guasto') }}"><i class="fa-solid fa-plus"></i></a>
             </div>
             <div class="body veh-issue-scroll">
-                @php($issueStatusClasses = ['open' => 'open', 'in_progress' => 'work'])
-                @forelse ($vehicle->issues->sortByDesc('event_date') as $issue)
+                @php
+                    $issueStatusClasses = ['open' => 'open', 'in_progress' => 'work'];
+
+                    // Guasti aperti/in lavorazione sempre in cima alla card,
+                    // indipendentemente dalla data: sono quelli che
+                    // richiedono attenzione. All'interno di ciascun gruppo
+                    // (aperti+in lavorazione, poi chiusi) restano ordinati
+                    // per data più recente, grazie alla stabilità di
+                    // sortBy() sopra un array già ordinato per data.
+                    $sortedIssues = $vehicle->issues
+                        ->sortByDesc(fn($issue) => $issue->event_date?->format('Y-m-d') ?? '')
+                        ->sortBy(fn($issue) => in_array($issue->status, ['open', 'in_progress'], true) ? 0 : 1)
+                        ->values();
+                @endphp
+                @forelse ($sortedIssues as $issue)
                     @php($issueProvider = $issueProviders->get($issue->id))
                     <div class="veh-issue-item {{ $issueStatusClasses[$issue->status] ?? 'done' }}">
                         <div>

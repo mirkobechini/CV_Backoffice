@@ -39,9 +39,25 @@ class IssueController extends Controller
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
         $statusFilter = $validated['status_filter'] ?? 'all';
 
+        $search = $request->get('q');
+
         $issuesQuery = Issue::with('vehicle.brand', 'vehicle.carModel')
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
-            ->search($request->get('q'));
+            ->whereHas('vehicle', fn($q) => $q->forCurrentUser());
+
+        // Issue::$searchable copre solo description/status: il campo cerca
+        // "veicolo o descrizione" (vedi placeholder in vista), quindi il
+        // veicolo va cercato esplicitamente sulla relazione, non tramite lo
+        // scope search() generico che non risale mai al veicolo.
+        if ($search) {
+            $issuesQuery->where(function ($sub) use ($search) {
+                $sub->where('description', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhereHas('vehicle', function ($vq) use ($search) {
+                        $vq->where('internal_code', 'like', "%{$search}%")
+                            ->orWhere('license_plate', 'like', "%{$search}%");
+                    });
+            });
+        }
 
         if ($statusFilter !== 'all') {
             $issuesQuery->where('status', $statusFilter);

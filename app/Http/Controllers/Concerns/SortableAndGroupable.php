@@ -68,6 +68,26 @@ trait SortableAndGroupable
         return route($routeName, $query);
     }
 
+    /**
+     * Come groupToggleUrl(), ma per raggruppamenti combinabili: $field viene
+     * aggiunto o rimosso dall'elenco di chiavi attive (group_by come lista
+     * separata da virgola, es. "vehicle,type") mantenendo le altre già
+     * selezionate, invece di sostituirle come fa un toggle mutuamente
+     * esclusivo.
+     */
+    protected function multiGroupToggleUrl(string $field, array $activeKeys, string $routeName): string
+    {
+        $query = request()->query();
+
+        $activeKeys = in_array($field, $activeKeys, true)
+            ? array_values(array_diff($activeKeys, [$field]))
+            : [...$activeKeys, $field];
+
+        $query['group_by'] = empty($activeKeys) ? 'none' : implode(',', $activeKeys);
+
+        return route($routeName, $query);
+    }
+
     protected function sortToggleUrl(string $field, ?string $currentSortBy, string $currentSortDir, string $routeName): string
     {
         $query = request()->query();

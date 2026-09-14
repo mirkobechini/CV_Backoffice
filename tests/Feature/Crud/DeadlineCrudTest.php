@@ -509,4 +509,74 @@ class DeadlineCrudTest extends TestCase
         $response->assertSessionHasErrors(['type']);
         $this->assertDatabaseCount('deadlines', $count); // Conferma che non venga creato alcun record di scadenza senza tipo.
     }
+
+    public function test_search_finds_deadline_by_vehicle_internal_code(): void
+    {
+        // Il campo cerca "tipologia o veicolo" (vedi placeholder), ma
+        // Deadline::$searchable copre solo type/status: cercare il codice
+        // del veicolo non trovava nulla.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle(); // internal_code = '1234'
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'status' => 'renewed',
+            'due_date' => '2025-06-30',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.index', ['q' => $vehicle->internal_code]));
+
+        $response->assertOk();
+        $response->assertSee('Assicurazione');
+    }
+
+    public function test_index_can_be_filtered_by_type(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'status' => 'renewed',
+            'due_date' => '2025-06-30',
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'status' => 'renewed',
+            'due_date' => '2025-07-31',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.index', ['type_filter' => 'Assicurazione']));
+
+        $response->assertOk();
+        // "Tagliando" compare comunque come opzione nel <select> dei tipi:
+        // verifichiamo la riga della tabella (span.type-name), non la sola
+        // presenza testuale nella pagina.
+        $response->assertSee('type-name">Assicurazione', false);
+        $response->assertDontSee('type-name">Tagliando', false);
+    }
+
+    public function test_index_can_group_by_vehicle_and_type_together(): void
+    {
+        // Prima si poteva raggruppare solo per una chiave alla volta
+        // (tipologia OPPURE veicolo): il gruppo "Grp" su tipologia e quello
+        // su veicolo si escludevano a vicenda invece di potersi combinare.
+        $user = $this->createUser();
+        $vehicleA = $this->createVehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicleA->id,
+            'type' => 'Assicurazione',
+            'status' => 'renewed',
+            'due_date' => '2025-06-30',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.index', ['group_by' => 'vehicle,type']));
+
+        $response->assertOk();
+        // Livello esterno: etichetta del veicolo. Livello interno: tipologia.
+        $response->assertSeeInOrder([$vehicleA->internal_code, 'Assicurazione']);
+    }
 }
