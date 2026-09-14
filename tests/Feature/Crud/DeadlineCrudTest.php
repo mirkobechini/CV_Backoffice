@@ -355,6 +355,88 @@ class DeadlineCrudTest extends TestCase
         $response->assertSee('Cinghia Distribuzione');
     }
 
+    public function test_marking_ministerial_deadline_as_renewed_via_update_creates_next_occurrence(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle(); // regular_inspection_months = 24
+        Deadline::where('vehicle_id', $vehicle->id)->forceDelete();
+
+        $current = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'status' => 'pending',
+            'due_date' => '2025-06-30',
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.deadlines.update', $current), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2025-06',
+            'is_renewed' => '1',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $current->id,
+            'is_renewed' => true,
+            'status' => 'renewed',
+        ]);
+        // La prossima scadenza va calcolata dalla data di QUESTA revisione
+        // (2025-06-30 + 24 mesi), non da un fallback su altri dati.
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2027-06-30 00:00:00',
+            'renews_deadline_id' => $current->id,
+        ]);
+        $this->assertEquals(2, Deadline::where('vehicle_id', $vehicle->id)->count());
+    }
+
+    public function test_editing_an_already_renewed_deadline_does_not_duplicate_next_occurrence(): void
+    {
+        // Bug reale: riaprire in modifica una scadenza GIÀ rinnovata (es.
+        // per annotare solo il km di riferimento) rieseguiva la creazione
+        // della scadenza successiva, duplicandola.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        Deadline::where('vehicle_id', $vehicle->id)->forceDelete();
+
+        $current = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'status' => 'pending',
+            'due_date' => '2025-06-30',
+            'is_renewed' => false,
+        ]);
+
+        $this->actingAs($user)->put(route('admin.deadlines.update', $current), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'is_renewed' => '1',
+        ]);
+
+        $this->assertEquals(2, Deadline::where('vehicle_id', $vehicle->id)->count());
+
+        // Riapre in modifica la stessa scadenza (già rinnovata) e salva di
+        // nuovo aggiungendo solo il km di riferimento, senza toccare nulla
+        // che riguardi il rinnovo.
+        $current->refresh();
+        $response = $this->actingAs($user)->put(route('admin.deadlines.update', $current), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'is_renewed' => '1',
+            'last_mileage' => 95000,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertEquals(2, Deadline::where('vehicle_id', $vehicle->id)->count());
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $current->id,
+            'last_mileage' => 95000,
+        ]);
+    }
+
     // VALIDAZIONE DEI CAMPI OBBLIGATORI
 
     public function test_deadline_type_is_required(): void
