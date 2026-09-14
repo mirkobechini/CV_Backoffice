@@ -54,17 +54,29 @@
                 </div>
             </div>
             <div class="filters">
-                <form action="{{ route('admin.maintenance-records.index') }}" method="GET" class="search">
-                    @foreach (request()->except('q', 'page') as $key => $value)
+                <form action="{{ route('admin.maintenance-records.index') }}" method="GET" class="filters"
+                    style="align-items:center;">
+                    @foreach (request()->except('q', 'page', 'vehicle_id') as $key => $value)
                         <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endforeach
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="q" placeholder="{{ __('cerca veicolo o descrizione') }}"
-                        value="{{ request('q') }}">
-                    @if (request('q'))
-                        <a href="{{ route('admin.maintenance-records.index') }}" class="clear-search"><i
-                                class="fa-solid fa-xmark"></i></a>
-                    @endif
+                    <select name="vehicle_id" class="select" style="width:auto;" onchange="this.form.submit()">
+                        <option value="">{{ __('Tutti i veicoli') }}</option>
+                        @foreach ($vehicles as $vehicleOption)
+                            <option value="{{ $vehicleOption->id }}"
+                                {{ (string) $vehicleFilter === (string) $vehicleOption->id ? 'selected' : '' }}>
+                                {{ $vehicleOption->internal_code }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="q" placeholder="{{ __('cerca veicolo o descrizione') }}"
+                            value="{{ request('q') }}">
+                        @if (request('q'))
+                            <a href="{{ route('admin.maintenance-records.index') }}" class="clear-search"><i
+                                    class="fa-solid fa-xmark"></i></a>
+                        @endif
+                    </div>
                 </form>
                 <a href="{{ route('admin.maintenance-records.calendar') }}" class="btn">
                     <i class="fa-solid fa-calendar"></i> {{ __('Calendario') }}
@@ -137,8 +149,16 @@
                                     ->where('itemable_type', \App\Models\Issue::class)
                                     ->map(fn($item) => $item->itemable)
                                     ->filter();
+                                $linkedDeadlines = $record->items
+                                    ->where('itemable_type', \App\Models\Deadline::class)
+                                    ->map(fn($item) => $item->itemable)
+                                    ->filter();
                                 $issueDescriptions = $linkedIssues->pluck('description')->implode(', ');
-                                $description = $issueDescriptions !== '' ? $issueDescriptions : $record->activity_type ?? __('N/D');
+                                $deadlineTypes = $linkedDeadlines->pluck('type')->unique()->implode(', ');
+                                $description = collect([$issueDescriptions, $deadlineTypes])
+                                    ->filter(fn($part) => $part !== '')
+                                    ->implode(' · ');
+                                $description = $description !== '' ? $description : $record->activity_type ?? __('N/D');
                             @endphp
                             <tr>
                                 <td>
@@ -161,6 +181,9 @@
                                         @endif
                                         @if ($linkedIssues->isNotEmpty())
                                             <span class="badge b-red">{{ __('Guasto') }}</span>
+                                        @endif
+                                        @if ($linkedDeadlines->isNotEmpty())
+                                            <span class="badge b-blue">{{ __('Scadenza') }}</span>
                                         @endif
                                     </div>
                                 </td>
