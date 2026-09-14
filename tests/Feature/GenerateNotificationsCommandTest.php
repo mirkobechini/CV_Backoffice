@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Notification;
@@ -27,6 +28,19 @@ class GenerateNotificationsCommandTest extends TestCase
         return User::factory()->withRole('admin')->create();
     }
 
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * il veicolo deve appartenervi per essere considerato dal comando
+     * (le sue query sono filtrate per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
+
     private function vehicle(): Vehicle
     {
         return Vehicle::create([
@@ -35,6 +49,7 @@ class GenerateNotificationsCommandTest extends TestCase
             'brand' => 'Fiat',
             'model' => 'Ducato',
             'immatricolation_date' => Carbon::today()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
         ]);
     }
 
@@ -208,6 +223,42 @@ class GenerateNotificationsCommandTest extends TestCase
 
         $this->artisan('app:generate-notifications');
 
+        Mail::assertNothingSent();
+    }
+
+    public function test_capo_is_not_notified_about_another_groups_deadline(): void
+    {
+        // Prima del fix le query del comando non erano filtrate per gruppo:
+        // un capo/sottocapo veniva notificato (e volendo anche mandato via
+        // email) di scadenze/guasti/attrezzature/appuntamenti di QUALSIASI
+        // gruppo, non solo del proprio.
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $capoA = User::factory()->create();
+        $groupA->addUser($capoA, Group::ROLE_CAPO);
+        NotificationSetting::create(['user_id' => $capoA->id, 'key' => 'report_email', 'value' => 'capoA@example.com']);
+
+        $vehicleB = Vehicle::create([
+            'license_plate' => 'EF456GH',
+            'internal_code' => '0002',
+            'brand' => 'Fiat',
+            'model' => 'Ducato',
+            'immatricolation_date' => Carbon::today()->subYears(2),
+            'group_id' => $groupB->id,
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicleB->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => Carbon::today()->addDays(5),
+            'status' => Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+
+        Mail::fake();
+
+        $this->artisan('app:generate-notifications --email');
+
+        $this->assertDatabaseCount('notifications', 0);
         Mail::assertNothingSent();
     }
 }

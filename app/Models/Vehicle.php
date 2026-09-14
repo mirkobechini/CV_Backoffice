@@ -108,8 +108,19 @@ class Vehicle extends Model
             return $query;
         }
 
-        $groupId = $user->activeGroup()?->id;
+        return $query->forGroup($user->activeGroup()?->id);
+    }
 
+    /**
+     * Filtra i veicoli per un gruppo esplicito, indipendentemente
+     * dall'utente autenticato. Serve ai comandi da console (notifiche/report
+     * schedulati) che iterano su più utenti senza un guard HTTP: lì
+     * Auth::user() è sempre null, quindi scopeForCurrentUser() non
+     * applicherebbe alcun filtro. Nessun gruppo (null) = nessun filtro,
+     * stessa semantica di scopeForCurrentUser().
+     */
+    public function scopeForGroup(Builder $query, ?int $groupId): Builder
+    {
         if ($groupId) {
             return $query->where('vehicles.group_id', $groupId);
         }
