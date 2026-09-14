@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.11] - 2026-09-14
+
+### Fixed
+
+- Creare una "Nuova scadenza" Revisione Ministeriale/Impianto Ossigeno mentre ce n'era già una in attesa la rinnovava automaticamente e ne creava una nuova (futura) — corretto — ma il km inserito nel form finiva sulla scadenza NUOVA invece che su quella appena rinnovata, a cui quel km si riferisce davvero.
+
+### Added
+
+- Nuovo comando `php artisan deadlines:fix-misattached-revision-mileage [--vehicle=ID] [--apply]` per correggere i dati già esistenti affetti da questo bug.
+
 ## [v1.2.10] - 2026-09-14
 
 ### Added
