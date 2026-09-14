@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.3] - 2026-09-14
+
+### Fixed
+
+- Il badge guasti aperti nella pagina veicolo mostrava il conteggio due volte (es. "⚠ 3 3 guasto/i aperto/i").
+
 ## [v1.2.2] - 2026-09-14
 
 ### Fixed
