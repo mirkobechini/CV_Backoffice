@@ -15,12 +15,6 @@
 
             return route('admin.deadlines.index', $query);
         };
-        $typeGroupToggleUrl = function () use ($groupBy) {
-            $query = request()->query();
-            $query['group_by'] = $groupBy === 'type' ? 'none' : 'type';
-
-            return route('admin.deadlines.index', $query);
-        };
         $statusFilterUrl = fn($status) => route('admin.deadlines.index', array_merge(request()->except(['status_filter', 'page']), $status === 'all' ? [] : ['status_filter' => $status]));
     @endphp
 
@@ -43,9 +37,17 @@
             </div>
             <div class="filters">
                 <form action="{{ route('admin.deadlines.index') }}" method="GET" class="search">
-                    @foreach (request()->except('q', 'page') as $key => $value)
+                    @foreach (request()->except('q', 'page', 'type_filter') as $key => $value)
                         <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endforeach
+                    <select name="type_filter" class="select" style="width:auto;" onchange="this.form.submit()">
+                        <option value="all">{{ __('Tutte le tipologie') }}</option>
+                        @foreach ($types as $type)
+                            <option value="{{ $type }}" {{ $typeFilter === $type ? 'selected' : '' }}>
+                                {{ $type }}
+                            </option>
+                        @endforeach
+                    </select>
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="q" placeholder="{{ __('cerca tipologia o veicolo') }}"
                         value="{{ request('q') }}">
@@ -69,9 +71,9 @@
                     <tr>
                         <th>
                             <div class="th-wrap"><span>{{ __('Tipologia') }}</span>
-                                <a href="{{ $typeGroupToggleUrl() }}"
-                                    class="mini {{ $groupBy === 'type' ? 'on' : '' }}"
-                                    title="{{ __('Raggruppa per tipologia') }}">Grp</a>
+                                <a href="{{ $groupToggleUrl('type') }}"
+                                    class="mini {{ in_array('type', $groupByKeys, true) ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per tipologia (combinabile con veicolo)') }}">Grp</a>
                                 <a href="{{ $sortToggleUrl('type') }}"
                                     class="mini {{ $sortBy === 'type' ? 'on' : '' }}"
                                     title="{{ __('Ordina per tipologia') }}">{{ $sortIcon('type') }}</a>
@@ -97,8 +99,8 @@
                         <th>
                             <div class="th-wrap"><span>{{ __('Veicolo') }}</span>
                                 <a href="{{ $groupToggleUrl('vehicle') }}"
-                                    class="mini {{ $groupBy === 'vehicle' ? 'on' : '' }}"
-                                    title="{{ __('Raggruppa per veicolo') }}">Grp</a>
+                                    class="mini {{ in_array('vehicle', $groupByKeys, true) ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per veicolo (combinabile con tipologia)') }}">Grp</a>
                                 <a href="{{ $sortToggleUrl('vehicle') }}"
                                     class="mini {{ $sortBy === 'vehicle' ? 'on' : '' }}"
                                     title="{{ __('Ordina per veicolo') }}">{{ $sortIcon('vehicle') }}</a>
@@ -108,70 +110,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php
-                        $groups = $groupBy !== null ? $groupedDeadlines : collect([__('Tutte le scadenze') => $deadlines]);
-                        $badgeClass = fn($color) => match ($color) {
-                            'red' => 'b-red',
-                            'yellow' => 'b-amber',
-                            'green' => 'b-green',
-                            default => 'b-gray',
-                        };
-                    @endphp
-
-                    @forelse ($groups as $groupLabel => $groupDeadlines)
-                        @if ($groupBy !== null)
-                            <tr class="group-row">
-                                <td colspan="5">{{ $groupLabel }} ({{ $groupDeadlines->count() }})</td>
-                            </tr>
-                        @endif
-
-                        @foreach ($groupDeadlines as $deadline)
-                            <tr>
-                                <td>
-                                    <div class="type-cell">
-                                        <span class="dot-type leg-{{ $deadline->type_slug }}"></span>
-                                        <span class="type-name">{{ $deadline->type }}</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    <div class="dl-badges">
-                                        @if ($deadline->date_remaining_label)
-                                            <span
-                                                class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->date_remaining_label }}</span>
-                                        @endif
-                                        @if ($deadline->km_remaining_label)
-                                            <span
-                                                class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->km_remaining_label }}</span>
-                                        @endif
-                                        @if (!$deadline->date_remaining_label && !$deadline->km_remaining_label)
-                                            <span class="badge b-gray">—</span>
-                                        @endif
-                                    </div>
-                                </td>
-                                <td><span
-                                        class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->status_label }}</span>
-                                </td>
-                                <td class="code">{{ $deadline->vehicle->internal_code ?? 'N/A' }}</td>
-                                <td>
-                                    <div class="row-actions">
-                                        <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="mini-btn"
-                                            title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                        <a href="{{ route('admin.deadlines.edit', $deadline->id) }}" class="mini-btn"
-                                            title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#confirmDeleteModal-{{ $deadline->id }}"><i
-                                                class="fa-solid fa-trash"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                            <x-admin.delete-modal type="deadline" :object="$deadline" />
-                        @endforeach
-                    @empty
+                    @if ($deadlines->isEmpty())
                         <tr>
                             <td colspan="5" class="empty">{{ __('Nessuna scadenza trovata.') }}</td>
                         </tr>
-                    @endforelse
+                    @elseif (!empty($groupByKeys))
+                        @include('admin.deadlines._group', ['groups' => $groupedDeadlines, 'depth' => 0])
+                    @else
+                        @foreach ($deadlines as $deadline)
+                            @include('admin.deadlines._row', ['deadline' => $deadline])
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>

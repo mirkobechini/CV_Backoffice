@@ -15,6 +15,18 @@ class DeadlineController extends Controller
 {
     use SortableAndGroupable;
 
+    /**
+     * Tipologie valide per il filtro "tipo" dell'elenco, nello stesso ordine
+     * mostrato nei form di creazione/modifica.
+     */
+    private const TYPES = [
+        'Assicurazione',
+        Deadline::TYPE_MINISTERIAL,
+        Deadline::TYPE_OXYGEN,
+        Deadline::TYPE_TAGLIANDO,
+        Deadline::TYPE_CINGHIA,
+    ];
+
     public function __construct(
         private readonly DeadlineService $deadlineService,
     ) {
@@ -27,28 +39,51 @@ class DeadlineController extends Controller
     public function index(Request $request)
     {
         $validated = $request->validate([
-            'group_by' => 'nullable|in:type,status,vehicle,date,none',
+            // Lista di chiavi separate da virgola (es. "vehicle,type"): permette
+            // di combinare più raggruppamenti annidati invece di uno solo.
+            'group_by' => 'nullable|string',
             'sort_by' => 'nullable|in:type,status,vehicle,date',
             'sort_dir' => 'nullable|in:asc,desc',
             'latest_revision_only' => 'nullable|in:0,1',
             'status_filter' => 'nullable|in:all,expired,pending,valid,renewed',
+            'type_filter' => 'nullable|in:all,' . implode(',', self::TYPES),
         ]);
 
         // Default atteso alla prima visita (nessun filtro in query string):
         // raggruppato per tipo e limitato all'ultima revisione per veicolo.
         // "none"/"0" espliciti nella query string permettono di disattivarli.
-        $groupBy = $validated['group_by'] ?? ($request->has('group_by') ? null : 'type');
-        if ($groupBy === 'none') {
-            $groupBy = null;
+        $rawGroupBy = $validated['group_by'] ?? ($request->has('group_by') ? null : 'type');
+        $groupByKeys = [];
+        if ($rawGroupBy && $rawGroupBy !== 'none') {
+            $groupByKeys = array_values(array_intersect(
+                ['type', 'status', 'vehicle', 'date'],
+                array_unique(array_filter(explode(',', $rawGroupBy)))
+            ));
         }
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
         $latestRevisionOnly = $request->has('latest_revision_only') ? $validated['latest_revision_only'] === '1' : true;
         $statusFilter = $validated['status_filter'] ?? 'all';
+        $typeFilter = $validated['type_filter'] ?? 'all';
+        $search = $request->get('q');
 
         $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
-            ->search($request->get('q'));
+            ->whereHas('vehicle', fn($q) => $q->forCurrentUser());
+
+        // Deadline::$searchable copre solo type/status: il campo cerca
+        // "tipologia o veicolo" (vedi placeholder in vista), quindi il
+        // veicolo va cercato esplicitamente sulla relazione, non tramite lo
+        // scope search() generico che non risale mai al veicolo.
+        if ($search) {
+            $deadlinesQuery->where(function ($sub) use ($search) {
+                $sub->where('type', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhereHas('vehicle', function ($vq) use ($search) {
+                        $vq->where('internal_code', 'like', "%{$search}%")
+                            ->orWhere('license_plate', 'like', "%{$search}%");
+                    });
+            });
+        }
 
         // Se latestRevisionOnly, teniamo solo l'ultima scadenza per
         // veicolo+tipo: si applica a tutte le tipologie (non solo
@@ -72,6 +107,10 @@ class DeadlineController extends Controller
             $deadlines = $deadlines->filter(fn(Deadline $d) => $d->automatic_status === $statusFilter)->values();
         }
 
+        if ($typeFilter !== 'all') {
+            $deadlines = $deadlines->filter(fn(Deadline $d) => $d->type === $typeFilter)->values();
+        }
+
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
             'type' => fn(Deadline $d) => $d->type,
             'status' => fn(Deadline $d) => $d->automatic_status,
@@ -79,23 +118,31 @@ class DeadlineController extends Controller
             'date' => fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
         ]);
 
-        $groupedDeadlines = $this->applyGrouping($deadlines, $groupBy, function (Deadline $deadline) use ($groupBy) {
-            return match ($groupBy) {
-                'type' => $deadline->type ?? 'N/A',
-                'status' => match ($deadline->automatic_status) {
-                    Deadline::STATUS_RENEWED => 'Rinnovata',
-                    Deadline::STATUS_PENDING => 'In scadenza',
-                    Deadline::STATUS_EXPIRED => 'Scaduta',
-                    Deadline::STATUS_VALID => 'Valida',
-                    default => 'Sconosciuto',
-                },
-                'vehicle' => $deadline->vehicle?->internal_code ?? 'N/A',
-                'date' => $deadline->due_date_formatted ?? 'N/A',
-            };
-        });
+        // Ogni chiave di raggruppamento attiva ha il suo callback etichetta;
+        // Collection::groupBy() accetta un array di callback e produce da
+        // solo un raggruppamento annidato (veicolo > tipo, tipo > veicolo,
+        // ecc. nell'ordine in cui le chiavi sono state attivate), invece di
+        // poterne applicare uno solo alla volta.
+        $groupLabelCallbacks = [
+            'type' => fn(Deadline $deadline) => $deadline->type ?? 'N/A',
+            'status' => fn(Deadline $deadline) => match ($deadline->automatic_status) {
+                Deadline::STATUS_RENEWED => 'Rinnovata',
+                Deadline::STATUS_PENDING => 'In scadenza',
+                Deadline::STATUS_EXPIRED => 'Scaduta',
+                Deadline::STATUS_VALID => 'Valida',
+                default => 'Sconosciuto',
+            },
+            'vehicle' => fn(Deadline $deadline) => $deadline->vehicle?->internal_code ?? 'N/A',
+            'date' => fn(Deadline $deadline) => $deadline->due_date_formatted ?? 'N/A',
+        ];
 
-        return view('admin.deadlines.index', compact('deadlines', 'groupBy', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly', 'statusFilter') + [
-            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.deadlines.index'),
+        $groupedDeadlines = empty($groupByKeys)
+            ? null
+            : $deadlines->groupBy(array_map(fn($key) => $groupLabelCallbacks[$key], $groupByKeys));
+
+        return view('admin.deadlines.index', compact('deadlines', 'groupByKeys', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly', 'statusFilter', 'typeFilter') + [
+            'types' => self::TYPES,
+            'groupToggleUrl' => fn($f) => $this->multiGroupToggleUrl($f, $groupByKeys, 'admin.deadlines.index'),
             'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
             'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);

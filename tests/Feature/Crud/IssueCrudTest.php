@@ -198,4 +198,24 @@ class IssueCrudTest extends TestCase
         $response->assertSessionHasErrors(['description']);
         $this->assertDatabaseCount('issues', 0); // Conferma che non venga creato alcun issue senza descrizione.
     }
+
+    public function test_search_finds_issue_by_vehicle_internal_code(): void
+    {
+        // Il campo cerca "veicolo o descrizione" (vedi placeholder), ma
+        // Issue::$searchable copre solo description/status: cercare il
+        // codice del veicolo non trovava nulla.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Rumore al motore',
+            'status' => 'open',
+            'event_date' => '2025-01-02',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.issues.index', ['q' => $vehicle->internal_code]));
+
+        $response->assertOk();
+        $response->assertSee('Rumore al motore');
+    }
 }
