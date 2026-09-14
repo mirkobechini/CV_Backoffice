@@ -8,6 +8,11 @@ use Carbon\Carbon;
 
 class DeadlineService
 {
+    public function __construct(
+        private readonly MileageLogService $mileageLogService,
+    ) {
+    }
+
     /**
      * Tipi periodici per cui l'aggiunta di una nuova scadenza rinnova
      * automaticamente quella precedente dello stesso veicolo.
@@ -56,6 +61,11 @@ class DeadlineService
                 'status' => Deadline::STATUS_RENEWED,
             ]);
         }
+
+        // Il km della scadenza è una lettura reale del contachilometri alla
+        // sua data: la registriamo nello storico chilometraggi del veicolo
+        // (vedi MileageLogService), non solo sul singolo record.
+        $this->mileageLogService->recordReading($vehicle, $deadline->due_date, $deadline->last_mileage);
 
         return $deadline;
     }
@@ -134,6 +144,11 @@ class DeadlineService
         if ($justRenewed && in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
             $this->createNextDeadlineAfterRenewal($deadline, $vehicle);
         }
+
+        // Il km della scadenza è una lettura reale del contachilometri alla
+        // sua data: la registriamo nello storico chilometraggi del veicolo
+        // (vedi MileageLogService), non solo sul singolo record.
+        $this->mileageLogService->recordReading($vehicle, $deadline->due_date, $deadline->last_mileage);
 
         return $deadline;
     }

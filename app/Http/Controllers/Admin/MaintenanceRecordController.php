@@ -13,6 +13,7 @@ use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\Vehicle;
 use App\Services\DeadlineService;
+use App\Services\MileageLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class MaintenanceRecordController extends Controller
 
     public function __construct(
         private readonly DeadlineService $deadlineService,
+        private readonly MileageLogService $mileageLogService,
     ) {
         $this->authorizeResource(MaintenanceRecord::class, 'maintenanceRecord');
     }
@@ -508,6 +510,18 @@ class MaintenanceRecordController extends Controller
             $deadline->last_mileage = $maintenanceRecord->mileage_at_service;
         }
         $deadline->save();
+
+        // Il km rilevato all'appuntamento è una lettura reale del
+        // contachilometri: la registriamo nello storico chilometraggi del
+        // veicolo (vedi MileageLogService), non solo sulla scadenza. Una
+        // sola chiamata qui copre tutti i tipi (ministeriale/ossigeno/
+        // tagliando/cinghia), a prescindere da dove il km finisce salvato
+        // più sotto.
+        $this->mileageLogService->recordReading(
+            $maintenanceRecord->vehicle,
+            $maintenanceRecord->return_date ?? Carbon::today(),
+            $maintenanceRecord->mileage_at_service,
+        );
 
         // Il tagliando ha una logica dedicata: la scadenza temporale
         // parte dalla data di RIENTRO e la scadenza km dai km

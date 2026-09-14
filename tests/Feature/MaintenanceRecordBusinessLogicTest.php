@@ -1003,4 +1003,37 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
             'status' => 'pending',
         ]);
     }
+
+    public function test_completing_appointment_records_mileage_in_vehicle_history(): void
+    {
+        // Il km rilevato all'appuntamento restava isolato sulla scadenza
+        // (last_mileage): non veniva mai registrato come lettura ufficiale
+        // dello storico chilometraggi del veicolo.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'status' => 'pending',
+            'due_date' => '2024-06-30',
+        ]);
+
+        $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'deadline_ids' => [$deadline->id],
+            'completed_deadline_ids' => [$deadline->id],
+            'appointment_date' => '2024/06/18',
+            'return_date' => '2024/06/18',
+            'mileage_at_service' => 72500,
+        ]);
+
+        $this->assertDatabaseHas('mileage_logs', [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2024-06-18 00:00:00',
+            'mileage' => 72500,
+        ]);
+    }
 }
