@@ -4,6 +4,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.6] - 2026-09-14
+
+### Added
+
+- Nuovo comando `php artisan mileage-logs:backfill [--vehicle=ID] [--apply]`: registra nello storico chilometraggi le letture km già presenti su scadenze e appuntamenti ma mai riportate lì, per dati inseriti prima che questo collegamento esistesse.
+
+### Fixed
+
+- Il km inserito su una scadenza (Revisione/Tagliando/Cinghia) o su un appuntamento completato non veniva mai registrato nello storico chilometraggi del veicolo: restava isolato in quel record, non compariva come "ultimo km" nell'indice veicoli e — soprattutto — non alimentava il calcolo automatico dello stato scaduto/in scadenza per tagliando/cinghia, che confronta il km con l'ultimo letto nello storico. Ora ogni lettura viene registrata automaticamente lì, rispettando la stessa coerenza cronologica già applicata all'inserimento manuale.
+- Il completamento di un appuntamento in officina aveva una propria logica di rinnovo scadenze completamente separata da quella del form di modifica, mai coperta dalle guardie anti-duplicati introdotte in precedenza: non collegava mai la scadenza successiva a quella rinnovata (renews_deadline_id), e non riportava il km rilevato all'appuntamento su ministeriale/ossigeno (solo su tagliando/cinghia). Unificata con la stessa logica del form di modifica.
+
 ## [v1.2.5] - 2026-09-14
 
 ### Fixed
