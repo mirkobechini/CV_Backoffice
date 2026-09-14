@@ -2004,6 +2004,23 @@ textarea.input {
     font-size: 12px;
     color: var(--text);
     padding: 8px 12px;
+    border-top: 2px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+/* Sotto-gruppo annidato (es. tipologia dentro veicolo, o viceversa):
+   stile più leggero e senza bordo di stacco, per restare chiaramente
+   distinto dall'intestazione di gruppo principale sopra di lui invece di
+   sembrare un secondo gruppo di primo livello. */
+.group-row.group-row-sub td {
+    background: var(--surface-2);
+    font-weight: 600;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    border-top: none;
+    text-transform: none;
+    letter-spacing: normal;
 }
 
 /* =============================================

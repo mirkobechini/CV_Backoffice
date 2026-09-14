@@ -578,5 +578,9 @@ class DeadlineCrudTest extends TestCase
         $response->assertOk();
         // Livello esterno: etichetta del veicolo. Livello interno: tipologia.
         $response->assertSeeInOrder([$vehicleA->internal_code, 'Assicurazione']);
+        // Il sotto-gruppo annidato ha uno stile distinto da quello del
+        // gruppo principale, per non essere scambiato per un secondo
+        // gruppo di primo livello.
+        $response->assertSee('group-row-sub', false);
     }
 }
