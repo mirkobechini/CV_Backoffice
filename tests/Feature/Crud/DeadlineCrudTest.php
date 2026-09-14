@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Deadline;
 use App\Models\Group;
+use App\Models\MileageLog;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -582,5 +583,58 @@ class DeadlineCrudTest extends TestCase
         // gruppo principale, per non essere scambiato per un secondo
         // gruppo di primo livello.
         $response->assertSee('group-row-sub', false);
+    }
+
+    public function test_setting_mileage_on_a_deadline_records_it_in_the_vehicle_mileage_history(): void
+    {
+        // Il km inserito su una scadenza restava isolato nel record: non
+        // compariva come "ultimo km" del veicolo né alimentava il calcolo
+        // automatico dello stato per tagliando/cinghia.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'due_date' => '2025-06',
+            'last_mileage' => 45000,
+            'interval_km' => 20000,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('mileage_logs', [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-06-30 00:00:00',
+            'mileage' => 45000,
+        ]);
+    }
+
+    public function test_mileage_recorded_from_a_deadline_does_not_override_a_conflicting_later_reading(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        // Lettura successiva già presente, con km più basso.
+        MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-08-01',
+            'mileage' => 40000,
+        ]);
+
+        // Una scadenza con data precedente ma km superiore al km futuro
+        // registrato è incoerente con la cronologia: va scartata in
+        // silenzio, non deve rompere il salvataggio della scadenza né
+        // sovrascrivere lo storico.
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'due_date' => '2025-06',
+            'last_mileage' => 45000,
+            'interval_km' => 20000,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseMissing('mileage_logs', ['mileage' => 45000]);
+        $this->assertDatabaseHas('mileage_logs', ['vehicle_id' => $vehicle->id, 'mileage' => 40000]);
     }
 }
