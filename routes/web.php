@@ -109,6 +109,9 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
             ->name('vehicles.pdf');
 
+        Route::post('vehicles/{vehicle}/timing-belt-deadline', [VehicleController::class, 'createTimingBeltDeadline'])
+            ->name('vehicles.timing-belt-deadline.create');
+
         Route::get('activity-log', [ActivityLogController::class, 'index'])
             ->name('activity-log.index');
 

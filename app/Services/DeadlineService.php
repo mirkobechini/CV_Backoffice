@@ -85,6 +85,29 @@ class DeadlineService
     }
 
     /**
+     * Crea la scadenza iniziale della cinghia di distribuzione per un
+     * veicolo, calcolata dalla sua data di immatricolazione (10 anni/
+     * 100.000 km, il primo dei due). Stessa logica usata da VehicleObserver
+     * alla creazione del veicolo (se già dotato di cinghia); esposta
+     * qui perché serve anche quando il flag viene attivato in un secondo
+     * momento, modificando un veicolo già esistente.
+     */
+    public function createInitialTimingBeltDeadline(Vehicle $vehicle): Deadline
+    {
+        $dueDate = Carbon::parse($vehicle->immatricolation_date)
+            ->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS);
+
+        return Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'due_date' => $dueDate->toDateString(),
+            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+            'last_mileage' => 0,
+            'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+        ]);
+    }
+
+    /**
      * Trova la scadenza "attuale" (non ancora rinnovata) dello stesso tipo
      * per il veicolo, quella che una nuova scadenza andrebbe a sostituire.
      */

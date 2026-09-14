@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.9] - 2026-09-14
+
+### Added
+
+- Modificare "dotato di cinghia di distribuzione" su un veicolo esistente ora mostra un banner di conferma sulla pagina veicolo: se attivato e non esiste ancora una scadenza cinghia, propone di crearla (calcolata dalla data di immatricolazione); se disattivato ed esiste una scadenza attiva, propone di eliminarla. Prima il flag non aveva alcun effetto se non alla creazione del veicolo.
+- Nuovo comando `php artisan mileage-logs:clean-tagliando-artifacts [--vehicle=ID] [--apply]`: trova ed elimina le righe dello storico chilometraggi create dal bug corretto in v1.2.8 (km di tagliando/cinghia abbinato erroneamente alla data futura di scadenza), per chi avesse già lanciato `mileage-logs:backfill --apply` prima di quel fix.
+
 ## [v1.2.8] - 2026-09-14
 
 ### Fixed

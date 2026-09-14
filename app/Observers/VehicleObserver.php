@@ -4,11 +4,17 @@ namespace App\Observers;
 
 use App\Models\Deadline;
 use App\Models\Vehicle;
+use App\Services\DeadlineService;
 use Carbon\Carbon;
 
 class VehicleObserver
 {
     private const MAX_BACKFILL_ITERATIONS = 10;
+
+    public function __construct(
+        private readonly DeadlineService $deadlineService,
+    ) {
+    }
 
     public function created(Vehicle $vehicle): void
     {
@@ -114,17 +120,7 @@ class VehicleObserver
             return;
         }
 
-        $dueDate = Carbon::parse($vehicle->immatricolation_date)
-            ->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS);
-
-        Deadline::create([
-            'vehicle_id' => $vehicle->id,
-            'type' => Deadline::TYPE_CINGHIA,
-            'due_date' => $dueDate->toDateString(),
-            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
-            'last_mileage' => 0,
-            'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
-        ]);
+        $this->deadlineService->createInitialTimingBeltDeadline($vehicle);
     }
 
     private function createDeadlineIfMissing(Vehicle $vehicle, string $type, Carbon $dueDate, bool $renewed = false): void
