@@ -4,6 +4,19 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.4] - 2026-09-14
+
+### Added
+
+- Nuovo comando `php artisan deadlines:backfill-renewal-links [--vehicle=ID] [--apply]`: collega retroattivamente le scadenze periodiche esistenti (Revisione Ministeriale/Impianto Ossigeno/Tagliando) alla scadenza che rinnovano (`renews_deadline_id`), per dati creati prima che questo collegamento esistesse. Anteprima di default, `--apply` per applicare davvero, `--vehicle` per limitare a un veicolo.
+- Elenco scadenze: filtro per tipologia (dropdown, accanto ai chip di stato già esistenti).
+- Elenco scadenze: i raggruppamenti "Tipologia" e "Veicolo" ("Grp" in colonna) ora sono combinabili invece di escludersi a vicenda — es. veicolo poi tipologia, annidati.
+
+### Fixed
+
+- La ricerca in Scadenze e Guasti non trovava nulla cercando un veicolo per codice/targa, nonostante il placeholder lo promettesse esplicitamente: cercava solo nei campi propri (tipo/stato o descrizione/stato), mai sul veicolo collegato.
+- Scheda veicolo, card "Guasti": i guasti aperti/in lavorazione ora sono sempre in cima alla lista, indipendentemente dalla data (prima erano ordinati solo per data, e uno aperto più vecchio poteva finire sotto uno chiuso più recente).
+
 ## [v1.2.3] - 2026-09-14
 
 ### Fixed
