@@ -34,25 +34,31 @@ class GenerateNotifications extends Command
 
         $adminUsers = User::whereHas('groups', function ($q) {
             $q->whereIn('group_user.role', [Group::ROLE_CAPO, Group::ROLE_SOTTOCAPO]);
-        })->get();
+        })->with('notificationSettings')->get();
 
         foreach ($adminUsers as $user) {
             $reminderDays = (int) $user->notificationSetting('reminder_days_before', 7);
+            // Nessun Auth::user() qui (comando da console): il gruppo va
+            // passato esplicitamente, altrimenti ogni query sotto tornerebbe
+            // non filtrata e ogni capo/sottocapo verrebbe notificato (anche
+            // via email) di guasti/scadenze/attrezzature/appuntamenti di
+            // gruppi a cui non appartiene.
+            $groupId = $user->activeGroup()?->id;
 
             if ($user->notificationSetting('notify_on_deadline', true)) {
-                $this->notifyUpcomingDeadlines($user, $reminderDays, $notifications, $emailsByUser, $created);
+                $this->notifyUpcomingDeadlines($user, $groupId, $reminderDays, $notifications, $emailsByUser, $created);
             }
 
             if ($user->notificationSetting('notify_on_issue', true)) {
-                $this->notifyOpenIssues($user, $notifications, $emailsByUser, $created);
+                $this->notifyOpenIssues($user, $groupId, $notifications, $emailsByUser, $created);
             }
 
             if ($user->notificationSetting('notify_on_equipment', true)) {
-                $this->notifyExpiringEquipment($user, $reminderDays, $notifications, $emailsByUser, $created);
+                $this->notifyExpiringEquipment($user, $groupId, $reminderDays, $notifications, $emailsByUser, $created);
             }
 
             if ($user->notificationSetting('notify_on_maintenance', true)) {
-                $this->notifyUpcomingAppointments($user, $reminderDays, $notifications, $emailsByUser, $created);
+                $this->notifyUpcomingAppointments($user, $groupId, $reminderDays, $notifications, $emailsByUser, $created);
             }
         }
 
@@ -77,9 +83,10 @@ class GenerateNotifications extends Command
         return Command::SUCCESS;
     }
 
-    private function notifyUpcomingDeadlines(User $user, int $reminderDays, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    private function notifyUpcomingDeadlines(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, int &$created): void
     {
         $upcomingDeadlines = Deadline::with('vehicle')
+            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
             ->where('is_renewed', false)
             ->whereNotNull('due_date')
             ->whereBetween('due_date', [today(), today()->addDays($reminderDays)])
@@ -102,9 +109,12 @@ class GenerateNotifications extends Command
         }
     }
 
-    private function notifyOpenIssues(User $user, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    private function notifyOpenIssues(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, int &$created): void
     {
-        $openIssues = Issue::with('vehicle')->open()->get();
+        $openIssues = Issue::with('vehicle')
+            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+            ->open()
+            ->get();
 
         foreach ($openIssues as $issue) {
             $vehicleCode = $issue->vehicle?->internal_code ?? 'N/A';
@@ -123,9 +133,17 @@ class GenerateNotifications extends Command
         }
     }
 
-    private function notifyExpiringEquipment(User $user, int $reminderDays, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    private function notifyExpiringEquipment(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, int &$created): void
     {
-        $expiringEquipment = Equipment::with('vehicle')->expiringSoon($reminderDays)->get();
+        // L'attrezzatura non assegnata a un veicolo non ha un gruppo
+        // proprio: resta inclusa, come nell'indice attrezzature.
+        $expiringEquipment = Equipment::with('vehicle')
+            ->where(function ($q) use ($groupId) {
+                $q->whereDoesntHave('vehicle')
+                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
+            })
+            ->expiringSoon($reminderDays)
+            ->get();
 
         foreach ($expiringEquipment as $equipment) {
             $vehicleCode = $equipment->vehicle?->internal_code ?? 'N/A';
@@ -147,9 +165,10 @@ class GenerateNotifications extends Command
     /**
      * Appuntamenti (officina) in arrivo e non ancora conclusi.
      */
-    private function notifyUpcomingAppointments(User $user, int $reminderDays, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    private function notifyUpcomingAppointments(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, int &$created): void
     {
         $upcomingAppointments = MaintenanceRecord::with('vehicle')
+            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
             ->whereNull('return_date')
             ->whereNotNull('appointment_date')
             ->whereBetween('appointment_date', [today(), today()->addDays($reminderDays)])

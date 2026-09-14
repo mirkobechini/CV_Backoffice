@@ -45,7 +45,8 @@ class MaintenanceRecordController extends Controller
         $statusFilter = $validated['status_filter'] ?? 'all';
         $q = $validated['q'] ?? null;
 
-        $query = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable']);
+        $query = MaintenanceRecord::with(['vehicle.brand', 'vehicle.carModel', 'provider', 'items.itemable'])
+            ->whereHas('vehicle', fn($vq) => $vq->forCurrentUser());
 
         $query->when($statusFilter === 'scheduled', fn($qr) => $qr->whereNull('return_date'))
             ->when($statusFilter === 'completed', fn($qr) => $qr->whereNotNull('return_date'))
@@ -346,6 +347,11 @@ class MaintenanceRecordController extends Controller
     public function destroy(Request $request, MaintenanceRecord $maintenanceRecord)
     {
         $this->authorize('delete', $maintenanceRecord);
+
+        // Come in DeadlineController::destroy: se "back" punta alla show
+        // dell'appuntamento appena eliminato, il redirect darebbe 404.
+        $showUrl = route('admin.maintenance-records.show', $maintenanceRecord);
+
         $maintenanceRecord->loadMissing('items.itemable');
 
         // I guasti in lavorazione tornano in open
@@ -411,7 +417,7 @@ class MaintenanceRecordController extends Controller
         }
 
         $back = $request->input('back');
-        if ($back) {
+        if ($back && ! str_starts_with($back, $showUrl)) {
             return redirect($back)->with('status', $message);
         }
 

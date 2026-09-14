@@ -8,8 +8,18 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PdfExportController extends Controller
 {
-    public function vehiclePdf(Vehicle $vehicle)
+    public function vehiclePdf(Request $request, Vehicle $vehicle)
     {
+        // Il binding di rotta risolve per id senza filtro di gruppo: senza
+        // questo controllo chiunque autenticato poteva scaricare la scheda
+        // PDF (guasti, scadenze, attrezzature, manutenzioni) di un veicolo
+        // di un altro gruppo indovinandone l'id.
+        $groupId = $request->user()->activeGroup()?->id;
+
+        if ($groupId && $vehicle->group_id !== $groupId) {
+            abort(404);
+        }
+
         $vehicle->load([
             'brand',
             'carModel',

@@ -50,7 +50,7 @@ class CsvExportController extends Controller
 
     private function exportIssues()
     {
-        $issues = Issue::with('vehicle')->get();
+        $issues = Issue::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Descrizione', 'Stato', 'Data Evento'];
         $rows = $issues->map(fn ($i) => [
@@ -65,7 +65,7 @@ class CsvExportController extends Controller
 
     private function exportDeadlines()
     {
-        $deadlines = Deadline::with('vehicle')->get();
+        $deadlines = Deadline::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Tipo', 'Data Scadenza', 'Stato', 'Rinnovata'];
         $rows = $deadlines->map(fn ($d) => [
@@ -81,7 +81,14 @@ class CsvExportController extends Controller
 
     private function exportEquipments()
     {
-        $equipments = Equipment::with(['vehicle', 'equipmentType'])->get();
+        // L'attrezzatura non assegnata a un veicolo non ha un gruppo proprio:
+        // resta inclusa, come nell'indice.
+        $equipments = Equipment::with(['vehicle', 'equipmentType'])
+            ->where(function ($q) {
+                $q->whereDoesntHave('vehicle')
+                    ->orWhereHas('vehicle', fn($vq) => $vq->forCurrentUser());
+            })
+            ->get();
 
         $headers = ['Veicolo', 'Tipo', 'Nome', 'Seriale', 'Data Revisione', 'Scadenza'];
         $rows = $equipments->map(fn ($e) => [
@@ -98,7 +105,7 @@ class CsvExportController extends Controller
 
     private function exportMaintenanceRecords()
     {
-        $records = MaintenanceRecord::with(['vehicle', 'provider'])->get();
+        $records = MaintenanceRecord::with(['vehicle', 'provider'])->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Fornitore', 'Data Appuntamento', 'Data Rientro', 'Tipo Attività', 'Km al Servizio'];
         $rows = $records->map(fn ($r) => [
@@ -115,7 +122,7 @@ class CsvExportController extends Controller
 
     private function exportMileageLogs()
     {
-        $logs = MileageLog::with('vehicle')->get();
+        $logs = MileageLog::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Data', 'Chilometri'];
         $rows = $logs->map(fn ($l) => [

@@ -83,18 +83,21 @@ class User extends Authenticatable
     /**
      * Legge una singola impostazione di notifica dell'utente, con un
      * valore di default se non è mai stata impostata.
+     *
+     * Usa la relazione (proprietà, non metodo) invece di una query diretta:
+     * se il chiamante ha già fatto with('notificationSettings') su più
+     * utenti (es. un comando schedulato che itera su tutti gli admin), le
+     * chiamate successive per lo stesso utente non generano query
+     * aggiuntive — altrimenti la relazione viene caricata una volta sola e
+     * riusata per le chiamate successive con chiavi diverse sullo stesso
+     * utente. Il cast booleano è già gestito da
+     * NotificationSetting::getValueAttribute().
      */
     public function notificationSetting(string $key, mixed $default = null): mixed
     {
-        $value = $this->notificationSettings()->where('key', $key)->value('value');
+        $setting = $this->notificationSettings->firstWhere('key', $key);
 
-        if ($value === null) {
-            return $default;
-        }
-
-        $booleanKeys = ['notify_on_maintenance', 'notify_on_deadline', 'notify_on_issue', 'notify_on_equipment'];
-
-        return in_array($key, $booleanKeys, true) ? filter_var($value, FILTER_VALIDATE_BOOLEAN) : $value;
+        return $setting?->value ?? $default;
     }
 
     /**

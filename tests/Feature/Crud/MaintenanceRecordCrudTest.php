@@ -4,6 +4,7 @@ namespace Tests\Feature\Crud;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
@@ -20,6 +21,19 @@ class MaintenanceRecordCrudTest extends TestCase
     private function createUser(): User
     {
         return User::factory()->withRole('admin')->create();
+    }
+
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * i veicoli devono appartenervi per essere visibili/accessibili
+     * all'utente di questi test (le route sono scoperte per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
     }
 
     private function createVehicle(): Vehicle
@@ -48,6 +62,7 @@ class MaintenanceRecordCrudTest extends TestCase
             'car_model_id' => $carModel->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
         ]);
     }
 
@@ -216,6 +231,22 @@ class MaintenanceRecordCrudTest extends TestCase
         $this->assertDatabaseMissing('maintenance_record_items', [
             'maintenance_record_id' => $maintenance->id,
         ]);
+    }
+
+    public function test_deleting_from_show_page_redirects_to_index_not_404(): void
+    {
+        // Il modale di conferma imposta "back" sull'URL della pagina
+        // corrente: eliminando dalla show, "back" punterebbe all'appuntamento
+        // appena cancellato (404) se seguito alla lettera.
+        $user = $this->createUser();
+        $maintenance = $this->createMaintenance()['maintenance'];
+
+        $response = $this->actingAs($user)->delete(route('admin.maintenance-records.destroy', $maintenance), [
+            'back' => route('admin.maintenance-records.show', $maintenance),
+        ]);
+
+        $response->assertRedirect(route('admin.maintenance-records.index'));
+        $this->assertSoftDeleted($maintenance);
     }
 
     public function test_maintenance_can_be_stored_with_notes(): void

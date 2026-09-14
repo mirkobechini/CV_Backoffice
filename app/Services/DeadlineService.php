@@ -9,7 +9,19 @@ use Carbon\Carbon;
 class DeadlineService
 {
     /**
+     * Tipi periodici per cui l'aggiunta di una nuova scadenza rinnova
+     * automaticamente quella precedente dello stesso veicolo.
+     */
+    private const AUTO_RENEW_TYPES = [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN];
+
+    /**
      * Crea una nuova scadenza con calcolo automatico della data.
+     *
+     * Per i tipi periodici (Revisione Ministeriale/Impianto Ossigeno), se il
+     * veicolo ha già una scadenza dello stesso tipo non ancora rinnovata,
+     * viene marcata automaticamente come rinnovata e collegata alla nuova
+     * (renews_deadline_id), così da poterla ripristinare se la nuova viene
+     * eliminata per errore.
      */
     public function createDeadline(array $data, Vehicle $vehicle): Deadline
     {
@@ -21,11 +33,16 @@ class DeadlineService
             throw new \RuntimeException('Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.');
         }
 
+        $previousDeadline = in_array($data['type'], self::AUTO_RENEW_TYPES, true)
+            ? $this->findCurrentDeadlineToRenew($vehicle, $data['type'])
+            : null;
+
         $deadline = Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => $data['type'],
             'due_date' => $dueDate->toDateString(),
             'is_renewed' => (bool) ($data['is_renewed'] ?? false),
+            'renews_deadline_id' => $previousDeadline?->id,
             'interval_km' => $data['interval_km'] ?? null,
             'last_mileage' => $data['last_mileage'] ?? null,
             'interval_days' => $data['interval_days'] ?? null,
@@ -33,7 +50,27 @@ class DeadlineService
 
         $deadline->syncStatusFromRules();
 
+        if ($previousDeadline) {
+            $previousDeadline->update([
+                'is_renewed' => true,
+                'status' => Deadline::STATUS_RENEWED,
+            ]);
+        }
+
         return $deadline;
+    }
+
+    /**
+     * Trova la scadenza "attuale" (non ancora rinnovata) dello stesso tipo
+     * per il veicolo, quella che una nuova scadenza andrebbe a sostituire.
+     */
+    private function findCurrentDeadlineToRenew(Vehicle $vehicle, string $type): ?Deadline
+    {
+        return $vehicle->deadlines()
+            ->where('type', $type)
+            ->where('is_renewed', false)
+            ->orderByDesc('due_date')
+            ->first();
     }
 
     /**
@@ -50,13 +87,10 @@ class DeadlineService
 
         $isRenewed = (bool) ($data['is_renewed'] ?? false);
 
-        // Se è un rinnovo con data esplicita, usiamo quella; altrimenti
-        // calcoliamo la data in automatico (per i tipi periodici).
-        if ($isRenewed && ! empty($data['due_date'])) {
-            $dueDate = $this->resolveManualDueDate($data['due_date']);
-        } else {
-            $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
-        }
+        // resolveDueDate() dà sempre la precedenza a una data esplicita,
+        // sia in caso di rinnovo che di semplice correzione manuale;
+        // altrimenti calcola la data in automatico per i tipi periodici.
+        $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
 
         if (! $dueDate) {
             throw new \RuntimeException('Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.');
@@ -108,7 +142,10 @@ class DeadlineService
                 'type' => $renewedDeadline->type,
                 'due_date' => $nextDueDate->toDateString(),
             ],
-            ['status' => Deadline::STATUS_PENDING]
+            [
+                'status' => Deadline::STATUS_PENDING,
+                'renews_deadline_id' => $renewedDeadline->id,
+            ]
         );
     }
 
@@ -126,11 +163,21 @@ class DeadlineService
 
     /**
      * Calcola la data di scadenza in base al tipo.
+     *
+     * Per i tipi a calcolo automatico (ministeriale/ossigeno), una data
+     * inserita esplicitamente in due_date ha sempre la precedenza sul
+     * calcolo automatico: permette di correggere manualmente la data di
+     * rinnovo (es. revisione fatta con anticipo/ritardo, dati storici),
+     * lasciando il campo vuoto quando si preferisce il calcolo automatico.
      */
     private function resolveDueDate(array $data, Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
         if (in_array($data['type'] ?? '', [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
             return $this->resolveManualDueDate($data['due_date'] ?? null);
+        }
+
+        if (! empty($data['due_date'])) {
+            return $this->resolveManualDueDate($data['due_date']);
         }
 
         if (($data['type'] ?? null) === Deadline::TYPE_MINISTERIAL) {

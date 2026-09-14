@@ -5,6 +5,7 @@ namespace Tests\Feature\Api;
 use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Deadline;
+use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
@@ -17,6 +18,21 @@ use Tests\TestCase;
 class ResourceApiTest extends TestCase
 {
     use RefreshDatabase;
+
+    /**
+     * Stesso gruppo usato dallo stato "admin" di UserFactory::withRole(), in
+     * modo che il veicolo creato da vehicle() sia sempre nel gruppo
+     * dell'utente autenticato da authToken() (le route API sono scoperte
+     * per gruppo: un veicolo senza gruppo o di un gruppo diverso non
+     * sarebbe visibile/accessibile all'utente di questi test).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
 
     private function authToken(): string
     {
@@ -37,6 +53,7 @@ class ResourceApiTest extends TestCase
             'car_model_id' => $model->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
         ]);
     }
 

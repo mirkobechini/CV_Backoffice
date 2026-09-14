@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Vehicle;
 use App\Models\Issue;
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\ReportMail;
@@ -43,31 +44,37 @@ class SendSummaryReport extends Command
             return Command::SUCCESS;
         }
 
-        // Parti del report indipendenti dai giorni di preavviso: calcolate una
-        // sola volta e riutilizzate per tutti i destinatari.
-        $totalVehicles = Vehicle::count();
-        $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')->get();
+        // Il report è per gruppo: ogni destinatario deve vedere solo i dati
+        // del proprio gruppo, quindi qui sotto non si può più precalcolare
+        // nulla in blocco per tutti i destinatari (comando da console, senza
+        // Auth::user(): senza scoping esplicito per gruppo ogni query
+        // tornerebbe i dati di TUTTI i gruppi, inviati via email a chiunque).
 
-        $vehicleIdsWithOpenIssues = Issue::open()->distinct('vehicle_id')->pluck('vehicle_id');
-        $vehiclesOk = $allVehicles->reject(fn ($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count();
+        // Frequenza e giorni di preavviso di tutti i destinatari in un'unica
+        // query, invece di due query per utente dentro il ciclo sotto.
+        $extraSettings = NotificationSetting::whereIn('user_id', $recipientRows->pluck('user_id'))
+            ->whereIn('key', ['report_frequency', 'reminder_days_before'])
+            ->get(['user_id', 'key', 'value'])
+            ->groupBy('user_id');
 
-        $incompleteVehicles = $allVehicles->filter(fn ($v) => ! $v->hasAllRequiredEquipment());
-        $openIssues = Issue::with('vehicle')->open()->get();
-        $expiredDeadlines = Deadline::where('status', Deadline::STATUS_EXPIRED)->where('is_renewed', false)->get();
-        $upcomingAppointments = MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')
-            ->whereNull('return_date')
-            ->where('appointment_date', '>=', today())
-            ->orderBy('appointment_date')
-            ->take(5)
-            ->get();
-        $vehiclesInMaintenance = MaintenanceRecord::whereNull('return_date')->distinct('vehicle_id')->count('vehicle_id');
+        $groupIdByUserId = User::whereIn('id', $recipientRows->pluck('user_id'))
+            ->with('groups')
+            ->get()
+            ->mapWithKeys(fn (User $user) => [$user->id => $user->activeGroup()?->id]);
 
         $today = Carbon::today();
         $sentCount = 0;
 
+        // Parti del report indipendenti dai giorni di preavviso: calcolate
+        // una sola volta per gruppo (e riutilizzate se più destinatari
+        // condividono lo stesso gruppo), non più per tutti i destinatari
+        // indistintamente.
+        $perGroupData = [];
+
         foreach ($recipientRows as $row) {
             $userId = $row->user_id;
-            $frequency = NotificationSetting::where('user_id', $userId)->where('key', 'report_frequency')->value('value') ?? 'daily';
+            $userSettings = $extraSettings->get($userId, collect());
+            $frequency = $userSettings->firstWhere('key', 'report_frequency')?->value ?? 'daily';
 
             $isSendDay = match ($frequency) {
                 'weekly' => $today->isMonday(),
@@ -79,21 +86,61 @@ class SendSummaryReport extends Command
                 continue;
             }
 
-            $reminderDays = (int) (NotificationSetting::where('user_id', $userId)->where('key', 'reminder_days_before')->value('value') ?? 7);
+            $reminderDays = (int) ($userSettings->firstWhere('key', 'reminder_days_before')?->value ?? 7);
+            $groupId = $groupIdByUserId->get($userId);
 
-            $data = [
-                'totalVehicles' => $totalVehicles,
-                'vehiclesOk' => $vehiclesOk,
-                'openIssues' => $openIssues,
-                'expiredDeadlines' => $expiredDeadlines,
-                'upcomingDeadlines' => Deadline::with('vehicle')->upcoming($reminderDays)->get(),
-                'upcomingAppointments' => $upcomingAppointments,
-                'incompleteVehicles' => $incompleteVehicles,
-                'vehiclesInMaintenance' => $vehiclesInMaintenance,
-                'expiringEquipment' => Equipment::with('vehicle')->expiringSoon($reminderDays)->get(),
-            ];
+            // 'reminder_days_before' cambia i dati per-utente anche a parità
+            // di gruppo, quindi la cache è per gruppo + giorni di preavviso.
+            $cacheKey = ($groupId ?? 'none') . ':' . $reminderDays;
 
-            Mail::to($row->value)->send(new ReportMail($data));
+            if (! isset($perGroupData[$cacheKey])) {
+                $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
+                    ->forGroup($groupId)
+                    ->get();
+
+                $vehicleIdsWithOpenIssues = Issue::open()
+                    ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                    ->distinct('vehicle_id')
+                    ->pluck('vehicle_id');
+
+                $perGroupData[$cacheKey] = [
+                    'totalVehicles' => $allVehicles->count(),
+                    'vehiclesOk' => $allVehicles->reject(fn ($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count(),
+                    'openIssues' => Issue::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))->open()->get(),
+                    'expiredDeadlines' => Deadline::whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                        ->where('status', Deadline::STATUS_EXPIRED)
+                        ->where('is_renewed', false)
+                        ->get(),
+                    'upcomingDeadlines' => Deadline::with('vehicle')
+                        ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                        ->upcoming($reminderDays)
+                        ->get(),
+                    'upcomingAppointments' => MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')
+                        ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                        ->whereNull('return_date')
+                        ->where('appointment_date', '>=', today())
+                        ->orderBy('appointment_date')
+                        ->take(5)
+                        ->get(),
+                    'incompleteVehicles' => $allVehicles->filter(fn ($v) => ! $v->hasAllRequiredEquipment()),
+                    'vehiclesInMaintenance' => MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                        ->whereNull('return_date')
+                        ->distinct('vehicle_id')
+                        ->count('vehicle_id'),
+                    // L'attrezzatura non assegnata a un veicolo non ha un
+                    // gruppo proprio: resta inclusa, come nell'indice
+                    // attrezzature.
+                    'expiringEquipment' => Equipment::with('vehicle')
+                        ->where(function ($q) use ($groupId) {
+                            $q->whereDoesntHave('vehicle')
+                                ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
+                        })
+                        ->expiringSoon($reminderDays)
+                        ->get(),
+                ];
+            }
+
+            Mail::to($row->value)->send(new ReportMail($perGroupData[$cacheKey]));
             $this->info("Report inviato con successo a {$row->value}!");
             $sentCount++;
         }

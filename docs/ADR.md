@@ -90,7 +90,7 @@ I ruoli (`admin`, `manager`, `worker`, `volunteer`) sono gestiti tramite **Larav
 
 ### Conseguenze
 
-- `RegisteredUserController` blocca la registrazione pubblica (solo admin può creare utenti)
+- Nessuna rotta di registrazione pubblica: gli account si creano solo su invito (codice/email di gruppo) o da un capo direttamente nella pagina del gruppo
 - Il primo utente diventa automaticamente admin (comando `php artisan make:admin`)
 - Rate limiting: 30 req/min per route admin, 5 req/min per login
 

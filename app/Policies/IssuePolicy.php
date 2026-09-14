@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Issue;
-use App\Policies\Concerns\HasRoleBasedAccess;
+use App\Policies\Concerns\HasGroupScopedAccess;
 
 class IssuePolicy
 {
-    use HasRoleBasedAccess;
+    use HasGroupScopedAccess;
 }

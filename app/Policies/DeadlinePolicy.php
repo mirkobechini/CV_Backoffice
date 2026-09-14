@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Deadline;
-use App\Policies\Concerns\HasRoleBasedAccess;
+use App\Policies\Concerns\HasGroupScopedAccess;
 
 class DeadlinePolicy
 {
-    use HasRoleBasedAccess;
+    use HasGroupScopedAccess;
 }

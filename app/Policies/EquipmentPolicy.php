@@ -3,9 +3,9 @@
 namespace App\Policies;
 
 use App\Models\Equipment;
-use App\Policies\Concerns\HasRoleBasedAccess;
+use App\Policies\Concerns\HasGroupScopedAccess;
 
 class EquipmentPolicy
 {
-    use HasRoleBasedAccess;
+    use HasGroupScopedAccess;
 }

@@ -112,7 +112,7 @@
                             <tr>
                                 <td>
                                     <div class="vin">
-                                        <span class="thumb t{{ ($loop->index % 5) + 1 }}"><i
+                                        <span class="thumb t{{ ($issue->vehicle_id % 5) + 1 }}"><i
                                                 class="fa-solid fa-truck"></i></span>
                                         <div>
                                             <div class="vin-name">{{ $issue->vehicle->brand->name ?? '' }}

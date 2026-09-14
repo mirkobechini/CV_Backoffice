@@ -17,23 +17,37 @@ class SettingsController extends Controller
      */
     public function index()
     {
-        $backups = collect(Storage::disk('local')->files('backups'))
-            ->map(fn ($file) => [
-                'name' => basename($file),
-                'size' => Storage::disk('local')->size($file),
-                'modified' => Storage::disk('local')->lastModified($file),
-            ])
-            ->sortByDesc('modified')
-            ->take(10);
+        $canManageBackups = auth()->user()->canManageData();
 
-        return view('admin.settings.index', compact('backups'));
+        // L'elenco dei backup è un dettaglio della sezione backup, visibile
+        // solo a chi può effettivamente gestirli.
+        $backups = $canManageBackups
+            ? collect(Storage::disk('local')->files('backups'))
+                ->map(fn ($file) => [
+                    'name' => basename($file),
+                    'size' => Storage::disk('local')->size($file),
+                    'modified' => Storage::disk('local')->lastModified($file),
+                ])
+                ->sortByDesc('modified')
+                ->take(10)
+            : collect();
+
+        return view('admin.settings.index', compact('backups', 'canManageBackups'));
     }
 
     /**
      * Crea un backup del database.
+     *
+     * Azione di sistema riservata a capo/sottocapo: prima non aveva alcun
+     * controllo di autorizzazione, quindi qualunque utente autenticato
+     * (anche un membro base) poteva lanciarla direttamente sulla route.
      */
     public function backup()
     {
+        if (! auth()->user()->canManageData()) {
+            abort(403);
+        }
+
         Artisan::call('app:backup-database');
 
         return back()->with('status', 'Backup creato con successo.');
