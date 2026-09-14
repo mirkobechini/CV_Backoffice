@@ -5,8 +5,15 @@
     scadenze effettive indipendentemente dalla profondità di annidamento.
 --}}
 @foreach ($groups as $groupLabel => $groupItems)
-    <tr class="group-row">
-        <td colspan="5" style="padding-left: {{ $depth * 20 }}px">
+    {{--
+        depth 0 = raggruppamento principale: più stacco visivo dalla riga
+        precedente (bordo sopra), per non confondere l'ultima riga di un
+        gruppo con l'inizio del successivo. depth > 0 = sotto-gruppo
+        annidato (es. tipo dentro veicolo): stile più leggero per restare
+        chiaramente distinto dall'intestazione principale sopra di lui.
+    --}}
+    <tr class="group-row {{ $depth > 0 ? 'group-row-sub' : '' }}">
+        <td colspan="5" style="padding-left: {{ 12 + $depth * 20 }}px">
             {{ $groupLabel }} ({{ $groupItems->flatten()->count() }})
         </td>
     </tr>

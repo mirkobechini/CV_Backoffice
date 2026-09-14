@@ -36,7 +36,8 @@
                 </div>
             </div>
             <div class="filters">
-                <form action="{{ route('admin.deadlines.index') }}" method="GET" class="search">
+                <form action="{{ route('admin.deadlines.index') }}" method="GET" class="filters"
+                    style="align-items:center;">
                     @foreach (request()->except('q', 'page', 'type_filter') as $key => $value)
                         <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                     @endforeach
@@ -48,13 +49,15 @@
                             </option>
                         @endforeach
                     </select>
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="q" placeholder="{{ __('cerca tipologia o veicolo') }}"
-                        value="{{ request('q') }}">
-                    @if (request('q'))
-                        <a href="{{ route('admin.deadlines.index') }}" class="clear-search"><i
-                                class="fa-solid fa-xmark"></i></a>
-                    @endif
+                    <div class="search">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" name="q" placeholder="{{ __('cerca tipologia o veicolo') }}"
+                            value="{{ request('q') }}">
+                        @if (request('q'))
+                            <a href="{{ route('admin.deadlines.index') }}" class="clear-search"><i
+                                    class="fa-solid fa-xmark"></i></a>
+                        @endif
+                    </div>
                 </form>
                 <a href="{{ route('admin.csv.export', 'deadlines') }}" class="btn" title="{{ __('Scarica CSV') }}">
                     <i class="fa-solid fa-download"></i> CSV
