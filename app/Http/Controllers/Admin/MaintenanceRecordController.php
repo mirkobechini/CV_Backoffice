@@ -40,6 +40,7 @@ class MaintenanceRecordController extends Controller
             'sort_by' => 'nullable|in:vehicle,description,date',
             'sort_dir' => 'nullable|in:asc,desc',
             'status_filter' => 'nullable|in:all,scheduled,completed,with_issues',
+            'vehicle_id' => 'nullable|integer',
             'q' => 'nullable|string|max:255',
         ]);
 
@@ -47,6 +48,7 @@ class MaintenanceRecordController extends Controller
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
         $statusFilter = $validated['status_filter'] ?? 'all';
+        $vehicleFilter = $validated['vehicle_id'] ?? null;
         $q = $validated['q'] ?? null;
 
         $query = MaintenanceRecord::with(['vehicle.brand', 'vehicle.carModel', 'provider', 'items.itemable'])
@@ -59,6 +61,8 @@ class MaintenanceRecordController extends Controller
                 fn($qr) => $qr->whereHas('items', fn($iq) => $iq->where('itemable_type', Issue::class))
             );
 
+        $query->when($vehicleFilter, fn($qr) => $qr->where('vehicle_id', $vehicleFilter));
+
         $query->when($q, function ($qr) use ($q) {
             $qr->where(function ($sub) use ($q) {
                 $sub->whereHas('vehicle', function ($vq) use ($q) {
@@ -70,27 +74,34 @@ class MaintenanceRecordController extends Controller
                         $iq->whereHasMorph('itemable', [Issue::class], function ($mq) use ($q) {
                             $mq->where('description', 'like', "%{$q}%");
                         });
+                    })
+                    ->orWhereHas('items', function ($iq) use ($q) {
+                        $iq->whereHasMorph('itemable', [Deadline::class], function ($mq) use ($q) {
+                            $mq->where('type', 'like', "%{$q}%");
+                        });
                     });
             });
         });
 
         $maintenanceRecords = $this->applySorting($query, $sortBy, $sortDir, [
             'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn(MaintenanceRecord $r) => $this->issueDescriptions($r) !== '' ? $this->issueDescriptions($r) : ($r->activity_type ?? ''),
+            'description' => fn(MaintenanceRecord $r) => $this->itemDescriptions($r) !== '' ? $this->itemDescriptions($r) : ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
         $groupedMaintenanceRecords = $this->applyGrouping($maintenanceRecords, $groupBy, function (MaintenanceRecord $record) use ($groupBy) {
             return match ($groupBy) {
                 'vehicle' => $record->vehicle?->internal_code ?? 'N/A',
-                'description' => $this->issueDescriptions($record) !== '' ? $this->issueDescriptions($record) : ($record->activity_type ?? 'N/A'),
+                'description' => $this->itemDescriptions($record) !== '' ? $this->itemDescriptions($record) : ($record->activity_type ?? 'N/A'),
                 'date' => $record->appointment_date
                     ? ucfirst($record->appointment_date->locale('it')->translatedFormat('F Y'))
                     : 'N/A',
             };
         });
 
-        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords', 'statusFilter') + [
+        $vehicles = Vehicle::forCurrentUser()->orderBy('internal_code')->get(['id', 'internal_code']);
+
+        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords', 'statusFilter', 'vehicleFilter', 'vehicles') + [
             'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
             'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
             'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
@@ -567,6 +578,33 @@ class MaintenanceRecordController extends Controller
             ->map(fn($item) => $item->itemable?->description)
             ->filter()
             ->implode(', ');
+    }
+
+    /**
+     * Tipologie delle scadenze collegate all'appuntamento (Tagliando,
+     * Revisione Ministeriale, ecc.), una sola volta ciascuna.
+     */
+    private function deadlineTypes(MaintenanceRecord $maintenanceRecord): string
+    {
+        return $maintenanceRecord->items
+            ->where('itemable_type', Deadline::class)
+            ->map(fn($item) => $item->itemable?->type)
+            ->filter()
+            ->unique()
+            ->implode(', ');
+    }
+
+    /**
+     * Descrizione combinata di tutto ciò che l'appuntamento riguarda: guasti
+     * e scadenze collegate insieme, non solo i guasti. Un appuntamento con
+     * più elementi resta comunque una sola riga nell'elenco — qui si
+     * costruisce solo il testo che ci va dentro.
+     */
+    private function itemDescriptions(MaintenanceRecord $maintenanceRecord): string
+    {
+        return collect([$this->issueDescriptions($maintenanceRecord), $this->deadlineTypes($maintenanceRecord)])
+            ->filter(fn($part) => $part !== '')
+            ->implode(' · ');
     }
 
     /**

@@ -492,6 +492,82 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $response->assertSee('Secondo guasto');
     }
 
+    public function test_index_shows_linked_deadlines_alongside_issues_on_the_same_row(): void
+    {
+        // Le scadenze collegate non comparivano affatto nell'elenco: solo i
+        // guasti. Un appuntamento con guasto E scadenza deve mostrare
+        // entrambi sulla stessa riga (non deve sparire nessuno dei due).
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $issue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Rumore sospetto',
+            'status' => 'in_progress',
+        ]);
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => today()->addMonth(),
+            'interval_km' => 20000,
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $maintenance->items()->create(['itemable_id' => $issue->id, 'itemable_type' => Issue::class]);
+        $maintenance->items()->create(['itemable_id' => $deadline->id, 'itemable_type' => Deadline::class]);
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.index'));
+
+        $response->assertOk();
+        $response->assertSee('Rumore sospetto');
+        $response->assertSee('Tagliando');
+        $response->assertSee('Scadenza'); // badge dedicato, in aggiunta a quello guasto
+    }
+
+    public function test_index_can_be_filtered_by_vehicle(): void
+    {
+        $user = $this->createUser();
+        $vehicleA = $this->createVehicle();
+        $brandB = Brand::create(['name' => 'Iveco']);
+        $modelB = CarModel::create(['name' => 'Daily', 'brand_id' => $brandB->id]);
+        $typeB = VehicleType::create(['name' => 'Furgone', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $vehicleB = Vehicle::create([
+            'license_plate' => 'ZZ999ZZ',
+            'internal_code' => '9999',
+            'brand_id' => $brandB->id,
+            'car_model_id' => $modelB->id,
+            'vehicle_type_id' => $typeB->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = $this->createProvider();
+
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicleA->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+            'activity_type' => 'Attività veicolo A',
+        ]);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicleB->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+            'activity_type' => 'Attività veicolo B',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.index', ['vehicle_id' => $vehicleA->id]));
+
+        $response->assertOk();
+        $response->assertSee('Attività veicolo A');
+        $response->assertDontSee('Attività veicolo B');
+    }
+
     public function test_complete_with_issue_resolved_renews_tagliando(): void
     {
         $user = $this->createUser();
