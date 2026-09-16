@@ -12,6 +12,7 @@ use App\Models\Notification;
 use App\Models\NotificationSetting;
 use App\Models\User;
 use App\Services\NotificationService;
+use App\Services\TireSeasonService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -27,7 +28,7 @@ class GenerateNotifications extends Command
      * personali per account: ogni utente admin/sottocapo viene valutato con
      * le proprie preferenze, non con un'unica configurazione globale.
      */
-    public function handle(NotificationService $notifications)
+    public function handle(NotificationService $notifications, TireSeasonService $tireSeasonService)
     {
         $created = 0;
         $emailsByUser = [];
@@ -59,6 +60,10 @@ class GenerateNotifications extends Command
 
             if ($user->notificationSetting('notify_on_maintenance', true)) {
                 $this->notifyUpcomingAppointments($user, $groupId, $reminderDays, $notifications, $emailsByUser, $created);
+            }
+
+            if ($user->notificationSetting('notify_on_tire_season', true)) {
+                $this->notifyTireSeasonReminders($user, $groupId, $tireSeasonService, $notifications, $emailsByUser, $created);
             }
         }
 
@@ -188,6 +193,34 @@ class GenerateNotifications extends Command
 
             $notifications->notifyUser($user, Notification::TYPE_MAINTENANCE, $title, "{$message} {$marker}", $url);
             $emailsByUser[$user->id][] = new EventNotificationMail(Notification::TYPE_MAINTENANCE, $title, $message, $url);
+            $created++;
+        }
+    }
+
+    /**
+     * Veicoli ancora con la stagionalità di gomme sbagliata dopo la data di
+     * cambio globale. Una sola notifica per veicolo per stagione/anno (il
+     * marker include anno e stagione attesa): se il veicolo torna in regola
+     * e poi risbaglia in una stagione successiva, viene notificato di nuovo.
+     */
+    private function notifyTireSeasonReminders(User $user, ?int $groupId, TireSeasonService $tireSeasonService, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    {
+        $expectedSeason = $tireSeasonService->expectedSeason();
+        $seasonLabel = $expectedSeason === 'winter' ? 'invernali' : 'estive';
+        $pendingVehicles = $tireSeasonService->pendingVehicles($groupId);
+
+        foreach ($pendingVehicles as $vehicle) {
+            $title = "Cambio gomme in ritardo: {$vehicle->internal_code}";
+            $message = "Il veicolo {$vehicle->internal_code} non ha ancora montato le gomme {$seasonLabel}.";
+            $url = route('admin.vehicles.show', $vehicle->id);
+            $marker = "#tire-season-{$vehicle->id}-" . today()->year . "-{$expectedSeason}";
+
+            if ($this->alreadyNotified($user->id, Notification::TYPE_TIRE_SEASON, $marker)) {
+                continue;
+            }
+
+            $notifications->notifyUser($user, Notification::TYPE_TIRE_SEASON, $title, "{$message} {$marker}", $url);
+            $emailsByUser[$user->id][] = new EventNotificationMail(Notification::TYPE_TIRE_SEASON, $title, $message, $url);
             $created++;
         }
     }

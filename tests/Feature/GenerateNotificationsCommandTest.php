@@ -11,6 +11,7 @@ use App\Models\MaintenanceRecord;
 use App\Models\Notification;
 use App\Models\NotificationSetting;
 use App\Models\Provider;
+use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Mail\EventNotificationMail;
@@ -224,6 +225,64 @@ class GenerateNotificationsCommandTest extends TestCase
         $this->artisan('app:generate-notifications');
 
         Mail::assertNothingSent();
+    }
+
+    public function test_generates_notification_for_vehicle_pending_seasonal_tire_change(): void
+    {
+        $this->travelTo(Carbon::parse('2026-12-01'));
+
+        $this->admin();
+        $vehicle = $this->vehicle();
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'quantity' => 4,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseHas('notifications', [
+            'type' => Notification::TYPE_TIRE_SEASON,
+            'is_read' => false,
+        ]);
+    }
+
+    public function test_does_not_notify_vehicle_already_on_the_right_season(): void
+    {
+        $this->travelTo(Carbon::parse('2026-12-01'));
+
+        $this->admin();
+        $vehicle = $this->vehicle();
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_WINTER,
+            'quantity' => 4,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseCount('notifications', 0);
+    }
+
+    public function test_does_not_duplicate_tire_season_notification(): void
+    {
+        $this->travelTo(Carbon::parse('2026-12-01'));
+
+        $this->admin();
+        $vehicle = $this->vehicle();
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'quantity' => 4,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $this->artisan('app:generate-notifications');
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseCount('notifications', 1);
     }
 
     public function test_capo_is_not_notified_about_another_groups_deadline(): void

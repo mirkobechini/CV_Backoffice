@@ -8,6 +8,7 @@ use App\Http\Requests\StoreTireRequest;
 use App\Http\Requests\UpdateTireRequest;
 use App\Models\Tire;
 use App\Models\Vehicle;
+use App\Services\TireSeasonService;
 use Illuminate\Http\Request;
 
 class TireController extends Controller
@@ -20,12 +21,14 @@ class TireController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, TireSeasonService $tireSeasonService)
     {
         $validated = $request->validate([
             'status_filter' => 'nullable|in:all,mounted,stored,retired',
+            'season_filter' => 'nullable|in:due',
         ]);
         $statusFilter = $validated['status_filter'] ?? 'all';
+        $seasonFilter = $validated['season_filter'] ?? null;
 
         $query = Tire::with('vehicle.brand', 'vehicle.carModel')
             ->whereHas('vehicle', fn($q) => $q->forCurrentUser());
@@ -46,9 +49,18 @@ class TireController extends Controller
             $query->where('status', $statusFilter);
         }
 
+        // "Da cambiare": la gomma montata la cui stagionalità non
+        // corrisponde a quella attesa (le quattro stagioni sono sempre ok).
+        if ($seasonFilter === 'due') {
+            $expectedSeason = $tireSeasonService->expectedSeason();
+            $query->where('status', Tire::STATUS_MOUNTED)
+                ->where('season', '!=', $expectedSeason)
+                ->where('season', '!=', Tire::SEASON_ALL_SEASON);
+        }
+
         $tires = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
 
-        return view('admin.tires.index', compact('tires', 'statusFilter'));
+        return view('admin.tires.index', compact('tires', 'statusFilter', 'seasonFilter'));
     }
 
     /**

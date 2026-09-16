@@ -32,6 +32,7 @@ class UpdateNotificationSettingRequest extends FormRequest
             'notify_on_deadline' => 'nullable|boolean',
             'notify_on_issue' => 'nullable|boolean',
             'notify_on_equipment' => 'nullable|boolean',
+            'notify_on_tire_season' => 'nullable|boolean',
         ];
     }
 
@@ -50,6 +51,7 @@ class UpdateNotificationSettingRequest extends FormRequest
             'notify_on_deadline.boolean' => 'Il valore notify_on_deadline non è valido.',
             'notify_on_issue.boolean' => 'Il valore notify_on_issue non è valido.',
             'notify_on_equipment.boolean' => 'Il valore notify_on_equipment non è valido.',
+            'notify_on_tire_season.boolean' => 'Il valore notify_on_tire_season non è valido.',
         ];
     }
 }
