@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
 {
@@ -48,10 +49,15 @@ class DashboardController extends Controller
                 ->orderBy('due_date')
                 ->get();
 
+            // appointment_date è una colonna date (senza ora): confrontarla
+            // con now() (data+ora corrente) la escludeva se l'appuntamento
+            // era oggi ma l'ora corrente aveva già superato mezzanotte, cioè
+            // sempre — un appuntamento di oggi spariva dai "prossimi" non
+            // appena passava la mezzanotte. today() confronta solo la data.
             $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->whereNull('return_date')
-                ->where('appointment_date', '>=', now())
+                ->where('appointment_date', '>=', Carbon::today())
                 ->orderBy('appointment_date')
                 ->take(5)
                 ->get();
@@ -75,7 +81,7 @@ class DashboardController extends Controller
             // Veicoli attualmente in officina: check-in avvenuto, non ancora rientrati.
             $inWorkshopCount = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->whereNull('return_date')
-                ->where('appointment_date', '<=', now())
+                ->where('appointment_date', '<=', Carbon::today())
                 ->count();
 
             return compact(

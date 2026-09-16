@@ -112,6 +112,42 @@ class FileUploadTest extends TestCase
         Storage::disk('public')->assertExists($issue->photo);
     }
 
+    public function test_issue_image_upload_accepts_heic(): void
+    {
+        // Formato di default delle foto scattate da iPhone: la regola
+        // "image" (basata sul MIME rilevato) lo rifiutava sempre, quindi il
+        // caricamento da mobile falliva ogni volta senza una foto convertita
+        // manualmente prima.
+        Storage::fake('public');
+        $user = $this->admin();
+        $deps = $this->vehicleDeps();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $user->activeGroup()->id,
+        ]);
+
+        $image = UploadedFile::fake()->create('IMG_1234.heic', 100, 'image/heic');
+
+        $response = $this->actingAs($user)->post(route('admin.issues.store'), [
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Motore non parte',
+            'event_date' => '2024-01-01',
+            'status' => 'open',
+            'image' => $image,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('image');
+        $response->assertRedirect();
+        $issue = Issue::where('description', 'Motore non parte')->first();
+        $this->assertNotNull($issue->photo);
+        Storage::disk('public')->assertExists($issue->photo);
+    }
+
     public function test_issue_image_rejects_oversized_file(): void
     {
         Storage::fake('public');

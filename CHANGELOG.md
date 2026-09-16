@@ -4,6 +4,14 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.14] - 2026-09-16
+
+### Fixed
+
+- Da mobile, ogni campo data/mese (Flatpickr) era completamente invisibile e non compilabile: la regola CSS che nascondeva l'input reale di Flatpickr colpiva per errore anche l'input nativo che Flatpickr stesso mostra al suo posto sui telefoni. Questo spiegava anche perché il salvataggio di un nuovo guasto da mobile non facesse nulla: la data del guasto è obbligatoria ma, essendo invisibile, non poteva essere compilata.
+- Il caricamento immagini nei guasti rifiutava sempre i file HEIC/HEIF, il formato di default delle foto su iPhone.
+- Dashboard, "Prossimi appuntamenti": un appuntamento di oggi spariva dall'elenco non appena passava la mezzanotte, perché la data veniva confrontata con l'orario corrente invece che con la sola data odierna.
+
 ## [v1.2.13] - 2026-09-14
 
 ### Added

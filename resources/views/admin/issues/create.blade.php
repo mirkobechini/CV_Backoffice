@@ -84,7 +84,7 @@
                         <i class="fa-solid fa-image"></i> {{ __('Clicca per caricare una foto') }}
                     </label>
                     <input type="file" class="@error('image') is-invalid @enderror" id="image" name="image"
-                        accept="image/*" hidden>
+                        accept="image/*,.heic,.heif" hidden>
                     @error('image')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
