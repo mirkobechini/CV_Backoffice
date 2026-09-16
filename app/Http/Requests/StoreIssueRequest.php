@@ -22,7 +22,11 @@ class StoreIssueRequest extends FormRequest
             'notes' => 'nullable|string',
             'event_date' => 'required|date',
             'status' => 'required|in:open,in_progress,closed',
-            'image' => 'nullable|image|max:2048', // Optional image upload
+            // La regola "image" (basata sul MIME rilevato) rifiuta HEIC/HEIF,
+            // il formato di default delle foto su iPhone: da mobile il
+            // caricamento falliva sempre per quelle. "mimes" verifica invece
+            // l'estensione, quindi possiamo includerle esplicitamente.
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,bmp,svg,webp,heic,heif|max:2048',
         ];
     }
 

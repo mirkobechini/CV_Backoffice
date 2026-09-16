@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Deadline;
 use App\Models\Group;
+use App\Models\MaintenanceRecord;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -61,5 +63,34 @@ class DashboardTest extends TestCase
         $response->assertOk();
         $response->assertSee('Scadenze scadute e non rinnovate');
         $response->assertSee('Tagliando');
+    }
+
+    public function test_dashboard_shows_todays_appointment_later_in_the_day(): void
+    {
+        // appointment_date è una colonna date (mezzanotte); confrontarla con
+        // now() (data+ora corrente) la escludeva dai "prossimi appuntamenti"
+        // non appena l'ora corrente superava la mezzanotte — cioè sempre,
+        // tranne nell'istante esatto in cui l'appuntamento veniva creato.
+        $this->travelTo(now()->setTime(23, 0));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Prossimi appuntamenti');
+        $response->assertDontSee('Nessun appuntamento imminente');
     }
 }
