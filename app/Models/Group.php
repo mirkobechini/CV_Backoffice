@@ -10,6 +10,8 @@ class Group extends Model
     protected $fillable = [
         'name',
         'invite_code',
+        'winter_switch_date',
+        'summer_switch_date',
     ];
 
     public const ROLE_CAPO = 'capo';

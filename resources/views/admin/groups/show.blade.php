@@ -121,6 +121,84 @@
                     {{ __('veicoli assegnati a questo gruppo') }}</div>
             </div>
         </div>
+
+        <div class="admin-card">
+            <div class="head">
+                <h3><span class="ic" style="background:var(--green-soft); color:var(--green);"><i
+                            class="fa-solid fa-circle-dot"></i></span> {{ __('Cambio gomme stagionale') }}</h3>
+            </div>
+            <div class="body">
+                <p class="hint" style="margin-bottom:10px;">
+                    {{ __('Date entro cui la flotta di questo gruppo dovrebbe passare a gomme invernali o estive. Usate dal promemoria e dal riquadro in dashboard.') }}
+                </p>
+                @if ($isCapo)
+                    @php
+                        [$winterMonth, $winterDay] = explode('-', $group->winter_switch_date);
+                        [$summerMonth, $summerDay] = explode('-', $group->summer_switch_date);
+                        $months = [
+                            1 => __('Gennaio'), 2 => __('Febbraio'), 3 => __('Marzo'), 4 => __('Aprile'),
+                            5 => __('Maggio'), 6 => __('Giugno'), 7 => __('Luglio'), 8 => __('Agosto'),
+                            9 => __('Settembre'), 10 => __('Ottobre'), 11 => __('Novembre'), 12 => __('Dicembre'),
+                        ];
+                    @endphp
+                    <form method="POST" action="{{ route('admin.groups.tire-season.update', $group) }}"
+                        data-single-submit="true">
+                        @csrf
+                        @method('PATCH')
+                        <div class="row2">
+                            <div class="field">
+                                <label>{{ __('Passaggio a invernali') }}</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="number" class="input @error('winter_switch_day') is-invalid @enderror"
+                                        name="winter_switch_day" min="1" max="31"
+                                        value="{{ old('winter_switch_day', (int) $winterDay) }}" style="width:80px;">
+                                    <select class="select" name="winter_switch_month">
+                                        @foreach ($months as $num => $label)
+                                            <option value="{{ $num }}"
+                                                {{ (int) old('winter_switch_month', (int) $winterMonth) === $num ? 'selected' : '' }}>
+                                                {{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('winter_switch_day')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="field">
+                                <label>{{ __('Passaggio a estive') }}</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="number" class="input @error('summer_switch_day') is-invalid @enderror"
+                                        name="summer_switch_day" min="1" max="31"
+                                        value="{{ old('summer_switch_day', (int) $summerDay) }}" style="width:80px;">
+                                    <select class="select" name="summer_switch_month">
+                                        @foreach ($months as $num => $label)
+                                            <option value="{{ $num }}"
+                                                {{ (int) old('summer_switch_month', (int) $summerMonth) === $num ? 'selected' : '' }}>
+                                                {{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('summer_switch_day')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <button type="submit" class="btn outline" data-loading-text="{{ __('Salvataggio...') }}">
+                            <i class="fa-solid fa-check"></i> {{ __('Salva date') }}
+                        </button>
+                    </form>
+                @else
+                    <div class="dl-kv">
+                        <span class="k">{{ __('Invernali dal') }}</span>
+                        <span class="v">{{ $group->winter_switch_date }}</span>
+                    </div>
+                    <div class="dl-kv">
+                        <span class="k">{{ __('Estive dal') }}</span>
+                        <span class="v">{{ $group->summer_switch_date }}</span>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 
     <div class="table-card" style="margin-top:16px;">

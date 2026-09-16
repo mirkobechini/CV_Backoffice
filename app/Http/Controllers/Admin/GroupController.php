@@ -97,6 +97,43 @@ class GroupController extends Controller
     }
 
     /**
+     * Aggiorna le date di cambio gomme stagionale del gruppo, usate dal
+     * promemoria e dal riquadro in dashboard per QUESTA flotta.
+     */
+    public function updateTireSeason(Request $request, Group $group)
+    {
+        $this->authorizeGroup($group);
+
+        // Solo il capo può cambiarle, come le altre impostazioni del gruppo.
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può modificare le date di cambio gomme.');
+        }
+
+        $data = $request->validate([
+            'winter_switch_month' => 'required|integer|min:1|max:12',
+            'winter_switch_day' => 'required|integer|min:1|max:31',
+            'summer_switch_month' => 'required|integer|min:1|max:12',
+            'summer_switch_day' => 'required|integer|min:1|max:31',
+        ]);
+
+        // checkdate() verifica che il giorno esista per quel mese (usa un
+        // anno bisestile fittizio per non respingere il 29 febbraio).
+        if (! checkdate($data['winter_switch_month'], $data['winter_switch_day'], 2024)) {
+            return back()->withErrors(['winter_switch_day' => 'Il giorno indicato non esiste per il mese scelto.'])->withInput();
+        }
+        if (! checkdate($data['summer_switch_month'], $data['summer_switch_day'], 2024)) {
+            return back()->withErrors(['summer_switch_day' => 'Il giorno indicato non esiste per il mese scelto.'])->withInput();
+        }
+
+        $group->update([
+            'winter_switch_date' => sprintf('%02d-%02d', $data['winter_switch_month'], $data['winter_switch_day']),
+            'summer_switch_date' => sprintf('%02d-%02d', $data['summer_switch_month'], $data['summer_switch_day']),
+        ]);
+
+        return back()->with('status', 'Date di cambio gomme aggiornate con successo.');
+    }
+
+    /**
      * Aggiunge un utente al gruppo tramite codice invito.
      */
     public function join(Request $request)
