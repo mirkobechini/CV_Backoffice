@@ -63,7 +63,7 @@ class GenerateNotifications extends Command
             }
 
             if ($user->notificationSetting('notify_on_tire_season', true)) {
-                $this->notifyTireSeasonReminders($user, $groupId, $tireSeasonService, $notifications, $emailsByUser, $created);
+                $this->notifyTireSeasonReminders($user, $groupId, $user->activeGroup(), $tireSeasonService, $notifications, $emailsByUser, $created);
             }
         }
 
@@ -199,13 +199,13 @@ class GenerateNotifications extends Command
 
     /**
      * Veicoli ancora con la stagionalità di gomme sbagliata dopo la data di
-     * cambio globale. Una sola notifica per veicolo per stagione/anno (il
+     * cambio del gruppo. Una sola notifica per veicolo per stagione/anno (il
      * marker include anno e stagione attesa): se il veicolo torna in regola
      * e poi risbaglia in una stagione successiva, viene notificato di nuovo.
      */
-    private function notifyTireSeasonReminders(User $user, ?int $groupId, TireSeasonService $tireSeasonService, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    private function notifyTireSeasonReminders(User $user, ?int $groupId, ?Group $group, TireSeasonService $tireSeasonService, NotificationService $notifications, array &$emailsByUser, int &$created): void
     {
-        $expectedSeason = $tireSeasonService->expectedSeason();
+        $expectedSeason = $tireSeasonService->expectedSeasonForGroup($group);
         $seasonLabel = $expectedSeason === 'winter' ? 'invernali' : 'estive';
         $pendingVehicles = $tireSeasonService->pendingVehicles($groupId);
 

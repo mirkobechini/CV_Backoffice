@@ -24,10 +24,11 @@ class DashboardController extends Controller
         // richiesta calcolava i dati (di TUTTI i gruppi) e li serviva a
         // chiunque altro visitasse la dashboard nei 5 minuti successivi,
         // indipendentemente dal proprio gruppo.
-        $groupId = auth()->user()?->activeGroup()?->id;
+        $activeGroup = auth()->user()?->activeGroup();
+        $groupId = $activeGroup?->id;
         $cacheKey = 'dashboard.stats.' . ($groupId ?? 'none');
 
-        $data = Cache::remember($cacheKey, 300, function () use ($groupId, $tireSeasonService) {
+        $data = Cache::remember($cacheKey, 300, function () use ($groupId, $activeGroup, $tireSeasonService) {
             $totalVehicles = Vehicle::forCurrentUser()->count();
 
             $openIssues = Issue::with('vehicle')
@@ -85,7 +86,7 @@ class DashboardController extends Controller
                 ->where('appointment_date', '<=', Carbon::today())
                 ->count();
 
-            $tireSeasonExpected = $tireSeasonService->expectedSeason();
+            $tireSeasonExpected = $tireSeasonService->expectedSeasonForGroup($activeGroup);
             $tireSeasonPending = $tireSeasonService->pendingVehicles($groupId);
             $tireSeasonCompliantCount = $tireSeasonService->compliantVehicles($groupId)->count();
 

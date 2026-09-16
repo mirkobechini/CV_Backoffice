@@ -68,7 +68,7 @@ class TireController extends Controller
         // "Da cambiare": la gomma montata la cui stagionalità non
         // corrisponde a quella attesa (le quattro stagioni sono sempre ok).
         if ($seasonFilter === 'due') {
-            $expectedSeason = $tireSeasonService->expectedSeason();
+            $expectedSeason = $tireSeasonService->expectedSeasonForGroup(auth()->user()?->activeGroup());
             $query->where('status', Tire::STATUS_MOUNTED)
                 ->where('season', '!=', $expectedSeason)
                 ->where('season', '!=', Tire::SEASON_ALL_SEASON);
