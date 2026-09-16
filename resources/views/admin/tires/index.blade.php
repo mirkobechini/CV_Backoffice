@@ -16,6 +16,7 @@
             default => 'b-gray',
         };
         $statusFilterUrl = fn($status) => route('admin.tires.index', array_merge(request()->except(['status_filter', 'page']), $status === 'all' ? [] : ['status_filter' => $status]));
+        $seasonDueUrl = route('admin.tires.index', array_merge(request()->except(['season_filter', 'page']), $seasonFilter === 'due' ? [] : ['season_filter' => 'due']));
     @endphp
 
     <div class="table-card">
@@ -31,6 +32,8 @@
                         class="chip {{ $statusFilter === 'stored' ? 'on' : '' }}">{{ __('In magazzino') }}</a>
                     <a href="{{ $statusFilterUrl('retired') }}"
                         class="chip {{ $statusFilter === 'retired' ? 'on' : '' }}">{{ __('Dismesse') }}</a>
+                    <a href="{{ $seasonDueUrl }}"
+                        class="chip {{ $seasonFilter === 'due' ? 'on' : '' }}">{{ __('Da cambiare') }}</a>
                 </div>
             </div>
             <div class="filters">

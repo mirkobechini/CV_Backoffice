@@ -81,6 +81,7 @@
                         'notify_on_issue' => __('Guasti'),
                         'notify_on_maintenance' => __('Appuntamenti'),
                         'notify_on_equipment' => __('Attrezzature'),
+                        'notify_on_tire_season' => __('Cambio gomme stagionale'),
                     ];
                 @endphp
 

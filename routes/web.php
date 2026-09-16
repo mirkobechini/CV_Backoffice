@@ -122,6 +122,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // Impostazioni generali
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/backup', [SettingsController::class, 'backup'])->name('settings.backup');
+        Route::patch('settings/tire-season', [SettingsController::class, 'updateTireSeason'])->name('settings.tire-season.update');
 
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])

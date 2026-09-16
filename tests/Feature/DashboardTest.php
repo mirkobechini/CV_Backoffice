@@ -6,6 +6,7 @@ use App\Models\Deadline;
 use App\Models\Group;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
+use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,5 +93,46 @@ class DashboardTest extends TestCase
         $response->assertOk();
         $response->assertSee('Prossimi appuntamenti');
         $response->assertDontSee('Nessun appuntamento imminente');
+    }
+
+    public function test_dashboard_shows_vehicle_pending_seasonal_tire_change(): void
+    {
+        $this->travelTo(now()->setDate(2026, 12, 1));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'quantity' => 4,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Cambio gomme stagionale');
+        $response->assertSee('0001');
+    }
+
+    public function test_dashboard_hides_tire_season_widget_when_no_tires_tracked(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+        Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertDontSee('Cambio gomme stagionale');
     }
 }

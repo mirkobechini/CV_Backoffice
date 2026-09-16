@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
+use App\Services\TireSeasonService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Carbon;
 
@@ -15,7 +16,7 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(TireSeasonService $tireSeasonService)
     {
         // La cache va segmentata per gruppo: quasi nessuna delle query sotto
         // era filtrata per gruppo (solo incompleteVehicles lo era), e la
@@ -23,10 +24,10 @@ class DashboardController extends Controller
         // richiesta calcolava i dati (di TUTTI i gruppi) e li serviva a
         // chiunque altro visitasse la dashboard nei 5 minuti successivi,
         // indipendentemente dal proprio gruppo.
-        $groupId = auth()->user()?->activeGroup()?->id ?? 'none';
-        $cacheKey = "dashboard.stats.{$groupId}";
+        $groupId = auth()->user()?->activeGroup()?->id;
+        $cacheKey = 'dashboard.stats.' . ($groupId ?? 'none');
 
-        $data = Cache::remember($cacheKey, 300, function () {
+        $data = Cache::remember($cacheKey, 300, function () use ($groupId, $tireSeasonService) {
             $totalVehicles = Vehicle::forCurrentUser()->count();
 
             $openIssues = Issue::with('vehicle')
@@ -84,6 +85,10 @@ class DashboardController extends Controller
                 ->where('appointment_date', '<=', Carbon::today())
                 ->count();
 
+            $tireSeasonExpected = $tireSeasonService->expectedSeason();
+            $tireSeasonPending = $tireSeasonService->pendingVehicles($groupId);
+            $tireSeasonCompliantCount = $tireSeasonService->compliantVehicles($groupId)->count();
+
             return compact(
                 'totalVehicles',
                 'openIssues',
@@ -92,7 +97,10 @@ class DashboardController extends Controller
                 'upcomingAppointments',
                 'incompleteVehicles',
                 'expiringEquipment',
-                'inWorkshopCount'
+                'inWorkshopCount',
+                'tireSeasonExpected',
+                'tireSeasonPending',
+                'tireSeasonCompliantCount'
             );
         });
 
