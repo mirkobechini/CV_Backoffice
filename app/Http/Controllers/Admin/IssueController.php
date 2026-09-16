@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
 use App\Models\Issue;
+use App\Models\Tire;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -104,8 +105,9 @@ class IssueController extends Controller
         $vehicles = Vehicle::forCurrentUser()->get();
         // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
+        $tires = Tire::whereHas('vehicle', fn($q) => $q->forCurrentUser())->with('vehicle')->get();
 
-        return view('admin.issues.create', compact('vehicles', 'selectedVehicleId'));
+        return view('admin.issues.create', compact('vehicles', 'selectedVehicleId', 'tires'));
     }
 
     /**
@@ -149,8 +151,9 @@ class IssueController extends Controller
     public function edit(Issue $issue)
     {
         $vehicles = Vehicle::forCurrentUser()->get();
+        $tires = Tire::whereHas('vehicle', fn($q) => $q->forCurrentUser())->with('vehicle')->get();
 
-        return view('admin.issues.edit', compact('issue', 'vehicles'));
+        return view('admin.issues.edit', compact('issue', 'vehicles', 'tires'));
     }
 
     /**
@@ -183,6 +186,7 @@ class IssueController extends Controller
     {
         $issueData = [
             'vehicle_id' => $data['vehicle_id'],
+            'tire_id' => $data['tire_id'] ?? null,
             'description' => $data['description'],
             'notes' => $data['notes'] ?? null,
             'event_date' => $data['event_date'],

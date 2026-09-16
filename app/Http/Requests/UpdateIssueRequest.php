@@ -18,6 +18,7 @@ class UpdateIssueRequest extends FormRequest
     {
         return [
             'vehicle_id' => 'required|exists:vehicles,id',
+            'tire_id' => 'nullable|exists:tires,id',
             'description' => 'required|string',
             'notes' => 'nullable|string',
             'event_date' => 'required|date',
@@ -35,6 +36,7 @@ class UpdateIssueRequest extends FormRequest
         return [
             'vehicle_id.required' => 'Il veicolo è obbligatorio.',
             'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
+            'tire_id.exists' => 'Il set di gomme selezionato non esiste.',
             'description.required' => 'La descrizione è obbligatoria.',
             'description.string' => 'La descrizione deve essere una stringa.',
             'notes.string' => 'Le note devono essere una stringa.',

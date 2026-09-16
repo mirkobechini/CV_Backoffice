@@ -168,6 +168,21 @@ class Vehicle extends Model
         return $this->hasMany(Deadline::class);
     }
 
+    public function tires()
+    {
+        return $this->hasMany(Tire::class);
+    }
+
+    public function tireChanges()
+    {
+        return $this->hasMany(TireChange::class);
+    }
+
+    public function mountedTires()
+    {
+        return $this->tires()->where('status', Tire::STATUS_MOUNTED);
+    }
+
     public function hasAllRequiredEquipment(): bool
     {
         return $this->missingRequiredEquipment()->isEmpty();

@@ -12,6 +12,7 @@ use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
 use App\Models\Provider;
+use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -85,6 +86,7 @@ class ViewRenderSmokeTest extends TestCase
             'admin.deadlines.index',
             'admin.equipments.index',
             'admin.equipment-types.index',
+            'admin.tires.index',
             'admin.groups.index',
             'admin.activity-log.index',
             'admin.settings.index',
@@ -134,6 +136,13 @@ class ViewRenderSmokeTest extends TestCase
             'revision_date' => '2023-01-01',
             'expiration_date' => '2024-01-01',
         ]);
+        $tire = Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => 'winter',
+            'quantity' => 4,
+            'brand' => 'Michelin',
+            'status' => 'mounted',
+        ]);
         $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
         $group->addUser($this->admin, Group::ROLE_CAPO);
 
@@ -146,6 +155,7 @@ class ViewRenderSmokeTest extends TestCase
             ['admin.deadlines.show', $deadline->id],
             ['admin.equipments.show', $equipment->id],
             ['admin.equipment-types.show', $equipmentType->id],
+            ['admin.tires.show', $tire->id],
             ['admin.groups.show', $group->id],
         ];
 
@@ -169,6 +179,7 @@ class ViewRenderSmokeTest extends TestCase
             'admin.deadlines.create',
             'admin.equipments.create',
             'admin.equipment-types.create',
+            'admin.tires.create',
         ];
 
         foreach ($routes as $route) {
