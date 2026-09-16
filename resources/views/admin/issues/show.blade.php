@@ -74,6 +74,20 @@
                     @endif
                 </span>
             </div>
+            @if ($issue->tire)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Pneumatico collegato') }}</span>
+                    <span class="v">
+                        <a class="dl-veh-link" href="{{ route('admin.tires.show', $issue->tire->id) }}">
+                            {{ $issue->tire->season_label }}
+                            @if ($issue->tire->brand)
+                                · {{ $issue->tire->brand }}
+                            @endif
+                            <span class="arrow">›</span>
+                        </a>
+                    </span>
+                </div>
+            @endif
             <div class="dl-kv">
                 <span class="k">{{ __('Data del guasto') }}</span>
                 <span class="v">{{ $issue->event_date_formatted ?? 'N/A' }}</span>
