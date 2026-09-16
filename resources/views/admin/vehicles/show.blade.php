@@ -378,7 +378,11 @@
                     <div class="veh-eq-item">
                         <span class="ic"><i class="fa-solid fa-circle-dot"></i></span>
                         <div style="min-width:0;">
-                            <div class="name">{{ $tire->season_label }} ·
+                            <div class="name">{{ $tire->season_label }}
+                                @if ($tire->axle !== 'full')
+                                    ({{ $tire->axle_label }})
+                                @endif
+                                ·
                                 {{ trim(($tire->brand ?? '') . ' ' . ($tire->model_name ?? '')) ?: __('N/A') }}</div>
                             <div class="meta">{{ $tire->size ?? 'N/A' }} ·
                                 {{ __('cambio') }} {{ $tire->next_change_date_formatted ?? 'N/A' }}</div>

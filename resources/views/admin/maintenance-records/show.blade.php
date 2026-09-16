@@ -9,6 +9,10 @@
         ->where('itemable_type', \App\Models\Deadline::class)
         ->map(fn($item) => $item->itemable)
         ->filter();
+    $linkedTireItem = $maintenanceRecord->items
+        ->where('itemable_type', \App\Models\Tire::class)
+        ->first();
+    $linkedTire = $linkedTireItem?->itemable;
     $issueDescriptions = $linkedIssues->pluck('description')->implode(', ');
     $title = $issueDescriptions !== '' ? $issueDescriptions : $maintenanceRecord->activity_type ?? __('Intervento');
     $badgeClass = fn($color) => match ($color) {
@@ -169,6 +173,31 @@
                         <span class="v"><span class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->status_label }}</span></span>
                     </div>
                 @endforeach
+            </div>
+        </div>
+    @endif
+
+    @if ($linkedTire)
+        <div class="dl-info-card">
+            <div class="head">
+                <h3>{{ __('Pneumatico collegato') }}</h3>
+            </div>
+            <div class="body">
+                <div class="dl-kv">
+                    <span class="k">
+                        <a href="{{ route('admin.tires.show', $linkedTire->id) }}">
+                            {{ $linkedTire->season_label }} ({{ $linkedTire->axle_label }})
+                            @if ($linkedTire->brand)
+                                · {{ $linkedTire->brand }}
+                            @endif
+                        </a>
+                    </span>
+                    <span class="v">
+                        <span class="badge {{ $linkedTireItem->completed ? 'b-green' : 'b-gray' }}">
+                            {{ $linkedTireItem->completed ? __('Montato') : __('Da montare al completamento') }}
+                        </span>
+                    </span>
+                </div>
             </div>
         </div>
     @endif

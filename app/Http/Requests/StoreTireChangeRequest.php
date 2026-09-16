@@ -19,6 +19,7 @@ class StoreTireChangeRequest extends FormRequest
         return [
             'changed_date' => 'required|date',
             'mileage_at_change' => 'nullable|integer|min:0',
+            'previous_disposition' => 'required|in:stored,retired',
             'notes' => 'nullable|string',
         ];
     }
@@ -29,6 +30,8 @@ class StoreTireChangeRequest extends FormRequest
             'changed_date.required' => 'La data del cambio è obbligatoria.',
             'changed_date.date' => 'La data del cambio deve essere una data valida.',
             'mileage_at_change.integer' => 'Il chilometraggio deve essere un numero intero.',
+            'previous_disposition.required' => 'Indica cosa fare delle gomme sostituite.',
+            'previous_disposition.in' => 'La scelta per le gomme sostituite non è valida.',
         ];
     }
 }

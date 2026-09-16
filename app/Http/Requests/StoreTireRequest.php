@@ -19,6 +19,7 @@ class StoreTireRequest extends FormRequest
         return [
             'vehicle_id' => 'required|exists:vehicles,id',
             'season' => 'required|in:summer,winter,all_season',
+            'axle' => 'required|in:full,front,rear',
             'quantity' => 'required|integer|min:1|max:10',
             'brand' => 'nullable|string|max:255',
             'model_name' => 'nullable|string|max:255',
@@ -39,6 +40,8 @@ class StoreTireRequest extends FormRequest
             'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'season.required' => 'La stagionalità è obbligatoria.',
             'season.in' => 'La stagionalità selezionata non è valida.',
+            'axle.required' => "L'asse è obbligatorio.",
+            'axle.in' => "L'asse selezionato non è valido.",
             'quantity.required' => 'Il numero di gomme è obbligatorio.',
             'quantity.integer' => 'Il numero di gomme deve essere un numero intero.',
             'quantity.min' => 'Il numero di gomme deve essere almeno 1.',

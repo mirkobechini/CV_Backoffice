@@ -21,6 +21,7 @@ class MaintenanceRecord extends Model
     public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';
     public const ACTIVITY_REVISION_OXYGEN = 'Revisione Impianto Ossigeno';
     public const ACTIVITY_TIMING_BELT = 'Cinghia Distribuzione';
+    public const ACTIVITY_TIRE_CHANGE = 'Cambio Gomme';
 
     public const ACTIVITY_TYPES = [
         self::ACTIVITY_TAGLIANDO,
@@ -29,7 +30,7 @@ class MaintenanceRecord extends Model
         self::ACTIVITY_REVISION_OXYGEN,
         self::ACTIVITY_TIMING_BELT,
         'Lavaggio',
-        'Cambio Gomme',
+        self::ACTIVITY_TIRE_CHANGE,
         'Altro',
     ];
 
@@ -72,6 +73,11 @@ class MaintenanceRecord extends Model
     public function deadlines()
     {
         return $this->morphToMany(Deadline::class, 'itemable', 'maintenance_record_items');
+    }
+
+    public function tires()
+    {
+        return $this->morphToMany(Tire::class, 'itemable', 'maintenance_record_items');
     }
 
     public function getAppointmentDateFormattedAttribute(): ?string

@@ -2,17 +2,23 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTireChangeRequest;
 use App\Http\Requests\StoreTireRequest;
 use App\Http\Requests\UpdateTireRequest;
 use App\Models\Tire;
 use App\Models\Vehicle;
+use App\Services\TireChangeService;
 use App\Services\TireSeasonService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 
 class TireController extends Controller
 {
+    use SortableAndGroupable;
+
     public function __construct()
     {
         $this->authorizeResource(Tire::class, 'tire');
@@ -25,13 +31,19 @@ class TireController extends Controller
     {
         $validated = $request->validate([
             'status_filter' => 'nullable|in:all,mounted,stored,retired',
-            'season_filter' => 'nullable|in:due',
+            'season_filter' => 'nullable|in:all,summer,winter,all_season,due',
+            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'sort_by' => 'nullable|in:vehicle,season,status,next_change',
+            'sort_dir' => 'nullable|in:asc,desc',
         ]);
         $statusFilter = $validated['status_filter'] ?? 'all';
-        $seasonFilter = $validated['season_filter'] ?? null;
+        $seasonFilter = $validated['season_filter'] ?? 'all';
+        $vehicleId = $validated['vehicle_id'] ?? null;
+        $sortBy = $validated['sort_by'] ?? null;
+        $sortDir = $validated['sort_dir'] ?? 'asc';
 
         $query = Tire::with('vehicle.brand', 'vehicle.carModel')
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser());
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser());
 
         if ($q = $request->get('q')) {
             $query->where(function ($sub) use ($q) {
@@ -45,6 +57,10 @@ class TireController extends Controller
             });
         }
 
+        if ($vehicleId) {
+            $query->where('vehicle_id', $vehicleId);
+        }
+
         if ($statusFilter !== 'all') {
             $query->where('status', $statusFilter);
         }
@@ -56,11 +72,45 @@ class TireController extends Controller
             $query->where('status', Tire::STATUS_MOUNTED)
                 ->where('season', '!=', $expectedSeason)
                 ->where('season', '!=', Tire::SEASON_ALL_SEASON);
+        } elseif (in_array($seasonFilter, [Tire::SEASON_SUMMER, Tire::SEASON_WINTER, Tire::SEASON_ALL_SEASON], true)) {
+            $query->where('season', $seasonFilter);
         }
 
-        $tires = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        $sortMap = [
+            'vehicle' => fn (Tire $t) => $t->vehicle?->internal_code ?? '',
+            'season' => 'season',
+            'status' => 'status',
+            'next_change' => 'next_change_date',
+        ];
 
-        return view('admin.tires.index', compact('tires', 'statusFilter', 'seasonFilter'));
+        $allTires = $sortBy
+            ? $this->applySorting($query, $sortBy, $sortDir, $sortMap)
+            : $query->orderByDesc('created_at')->get();
+
+        $perPage = 20;
+        $page = (int) $request->get('page', 1);
+        $tires = new LengthAwarePaginator(
+            $allTires->forPage($page, $perPage)->values(),
+            $allTires->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $vehiclesForFilter = Vehicle::forCurrentUser()->whereHas('tires')->get();
+
+        return view('admin.tires.index', compact(
+            'tires',
+            'statusFilter',
+            'seasonFilter',
+            'vehicleId',
+            'sortBy',
+            'sortDir',
+            'vehiclesForFilter'
+        ) + [
+            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.tires.index'),
+            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
+        ]);
     }
 
     /**
@@ -126,38 +176,22 @@ class TireController extends Controller
     }
 
     /**
-     * Registra il montaggio di questo set di gomme sul veicolo: crea una
-     * voce di storico cambio gomme, marca come "in magazzino" l'eventuale
-     * set attualmente montato, e questo come "montato".
+     * Registra il montaggio di questo set di gomme (o solo asse) sul
+     * veicolo: vedi TireChangeService per la logica di smontaggio/split.
      */
-    public function recordChange(StoreTireChangeRequest $request, Tire $tire)
+    public function recordChange(StoreTireChangeRequest $request, Tire $tire, TireChangeService $tireChangeService)
     {
         $this->authorize('update', $tire);
 
         $data = $request->validated();
 
-        $previousTire = $tire->vehicle
-            ->mountedTires()
-            ->where('id', '!=', $tire->id)
-            ->first();
-
-        $tire->vehicle->tireChanges()->create([
-            'tire_id' => $tire->id,
-            'previous_tire_id' => $previousTire?->id,
-            'changed_date' => $data['changed_date'],
-            'mileage_at_change' => $data['mileage_at_change'] ?? null,
-            'notes' => $data['notes'] ?? null,
-        ]);
-
-        if ($previousTire) {
-            $previousTire->update(['status' => Tire::STATUS_STORED]);
-        }
-
-        $tire->update([
-            'status' => Tire::STATUS_MOUNTED,
-            'mounted_date' => $data['changed_date'],
-            'mounted_mileage' => $data['mileage_at_change'] ?? $tire->mounted_mileage,
-        ]);
+        $tireChangeService->recordChange(
+            $tire,
+            Carbon::parse($data['changed_date']),
+            $data['mileage_at_change'] ?? null,
+            $data['previous_disposition'],
+            $data['notes'] ?? null,
+        );
 
         return redirect()->route('admin.vehicles.show', $tire->vehicle_id)->with('status', 'Cambio gomme registrato con successo.');
     }

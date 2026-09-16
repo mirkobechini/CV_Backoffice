@@ -77,15 +77,23 @@ class TireSeasonService
         return $this->vehiclesWithTires($groupId)->reject(fn (Vehicle $vehicle) => $this->isCompliant($vehicle));
     }
 
+    /**
+     * Un veicolo può avere più di una gomma "montata" contemporaneamente
+     * (es. un set anteriore e uno posteriore tracciati separatamente): è in
+     * regola solo se TUTTE quelle montate corrispondono alla stagionalità
+     * attesa (o sono quattro stagioni).
+     */
     public function isCompliant(Vehicle $vehicle): bool
     {
-        $mounted = $vehicle->tires->firstWhere('status', Tire::STATUS_MOUNTED);
+        $mounted = $vehicle->tires->where('status', Tire::STATUS_MOUNTED);
 
-        if (! $mounted) {
+        if ($mounted->isEmpty()) {
             return false;
         }
 
-        return $mounted->season === $this->expectedSeasonForVehicle($vehicle) || $mounted->season === Tire::SEASON_ALL_SEASON;
+        $expectedSeason = $this->expectedSeasonForVehicle($vehicle);
+
+        return $mounted->every(fn (Tire $tire) => $tire->season === $expectedSeason || $tire->season === Tire::SEASON_ALL_SEASON);
     }
 
     private function vehiclesWithTires(?int $groupId): Collection

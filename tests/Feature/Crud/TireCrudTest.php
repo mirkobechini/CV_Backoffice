@@ -95,6 +95,7 @@ class TireCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
+            'axle' => 'full',
             'quantity' => 4,
             'brand' => 'Pirelli',
             'model_name' => 'Cinturato',
@@ -121,6 +122,7 @@ class TireCrudTest extends TestCase
         $response = $this->actingAs($user)->put(route('admin.tires.update', $tire), [
             'vehicle_id' => $vehicle->id,
             'season' => 'winter',
+            'axle' => 'full',
             'quantity' => 4,
             'brand' => 'Continental',
             'model_name' => 'WinterContact',
@@ -173,6 +175,7 @@ class TireCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.record-change', $summer), [
             'changed_date' => '2026-04-15',
             'mileage_at_change' => 50000,
+            'previous_disposition' => 'stored',
             'notes' => 'Cambio stagionale',
         ]);
 
@@ -207,6 +210,47 @@ class TireCrudTest extends TestCase
         $response->assertViewHas('tires', function ($tires) use ($wrongSeason) {
             return $tires->pluck('id')->all() === [$wrongSeason->id];
         });
+    }
+
+    public function test_index_can_filter_by_vehicle(): void
+    {
+        $user = $this->admin();
+        $vehicleA = $this->createVehicle(['license_plate' => 'AB123CD', 'internal_code' => '0001']);
+        $vehicleB = $this->createVehicle(['license_plate' => 'XY987ZZ', 'internal_code' => '0002']);
+        $tireA = $this->createTire($vehicleA);
+        $this->createTire($vehicleB);
+
+        $response = $this->actingAs($user)->get(route('admin.tires.index', ['vehicle_id' => $vehicleA->id]));
+
+        $response->assertOk();
+        $response->assertViewHas('tires', fn ($tires) => $tires->pluck('id')->all() === [$tireA->id]);
+    }
+
+    public function test_index_can_filter_by_season(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+        $winter = $this->createTire($vehicle, ['season' => 'winter']);
+        $this->createTire($vehicle, ['season' => 'summer']);
+
+        $response = $this->actingAs($user)->get(route('admin.tires.index', ['season_filter' => 'winter']));
+
+        $response->assertOk();
+        $response->assertViewHas('tires', fn ($tires) => $tires->pluck('id')->all() === [$winter->id]);
+    }
+
+    public function test_index_can_sort_by_vehicle(): void
+    {
+        $user = $this->admin();
+        $vehicleA = $this->createVehicle(['license_plate' => 'AB123CD', 'internal_code' => '0002']);
+        $vehicleB = $this->createVehicle(['license_plate' => 'XY987ZZ', 'internal_code' => '0001']);
+        $tireA = $this->createTire($vehicleA);
+        $tireB = $this->createTire($vehicleB);
+
+        $response = $this->actingAs($user)->get(route('admin.tires.index', ['sort_by' => 'vehicle', 'sort_dir' => 'asc']));
+
+        $response->assertOk();
+        $response->assertViewHas('tires', fn ($tires) => $tires->pluck('id')->all() === [$tireB->id, $tireA->id]);
     }
 
     public function test_issue_can_be_linked_to_a_tire(): void
