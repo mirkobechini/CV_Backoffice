@@ -25,6 +25,10 @@
             href="{{ route('admin.mileage-logs.index') }}" title="{{ __('Chilometraggi') }}">
             <i class="fa-solid fa-road"></i><span>{{ __('Km') }}</span>
         </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.tires.*') ? 'active' : '' }}"
+            href="{{ route('admin.tires.index') }}" title="{{ __('Pneumatici') }}">
+            <i class="fa-solid fa-circle-dot"></i><span>{{ __('Pneumatici') }}</span>
+        </a>
     </nav>
 
     {{-- Sezione: Servizi --}}

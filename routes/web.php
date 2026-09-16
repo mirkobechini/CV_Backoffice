@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
+use App\Http\Controllers\Admin\TireController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("issues", IssueController::class);
         Route::resource("deadlines", DeadlineController::class);
         Route::resource("equipments", EquipmentController::class);
+        Route::resource("tires", TireController::class);
+        Route::post('tires/{tire}/record-change', [TireController::class, 'recordChange'])
+            ->name('tires.record-change');
 
         // Gestione gruppi
         Route::post('groups/join', [GroupController::class, 'join'])->name('groups.join');

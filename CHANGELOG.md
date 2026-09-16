@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.16] - 2026-09-16
+
+### Added
+
+- Gestione pneumatici: nuova sezione "Pneumatici" per tracciare i set di gomme di ogni veicolo (estive, invernali o quattro stagioni), numero di gomme, marca/modello/misura, data e km di montaggio, e quando è previsto il prossimo cambio (per data e/o km). Il montaggio di un nuovo set aggiorna automaticamente lo storico dei cambi effettuati e riporta in magazzino il set precedente.
+- I guasti possono ora essere collegati a uno specifico set di gomme del veicolo (campo opzionale), per distinguere ad esempio un problema di foratura dagli altri guasti meccanici.
+
 ## [v1.2.15] - 2026-09-16
 
 ### Added

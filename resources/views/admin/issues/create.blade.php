@@ -44,6 +44,23 @@
                     </div>
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" required />
                 </div>
+                <div class="field">
+                    <label for="tire_id">{{ __('Pneumatico collegato (opzionale)') }}</label>
+                    <select class="select @error('tire_id') is-invalid @enderror" id="tire_id" name="tire_id">
+                        <option value="">{{ __('Nessun pneumatico associato') }}</option>
+                        @foreach ($tires as $tire)
+                            <option value="{{ $tire->id }}" {{ old('tire_id') == $tire->id ? 'selected' : '' }}>
+                                {{ $tire->vehicle->internal_code ?? 'N/A' }} · {{ $tire->season_label }}
+                                @if ($tire->brand)
+                                    · {{ $tire->brand }}
+                                @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('tire_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
                 <div class="row2">
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>

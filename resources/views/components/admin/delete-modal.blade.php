@@ -23,6 +23,7 @@
         ],
         'equipment' => ['label' => 'attrezzatura', 'route' => 'admin.equipments.destroy', 'parameter' => 'equipment'],
         'deadline' => ['label' => 'scadenza', 'route' => 'admin.deadlines.destroy', 'parameter' => 'deadline'],
+        'tire' => ['label' => 'set di gomme', 'route' => 'admin.tires.destroy', 'parameter' => 'tire'],
         'mileagelog' => [
             'label' => 'registro chilometrico',
             'route' => 'admin.mileage-logs.destroy',
@@ -46,6 +47,7 @@
         'vehicle' => $object->internal_code ?? ($object->license_plate ?? (string) $object->id),
         'issue' => $object->description ?? (string) $object->id,
         'maintenancerecord' => $object->activity_type ?? (string) $object->id,
+        'tire' => trim(($object->season_label ?? '') . ' ' . ($object->brand ?? '')) ?: (string) $object->id,
         default => $object->name ?? ($object->title ?? (string) $object->id),
     };
 @endphp
