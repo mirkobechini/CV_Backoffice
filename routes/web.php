@@ -68,6 +68,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::post('groups/join', [GroupController::class, 'join'])->name('groups.join');
         Route::post('groups/{group}/invite', [GroupController::class, 'invite'])->name('groups.invite');
         Route::patch('groups/{group}/invite-code', [GroupController::class, 'regenerateInviteCode'])->name('groups.invite-code');
+        Route::patch('groups/{group}/tire-season', [GroupController::class, 'updateTireSeason'])->name('groups.tire-season.update');
         Route::patch('groups/{group}/role/{user}', [GroupController::class, 'updateRole'])->name('groups.role');
         Route::delete('groups/{group}/member/{user}', [GroupController::class, 'removeMember'])->name('groups.remove-member');
         // Creazione di un account utente direttamente in un gruppo (in
@@ -122,7 +123,6 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // Impostazioni generali
         Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('settings/backup', [SettingsController::class, 'backup'])->name('settings.backup');
-        Route::patch('settings/tire-season', [SettingsController::class, 'updateTireSeason'])->name('settings.tire-season.update');
 
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])

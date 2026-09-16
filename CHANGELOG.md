@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.19] - 2026-09-18
+
+### Fixed
+
+- Le date di cambio gomme stagionale (invernali/estive) erano un'unica impostazione globale condivisa da tutta l'installazione: due associazioni diverse che usano la stessa installazione erano costrette alle stesse date. Ora sono per gruppo, impostabili (solo dal capo) dalla pagina del gruppo invece che da Impostazioni.
+
 ## [v1.2.18] - 2026-09-18
 
 ### Added

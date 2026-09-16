@@ -80,6 +80,79 @@ class GroupControllerTest extends TestCase
         ]);
     }
 
+    public function test_capo_can_update_tire_season_switch_dates(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->patch(route('admin.groups.tire-season.update', $group), [
+            'winter_switch_month' => 11,
+            'winter_switch_day' => 1,
+            'summer_switch_month' => 4,
+            'summer_switch_day' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('groups', [
+            'id' => $group->id,
+            'winter_switch_date' => '11-01',
+            'summer_switch_date' => '04-01',
+        ]);
+    }
+
+    public function test_member_cannot_update_tire_season_switch_dates(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $member = User::factory()->create();
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($member)->patch(route('admin.groups.tire-season.update', $group), [
+            'winter_switch_month' => 11,
+            'winter_switch_day' => 1,
+            'summer_switch_month' => 4,
+            'summer_switch_day' => 1,
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_tire_season_switch_dates_reject_invalid_day_for_month(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->patch(route('admin.groups.tire-season.update', $group), [
+            'winter_switch_month' => 2,
+            'winter_switch_day' => 30,
+            'summer_switch_month' => 4,
+            'summer_switch_day' => 15,
+        ]);
+
+        $response->assertSessionHasErrors(['winter_switch_day']);
+    }
+
+    public function test_capo_cannot_update_tire_season_dates_of_another_groups(): void
+    {
+        $capoA = User::factory()->create();
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $groupA->addUser($capoA, Group::ROLE_CAPO);
+
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+
+        $response = $this->actingAs($capoA)->patch(route('admin.groups.tire-season.update', $groupB), [
+            'winter_switch_month' => 11,
+            'winter_switch_day' => 1,
+            'summer_switch_month' => 4,
+            'summer_switch_day' => 1,
+        ]);
+
+        $response->assertForbidden();
+    }
+
     public function test_join_group_with_valid_code(): void
     {
         $user = User::factory()->create();
