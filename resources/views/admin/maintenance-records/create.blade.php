@@ -167,6 +167,70 @@
                         @enderror
                     </div>
                 </div>
+                <div id="tire-section" style="display:none;">
+                    <div class="field">
+                        <label for="target_tire_id">{{ __('Set di gomme da montare') }}</label>
+                        <select class="select @error('target_tire_id') is-invalid @enderror" id="target_tire_id"
+                            name="target_tire_id">
+                            <option value="">{{ __('-- Crea un nuovo set --') }}</option>
+                            @foreach ($storedTires as $tire)
+                                <option value="{{ $tire->id }}" data-vehicle-id="{{ $tire->vehicle_id }}"
+                                    {{ old('target_tire_id') == $tire->id ? 'selected' : '' }}>
+                                    {{ $tire->season_label }} ({{ $tire->axle_label }})
+                                    @if ($tire->brand)
+                                        · {{ $tire->brand }}
+                                    @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('target_tire_id')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        <div class="hint">{{ __('Propone i set attualmente in magazzino per il veicolo selezionato, oppure descrivi un set nuovo.') }}</div>
+                    </div>
+                    <div id="new-tire-fields">
+                        <div class="row2">
+                            <div class="field">
+                                <label for="new_tire_season">{{ __('Stagionalità') }}</label>
+                                <select class="select @error('new_tire_season') is-invalid @enderror" id="new_tire_season"
+                                    name="new_tire_season">
+                                    <option value="" disabled selected>{{ __('Seleziona...') }}</option>
+                                    <option value="summer" {{ old('new_tire_season') == 'summer' ? 'selected' : '' }}>{{ __('Estive') }}</option>
+                                    <option value="winter" {{ old('new_tire_season') == 'winter' ? 'selected' : '' }}>{{ __('Invernali') }}</option>
+                                    <option value="all_season" {{ old('new_tire_season') == 'all_season' ? 'selected' : '' }}>{{ __('Quattro stagioni') }}</option>
+                                </select>
+                                @error('new_tire_season')
+                                    <div class="field-error">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="field">
+                                <label for="new_tire_axle">{{ __('Asse') }}</label>
+                                <select class="select" id="new_tire_axle" name="new_tire_axle">
+                                    <option value="full" {{ old('new_tire_axle', 'full') == 'full' ? 'selected' : '' }}>{{ __('Set completo (4)') }}</option>
+                                    <option value="front" {{ old('new_tire_axle') == 'front' ? 'selected' : '' }}>{{ __('Anteriori (2)') }}</option>
+                                    <option value="rear" {{ old('new_tire_axle') == 'rear' ? 'selected' : '' }}>{{ __('Posteriori (2)') }}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row2">
+                            <div class="field">
+                                <label for="new_tire_brand">{{ __('Marca') }}</label>
+                                <input type="text" class="input" id="new_tire_brand" name="new_tire_brand"
+                                    value="{{ old('new_tire_brand') }}" placeholder="{{ __('es. Michelin') }}">
+                            </div>
+                            <div class="field">
+                                <label for="new_tire_model_name">{{ __('Modello') }}</label>
+                                <input type="text" class="input" id="new_tire_model_name" name="new_tire_model_name"
+                                    value="{{ old('new_tire_model_name') }}" placeholder="{{ __('es. Alpin 6') }}">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="new_tire_size">{{ __('Misura') }}</label>
+                            <input type="text" class="input" id="new_tire_size" name="new_tire_size"
+                                value="{{ old('new_tire_size') }}" placeholder="{{ __('es. 205/55 R16') }}">
+                        </div>
+                    </div>
+                </div>
                 <div class="row2">
                     <div class="field">
                         <x-form.date-input name="return_date" label="{{ __('Data restituzione veicolo') }}" />
@@ -328,6 +392,36 @@
 
             filterByVehicle();
             vehicleSelect.addEventListener('change', filterByVehicle);
+
+            // --- Sezione "Cambio Gomme" ---
+            const activityTypeSelect = document.getElementById('activity_type');
+            const tireSection = document.getElementById('tire-section');
+            const targetTireSelect = document.getElementById('target_tire_id');
+            const newTireFields = document.getElementById('new-tire-fields');
+
+            const toggleTireSection = () => {
+                tireSection.style.display = activityTypeSelect.value === 'Cambio Gomme' ? '' : 'none';
+            };
+            const toggleNewTireFields = () => {
+                newTireFields.style.display = targetTireSelect.value ? 'none' : '';
+            };
+            const filterTiresByVehicle = () => {
+                const selectedVehicleId = vehicleSelect.value;
+                targetTireSelect.querySelectorAll('option[data-vehicle-id]').forEach(opt => {
+                    opt.hidden = opt.dataset.vehicleId !== selectedVehicleId;
+                    if (opt.hidden && opt.selected) {
+                        targetTireSelect.value = '';
+                    }
+                });
+                toggleNewTireFields();
+            };
+
+            toggleTireSection();
+            toggleNewTireFields();
+            filterTiresByVehicle();
+            activityTypeSelect.addEventListener('change', toggleTireSection);
+            targetTireSelect.addEventListener('change', toggleNewTireFields);
+            vehicleSelect.addEventListener('change', filterTiresByVehicle);
 
             // --- Dialog completamento ---
             const form = document.getElementById('maintenance-record-form');

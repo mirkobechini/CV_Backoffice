@@ -69,6 +69,10 @@
                 <span class="v">{{ $tire->season_label }}</span>
             </div>
             <div class="dl-kv">
+                <span class="k">{{ __('Asse') }}</span>
+                <span class="v">{{ $tire->axle_label }}</span>
+            </div>
+            <div class="dl-kv">
                 <span class="k">{{ __('Numero di gomme') }}</span>
                 <span class="v">{{ $tire->quantity }}</span>
             </div>
@@ -129,6 +133,14 @@
                             <input type="number" class="input" id="mileage_at_change" name="mileage_at_change"
                                 min="0">
                         </div>
+                    </div>
+                    <div class="field">
+                        <label for="previous_disposition">{{ __('Le gomme sostituite') }} <span class="req">*</span></label>
+                        <select class="select" id="previous_disposition" name="previous_disposition" required>
+                            <option value="stored">{{ __('Vanno in magazzino') }}</option>
+                            <option value="retired">{{ __('Vengono dismesse') }}</option>
+                        </select>
+                        <div class="hint">{{ __('Se il veicolo aveva un set completo montato e qui si monta solo un asse, il set viene diviso: solo la parte effettivamente rimossa segue questa scelta.') }}</div>
                     </div>
                     <div class="field">
                         <label for="notes">{{ __('Note (opzionale)') }}</label>

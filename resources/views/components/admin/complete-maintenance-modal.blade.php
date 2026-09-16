@@ -3,6 +3,8 @@
 @php
     $routeParameterValue = $maintenanceRecord?->getRouteKey();
     $modalIdSuffix = $routeParameterValue ?? 'missing-maintenance';
+    $tireItem = $maintenanceRecord?->items
+        ?->first(fn ($item) => $item->itemable_type === \App\Models\Tire::class);
 @endphp
 
 @if ($disabledReason)
@@ -48,6 +50,25 @@
                                 No
                             </label>
                         </div>
+
+                        @if ($tireItem)
+                            <p class="mb-2 mt-3"><strong>Le gomme sostituite:</strong></p>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="previous_disposition"
+                                    id="previous_disposition_stored_{{ $modalIdSuffix }}" value="stored" required>
+                                <label class="form-check-label" for="previous_disposition_stored_{{ $modalIdSuffix }}">
+                                    Vanno in magazzino
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="previous_disposition"
+                                    id="previous_disposition_retired_{{ $modalIdSuffix }}" value="retired" required>
+                                <label class="form-check-label" for="previous_disposition_retired_{{ $modalIdSuffix }}">
+                                    Vengono dismesse
+                                </label>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="modal-footer">
