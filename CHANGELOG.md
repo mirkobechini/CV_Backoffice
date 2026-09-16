@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.15] - 2026-09-16
+
+### Added
+
+- Le foto HEIC/HEIF caricate su un guasto vengono ora convertite in JPEG direttamente nel browser prima dell'invio: il server le accettava già da v1.2.14, ma restavano non visualizzabili in quasi tutti i browser (solo Safari sa mostrare un HEIC). La conversione avviene lato client (nessuna libreria di decodifica HEIC richiesta sul server) e scarica il decoder solo quando serve davvero, non su ogni pagina.
+
 ## [v1.2.14] - 2026-09-16
 
 ### Fixed
