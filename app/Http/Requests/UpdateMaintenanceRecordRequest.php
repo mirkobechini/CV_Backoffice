@@ -38,6 +38,13 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'issue_resolved' => 'nullable|boolean',
             'mileage_at_service' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:2000',
+            'target_tire_id' => 'nullable|exists:tires,id',
+            'new_tire_season' => 'nullable|in:summer,winter,all_season',
+            'new_tire_axle' => 'nullable|in:full,front,rear',
+            'new_tire_quantity' => 'nullable|integer|min:1|max:10',
+            'new_tire_brand' => 'nullable|string|max:255',
+            'new_tire_model_name' => 'nullable|string|max:255',
+            'new_tire_size' => 'nullable|string|max:255',
         ];
     }
 

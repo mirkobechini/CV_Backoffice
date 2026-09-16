@@ -17,6 +17,7 @@
         };
         $statusFilterUrl = fn($status) => route('admin.tires.index', array_merge(request()->except(['status_filter', 'page']), $status === 'all' ? [] : ['status_filter' => $status]));
         $seasonDueUrl = route('admin.tires.index', array_merge(request()->except(['season_filter', 'page']), $seasonFilter === 'due' ? [] : ['season_filter' => 'due']));
+        $seasonLabels = ['summer' => __('Estive'), 'winter' => __('Invernali'), 'all_season' => __('Quattro stagioni')];
     @endphp
 
     <div class="table-card">
@@ -49,6 +50,30 @@
                                 class="fa-solid fa-xmark"></i></a>
                     @endif
                 </form>
+                <form action="{{ route('admin.tires.index') }}" method="GET">
+                    @foreach (request()->except('vehicle_id', 'page') as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <select class="select sm" name="vehicle_id" onchange="this.form.submit()">
+                        <option value="">{{ __('Tutti i veicoli') }}</option>
+                        @foreach ($vehiclesForFilter as $vehicle)
+                            <option value="{{ $vehicle->id }}" {{ (string) $vehicleId === (string) $vehicle->id ? 'selected' : '' }}>
+                                {{ $vehicle->internal_code }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+                <form action="{{ route('admin.tires.index') }}" method="GET">
+                    @foreach (request()->except('season_filter', 'page') as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
+                    <select class="select sm" name="season_filter" onchange="this.form.submit()">
+                        <option value="all" {{ $seasonFilter === 'all' ? 'selected' : '' }}>{{ __('Tutte le stagionalità') }}</option>
+                        @foreach ($seasonLabels as $value => $label)
+                            <option value="{{ $value }}" {{ $seasonFilter === $value ? 'selected' : '' }}>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </form>
                 <a href="{{ route('admin.tires.create') }}" class="btn primary">
                     <i class="fa-solid fa-plus"></i> {{ __('Nuovo set') }}
                 </a>
@@ -59,12 +84,37 @@
             <table>
                 <thead>
                     <tr>
-                        <th>{{ __('Veicolo') }}</th>
-                        <th>{{ __('Stagionalità') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Veicolo') }}</span>
+                                <a href="{{ $sortToggleUrl('vehicle') }}"
+                                    class="mini {{ $sortBy === 'vehicle' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per veicolo') }}">{{ $sortIcon('vehicle') }}</a>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Stagionalità') }}</span>
+                                <a href="{{ $sortToggleUrl('season') }}"
+                                    class="mini {{ $sortBy === 'season' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per stagionalità') }}">{{ $sortIcon('season') }}</a>
+                            </div>
+                        </th>
+                        <th>{{ __('Asse') }}</th>
                         <th>{{ __('Marca / Modello') }}</th>
                         <th>{{ __('Misura') }}</th>
-                        <th>{{ __('Stato') }}</th>
-                        <th>{{ __('Prossimo cambio') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Stato') }}</span>
+                                <a href="{{ $sortToggleUrl('status') }}"
+                                    class="mini {{ $sortBy === 'status' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per stato') }}">{{ $sortIcon('status') }}</a>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Prossimo cambio') }}</span>
+                                <a href="{{ $sortToggleUrl('next_change') }}"
+                                    class="mini {{ $sortBy === 'next_change' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per prossimo cambio') }}">{{ $sortIcon('next_change') }}</a>
+                            </div>
+                        </th>
                         <th></th>
                     </tr>
                 </thead>
@@ -79,6 +129,7 @@
                                 </div>
                             </td>
                             <td>{{ $tire->season_label }}</td>
+                            <td>{{ $tire->axle_label }}</td>
                             <td>{{ trim(($tire->brand ?? '') . ' ' . ($tire->model_name ?? '')) ?: '—' }}</td>
                             <td class="code">{{ $tire->size ?: '—' }}</td>
                             <td>
@@ -106,7 +157,7 @@
                         <x-admin.delete-modal type="tire" :object="$tire" />
                     @empty
                         <tr>
-                            <td colspan="7" class="empty">{{ __('Nessun set di gomme trovato.') }}</td>
+                            <td colspan="8" class="empty">{{ __('Nessun set di gomme trovato.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -60,6 +60,20 @@
                 </div>
                 <div class="row2">
                     <div class="field">
+                        <label for="axle">{{ __('Asse') }} <span class="req">*</span></label>
+                        <select class="select @error('axle') is-invalid @enderror" id="axle" name="axle" required>
+                            <option value="full" {{ old('axle', 'full') == 'full' ? 'selected' : '' }}>
+                                {{ __('Set completo (4)') }}</option>
+                            <option value="front" {{ old('axle') == 'front' ? 'selected' : '' }}>
+                                {{ __('Anteriori (2)') }}</option>
+                            <option value="rear" {{ old('axle') == 'rear' ? 'selected' : '' }}>
+                                {{ __('Posteriori (2)') }}</option>
+                        </select>
+                        @error('axle')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
                         <label for="quantity">{{ __('Numero di gomme') }} <span class="req">*</span></label>
                         <input type="number" class="input @error('quantity') is-invalid @enderror" id="quantity"
                             name="quantity" value="{{ old('quantity', 4) }}" min="1" max="10" required>
@@ -67,6 +81,8 @@
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
+                </div>
+                <div class="row2">
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
                         <select class="select @error('status') is-invalid @enderror" id="status" name="status"
@@ -83,8 +99,6 @@
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
-                <div class="row2">
                     <div class="field">
                         <label for="brand">{{ __('Marca') }}</label>
                         <input type="text" class="input @error('brand') is-invalid @enderror" id="brand"
