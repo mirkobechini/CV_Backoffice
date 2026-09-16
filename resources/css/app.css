@@ -2598,10 +2598,40 @@ textarea.input {
    ============================================= */
 
 /* Input reale usato da Flatpickr per il valore: nascosto, l'utente vede
-   solo l'altInput generato (classe .input passata via data-alt-class). */
-.flatpickr-date,
-.flatpickr-month-input {
+   solo l'altInput generato (classe .input passata via data-alt-class).
+   Su mobile Flatpickr passa in modalità nativa (isMobile): crea un terzo
+   input (self.mobileInput, <input type="date/month">, visibile) il cui
+   className parte da self.input.className + " flatpickr-mobile" — eredita
+   quindi anche flatpickr-date/flatpickr-month-input. Senza :not(.flatpickr-mobile)
+   questa stessa regola nascondeva anche QUELLO, lasciando il campo
+   completamente invisibile e non compilabile su telefono (sia l'originale
+   che l'altInput sono già impostati su type="hidden" da Flatpickr stesso
+   in quel caso, quindi il mobileInput era l'unico elemento rimasto — e
+   veniva nascosto per errore). */
+.flatpickr-date:not(.flatpickr-mobile),
+.flatpickr-month-input:not(.flatpickr-mobile) {
     display: none;
+}
+
+/* Il mobileInput non riceve la classe .input (passata solo all'altInput
+   via data-alt-class): senza queste regole sarebbe uno <input type=date>
+   con lo stile grezzo del browser, fuori posto nel resto del form. */
+.flatpickr-mobile {
+    display: block;
+    width: 100%;
+    height: 40px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13.5px;
+    outline: none;
+}
+
+.flatpickr-mobile:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-soft);
 }
 
 .flatpickr-calendar {
