@@ -63,6 +63,20 @@
                 </div>
                 <div class="row2">
                     <div class="field">
+                        <label for="axle">{{ __('Asse') }} <span class="req">*</span></label>
+                        <select class="select @error('axle') is-invalid @enderror" id="axle" name="axle" required>
+                            <option value="full" {{ old('axle', $tire->axle) == 'full' ? 'selected' : '' }}>
+                                {{ __('Set completo (4)') }}</option>
+                            <option value="front" {{ old('axle', $tire->axle) == 'front' ? 'selected' : '' }}>
+                                {{ __('Anteriori (2)') }}</option>
+                            <option value="rear" {{ old('axle', $tire->axle) == 'rear' ? 'selected' : '' }}>
+                                {{ __('Posteriori (2)') }}</option>
+                        </select>
+                        @error('axle')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
                         <label for="quantity">{{ __('Numero di gomme') }} <span class="req">*</span></label>
                         <input type="number" class="input @error('quantity') is-invalid @enderror" id="quantity"
                             name="quantity" value="{{ old('quantity', $tire->quantity) }}" min="1" max="10" required>

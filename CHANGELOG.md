@@ -4,6 +4,14 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.18] - 2026-09-18
+
+### Added
+
+- Pneumatici: l'elenco può ora essere filtrato per veicolo e per stagionalità, oltre che ordinato per veicolo, stagionalità, stato o prossimo cambio.
+- Pneumatici: un set può ora riguardare solo un asse (anteriore o posteriore) invece delle 4 gomme intere, per registrare correttamente un cambio parziale. Se si sostituisce un solo asse mentre è montato un set completo, quest'ultimo viene automaticamente "diviso": l'asse non toccato resta tracciato come montato.
+- Appuntamenti "Cambio Gomme": ora è possibile collegare il set di gomme da montare (scegliendo tra quelli in magazzino o descrivendone uno nuovo). Al completamento dell'appuntamento, il set collegato viene montato e viene chiesto se le gomme sostituite vanno in magazzino o dismesse.
+
 ## [v1.2.17] - 2026-09-16
 
 ### Added

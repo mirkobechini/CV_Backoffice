@@ -30,9 +30,16 @@ class Tire extends Model
 
     public const STATUS_RETIRED = 'retired';
 
+    public const AXLE_FULL = 'full';
+
+    public const AXLE_FRONT = 'front';
+
+    public const AXLE_REAR = 'rear';
+
     protected $fillable = [
         'vehicle_id',
         'season',
+        'axle',
         'quantity',
         'brand',
         'model_name',
@@ -84,6 +91,16 @@ class Tire extends Model
             self::STATUS_MOUNTED => 'Montate',
             self::STATUS_STORED => 'In magazzino',
             self::STATUS_RETIRED => 'Dismesse',
+            default => 'N/A',
+        };
+    }
+
+    public function getAxleLabelAttribute(): string
+    {
+        return match ($this->axle) {
+            self::AXLE_FULL => 'Set completo',
+            self::AXLE_FRONT => 'Anteriori',
+            self::AXLE_REAR => 'Posteriori',
             default => 'N/A',
         };
     }
