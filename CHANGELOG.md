@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.17] - 2026-09-16
+
+### Added
+
+- Promemoria cambio gomme stagionale: due date globali (di default 15 novembre per le invernali, 15 aprile per le estive, modificabili da Impostazioni) definiscono quando la flotta dovrebbe cambiare gomme. Un nuovo riquadro in dashboard mostra quanti veicoli l'hanno già fatto e quali sono ancora in ritardo, con un filtro "Da cambiare" nell'elenco Pneumatici per vederli subito. Chi ha attivato le notifiche riceve un avviso (in-app ed eventualmente via email) una volta per veicolo quando scatta il ritardo.
+
 ## [v1.2.16] - 2026-09-16
 
 ### Added

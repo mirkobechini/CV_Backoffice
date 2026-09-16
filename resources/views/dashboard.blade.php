@@ -255,4 +255,48 @@
             </div>
         </div>
     </div>
+
+    @php
+        $tireSeasonLabel = $tireSeasonExpected === 'winter' ? __('invernali') : __('estive');
+        $tireSeasonTotal = $tireSeasonCompliantCount + $tireSeasonPending->count();
+    @endphp
+    @if ($tireSeasonTotal > 0)
+        <div class="dash-grid2">
+            <div class="dash-card" style="grid-column:1 / -1;">
+                <div class="head">
+                    <h3><span class="ic" style="background:var(--green-soft);color:var(--green)"><i
+                                class="fa-solid fa-circle-dot"></i></span>{{ __('Cambio gomme stagionale') }} —
+                        {{ __('gomme :season attese', ['season' => $tireSeasonLabel]) }}</h3>
+                </div>
+                <div class="body">
+                    <div class="dash-list-item" style="align-items:flex-start;flex-direction:column;gap:6px;">
+                        <div style="display:flex;align-items:baseline;gap:6px;width:100%;">
+                            <span class="name" style="font-size:17px;">{{ $tireSeasonCompliantCount }}</span>
+                            <span class="meta">/ {{ $tireSeasonTotal }} {{ __('veicoli già cambiati') }}</span>
+                            @if ($tireSeasonPending->isNotEmpty())
+                                <span class="badge b-amber" style="margin-left:auto;">
+                                    {{ trans_choice('{1} :count veicolo da cambiare|[2,*] :count veicoli da cambiare', $tireSeasonPending->count(), ['count' => $tireSeasonPending->count()]) }}
+                                </span>
+                            @endif
+                        </div>
+                        <div style="width:100%;height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;">
+                            <div style="height:100%;background:var(--green);width:{{ $tireSeasonTotal > 0 ? ($tireSeasonCompliantCount / $tireSeasonTotal) * 100 : 0 }}%;">
+                            </div>
+                        </div>
+                    </div>
+                    @foreach ($tireSeasonPending as $vehicle)
+                        <a href="{{ route('admin.vehicles.show', $vehicle->id) }}" class="dash-list-item">
+                            <div>
+                                <div class="name">{{ $vehicle->internal_code }}</div>
+                                <div class="meta">{{ $vehicle->license_plate }}</div>
+                            </div>
+                            <span class="badge b-amber">{{ __('da cambiare') }}</span>
+                        </a>
+                    @endforeach
+                    <a href="{{ route('admin.tires.index', ['season_filter' => 'due']) }}"
+                        class="dash-see-all">{{ __('Vedi pneumatici da cambiare') }} ›</a>
+                </div>
+            </div>
+        </div>
+    @endif
 @endsection

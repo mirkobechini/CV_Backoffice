@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\FleetSetting;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -82,5 +83,51 @@ class SettingsTest extends TestCase
 
         $response->assertOk();
         $response->assertDontSee('Crea backup');
+    }
+
+    public function test_capo_can_update_tire_season_switch_dates(): void
+    {
+        [$capo] = $this->capoWithGroup();
+
+        $response = $this->actingAs($capo)->patch(route('admin.settings.tire-season.update'), [
+            'winter_switch_month' => 11,
+            'winter_switch_day' => 1,
+            'summer_switch_month' => 4,
+            'summer_switch_day' => 1,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertSame('11-01', FleetSetting::current()->winter_switch_date);
+        $this->assertSame('04-01', FleetSetting::current()->summer_switch_date);
+    }
+
+    public function test_member_cannot_update_tire_season_switch_dates(): void
+    {
+        [, $group] = $this->capoWithGroup();
+        $member = User::factory()->create();
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($member)->patch(route('admin.settings.tire-season.update'), [
+            'winter_switch_month' => 11,
+            'winter_switch_day' => 1,
+            'summer_switch_month' => 4,
+            'summer_switch_day' => 1,
+        ]);
+
+        $response->assertForbidden();
+    }
+
+    public function test_tire_season_switch_dates_reject_invalid_day_for_month(): void
+    {
+        [$capo] = $this->capoWithGroup();
+
+        $response = $this->actingAs($capo)->patch(route('admin.settings.tire-season.update'), [
+            'winter_switch_month' => 2,
+            'winter_switch_day' => 30,
+            'summer_switch_month' => 4,
+            'summer_switch_day' => 15,
+        ]);
+
+        $response->assertSessionHasErrors(['winter_switch_day']);
     }
 }

@@ -29,6 +29,7 @@ class NotificationSetting extends Model
             'notify_on_deadline',
             'notify_on_issue',
             'notify_on_equipment',
+            'notify_on_tire_season',
         ];
 
         $key = $this->attributes['key'] ?? null;

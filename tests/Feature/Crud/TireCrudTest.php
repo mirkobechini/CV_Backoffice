@@ -28,13 +28,13 @@ class TireCrudTest extends TestCase
         return $user;
     }
 
-    private function createVehicle(): Vehicle
+    private function createVehicle(array $overrides = []): Vehicle
     {
-        $brand = Brand::create(['name' => 'Fiat']);
+        $brand = Brand::create(['name' => 'Fiat ' . uniqid()]);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
-        $type = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $type = VehicleType::create(['name' => 'Ambulanza ' . uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
 
-        return Vehicle::create([
+        return Vehicle::create(array_merge([
             'group_id' => $this->group?->id,
             'license_plate' => 'AB123CD',
             'internal_code' => '0001',
@@ -42,7 +42,7 @@ class TireCrudTest extends TestCase
             'car_model_id' => $model->id,
             'vehicle_type_id' => $type->id,
             'immatricolation_date' => '2024-01-01',
-        ]);
+        ], $overrides));
     }
 
     private function createTire(Vehicle $vehicle, array $overrides = []): Tire
@@ -186,6 +186,27 @@ class TireCrudTest extends TestCase
             'previous_tire_id' => $mountedWinter->id,
             'mileage_at_change' => 50000,
         ]);
+    }
+
+    public function test_season_filter_due_shows_only_mounted_tires_of_wrong_season(): void
+    {
+        $this->travelTo(\Carbon\Carbon::parse('2026-12-01'));
+
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+        $wrongSeason = $this->createTire($vehicle, ['season' => 'summer', 'status' => 'mounted']);
+        $this->createTire($vehicle, ['season' => 'winter', 'status' => 'stored']);
+
+        $otherVehicle = $this->createVehicle(['license_plate' => 'XY987ZZ', 'internal_code' => '0002']);
+        $this->createTire($otherVehicle, ['season' => 'winter', 'status' => 'mounted']);
+
+        $response = $this->actingAs($user)->get(route('admin.tires.index', ['season_filter' => 'due']));
+
+        $response->assertOk();
+        $response->assertSee('Michelin');
+        $response->assertViewHas('tires', function ($tires) use ($wrongSeason) {
+            return $tires->pluck('id')->all() === [$wrongSeason->id];
+        });
     }
 
     public function test_issue_can_be_linked_to_a_tire(): void

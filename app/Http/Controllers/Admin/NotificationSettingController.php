@@ -16,7 +16,7 @@ class NotificationSettingController extends Controller
     /**
      * Chiavi delle impostazioni booleane (checkbox "notifica su...").
      */
-    private const BOOLEAN_KEYS = ['notify_on_maintenance', 'notify_on_deadline', 'notify_on_issue', 'notify_on_equipment'];
+    private const BOOLEAN_KEYS = ['notify_on_maintenance', 'notify_on_deadline', 'notify_on_issue', 'notify_on_equipment', 'notify_on_tire_season'];
 
     /**
      * Show the form for editing the current user's notification settings.

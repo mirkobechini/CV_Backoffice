@@ -26,6 +26,7 @@ class Notification extends Model
     public const TYPE_ISSUE = 'issue';
     public const TYPE_EQUIPMENT = 'equipment';
     public const TYPE_MAINTENANCE = 'maintenance';
+    public const TYPE_TIRE_SEASON = 'tire_season';
     public const TYPE_SYSTEM = 'system';
 
     public function user()
@@ -64,6 +65,7 @@ class Notification extends Model
             self::TYPE_ISSUE => '⚠️',
             self::TYPE_EQUIPMENT => '🧯',
             self::TYPE_MAINTENANCE => '🔧',
+            self::TYPE_TIRE_SEASON => '🛞',
             default => '🔔',
         };
     }
