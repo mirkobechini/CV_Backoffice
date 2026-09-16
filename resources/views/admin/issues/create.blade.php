@@ -83,8 +83,8 @@
                     <label class="file-drop" for="image" id="image_label">
                         <i class="fa-solid fa-image"></i> {{ __('Clicca per caricare una foto') }}
                     </label>
-                    <input type="file" class="@error('image') is-invalid @enderror" id="image" name="image"
-                        accept="image/*,.heic,.heif" hidden>
+                    <input type="file" class="heic-convert @error('image') is-invalid @enderror" id="image"
+                        name="image" accept="image/*,.heic,.heif" hidden>
                     @error('image')
                         <div class="field-error">{{ $message }}</div>
                     @enderror

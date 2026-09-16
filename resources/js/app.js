@@ -1,6 +1,7 @@
 import './bootstrap';
 import './vehicle-type-equipment';
 import './date-pickers';
+import './heic-convert';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'flatpickr/dist/flatpickr.min.css';
 import 'flatpickr/dist/plugins/monthSelect/style.css';
