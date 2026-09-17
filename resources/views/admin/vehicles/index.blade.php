@@ -152,9 +152,12 @@
                             </td>
                             <td>
                                 @if ($vehicle->open_issues_count > 0 && $vehicle->in_progress_issues_count > 0)
-                                    <span class="badge b-red">⚠ {{ __('Aperti') }}
-                                        {{ $vehicle->open_issues_count }} + {{ __('Lavoraz.') }}
-                                        {{ $vehicle->in_progress_issues_count }}</span>
+                                    <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                                        <span class="badge b-red">⚠ {{ __('Aperti') }}
+                                            {{ $vehicle->open_issues_count }}</span>
+                                        <span class="badge b-amber">◐ {{ __('Lavoraz.') }}
+                                            {{ $vehicle->in_progress_issues_count }}</span>
+                                    </div>
                                 @elseif($vehicle->open_issues_count > 0)
                                     <span class="badge b-red">⚠ {{ __('Aperti') }}
                                         {{ $vehicle->open_issues_count }}</span>

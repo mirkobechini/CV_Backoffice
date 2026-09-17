@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.22] - 2026-09-19
+
+### Fixed
+
+- Elenco veicoli: quando un veicolo aveva sia guasti aperti che in lavorazione, il badge li mostrava entrambi schiacciati su una riga ("Aperti 2 + Lavoraz. 1"). Ora sono due badge separati, uno sotto l'altro.
+
 ## [v1.2.21] - 2026-09-19
 
 ### Added
