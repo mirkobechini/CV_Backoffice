@@ -38,10 +38,11 @@
                         <label for="equipment_type_id">{{ __('Tipo di attrezzatura') }} <span class="req">*</span></label>
                         <select class="select @error('equipment_type_id') is-invalid @enderror" id="equipment_type_id"
                             name="equipment_type_id" required>
-                            <option value="" disabled selected>{{ __('Seleziona un tipo di attrezzatura') }}</option>
+                            <option value="" disabled {{ old('equipment_type_id', $selectedEquipmentTypeId) ? '' : 'selected' }}>
+                                {{ __('Seleziona un tipo di attrezzatura') }}</option>
                             @foreach ($equipmentTypes as $type)
                                 <option value="{{ $type->id }}" data-category="{{ $type->category }}"
-                                    {{ old('equipment_type_id') == $type->id ? 'selected' : '' }}>
+                                    {{ old('equipment_type_id', $selectedEquipmentTypeId) == $type->id ? 'selected' : '' }}>
                                     {{ $type->name }}
                                 </option>
                             @endforeach

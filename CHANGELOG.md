@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.24] - 2026-09-19
+
+### Added
+
+- Scheda veicolo: la card Equipaggiamento elenca ora esplicitamente le attrezzature obbligatorie mancanti (con quante ne sono presenti rispetto a quante richieste) invece del solo badge riassuntivo in testata, con un link rapido per aggiungerle già con il tipo preselezionato.
+
 ## [v1.2.23] - 2026-09-19
 
 ### Changed
