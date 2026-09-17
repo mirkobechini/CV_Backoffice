@@ -334,6 +334,24 @@
                     class="veh-btn-add" title="{{ __('Nuova attrezzatura') }}"><i class="fa-solid fa-plus"></i></a>
             </div>
             <div class="body">
+                @if ($missingEquipment->isNotEmpty())
+                    @foreach ($missingEquipment as $missingType)
+                        @php($availableQuantity = $vehicle->equipment->where('equipment_type_id', $missingType->id)->count())
+                        @php($requiredQuantity = (int) $missingType->pivot->required_quantity)
+                        <div class="veh-eq-item">
+                            <span class="ic" style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                            <div style="min-width:0;">
+                                <div class="name">{{ $missingType->name }}</div>
+                                <div class="meta">{{ __('Presenti :available di :required richieste', ['available' => $availableQuantity, 'required' => $requiredQuantity]) }}</div>
+                            </div>
+                            <span class="exp c-red">{{ __('Mancante') }}</span>
+                            <div class="row-actions">
+                                <a href="{{ route('admin.equipments.create', ['vehicle_id' => $vehicle->id, 'equipment_type_id' => $missingType->id, 'back' => url()->full()]) }}"
+                                    class="mini-btn" title="{{ __('Aggiungi') }}"><i class="fa-solid fa-plus"></i></a>
+                            </div>
+                        </div>
+                    @endforeach
+                @endif
                 @forelse ($vehicle->equipment as $equipment)
                     <div class="veh-eq-item">
                         <span class="ic"><i class="fa-solid fa-toolbox"></i></span>
