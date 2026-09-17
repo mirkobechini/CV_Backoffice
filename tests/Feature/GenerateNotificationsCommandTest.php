@@ -130,6 +130,50 @@ class GenerateNotificationsCommandTest extends TestCase
         ]);
     }
 
+    public function test_generates_notification_for_expiring_collaudo(): void
+    {
+        $this->admin();
+        $vehicle = $this->vehicle();
+        $type = EquipmentType::create([
+            'name' => 'Estintore',
+            'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
+        ]);
+        Equipment::create([
+            'vehicle_id' => $vehicle->id,
+            'equipment_type_id' => $type->id,
+            'name' => 'Estintore 5kg',
+            'next_collaudo_date' => Carbon::today()->addDays(3),
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseHas('notifications', [
+            'title' => 'Collaudo in scadenza: Estintore 5kg',
+            'is_read' => false,
+        ]);
+    }
+
+    public function test_does_not_duplicate_collaudo_notification(): void
+    {
+        $this->admin();
+        $vehicle = $this->vehicle();
+        $type = EquipmentType::create([
+            'name' => 'Estintore',
+            'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
+        ]);
+        Equipment::create([
+            'vehicle_id' => $vehicle->id,
+            'equipment_type_id' => $type->id,
+            'name' => 'Estintore 5kg',
+            'next_collaudo_date' => Carbon::today()->addDays(3),
+        ]);
+
+        $this->artisan('app:generate-notifications');
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseCount('notifications', 1);
+    }
+
     public function test_generates_notification_for_upcoming_maintenance_appointment(): void
     {
         $this->admin();
