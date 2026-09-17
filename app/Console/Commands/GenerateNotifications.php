@@ -56,6 +56,7 @@ class GenerateNotifications extends Command
 
             if ($user->notificationSetting('notify_on_equipment', true)) {
                 $this->notifyExpiringEquipment($user, $groupId, $reminderDays, $notifications, $emailsByUser, $created);
+                $this->notifyExpiringCollaudo($user, $groupId, $reminderDays, $notifications, $emailsByUser, $created);
             }
 
             if ($user->notificationSetting('notify_on_maintenance', true)) {
@@ -156,6 +157,37 @@ class GenerateNotifications extends Command
             $message = "L'attrezzatura {$equipment->name} del veicolo {$vehicleCode} scade il {$equipment->expiration_date?->format('d/m/Y')}.";
             $url = $equipment->vehicle_id ? route('admin.vehicles.show', $equipment->vehicle_id) : null;
             $marker = "#equipment-{$equipment->id}";
+
+            if ($this->alreadyNotified($user->id, Notification::TYPE_EQUIPMENT, $marker)) {
+                continue;
+            }
+
+            $notifications->notifyUser($user, Notification::TYPE_EQUIPMENT, $title, "{$message} {$marker}", $url);
+            $emailsByUser[$user->id][] = new EventNotificationMail(Notification::TYPE_EQUIPMENT, $title, $message, $url);
+            $created++;
+        }
+    }
+
+    /**
+     * Collaudo (retest idraulico) in scadenza: ciclo separato dalla
+     * revisione ordinaria, rilevante solo per gli estintori.
+     */
+    private function notifyExpiringCollaudo(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    {
+        $expiringCollaudo = Equipment::with('vehicle')
+            ->where(function ($q) use ($groupId) {
+                $q->whereDoesntHave('vehicle')
+                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
+            })
+            ->collaudoExpiringSoon($reminderDays)
+            ->get();
+
+        foreach ($expiringCollaudo as $equipment) {
+            $vehicleCode = $equipment->vehicle?->internal_code ?? 'N/A';
+            $title = "Collaudo in scadenza: {$equipment->name}";
+            $message = "Il collaudo dell'attrezzatura {$equipment->name} del veicolo {$vehicleCode} scade il {$equipment->next_collaudo_date?->format('d/m/Y')}.";
+            $url = $equipment->vehicle_id ? route('admin.vehicles.show', $equipment->vehicle_id) : null;
+            $marker = "#equipment-collaudo-{$equipment->id}";
 
             if ($this->alreadyNotified($user->id, Notification::TYPE_EQUIPMENT, $marker)) {
                 continue;

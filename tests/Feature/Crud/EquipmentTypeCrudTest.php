@@ -22,6 +22,7 @@ class EquipmentTypeCrudTest extends TestCase
 
         return EquipmentType::create([
             'name' => 'Estintore',
+            'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
             'first_inspection_months' => 6,
             'regular_inspection_months' => 6,
         ]);
@@ -75,11 +76,12 @@ class EquipmentTypeCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.equipment-types.store'), [
             'name' => 'Estintore',
+            'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
             'first_inspection_months' => 6,
             'regular_inspection_months' => 6,
         ]);
 
-        $equipmentType = EquipmentType::first();
+        $equipmentType = EquipmentType::where('name', 'Estintore')->firstOrFail();
 
         $response->assertRedirect(route('admin.equipment-types.show', $equipmentType));
 
@@ -98,6 +100,7 @@ class EquipmentTypeCrudTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('admin.equipment-types.update', $equipmentType), [
             'name' => 'Barella',
+            'category' => EquipmentType::CATEGORY_STRETCHER,
             'first_inspection_months' => 12,
             'regular_inspection_months' => 12,
         ]);
@@ -131,18 +134,20 @@ class EquipmentTypeCrudTest extends TestCase
     {
         $user = $this->createUser();
         $equipmentType = $this->createEquipmentType();
+        $countBefore = EquipmentType::count();
 
         // Forza il ritorno alla form in caso di errore di validazione.
         $response = $this->from(route('admin.equipment-types.create'))
             ->actingAs($user)->post(route('admin.equipment-types.store'), [
                 'name' => $equipmentType->name,
+                'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
                 'first_inspection_months' => 6,
                 'regular_inspection_months' => 6,
             ]);
 
         // Verifica che il nome duplicato venga rifiutato.
         $response->assertSessionHasErrors(['name']);
-        $this->assertDatabaseCount('equipment_types', 1); // Conferma che non venga creato un secondo tipo di equipaggiamento con lo stesso nome.
+        $this->assertDatabaseCount('equipment_types', $countBefore); // Conferma che non venga creato un secondo tipo di equipaggiamento con lo stesso nome.
 
     }
 
@@ -153,6 +158,7 @@ class EquipmentTypeCrudTest extends TestCase
         $equipmentTypeBase = $this->createEquipmentType();
         $equipmentType = EquipmentType::create([
             'name' => 'Barella',
+            'category' => EquipmentType::CATEGORY_STRETCHER,
             'first_inspection_months' => 12,
             'regular_inspection_months' => 12,
         ]);
@@ -160,6 +166,7 @@ class EquipmentTypeCrudTest extends TestCase
         // Forza il ritorno alla form di modifica in caso di errore.
         $response = $this->from(route('admin.equipment-types.edit', $equipmentType))->actingAs($user)->put(route('admin.equipment-types.update', $equipmentType), [
             'name' => $equipmentTypeBase->name,
+            'category' => EquipmentType::CATEGORY_STRETCHER,
             'first_inspection_months' => 12,
             'regular_inspection_months' => 12,
         ]);

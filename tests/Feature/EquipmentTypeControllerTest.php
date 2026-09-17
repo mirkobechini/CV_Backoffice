@@ -35,6 +35,7 @@ class EquipmentTypeControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->post(route('admin.equipment-types.store'), [
                 'name' => 'Estintore',
+                'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
             ])
             ->assertRedirect();
 
@@ -57,6 +58,7 @@ class EquipmentTypeControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->put(route('admin.equipment-types.update', $eqType), [
                 'name' => 'Nuovo Tipo',
+                'category' => EquipmentType::CATEGORY_OTHER,
             ])
             ->assertRedirect();
 

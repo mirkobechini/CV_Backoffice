@@ -60,6 +60,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("issues", IssueController::class);
         Route::resource("deadlines", DeadlineController::class);
         Route::resource("equipments", EquipmentController::class);
+        Route::post('equipments/{equipment}/record-revision', [EquipmentController::class, 'recordRevision'])
+            ->name('equipments.record-revision');
         Route::resource("tires", TireController::class);
         Route::post('tires/{tire}/record-change', [TireController::class, 'recordChange'])
             ->name('tires.record-change');
