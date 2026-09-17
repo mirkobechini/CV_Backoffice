@@ -3,8 +3,8 @@
 @php
     $routeParameterValue = $maintenanceRecord?->getRouteKey();
     $modalIdSuffix = $routeParameterValue ?? 'missing-maintenance';
-    $tireItem = $maintenanceRecord?->items
-        ?->first(fn ($item) => $item->itemable_type === \App\Models\Tire::class);
+    $tireItems = $maintenanceRecord?->items
+        ?->where('itemable_type', \App\Models\Tire::class);
 @endphp
 
 @if ($disabledReason)
@@ -51,7 +51,7 @@
                             </label>
                         </div>
 
-                        @if ($tireItem)
+                        @if ($tireItems && $tireItems->isNotEmpty())
                             <p class="mb-2 mt-3"><strong>Le gomme sostituite:</strong></p>
 
                             <div class="form-check">

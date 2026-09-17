@@ -119,6 +119,7 @@ class MaintenanceRecordController extends Controller
         // Default: nessuna preselezione, utile quando apro la create manualmente.
         $preselectedIssueId = null;
         $preselectedVehicleId = null;
+        $preselectedActivityType = null;
 
         // Accettiamo sia i nuovi parametri (issue_id, vehicle_id)
         // sia i vecchi alias (issue, vehicle) per retrocompatibilità.
@@ -151,6 +152,11 @@ class MaintenanceRecordController extends Controller
             $preselectedVehicleId = $vehicleId;
         }
 
+        $rawActivityType = $request->query('activity_type');
+        if (is_string($rawActivityType) && in_array($rawActivityType, MaintenanceRecord::ACTIVITY_TYPES, true)) {
+            $preselectedActivityType = $rawActivityType;
+        }
+
         $vehicles = Vehicle::forCurrentUser()->get();
         $providers = Provider::all();
         // Guasti aperti o in lavorazione: selezionabili per nuovi appuntamenti.
@@ -180,7 +186,7 @@ class MaintenanceRecordController extends Controller
 
         // La view usa old(..., $preselected...) così old() ha priorità
         // dopo un errore validazione, altrimenti usa le preselezioni.
-        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'storedTires', 'preselectedIssueId', 'preselectedVehicleId'));
+        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'storedTires', 'preselectedIssueId', 'preselectedVehicleId', 'preselectedActivityType'));
     }
 
     /**
@@ -238,7 +244,7 @@ class MaintenanceRecordController extends Controller
             }
         }
 
-        $this->linkTireItem($newRecord, $data);
+        $this->linkTireItems($newRecord, $data);
 
         // Se la data di rientro è compilata, l'appuntamento è considerato
         // completato: aggiorna i guasti e rinnova le scadenze marcate come
@@ -296,22 +302,21 @@ class MaintenanceRecordController extends Controller
             })
             ->values();
 
-        // Set collegato (se presente) + gli altri set in magazzino del veicolo,
-        // per poterlo mantenere selezionato in modifica.
-        $linkedTireId = $maintenanceRecord->items
+        // Set collegati (se presenti) + gli altri set in magazzino del
+        // veicolo, per poterli mantenere selezionati in modifica.
+        $linkedTireIds = $maintenanceRecord->items
             ->where('itemable_type', Tire::class)
-            ->pluck('itemable_id')
-            ->first();
-        $storedTires = Tire::where(function ($q) use ($linkedTireId) {
+            ->pluck('itemable_id');
+        $storedTires = Tire::where(function ($q) use ($linkedTireIds) {
             $q->where('status', Tire::STATUS_STORED);
-            if ($linkedTireId) {
-                $q->orWhere('id', $linkedTireId);
+            if ($linkedTireIds->isNotEmpty()) {
+                $q->orWhereIn('id', $linkedTireIds);
             }
         })
             ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->get(['id', 'vehicle_id', 'season', 'axle', 'brand', 'model_name', 'size']);
 
-        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'storedTires', 'linkedTireId'));
+        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'storedTires', 'linkedTireIds'));
     }
 
     /**
@@ -374,7 +379,7 @@ class MaintenanceRecordController extends Controller
             }
         }
 
-        $this->linkTireItem($maintenanceRecord, $data);
+        $this->linkTireItems($maintenanceRecord, $data);
 
         // Se la data di rientro è compilata, processa gli item completati
         if ($maintenanceRecord->return_date) {
@@ -460,7 +465,7 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
 
-        $tireItem = $maintenanceRecord->items->first(fn ($item) => $item->itemable_type === Tire::class);
+        $tireItems = $maintenanceRecord->items->where('itemable_type', Tire::class);
 
         $rules = [
             'issue_resolved' => 'required|boolean',
@@ -470,7 +475,7 @@ class MaintenanceRecordController extends Controller
             'issue_resolved.boolean' => 'Il valore selezionato non è valido.',
         ];
 
-        if ($tireItem) {
+        if ($tireItems->isNotEmpty()) {
             $rules['previous_disposition'] = 'required|in:stored,retired';
             $messages['previous_disposition.required'] = 'Indica cosa fare delle gomme sostituite.';
             $messages['previous_disposition.in'] = 'La scelta per le gomme sostituite non è valida.';
@@ -491,7 +496,7 @@ class MaintenanceRecordController extends Controller
         $deadlines = $maintenanceRecord->items->where('itemable_type', Deadline::class);
 
         // Transazione unica: aggiornamento intervento/guasto/scadenza deve essere atomico.
-        DB::transaction(function () use ($maintenanceRecord, $data, $issues, $deadlines, $tireItem) {
+        DB::transaction(function () use ($maintenanceRecord, $data, $issues, $deadlines, $tireItems) {
             // 1) complete maintenance
             // Se l'utente ha già indicato una data di rientro (es. un tagliando
             // registrato retroattivamente), la rispettiamo. Altrimenti usiamo oggi.
@@ -535,9 +540,17 @@ class MaintenanceRecordController extends Controller
                 $this->renewTimingBeltDeadline($maintenanceRecord);
             }
 
-            // 5) Cambio gomme: monta il set collegato, applicando alle gomme
-            // sostituite la disposizione scelta (magazzino o dismesse).
-            if ($tireItem && ! $tireItem->completed) {
+            // 5) Cambio gomme: monta i set collegati (uno o più, es. anteriori
+            // + posteriori insieme), applicando alle gomme sostituite la
+            // disposizione scelta (magazzino o dismesse). Le chiamate in
+            // sequenza si compongono correttamente anche quando un set
+            // "full" già montato va diviso tra i due nuovi assi montati
+            // (vedi TireChangeService).
+            foreach ($tireItems as $tireItem) {
+                if ($tireItem->completed) {
+                    continue;
+                }
+
                 $this->tireChangeService->recordChange(
                     $tireItem->itemable,
                     $maintenanceRecord->return_date,
@@ -555,26 +568,30 @@ class MaintenanceRecordController extends Controller
     }
 
     /**
-     * Per un appuntamento "Cambio Gomme", collega il set di gomme da
-     * montare: un set esistente (in magazzino) oppure uno nuovo appena
-     * descritto. Il montaggio vero e proprio (con la scelta di cosa fare
-     * delle gomme sostituite) avviene solo al completamento
+     * Per un appuntamento "Cambio Gomme", collega i set di gomme da
+     * montare insieme: uno o più set esistenti (in magazzino) e/o uno
+     * nuovo appena descritto (validati in ValidatesTireSelection: la
+     * combinazione deve coprire esattamente 4 gomme della stessa
+     * stagionalità). Il montaggio vero e proprio (con la scelta di cosa
+     * fare delle gomme sostituite) avviene solo al completamento
      * dell'appuntamento (vedi complete()), non qui.
      */
-    private function linkTireItem(MaintenanceRecord $maintenanceRecord, array $data): void
+    private function linkTireItems(MaintenanceRecord $maintenanceRecord, array $data): void
     {
         if (($data['activity_type'] ?? null) !== MaintenanceRecord::ACTIVITY_TIRE_CHANGE) {
             return;
         }
 
-        $tire = null;
+        $tires = collect();
 
-        if (! empty($data['target_tire_id'])) {
-            $tire = Tire::where('id', $data['target_tire_id'])
+        if (! empty($data['target_tire_ids'])) {
+            $tires = Tire::whereIn('id', $data['target_tire_ids'])
                 ->where('vehicle_id', $data['vehicle_id'])
-                ->first();
-        } elseif (! empty($data['new_tire_season'])) {
-            $tire = Tire::create([
+                ->get();
+        }
+
+        if (! empty($data['new_tire_season'])) {
+            $tires->push(Tire::create([
                 'vehicle_id' => $data['vehicle_id'],
                 'season' => $data['new_tire_season'],
                 'axle' => $data['new_tire_axle'] ?? Tire::AXLE_FULL,
@@ -583,10 +600,10 @@ class MaintenanceRecordController extends Controller
                 'model_name' => $data['new_tire_model_name'] ?? null,
                 'size' => $data['new_tire_size'] ?? null,
                 'status' => Tire::STATUS_STORED,
-            ]);
+            ]));
         }
 
-        if ($tire) {
+        foreach ($tires as $tire) {
             $maintenanceRecord->items()->create([
                 'itemable_id' => $tire->id,
                 'itemable_type' => Tire::class,

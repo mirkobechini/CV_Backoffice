@@ -191,24 +191,30 @@
                 </div>
                 <div id="tire-section" style="display:none;">
                     <div class="field">
-                        <label for="target_tire_id">{{ __('Set di gomme da montare') }}</label>
-                        <select class="select @error('target_tire_id') is-invalid @enderror" id="target_tire_id"
-                            name="target_tire_id">
-                            <option value="">{{ __('-- Crea un nuovo set --') }}</option>
+                        <label>{{ __('Set di gomme in magazzino da montare') }}</label>
+                        <div class="check-list" id="tire-checkboxes">
+                            @error('target_tire_ids')
+                                <div class="field-error">{{ $message }}</div>
+                            @enderror
                             @foreach ($storedTires as $tire)
-                                <option value="{{ $tire->id }}" data-vehicle-id="{{ $tire->vehicle_id }}"
-                                    {{ old('target_tire_id', $linkedTireId) == $tire->id ? 'selected' : '' }}>
-                                    {{ $tire->season_label }} ({{ $tire->axle_label }})
-                                    @if ($tire->brand)
-                                        · {{ $tire->brand }}
-                                    @endif
-                                </option>
+                                <div class="item tire-checkbox" data-vehicle-id="{{ $tire->vehicle_id }}"
+                                    style="display:none;">
+                                    <input type="checkbox" name="target_tire_ids[]" value="{{ $tire->id }}"
+                                        id="tire_{{ $tire->id }}"
+                                        {{ in_array((string) $tire->id, old('target_tire_ids', $linkedTireIds->map(fn ($id) => (string) $id)->all())) ? 'checked' : '' }}>
+                                    <label class="lbl" for="tire_{{ $tire->id }}">
+                                        {{ $tire->season_label }} ({{ $tire->axle_label }})
+                                        @if ($tire->brand)
+                                            <span class="meta">— {{ $tire->brand }}</span>
+                                        @endif
+                                    </label>
+                                </div>
                             @endforeach
-                        </select>
-                        @error('target_tire_id')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                        <div class="hint">{{ __('Propone i set attualmente in magazzino per il veicolo selezionato, oppure descrivi un set nuovo.') }}</div>
+                            <div class="empty" id="no-tire-msg" style="display:none;">
+                                {{ __('Nessun set in magazzino per il veicolo selezionato.') }}
+                            </div>
+                        </div>
+                        <div class="hint">{{ __('Seleziona uno o più set da montare insieme (es. anteriori + posteriori): devono coprire esattamente 4 gomme della stessa stagionalità. Puoi anche descrivere un set nuovo qui sotto, da solo o in aggiunta a quelli selezionati.') }}</div>
                     </div>
                     <div id="new-tire-fields">
                         <div class="row2">
@@ -417,31 +423,30 @@
             // --- Sezione "Cambio Gomme" ---
             const activityTypeSelect = document.getElementById('activity_type');
             const tireSection = document.getElementById('tire-section');
-            const targetTireSelect = document.getElementById('target_tire_id');
-            const newTireFields = document.getElementById('new-tire-fields');
+            const noTireMsg = document.getElementById('no-tire-msg');
 
             const toggleTireSection = () => {
                 tireSection.style.display = activityTypeSelect.value === 'Cambio Gomme' ? '' : 'none';
             };
-            const toggleNewTireFields = () => {
-                newTireFields.style.display = targetTireSelect.value ? 'none' : '';
-            };
             const filterTiresByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
-                targetTireSelect.querySelectorAll('option[data-vehicle-id]').forEach(opt => {
-                    opt.hidden = opt.dataset.vehicleId !== selectedVehicleId;
-                    if (opt.hidden && opt.selected) {
-                        targetTireSelect.value = '';
+                const tireChecks = document.querySelectorAll('.tire-checkbox');
+                let hasVisibleTire = false;
+                tireChecks.forEach(el => {
+                    if (el.dataset.vehicleId === selectedVehicleId) {
+                        el.style.display = '';
+                        hasVisibleTire = true;
+                    } else {
+                        el.style.display = 'none';
+                        el.querySelector('input').checked = false;
                     }
                 });
-                toggleNewTireFields();
+                noTireMsg.style.display = (selectedVehicleId && !hasVisibleTire) ? '' : 'none';
             };
 
             toggleTireSection();
-            toggleNewTireFields();
             filterTiresByVehicle();
             activityTypeSelect.addEventListener('change', toggleTireSection);
-            targetTireSelect.addEventListener('change', toggleNewTireFields);
             vehicleSelect.addEventListener('change', filterTiresByVehicle);
 
             // --- Dialog completamento ---

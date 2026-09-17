@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.20] - 2026-09-17
+
+### Added
+
+- Appuntamenti "Cambio Gomme": ora si possono collegare più set di gomme insieme (es. anteriori + posteriori), non solo un set alla volta. La combinazione scelta deve coprire esattamente 4 gomme tutte della stessa stagionalità, altrimenti l'appuntamento non viene salvato. Al completamento, tutti i set collegati vengono montati insieme.
+- È ora possibile raggiungere direttamente la creazione di un appuntamento "Cambio Gomme" dalla scheda del veicolo, tramite il pulsante nella card Pneumatici.
+
 ## [v1.2.19] - 2026-09-18
 
 ### Fixed
