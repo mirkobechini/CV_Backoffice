@@ -370,8 +370,13 @@
         <div class="veh-card">
             <div class="head">
                 <h3>{{ __('Pneumatici') }}</h3>
-                <a href="{{ route('admin.tires.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
-                    class="veh-btn-add" title="{{ __('Nuovo set di gomme') }}"><i class="fa-solid fa-plus"></i></a>
+                <div style="display:flex; gap:6px;">
+                    <a href="{{ route('admin.maintenance-records.create', ['vehicle_id' => $vehicle->id, 'activity_type' => 'Cambio Gomme', 'back' => url()->full()]) }}"
+                        class="veh-btn-add" title="{{ __('Registra cambio gomme') }}"><i
+                            class="fa-solid fa-arrows-rotate"></i></a>
+                    <a href="{{ route('admin.tires.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
+                        class="veh-btn-add" title="{{ __('Nuovo set di gomme') }}"><i class="fa-solid fa-plus"></i></a>
+                </div>
             </div>
             <div class="body">
                 @forelse ($vehicle->tires->sortByDesc('status') as $tire)

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Http\Requests\Concerns\ValidatesTireSelection;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use Illuminate\Support\Carbon;
@@ -13,6 +14,7 @@ use Illuminate\Validation\Validator;
 class UpdateMaintenanceRecordRequest extends FormRequest
 {
     use AdminOnlyAccess;
+    use ValidatesTireSelection;
 
     /**
      * Get the validation rules that apply to the request.
@@ -38,7 +40,8 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'issue_resolved' => 'nullable|boolean',
             'mileage_at_service' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:2000',
-            'target_tire_id' => 'nullable|exists:tires,id',
+            'target_tire_ids' => 'nullable|array',
+            'target_tire_ids.*' => 'exists:tires,id',
             'new_tire_season' => 'nullable|in:summer,winter,all_season',
             'new_tire_axle' => 'nullable|in:full,front,rear',
             'new_tire_quantity' => 'nullable|integer|min:1|max:10',
@@ -127,6 +130,8 @@ class UpdateMaintenanceRecordRequest extends FormRequest
                     $validator->errors()->add('appointment_date', "Il veicolo è già in officina dal {$conflict->appointment_date?->toDateString()} al {$conflictEnd}. Impossibile inserire un appuntamento sovrapposto.");
                 }
             }
+
+            $this->validateTireSelection($validator);
         });
     }
 }
