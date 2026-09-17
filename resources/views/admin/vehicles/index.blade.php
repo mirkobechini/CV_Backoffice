@@ -109,8 +109,7 @@
                                     <div>
                                         <div class="vin-name">{{ $vehicle->brand->name ?? '' }}
                                             {{ $vehicle->carModel->name ?? 'N/A' }}</div>
-                                        <div class="vin-sub">{{ $vehicle->immatricolation_date?->format('Y') ?? '—' }}
-                                            · {{ $vehicle->fuel_type ?? '—' }}</div>
+                                        <div class="vin-sub">{{ $vehicle->license_plate ?? '—' }}</div>
                                     </div>
                                 </div>
                             </td>
