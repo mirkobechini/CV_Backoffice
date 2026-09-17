@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEquipmentRequest;
+use App\Http\Requests\StoreEquipmentRevisionRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
+use App\Models\EquipmentRevision;
 use App\Models\EquipmentType;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
@@ -41,7 +43,10 @@ class EquipmentController extends Controller
         if ($q = $request->get('q')) {
             $query->where(function ($sub) use ($q) {
                 $sub->where('name', 'like', "%{$q}%")
-                    ->orWhere('serial_number', 'like', "%{$q}%");
+                    ->orWhere('serial_number', 'like', "%{$q}%")
+                    ->orWhere('brand', 'like', "%{$q}%")
+                    ->orWhere('model', 'like', "%{$q}%")
+                    ->orWhere('identification_number', 'like', "%{$q}%");
             });
         }
 
@@ -89,6 +94,7 @@ class EquipmentController extends Controller
     {
         $validatedData = $request->validated();
         $validatedData = $this->resolveExpirationDate($validatedData);
+        $validatedData = $this->resolveNextCollaudoDate($validatedData);
 
         $newEquipment = Equipment::create($validatedData);
 
@@ -100,7 +106,7 @@ class EquipmentController extends Controller
      */
     public function show(Equipment $equipment)
     {
-        $equipment->load('vehicle.brand', 'vehicle.carModel', 'equipmentType');
+        $equipment->load('vehicle.brand', 'vehicle.carModel', 'equipmentType', 'revisions');
 
         return view('admin.equipments.show', compact('equipment'));
     }
@@ -123,6 +129,7 @@ class EquipmentController extends Controller
     {
         $validatedData = $request->validated();
         $validatedData = $this->resolveExpirationDate($validatedData);
+        $validatedData = $this->resolveNextCollaudoDate($validatedData);
 
         $equipment->update($validatedData);
 
@@ -157,6 +164,75 @@ class EquipmentController extends Controller
             ->toDateString();
 
         return $data;
+    }
+
+    /**
+     * Calcola automaticamente la data del prossimo collaudo se non fornita,
+     * in base all'intervallo di collaudo del tipo di attrezzatura
+     * (rilevante solo per gli estintori).
+     */
+    private function resolveNextCollaudoDate(array $data): array
+    {
+        if (! empty($data['next_collaudo_date'])) {
+            return $data;
+        }
+
+        if (empty($data['collaudo_date']) || empty($data['equipment_type_id'])) {
+            return $data;
+        }
+
+        $equipmentType = EquipmentType::find($data['equipment_type_id']);
+        $collaudoMonths = $equipmentType?->collaudo_interval_months;
+
+        if (! $collaudoMonths || $collaudoMonths <= 0) {
+            return $data;
+        }
+
+        $data['next_collaudo_date'] = Carbon::parse($data['collaudo_date'])
+            ->addMonthsNoOverflow((int) $collaudoMonths)
+            ->toDateString();
+
+        return $data;
+    }
+
+    /**
+     * Registra una revisione o un collaudo effettuato: crea una voce di
+     * storico e aggiorna la data corrente (+ la relativa scadenza) di
+     * quel tipo di controllo sull'attrezzatura.
+     */
+    public function recordRevision(StoreEquipmentRevisionRequest $request, Equipment $equipment)
+    {
+        $this->authorize('update', $equipment);
+
+        $data = $request->validated();
+
+        $equipment->revisions()->create($data);
+
+        if ($data['kind'] === EquipmentRevision::KIND_COLLAUDO) {
+            $update = $this->resolveNextCollaudoDate([
+                'collaudo_date' => $data['performed_date'],
+                'equipment_type_id' => $equipment->equipment_type_id,
+            ]);
+            $equipment->update([
+                'collaudo_date' => $data['performed_date'],
+                'next_collaudo_date' => $update['next_collaudo_date'] ?? null,
+            ]);
+        } else {
+            $update = $this->resolveExpirationDate([
+                'revision_date' => $data['performed_date'],
+                'equipment_type_id' => $equipment->equipment_type_id,
+            ]);
+            $equipment->update([
+                'revision_date' => $data['performed_date'],
+                'expiration_date' => $update['expiration_date'] ?? null,
+            ]);
+        }
+
+        $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
+            ? 'Collaudo registrato con successo.'
+            : 'Revisione registrata con successo.';
+
+        return redirect()->route('admin.equipments.show', $equipment)->with('status', $message);
     }
 
     /**

@@ -30,9 +30,7 @@
                 class="fa-solid fa-toolbox"></i></div>
         <div class="dl-title">
             <h1>{{ $equipmentType->name }}</h1>
-            <div class="sub">
-                {{ __('Prima revisione dopo :n', ['n' => $equipmentType->first_inspection_months_formatted ?? 'N/A']) }}
-            </div>
+            <div class="sub">{{ $equipmentType->category_label }}</div>
         </div>
     </div>
 
@@ -42,6 +40,10 @@
         </div>
         <div class="body">
             <div class="dl-kv">
+                <span class="k">{{ __('Categoria') }}</span>
+                <span class="v">{{ $equipmentType->category_label }}</span>
+            </div>
+            <div class="dl-kv">
                 <span class="k">{{ __('Prima revisione dopo') }}</span>
                 <span class="v">{{ $equipmentType->first_inspection_months_formatted ?? 'N/A' }}</span>
             </div>
@@ -49,6 +51,16 @@
                 <span class="k">{{ __('Revisioni successive ogni') }}</span>
                 <span class="v">{{ $equipmentType->regular_inspection_months_formatted ?? 'N/A' }}</span>
             </div>
+            @if ($equipmentType->category === \App\Models\EquipmentType::CATEGORY_FIRE_EXTINGUISHER)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Collaudo ogni') }}</span>
+                    <span class="v">{{ $equipmentType->collaudo_interval_months ? $equipmentType->collaudo_interval_months . ' mesi' : 'N/A' }}</span>
+                </div>
+                <div class="dl-kv">
+                    <span class="k">{{ __('Sostituzione dopo') }}</span>
+                    <span class="v">{{ $equipmentType->max_revisions_before_exchange ? $equipmentType->max_revisions_before_exchange . ' revisioni' : 'N/A' }}</span>
+                </div>
+            @endif
         </div>
     </div>
 

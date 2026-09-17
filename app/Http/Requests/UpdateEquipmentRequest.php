@@ -22,10 +22,21 @@ class UpdateEquipmentRequest extends FormRequest
         return [
             'vehicle_id' => 'nullable|exists:vehicles,id',
             'name' => 'required|string|max:255',
+            'brand' => 'nullable|string|max:255',
+            'model' => 'nullable|string|max:255',
             'serial_number' => 'unique:equipment,serial_number,' . $this->route('equipment')?->id . ',id|nullable|string|max:255',
+            'identification_number' => 'nullable|string|max:255',
+            'fabrication_date' => 'nullable|date',
             'revision_date' => 'nullable|date',
             'expiration_date' => 'nullable|date|after_or_equal:revision_date',
             'equipment_type_id' => 'required|exists:equipment_types,id',
+            'extinguisher_agent' => 'nullable|in:co2,powder',
+            'weight_kg' => 'nullable|numeric|min:0|max:999',
+            'collaudo_date' => 'nullable|date',
+            'next_collaudo_date' => 'nullable|date|after_or_equal:collaudo_date',
+            'chair_type' => 'nullable|in:electric,manual_2_wheel,manual_4_wheel,manual_tracks',
+            'max_weight_kg' => 'nullable|numeric|min:0|max:9999',
+            'notes' => 'nullable|string|max:2000',
         ];
     }
 
@@ -44,6 +55,15 @@ class UpdateEquipmentRequest extends FormRequest
             'expiration_date.after_or_equal' => 'Il campo data di scadenza deve essere successivo o uguale alla data di revisione.',
             'equipment_type_id.required' => 'Il campo tipo di attrezzatura è obbligatorio.',
             'equipment_type_id.exists' => 'Il tipo di attrezzatura selezionato non esiste.',
+            'fabrication_date.date' => 'La data di fabbricazione deve essere una data valida.',
+            'extinguisher_agent.in' => "L'agente estinguente selezionato non è valido.",
+            'weight_kg.numeric' => 'Il peso deve essere un numero.',
+            'collaudo_date.date' => 'La data di collaudo deve essere una data valida.',
+            'next_collaudo_date.date' => 'La data del prossimo collaudo deve essere una data valida.',
+            'next_collaudo_date.after_or_equal' => 'La data del prossimo collaudo deve essere successiva o uguale alla data di collaudo.',
+            'chair_type.in' => 'Il tipo di sedia selezionato non è valido.',
+            'max_weight_kg.numeric' => 'Il peso massimo deve essere un numero.',
+            'notes.max' => 'Le note non possono superare i 2000 caratteri.',
         ];
     }
 

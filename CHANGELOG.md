@@ -4,6 +4,15 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.21] - 2026-09-19
+
+### Added
+
+- Attrezzature: i tipi ora hanno una categoria (Estintore, Aspiratore/LSU, Sedia, Barella, DAE, LUCAS, LIFEPAK, Altro) che determina quali campi extra mostrare per gli elementi di quel tipo — marca, modello, numero identificativo e data di fabbricazione per tutti; agente estinguente, peso, collaudo e numero di revisioni per gli estintori; tipo di sedia e kg massimo per sedie e barelle.
+- Nuovo storico revisioni/collaudi per attrezzatura: ogni controllo effettuato viene registrato con data e note, invece di sovrascrivere semplicemente la data corrente. Per gli estintori, il conteggio delle revisioni registrate permette di segnalare quando l'attrezzatura ha raggiunto la soglia oltre la quale va sostituita.
+- Il collaudo degli estintori (retest idraulico, ciclo separato dalla revisione ordinaria) ha ora una propria data di scadenza calcolata automaticamente e un promemoria dedicato, come la revisione.
+- Aggiunti i tipi di attrezzatura DAE, LUCAS, LIFEPAK e Aspiratore (LSU), già pronti all'uso.
+
 ## [v1.2.20] - 2026-09-17
 
 ### Added
