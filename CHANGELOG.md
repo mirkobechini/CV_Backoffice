@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.23] - 2026-09-19
+
+### Changed
+
+- Elenco veicoli: la riga sotto marca/modello mostra ora la targa invece di anno e alimentazione.
+
 ## [v1.2.22] - 2026-09-19
 
 ### Fixed
