@@ -80,7 +80,7 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
             'provider_id' => $provider->id,
             'appointment_date' => today()->toDateString(),
             'activity_type' => 'Cambio Gomme',
-            'target_tire_id' => $tire->id,
+            'target_tire_ids' => [$tire->id],
         ]);
 
         $record = MaintenanceRecord::first();
@@ -96,6 +96,37 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         $this->assertSame('stored', $tire->fresh()->status);
     }
 
+    public function test_creating_tire_change_appointment_can_link_multiple_existing_sets_together(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        $front = $this->createTire($vehicle, ['axle' => 'front', 'quantity' => 2, 'season' => 'winter']);
+        $rear = $this->createTire($vehicle, ['axle' => 'rear', 'quantity' => 2, 'season' => 'winter']);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->toDateString(),
+            'activity_type' => 'Cambio Gomme',
+            'target_tire_ids' => [$front->id, $rear->id],
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $record = MaintenanceRecord::first();
+
+        $this->assertDatabaseHas('maintenance_record_items', [
+            'maintenance_record_id' => $record->id,
+            'itemable_id' => $front->id,
+            'itemable_type' => Tire::class,
+        ]);
+        $this->assertDatabaseHas('maintenance_record_items', [
+            'maintenance_record_id' => $record->id,
+            'itemable_id' => $rear->id,
+            'itemable_type' => Tire::class,
+        ]);
+    }
+
     public function test_creating_tire_change_appointment_creates_new_tire_when_no_existing_selected(): void
     {
         $user = $this->createUser();
@@ -108,15 +139,15 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
             'appointment_date' => today()->toDateString(),
             'activity_type' => 'Cambio Gomme',
             'new_tire_season' => 'summer',
-            'new_tire_axle' => 'front',
-            'new_tire_quantity' => 2,
+            'new_tire_axle' => 'full',
+            'new_tire_quantity' => 4,
             'new_tire_brand' => 'Pirelli',
         ]);
 
         $this->assertDatabaseHas('tires', [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
-            'axle' => 'front',
+            'axle' => 'full',
             'brand' => 'Pirelli',
             'status' => 'stored',
         ]);
@@ -128,6 +159,111 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
             'maintenance_record_id' => $record->id,
             'itemable_id' => $newTire->id,
             'itemable_type' => Tire::class,
+        ]);
+    }
+
+    public function test_creating_tire_change_appointment_can_combine_existing_set_with_a_new_one(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        $existingFront = $this->createTire($vehicle, ['axle' => 'front', 'quantity' => 2, 'season' => 'summer']);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->toDateString(),
+            'activity_type' => 'Cambio Gomme',
+            'target_tire_ids' => [$existingFront->id],
+            'new_tire_season' => 'summer',
+            'new_tire_axle' => 'rear',
+            'new_tire_quantity' => 2,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $record = MaintenanceRecord::first();
+        $this->assertSame(2, $record->items->where('itemable_type', Tire::class)->count());
+    }
+
+    public function test_creating_tire_change_appointment_rejects_selection_not_totaling_four(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        $front = $this->createTire($vehicle, ['axle' => 'front', 'quantity' => 2, 'season' => 'winter']);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->toDateString(),
+            'activity_type' => 'Cambio Gomme',
+            'target_tire_ids' => [$front->id],
+        ]);
+
+        $response->assertSessionHasErrors(['target_tire_ids']);
+        $this->assertDatabaseCount('maintenance_records', 0);
+    }
+
+    public function test_creating_tire_change_appointment_rejects_mixed_seasons(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        $winterFront = $this->createTire($vehicle, ['axle' => 'front', 'quantity' => 2, 'season' => 'winter']);
+        $summerRear = $this->createTire($vehicle, ['axle' => 'rear', 'quantity' => 2, 'season' => 'summer']);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->toDateString(),
+            'activity_type' => 'Cambio Gomme',
+            'target_tire_ids' => [$winterFront->id, $summerRear->id],
+        ]);
+
+        $response->assertSessionHasErrors(['target_tire_ids']);
+        $this->assertDatabaseCount('maintenance_records', 0);
+    }
+
+    public function test_completing_appointment_with_multiple_linked_tires_mounts_both_and_disposes_previous_full_set(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        $oldFull = $this->createTire($vehicle, ['axle' => 'full', 'quantity' => 4, 'season' => 'winter', 'status' => 'mounted']);
+        $newFront = $this->createTire($vehicle, ['axle' => 'front', 'quantity' => 2, 'season' => 'summer', 'status' => 'stored']);
+        $newRear = $this->createTire($vehicle, ['axle' => 'rear', 'quantity' => 2, 'season' => 'summer', 'status' => 'stored']);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+            'activity_type' => 'Cambio Gomme',
+        ]);
+        $maintenance->items()->create(['itemable_id' => $newFront->id, 'itemable_type' => Tire::class]);
+        $maintenance->items()->create(['itemable_id' => $newRear->id, 'itemable_type' => Tire::class]);
+
+        $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'issue_resolved' => '1',
+            'previous_disposition' => 'stored',
+        ]);
+
+        $this->assertSame('mounted', $newFront->fresh()->status);
+        $this->assertSame('mounted', $newRear->fresh()->status);
+        // Il vecchio set "full" viene interamente sostituito da due nuovi
+        // set (anteriori+posteriori): TireChangeService lo chiude come
+        // "retired" (superato), non applica la disposition scelta perché
+        // non è una singola rimozione fisica scelta dall'utente.
+        $this->assertSame('retired', $oldFull->fresh()->status);
+
+        $this->assertDatabaseHas('maintenance_record_items', [
+            'maintenance_record_id' => $maintenance->id,
+            'itemable_id' => $newFront->id,
+            'completed' => true,
+        ]);
+        $this->assertDatabaseHas('maintenance_record_items', [
+            'maintenance_record_id' => $maintenance->id,
+            'itemable_id' => $newRear->id,
+            'completed' => true,
         ]);
     }
 
