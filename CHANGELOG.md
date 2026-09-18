@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.26] - 2026-09-18
+
+### Fixed
+
+- Dashboard non aggiornata dopo una mutazione (es. rinnovo di una scadenza, chiusura di un guasto, completamento di un intervento): i dati restavano quelli cachati fino a 5 minuti prima, anche se già corretti ovunque altrove nell'app. Ora ogni cambiamento rilevante invalida subito la cache della dashboard del proprio gruppo.
+
 ## [v1.2.25] - 2026-09-18
 
 ### Added

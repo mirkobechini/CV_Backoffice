@@ -95,6 +95,41 @@ class DashboardTest extends TestCase
         $response->assertDontSee('Nessun appuntamento imminente');
     }
 
+    public function test_dashboard_reflects_deadline_renewal_immediately(): void
+    {
+        // Riproduce il bug: la dashboard è cachata 5 minuti per gruppo
+        // (DashboardController) e, senza invalidazione esplicita, una
+        // scadenza appena rinnovata restava visibile come scaduta finché la
+        // cache non scadeva naturalmente.
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => now()->subDays(10),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        // Prima visita: popola la cache dashboard con la scadenza ancora scaduta.
+        $this->actingAs($user)->get(route('dashboard'))
+            ->assertSee('Scadenze scadute e non rinnovate')
+            ->assertSee('Tagliando');
+
+        $deadline->update(['status' => Deadline::STATUS_RENEWED, 'is_renewed' => true]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Nessuna scadenza scaduta');
+        $response->assertDontSee('Tagliando');
+    }
+
     public function test_dashboard_shows_vehicle_pending_seasonal_tire_change(): void
     {
         $this->travelTo(now()->setDate(2026, 12, 1));
