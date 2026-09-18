@@ -64,6 +64,13 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(60)
                 ->by($request->user()?->id ?: $request->ip());
         });
+
+        // Rate limiting per la pagina pubblica di stato flotta (nessuna auth,
+        // protetta solo dal token nell'URL): limita i tentativi di indovinare
+        // token validi a forza bruta.
+        RateLimiter::for('public-fleet-status', function (Request $request) {
+            return Limit::perMinute(20)->by($request->ip());
+        });
         // Registra le policy
         Gate::policy(Vehicle::class, VehiclePolicy::class);
         Gate::policy(Provider::class, ProviderPolicy::class);

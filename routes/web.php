@@ -21,6 +21,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CsvExportController;
 use App\Http\Controllers\CsvImportController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PublicFleetStatusController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -28,6 +29,10 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'welcome')->name('welcome');
 
 Route::view('/privacy', 'privacy')->name('privacy');
+
+Route::get('/status/{token}', [PublicFleetStatusController::class, 'show'])
+    ->middleware('throttle:public-fleet-status')
+    ->name('public.fleet-status');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -70,6 +75,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::post('groups/join', [GroupController::class, 'join'])->name('groups.join');
         Route::post('groups/{group}/invite', [GroupController::class, 'invite'])->name('groups.invite');
         Route::patch('groups/{group}/invite-code', [GroupController::class, 'regenerateInviteCode'])->name('groups.invite-code');
+        Route::patch('groups/{group}/public-status-token', [GroupController::class, 'generatePublicStatusToken'])->name('groups.public-status-token.generate');
+        Route::delete('groups/{group}/public-status-token', [GroupController::class, 'revokePublicStatusToken'])->name('groups.public-status-token.revoke');
         Route::patch('groups/{group}/tire-season', [GroupController::class, 'updateTireSeason'])->name('groups.tire-season.update');
         Route::patch('groups/{group}/role/{user}', [GroupController::class, 'updateRole'])->name('groups.role');
         Route::delete('groups/{group}/member/{user}', [GroupController::class, 'removeMember'])->name('groups.remove-member');
