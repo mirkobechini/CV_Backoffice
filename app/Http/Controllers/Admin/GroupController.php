@@ -180,6 +180,39 @@ class GroupController extends Controller
     }
 
     /**
+     * Genera (o rigenera, invalidando il link precedente) il token della
+     * pagina pubblica di stato flotta del gruppo (solo il capo).
+     */
+    public function generatePublicStatusToken(Group $group)
+    {
+        $this->authorizeGroup($group);
+
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può gestire la pagina pubblica di stato.');
+        }
+
+        $group->update(['public_status_token' => Group::generatePublicStatusToken()]);
+
+        return back()->with('status', 'Link della pagina di stato generato.');
+    }
+
+    /**
+     * Disattiva la pagina pubblica di stato flotta del gruppo (solo il capo).
+     */
+    public function revokePublicStatusToken(Group $group)
+    {
+        $this->authorizeGroup($group);
+
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può gestire la pagina pubblica di stato.');
+        }
+
+        $group->update(['public_status_token' => null]);
+
+        return back()->with('status', 'Pagina di stato disattivata.');
+    }
+
+    /**
      * Invia un invito via email a un nuovo membro (solo il capo).
      * Il codice invito viene inviato all'email indicata.
      */
