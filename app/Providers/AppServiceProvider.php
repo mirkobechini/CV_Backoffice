@@ -10,8 +10,10 @@ use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
 use App\Models\Provider;
+use App\Models\Tire;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
+use App\Observers\DashboardCacheObserver;
 use App\Observers\VehicleObserver;
 use App\Policies\DeadlinePolicy;
 use App\Policies\EquipmentPolicy;
@@ -83,6 +85,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(VehicleType::class, VehicleTypePolicy::class);
 
         Vehicle::observe(VehicleObserver::class);
+
+        // Invalida la cache dashboard (vedi DashboardCache/DashboardCacheObserver)
+        // per ogni modello i cui dati vi compaiono dentro.
+        Vehicle::observe(DashboardCacheObserver::class);
+        Deadline::observe(DashboardCacheObserver::class);
+        Issue::observe(DashboardCacheObserver::class);
+        MaintenanceRecord::observe(DashboardCacheObserver::class);
+        Equipment::observe(DashboardCacheObserver::class);
+        Tire::observe(DashboardCacheObserver::class);
+        MileageLog::observe(DashboardCacheObserver::class);
+
         Validator::extend('car_model_belongs_to_brand', function ($attribute, $value, $parameters, $validator) {
             $brandField = $parameters[0] ?? null;
             $brandId = data_get($validator->getData(), $brandField);

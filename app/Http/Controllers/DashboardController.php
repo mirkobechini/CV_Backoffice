@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
+use App\Services\DashboardCache;
 use App\Services\TireSeasonService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Carbon;
@@ -26,7 +27,7 @@ class DashboardController extends Controller
         // indipendentemente dal proprio gruppo.
         $activeGroup = auth()->user()?->activeGroup();
         $groupId = $activeGroup?->id;
-        $cacheKey = 'dashboard.stats.' . ($groupId ?? 'none');
+        $cacheKey = DashboardCache::key($groupId);
 
         $data = Cache::remember($cacheKey, 300, function () use ($groupId, $activeGroup, $tireSeasonService) {
             $totalVehicles = Vehicle::forCurrentUser()->count();
