@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.25] - 2026-09-18
+
+### Added
+
+- Pagina pubblica di stato flotta: il capo può generare (dalla pagina del gruppo) un link segreto e non indovinabile che mostra, senza bisogno di account, solo quali mezzi sono disponibili o in officina — nessun dettaglio di guasti, nessun dato personale, nessuna targa. Il link è rigenerabile o disattivabile in qualsiasi momento.
+
 ## [v1.2.24] - 2026-09-19
 
 ### Added

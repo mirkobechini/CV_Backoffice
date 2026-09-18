@@ -124,6 +124,52 @@
 
         <div class="admin-card">
             <div class="head">
+                <h3>{{ __('Pagina pubblica di stato') }}</h3>
+            </div>
+            <div class="body">
+                <p class="hint" style="margin-bottom:10px;">
+                    {{ __('Un link segreto (nessun account richiesto) che mostra solo quali mezzi sono disponibili o in officina, senza dettagli di guasti o dati personali.') }}
+                </p>
+                @if ($group->public_status_token)
+                    @php($publicStatusUrl = route('public.fleet-status', $group->public_status_token))
+                    <div class="invite-code" style="font-size:13px; word-break:break-all;">{{ $publicStatusUrl }}</div>
+                    @if ($isCapo)
+                        <div class="invite-actions">
+                            <form method="POST" action="{{ route('admin.groups.public-status-token.generate', $group) }}">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn sm">
+                                    <i class="fa-solid fa-rotate"></i> {{ __('Rigenera link') }}
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.groups.public-status-token.revoke', $group) }}">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn sm danger">
+                                    <i class="fa-solid fa-ban"></i> {{ __('Disattiva') }}
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+                @else
+                    <div class="hint">{{ __('Pagina disattivata.') }}</div>
+                    @if ($isCapo)
+                        <div class="invite-actions">
+                            <form method="POST" action="{{ route('admin.groups.public-status-token.generate', $group) }}">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="btn sm primary">
+                                    <i class="fa-solid fa-link"></i> {{ __('Genera link') }}
+                                </button>
+                            </form>
+                        </div>
+                    @endif
+                @endif
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <div class="head">
                 <h3><span class="ic" style="background:var(--green-soft); color:var(--green);"><i
                             class="fa-solid fa-circle-dot"></i></span> {{ __('Cambio gomme stagionale') }}</h3>
             </div>

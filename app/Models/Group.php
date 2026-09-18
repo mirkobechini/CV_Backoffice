@@ -10,6 +10,7 @@ class Group extends Model
     protected $fillable = [
         'name',
         'invite_code',
+        'public_status_token',
         'winter_switch_date',
         'summer_switch_date',
     ];
@@ -56,6 +57,21 @@ class Group extends Model
         } while (static::where('invite_code', $code)->exists());
 
         return $code;
+    }
+
+    /**
+     * Genera un token non indovinabile per la pagina pubblica di stato
+     * flotta (più lungo dell'invite_code: qui la sicurezza dipende
+     * interamente dall'essere impossibile da indovinare, non da un
+     * secondo fattore come una password).
+     */
+    public static function generatePublicStatusToken(): string
+    {
+        do {
+            $token = Str::random(40);
+        } while (static::where('public_status_token', $token)->exists());
+
+        return $token;
     }
 
     /**
