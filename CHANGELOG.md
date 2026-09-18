@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.27] - 2026-09-18
+
+### Fixed
+
+- Scadenze già rinnovate ancora elencate tra le "Scadenze imminenti" in dashboard: la query non escludeva le scadenze con `is_renewed=true`, quindi una revisione appena rinnovata restava visibile lì (con la vecchia data) accanto alla nuova, finché la vecchia data non passava.
+
 ## [v1.2.26] - 2026-09-18
 
 ### Fixed

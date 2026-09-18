@@ -79,7 +79,8 @@ class Deadline extends Model
 
     public function scopeUpcoming(Builder $query, int $days = 30): Builder
     {
-        return $query->where('due_date', '>=', Carbon::today())
+        return $query->where('is_renewed', false)
+            ->where('due_date', '>=', Carbon::today())
             ->where('due_date', '<=', Carbon::today()->addDays($days))
             ->orderBy('due_date');
     }
