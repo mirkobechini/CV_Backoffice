@@ -130,6 +130,40 @@ class DashboardTest extends TestCase
         $response->assertDontSee('Tagliando');
     }
 
+    public function test_dashboard_excludes_renewed_deadlines_from_upcoming(): void
+    {
+        // scopeUpcoming() filtrava solo per finestra di date, senza
+        // escludere le scadenze già rinnovate: una scadenza rinnovata oggi
+        // ma la cui vecchia due_date cadeva ancora entro i prossimi 30
+        // giorni restava visibile tra le "imminenti" insieme alla nuova.
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_OXYGEN,
+            'due_date' => now()->addDays(5),
+            'status' => Deadline::STATUS_RENEWED,
+            'is_renewed' => true,
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_OXYGEN,
+            'due_date' => now()->addYear(),
+            'status' => Deadline::STATUS_VALID,
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Nessuna scadenza imminente');
+    }
+
     public function test_dashboard_shows_vehicle_pending_seasonal_tire_change(): void
     {
         $this->travelTo(now()->setDate(2026, 12, 1));
