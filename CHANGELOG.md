@@ -4,6 +4,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.28] - 2026-09-23
+
+### Fixed
+
+- Badge collaudo attrezzatura mostrato come "In scadenza" anche a anni di distanza dalla scadenza reale: `diffInDays()` con Carbon 3 restituisce un valore con segno (non più sempre assoluto), e l'ordine invertito della chiamata dava un risultato negativo — sempre `<= 30` — per qualunque data futura. Stesso bug corretto anche per lo stato generale dell'attrezzatura.
+
+### Added
+
+- Data di scadenza attrezzatura e prossimo collaudo ora si inseriscono come mese/anno (come le scadenze), non più con un giorno specifico che non ha senso per queste date.
+- Dalla scheda veicolo si può assegnare attrezzatura già esistente in anagrafica (non assegnata, o spostandola da un altro veicolo con conferma) invece di doverne creare sempre una nuova.
+
 ## [v1.2.27] - 2026-09-18
 
 ### Fixed

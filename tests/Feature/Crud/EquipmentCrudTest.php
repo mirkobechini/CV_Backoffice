@@ -94,7 +94,7 @@ class EquipmentCrudTest extends TestCase
             'name' => 'Prova',
             'serial_number' => '111111',
             'revision_date' => '2023-01-01',
-            'expiration_date' => '2024-01-01',
+            'expiration_date' => '2024-01',
         ]);
 
         $equipment = Equipment::first();
@@ -122,7 +122,7 @@ class EquipmentCrudTest extends TestCase
             'name' => 'Prova3',
             'serial_number' => '333333',
             'revision_date' => '2023-01-01',
-            'expiration_date' => '2024-01-01',
+            'expiration_date' => '2024-01',
         ]);
 
         $response->assertRedirect(route('admin.equipments.show', $equipment));
@@ -159,7 +159,7 @@ class EquipmentCrudTest extends TestCase
             'equipment_type_id' => $equipmentType->id,
             'serial_number' => '111111',
             'revision_date' => '2023-01-01',
-            'expiration_date' => '2024-01-01',
+            'expiration_date' => '2024-01',
         ]);
 
         // Verifica che il campo `name` sia obbligatorio.

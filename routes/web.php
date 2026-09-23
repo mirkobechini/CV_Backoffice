@@ -126,6 +126,9 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::post('vehicles/{vehicle}/timing-belt-deadline', [VehicleController::class, 'createTimingBeltDeadline'])
             ->name('vehicles.timing-belt-deadline.create');
 
+        Route::post('vehicles/{vehicle}/equipment/assign', [VehicleController::class, 'assignEquipment'])
+            ->name('vehicles.equipment.assign');
+
         Route::get('activity-log', [ActivityLogController::class, 'index'])
             ->name('activity-log.index');
 
