@@ -274,7 +274,7 @@
                 <a href="{{ route('admin.issues.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
                     class="veh-btn-add" title="{{ __('Nuovo guasto') }}"><i class="fa-solid fa-plus"></i></a>
             </div>
-            <div class="body">
+            <div class="body veh-issue-scroll">
                 @php
                     $issueStatusClasses = ['open' => 'open', 'in_progress' => 'work'];
 
