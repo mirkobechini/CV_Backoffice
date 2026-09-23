@@ -138,8 +138,8 @@
 
                     @forelse ($groups as $groupLabel => $groupRecords)
                         @if ($groupBy !== null)
-                            <tr class="group-row">
-                                <td colspan="4">{{ $groupLabel }} ({{ $groupRecords->count() }})</td>
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                                <td colspan="4"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupRecords->count() }})</td>
                             </tr>
                         @endif
 
@@ -160,7 +160,7 @@
                                     ->implode(' · ');
                                 $description = $description !== '' ? $description : $record->activity_type ?? __('N/D');
                             @endphp
-                            <tr>
+                            <tr @if ($groupBy !== null) data-groups="g{{ $loop->parent->index }}" @endif>
                                 <td>
                                     <div class="vin">
                                         <span class="thumb t{{ ($record->vehicle_id % 5) + 1 }}"><i

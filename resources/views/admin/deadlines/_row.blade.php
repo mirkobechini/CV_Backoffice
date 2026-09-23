@@ -7,7 +7,7 @@
     };
 @endphp
 
-<tr>
+<tr @if (!empty($groupIds)) data-groups="{{ implode(' ', $groupIds) }}" @endif>
     <td>
         <div class="type-cell">
             <span class="dot-type leg-{{ $deadline->type_slug }}"></span>

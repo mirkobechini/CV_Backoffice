@@ -2062,6 +2062,30 @@ textarea.input {
     letter-spacing: normal;
 }
 
+/* Righe di gruppo pieghevoli: click sull'intestazione nasconde le righe
+   sottostanti (vedi resources/js/app.js). */
+.group-row[data-group-row] {
+    cursor: pointer;
+    user-select: none;
+}
+
+.group-row[data-group-row]:hover td {
+    background: var(--surface-3);
+    filter: brightness(1.05);
+}
+
+.group-chevron {
+    display: inline-block;
+    width: 10px;
+    margin-right: 4px;
+    font-size: 10px;
+    transition: transform 0.15s ease;
+}
+
+.group-row.is-collapsed .group-chevron {
+    transform: rotate(-90deg);
+}
+
 /* =============================================
    Scadenze: dettaglio
    ============================================= */
