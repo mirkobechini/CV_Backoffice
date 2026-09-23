@@ -330,14 +330,52 @@
         <div class="veh-card">
             <div class="head">
                 <h3>{{ __('Equipaggiamento') }}</h3>
-                <a href="{{ route('admin.equipments.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
-                    class="veh-btn-add" title="{{ __('Nuova attrezzatura') }}"><i class="fa-solid fa-plus"></i></a>
+                <div class="dropdown">
+                    <button type="button" class="veh-btn-add" title="{{ __('Aggiungi attrezzatura') }}"
+                        data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end eq-assign-menu">
+                        @forelse ($assignableEquipment as $candidate)
+                            <li>
+                                <form method="POST" action="{{ route('admin.vehicles.equipment.assign', $vehicle) }}"
+                                    class="eq-assign-form">
+                                    @csrf
+                                    <input type="hidden" name="equipment_id" value="{{ $candidate->id }}">
+                                    <button type="submit" class="dropdown-item"
+                                        data-assigned="{{ $candidate->vehicle_id ? '1' : '0' }}"
+                                        data-assigned-to="{{ $candidate->vehicle->internal_code ?? '' }}">
+                                        {{ $candidate->equipmentType->name ?? $candidate->name }} ·
+                                        {{ $candidate->serial_number ?? 'N/A' }}
+                                        @if ($candidate->vehicle)
+                                            <span class="eq-assign-meta">— {{ __('su') }} {{ $candidate->vehicle->internal_code }}</span>
+                                        @else
+                                            <span class="eq-assign-meta">— {{ __('non assegnata') }}</span>
+                                        @endif
+                                    </button>
+                                </form>
+                            </li>
+                        @empty
+                            <li><span class="dropdown-item-text eq-assign-empty">{{ __('Nessuna attrezzatura esistente da assegnare') }}</span></li>
+                        @endforelse
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <a class="dropdown-item"
+                                href="{{ route('admin.equipments.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}">
+                                <i class="fa-solid fa-plus"></i> {{ __('Nuova attrezzatura') }}
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
             <div class="body">
                 @if ($missingEquipment->isNotEmpty())
                     @foreach ($missingEquipment as $missingType)
                         @php($availableQuantity = $vehicle->equipment->where('equipment_type_id', $missingType->id)->count())
                         @php($requiredQuantity = (int) $missingType->pivot->required_quantity)
+                        @php($matchingEquipment = $assignableEquipment->where('equipment_type_id', $missingType->id))
                         <div class="veh-eq-item">
                             <span class="ic" style="color:var(--red);"><i class="fa-solid fa-triangle-exclamation"></i></span>
                             <div style="min-width:0;">
@@ -346,8 +384,45 @@
                             </div>
                             <span class="exp c-red">{{ __('Mancante') }}</span>
                             <div class="row-actions">
-                                <a href="{{ route('admin.equipments.create', ['vehicle_id' => $vehicle->id, 'equipment_type_id' => $missingType->id, 'back' => url()->full()]) }}"
-                                    class="mini-btn" title="{{ __('Aggiungi') }}"><i class="fa-solid fa-plus"></i></a>
+                                <div class="dropdown">
+                                    <button type="button" class="mini-btn" title="{{ __('Aggiungi') }}"
+                                        data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
+                                        <i class="fa-solid fa-plus"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end eq-assign-menu">
+                                        @forelse ($matchingEquipment as $candidate)
+                                            <li>
+                                                <form method="POST"
+                                                    action="{{ route('admin.vehicles.equipment.assign', $vehicle) }}"
+                                                    class="eq-assign-form">
+                                                    @csrf
+                                                    <input type="hidden" name="equipment_id" value="{{ $candidate->id }}">
+                                                    <button type="submit" class="dropdown-item"
+                                                        data-assigned="{{ $candidate->vehicle_id ? '1' : '0' }}"
+                                                        data-assigned-to="{{ $candidate->vehicle->internal_code ?? '' }}">
+                                                        {{ $candidate->serial_number ?? $candidate->name }}
+                                                        @if ($candidate->vehicle)
+                                                            <span class="eq-assign-meta">— {{ __('su') }} {{ $candidate->vehicle->internal_code }}</span>
+                                                        @else
+                                                            <span class="eq-assign-meta">— {{ __('non assegnata') }}</span>
+                                                        @endif
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        @empty
+                                            <li><span class="dropdown-item-text eq-assign-empty">{{ __('Nessuna attrezzatura esistente di questo tipo') }}</span></li>
+                                        @endforelse
+                                        <li>
+                                            <hr class="dropdown-divider">
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item"
+                                                href="{{ route('admin.equipments.create', ['vehicle_id' => $vehicle->id, 'equipment_type_id' => $missingType->id, 'back' => url()->full()]) }}">
+                                                <i class="fa-solid fa-plus"></i> {{ __('Nuova attrezzatura') }}
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -382,45 +457,6 @@
                     <div class="veh-eq-item"><div><div class="name">{{ __('Nessun equipaggiamento registrato') }}</div>
                         </div></div>
                 @endforelse
-
-                @if ($assignableEquipment->isNotEmpty())
-                    <form method="POST" action="{{ route('admin.vehicles.equipment.assign', $vehicle) }}"
-                        id="assign-equipment-form" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-                        @csrf
-                        <div class="field" style="margin-bottom:8px;">
-                            <label for="assign_equipment_id">{{ __('Assegna attrezzatura esistente') }}</label>
-                            <select class="select @error('equipment_id') is-invalid @enderror" id="assign_equipment_id"
-                                name="equipment_id" required>
-                                <option value="" disabled selected>{{ __('Seleziona attrezzatura...') }}</option>
-                                @foreach ($assignableEquipment as $assignable)
-                                    <option value="{{ $assignable->id }}"
-                                        data-assigned="{{ $assignable->vehicle_id ? '1' : '0' }}"
-                                        data-assigned-to="{{ $assignable->vehicle->internal_code ?? '' }}">
-                                        {{ $assignable->equipmentType->name ?? $assignable->name }} ·
-                                        {{ $assignable->serial_number ?? 'N/A' }}
-                                        @if ($assignable->vehicle)
-                                            — {{ __('su') }} {{ $assignable->vehicle->internal_code }}
-                                        @else
-                                            — {{ __('non assegnata') }}
-                                        @endif
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('equipment_id')
-                                <div class="field-error">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <label class="check" style="margin-bottom:8px;">
-                            <input type="checkbox" id="assign-unassigned-only">
-                            <div>
-                                <div class="label">{{ __('Mostra solo non assegnate') }}</div>
-                            </div>
-                        </label>
-                        <button type="submit" class="btn ghost sm">
-                            <i class="fa-solid fa-link"></i> {{ __('Assegna') }}
-                        </button>
-                    </form>
-                @endif
             </div>
         </div>
 
@@ -521,39 +557,22 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('assign-equipment-form');
-            if (!form) {
-                return;
-            }
-
-            const select = document.getElementById('assign_equipment_id');
-            const unassignedOnly = document.getElementById('assign-unassigned-only');
-
-            const applyFilter = () => {
-                Array.from(select.options).forEach((option) => {
-                    if (!option.value) {
-                        return;
+            // Ogni voce del menu "assegna attrezzatura" è un piccolo form a sé
+            // (il pulsante invia direttamente): se l'attrezzatura scelta è già
+            // assegnata a un altro veicolo, chiede conferma prima di spostarla.
+            document.querySelectorAll('.eq-assign-form').forEach((form) => {
+                form.addEventListener('submit', function(event) {
+                    const button = form.querySelector('button[type="submit"]');
+                    if (button.dataset.assigned === '1') {
+                        const confirmed = confirm(
+                            @json(__('Questa attrezzatura è già assegnata a')) + ' ' + button.dataset.assignedTo +
+                            '. ' + @json(__('Spostarla su questo veicolo?'))
+                        );
+                        if (!confirmed) {
+                            event.preventDefault();
+                        }
                     }
-                    option.hidden = unassignedOnly.checked && option.dataset.assigned === '1';
                 });
-                if (select.selectedOptions[0]?.hidden) {
-                    select.value = '';
-                }
-            };
-
-            unassignedOnly.addEventListener('change', applyFilter);
-
-            form.addEventListener('submit', function(event) {
-                const selected = select.options[select.selectedIndex];
-                if (selected && selected.dataset.assigned === '1') {
-                    const confirmed = confirm(
-                        @json(__('Questa attrezzatura è già assegnata a')) + ' ' + selected.dataset.assignedTo +
-                        '. ' + @json(__('Spostarla su questo veicolo?'))
-                    );
-                    if (!confirmed) {
-                        event.preventDefault();
-                    }
-                }
             });
         });
     </script>
