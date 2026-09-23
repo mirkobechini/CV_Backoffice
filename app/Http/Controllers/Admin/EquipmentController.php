@@ -95,6 +95,7 @@ class EquipmentController extends Controller
     public function store(StoreEquipmentRequest $request)
     {
         $validatedData = $request->validated();
+        $validatedData = $this->normalizeMonthlyDates($validatedData);
         $validatedData = $this->resolveExpirationDate($validatedData);
         $validatedData = $this->resolveNextCollaudoDate($validatedData);
 
@@ -130,12 +131,34 @@ class EquipmentController extends Controller
     public function update(UpdateEquipmentRequest $request, Equipment $equipment)
     {
         $validatedData = $request->validated();
+        $validatedData = $this->normalizeMonthlyDates($validatedData);
         $validatedData = $this->resolveExpirationDate($validatedData);
         $validatedData = $this->resolveNextCollaudoDate($validatedData);
 
         $equipment->update($validatedData);
 
         return redirect()->route('admin.equipments.show', $equipment)->with('status', 'Attrezzatura aggiornata con successo.');
+    }
+
+    /**
+     * expiration_date e next_collaudo_date arrivano dal form come "Y-m"
+     * (solo mese/anno, come le scadenze): qui si convertono nell'ultimo
+     * giorno del mese per il salvataggio, prima che resolveExpirationDate/
+     * resolveNextCollaudoDate valutino se serve invece il calcolo
+     * automatico (che si attiva solo quando il campo è vuoto).
+     */
+    private function normalizeMonthlyDates(array $data): array
+    {
+        foreach (['expiration_date', 'next_collaudo_date'] as $field) {
+            if (empty($data[$field])) {
+                continue;
+            }
+
+            $parsed = Carbon::createFromFormat('Y-m', $data[$field]);
+            $data[$field] = $parsed ? $parsed->endOfMonth()->toDateString() : null;
+        }
+
+        return $data;
     }
 
     /**

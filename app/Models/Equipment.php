@@ -142,7 +142,12 @@ class Equipment extends Model
             return 'Scaduta';
         }
 
-        if ($expiration->diffInDays($today) <= 30) {
+        // $today->diffInDays($expiration), non il contrario: da Carbon 3 il
+        // segno dipende dall'ordine (l'oggetto su cui si chiama è il primo
+        // termine della sottrazione), e con l'ordine invertito il risultato
+        // era negativo per qualunque scadenza futura, quindi sempre <= 30 —
+        // il badge "In scadenza" compariva anche a anni di distanza.
+        if ($today->diffInDays($expiration) <= 30) {
             return 'In scadenza';
         }
 
@@ -172,7 +177,7 @@ class Equipment extends Model
             return 'Scaduto';
         }
 
-        if ($due->diffInDays($today) <= 30) {
+        if ($today->diffInDays($due) <= 30) {
             return 'In scadenza';
         }
 

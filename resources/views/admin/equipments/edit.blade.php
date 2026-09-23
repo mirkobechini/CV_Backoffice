@@ -97,7 +97,7 @@
                     <x-form.date-input name="revision_date" label="{{ __('Data revisione') }}" :model="$equipment" />
                 </div>
                 <div class="row2">
-                    <x-form.date-input name="expiration_date" label="{{ __('Data scadenza') }}" :model="$equipment" />
+                    <x-form.month-input name="expiration_date" label="{{ __('Data scadenza') }}" :model="$equipment" />
                 </div>
 
                 {{-- Campi specifici estintori --}}
@@ -132,7 +132,7 @@
                     <div class="row2">
                         <x-form.date-input name="collaudo_date" label="{{ __('Data collaudo') }}"
                             :model="$equipment" />
-                        <x-form.date-input name="next_collaudo_date" label="{{ __('Prossimo collaudo') }}"
+                        <x-form.month-input name="next_collaudo_date" label="{{ __('Prossimo collaudo') }}"
                             :model="$equipment" />
                     </div>
                 </div>

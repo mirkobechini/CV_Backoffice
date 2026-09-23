@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
 use App\Models\Deadline;
+use App\Models\Equipment;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Services\DeadlineService;
@@ -144,13 +145,53 @@ class VehicleController extends Controller
                 ->mapWithKeys(fn ($issueId) => [$issueId => $record->provider]))
         ;
 
+        // Attrezzatura assegnabile a questo veicolo: quella non assegnata a
+        // nessun veicolo, o già assegnata a un altro veicolo del gruppo
+        // (selezionarla la sposta qui, vedi assignEquipment()). Esclude
+        // quella già su questo stesso veicolo.
+        $assignableEquipment = Equipment::with('vehicle', 'equipmentType')
+            ->where(function ($q) use ($vehicle) {
+                $q->whereNull('vehicle_id')->orWhere('vehicle_id', '!=', $vehicle->id);
+            })
+            ->where(function ($q) {
+                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
+            })
+            ->orderBy('name')
+            ->get();
+
         return view('admin.vehicles.show', compact(
             'vehicle',
             'vehicleAppointments',
             'deadlines',
             'deadlinesTypes',
-            'issueProviders'
+            'issueProviders',
+            'assignableEquipment'
         ));
+    }
+
+    /**
+     * Assegna a questo veicolo un'attrezzatura già esistente in anagrafica,
+     * non assegnata o assegnata a un altro veicolo (in tal caso la sposta
+     * qui: il front-end chiede conferma prima di inviare quando
+     * l'attrezzatura risulta già assegnata altrove).
+     */
+    public function assignEquipment(Request $request, Vehicle $vehicle)
+    {
+        $this->authorize('update', $vehicle);
+
+        $data = $request->validate([
+            'equipment_id' => 'required|exists:equipment,id',
+        ], [
+            'equipment_id.required' => "Seleziona un'attrezzatura da assegnare.",
+            'equipment_id.exists' => "L'attrezzatura selezionata non esiste.",
+        ]);
+
+        $equipment = Equipment::findOrFail($data['equipment_id']);
+        $this->authorize('update', $equipment);
+
+        $equipment->update(['vehicle_id' => $vehicle->id]);
+
+        return redirect()->route('admin.vehicles.show', $vehicle->id)->with('status', 'Attrezzatura assegnata con successo.');
     }
 
     /**
