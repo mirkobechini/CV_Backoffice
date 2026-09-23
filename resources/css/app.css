@@ -1652,25 +1652,6 @@ body {
     font-weight: 400;
 }
 
-.veh-issue-scroll {
-    max-height: 340px;
-    overflow-y: auto;
-    padding-right: 6px;
-}
-
-.veh-issue-scroll::-webkit-scrollbar {
-    width: 8px;
-}
-
-.veh-issue-scroll::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 4px;
-}
-
-.veh-issue-scroll::-webkit-scrollbar-track {
-    background: transparent;
-}
-
 .veh-hist-table {
     width: 100%;
     border-collapse: collapse;

@@ -4,6 +4,15 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.35] - 2026-09-23
+
+### Fixed
+
+- La card "Guasti" nella scheda veicolo aveva uno scroll interno con altezza fissa: ora si espande fino in fondo come le altre card.
+
+### Added
+
+- La scheda veicolo PDF include ora una sezione "Pneumatici" (posizione, stagionalità, marca/modello, prossimo cambio, stato).
 ## [v1.2.34] - 2026-09-23
 
 ### Fixed

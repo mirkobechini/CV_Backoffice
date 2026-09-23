@@ -31,6 +31,7 @@ class PdfExportController extends Controller
             'equipment.equipmentType',
             'maintenanceRecords.provider',
             'maintenanceRecords.items.itemable',
+            'tires',
         ]);
         $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
             ->loadView('pdfs.scheda-veicolo', compact('vehicle'));
