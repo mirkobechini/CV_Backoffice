@@ -382,6 +382,45 @@
                     <div class="veh-eq-item"><div><div class="name">{{ __('Nessun equipaggiamento registrato') }}</div>
                         </div></div>
                 @endforelse
+
+                @if ($assignableEquipment->isNotEmpty())
+                    <form method="POST" action="{{ route('admin.vehicles.equipment.assign', $vehicle) }}"
+                        id="assign-equipment-form" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+                        @csrf
+                        <div class="field" style="margin-bottom:8px;">
+                            <label for="assign_equipment_id">{{ __('Assegna attrezzatura esistente') }}</label>
+                            <select class="select @error('equipment_id') is-invalid @enderror" id="assign_equipment_id"
+                                name="equipment_id" required>
+                                <option value="" disabled selected>{{ __('Seleziona attrezzatura...') }}</option>
+                                @foreach ($assignableEquipment as $assignable)
+                                    <option value="{{ $assignable->id }}"
+                                        data-assigned="{{ $assignable->vehicle_id ? '1' : '0' }}"
+                                        data-assigned-to="{{ $assignable->vehicle->internal_code ?? '' }}">
+                                        {{ $assignable->equipmentType->name ?? $assignable->name }} ·
+                                        {{ $assignable->serial_number ?? 'N/A' }}
+                                        @if ($assignable->vehicle)
+                                            — {{ __('su') }} {{ $assignable->vehicle->internal_code }}
+                                        @else
+                                            — {{ __('non assegnata') }}
+                                        @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('equipment_id')
+                                <div class="field-error">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <label class="check" style="margin-bottom:8px;">
+                            <input type="checkbox" id="assign-unassigned-only">
+                            <div>
+                                <div class="label">{{ __('Mostra solo non assegnate') }}</div>
+                            </div>
+                        </label>
+                        <button type="submit" class="btn ghost sm">
+                            <i class="fa-solid fa-link"></i> {{ __('Assegna') }}
+                        </button>
+                    </form>
+                @endif
             </div>
         </div>
 
@@ -481,4 +520,43 @@
             </div>
         </div>
     @endif
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('assign-equipment-form');
+            if (!form) {
+                return;
+            }
+
+            const select = document.getElementById('assign_equipment_id');
+            const unassignedOnly = document.getElementById('assign-unassigned-only');
+
+            const applyFilter = () => {
+                Array.from(select.options).forEach((option) => {
+                    if (!option.value) {
+                        return;
+                    }
+                    option.hidden = unassignedOnly.checked && option.dataset.assigned === '1';
+                });
+                if (select.selectedOptions[0]?.hidden) {
+                    select.value = '';
+                }
+            };
+
+            unassignedOnly.addEventListener('change', applyFilter);
+
+            form.addEventListener('submit', function(event) {
+                const selected = select.options[select.selectedIndex];
+                if (selected && selected.dataset.assigned === '1') {
+                    const confirmed = confirm(
+                        @json(__('Questa attrezzatura è già assegnata a')) + ' ' + selected.dataset.assignedTo +
+                        '. ' + @json(__('Spostarla su questo veicolo?'))
+                    );
+                    if (!confirmed) {
+                        event.preventDefault();
+                    }
+                }
+            });
+        });
+    </script>
 @endsection
