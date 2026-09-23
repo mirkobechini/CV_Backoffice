@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.29] - 2026-09-23
+
+### Changed
+
+- Il selettore pneumatico nei guasti non è più sempre visibile: compare solo dopo aver marcato il guasto come "relativo a un pneumatico".
+
 ## [v1.2.28] - 2026-09-23
 
 ### Fixed
