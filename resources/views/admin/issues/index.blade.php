@@ -103,13 +103,13 @@
 
                     @forelse ($groups as $groupLabel => $groupIssues)
                         @if ($groupBy !== null)
-                            <tr class="group-row">
-                                <td colspan="5">{{ $groupLabel }} ({{ $groupIssues->count() }})</td>
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                                <td colspan="5"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupIssues->count() }})</td>
                             </tr>
                         @endif
 
                         @foreach ($groupIssues as $issue)
-                            <tr>
+                            <tr @if ($groupBy !== null) data-groups="g{{ $loop->parent->index }}" @endif>
                                 <td>
                                     <div class="vin">
                                         <span class="thumb t{{ ($issue->vehicle_id % 5) + 1 }}"><i

@@ -96,6 +96,35 @@ document.addEventListener('DOMContentLoaded', () => {
         toggle.setAttribute('aria-label', showing ? 'Mostra password' : 'Nascondi password');
     });
 
+    // Righe di gruppo pieghevoli nelle tabelle raggruppate (guasti,
+    // scadenze, appuntamenti): un click sull'intestazione nasconde tutte
+    // le righe che le appartengono, incluse quelle di eventuali sotto-gruppi
+    // annidati (che portano l'id del gruppo tra i propri data-groups).
+    const collapsedGroups = new Set();
+
+    const applyGroupCollapse = () => {
+        document.querySelectorAll('[data-groups]').forEach((row) => {
+            const groups = row.dataset.groups.split(' ').filter(Boolean);
+            row.style.display = groups.some((g) => collapsedGroups.has(g)) ? 'none' : '';
+        });
+        document.querySelectorAll('.group-row[data-group-row]').forEach((header) => {
+            header.classList.toggle('is-collapsed', collapsedGroups.has(header.dataset.groupRow));
+        });
+    };
+
+    document.addEventListener('click', (event) => {
+        const header = event.target.closest('.group-row[data-group-row]');
+        if (!header) return;
+
+        const id = header.dataset.groupRow;
+        if (collapsedGroups.has(id)) {
+            collapsedGroups.delete(id);
+        } else {
+            collapsedGroups.add(id);
+        }
+        applyGroupCollapse();
+    });
+
     document.querySelectorAll('form[data-single-submit="true"]').forEach((form) => {
         form.addEventListener('submit', (event) => {
             if (form.dataset.submitting === 'true') {

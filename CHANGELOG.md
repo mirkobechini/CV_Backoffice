@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.33] - 2026-09-23
+
+### Added
+
+- Le tabelle raggruppate (guasti, scadenze, appuntamenti in officina) sono ora pieghevoli: un click sull'intestazione di un gruppo (es. un veicolo) nasconde/mostra le righe al suo interno, inclusi i sotto-gruppi annidati.
 ## [v1.2.32] - 2026-09-23
 
 ### Changed
