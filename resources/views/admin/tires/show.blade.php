@@ -69,12 +69,8 @@
                 <span class="v">{{ $tire->season_label }}</span>
             </div>
             <div class="dl-kv">
-                <span class="k">{{ __('Asse') }}</span>
-                <span class="v">{{ $tire->axle_label }}</span>
-            </div>
-            <div class="dl-kv">
-                <span class="k">{{ __('Numero di gomme') }}</span>
-                <span class="v">{{ $tire->quantity }}</span>
+                <span class="k">{{ __('Posizione') }}</span>
+                <span class="v">{{ $tire->position_label }}</span>
             </div>
             <div class="dl-kv">
                 <span class="k">{{ __('Marca / Modello') }}</span>

@@ -178,7 +178,7 @@ class DashboardTest extends TestCase
         Tire::create([
             'vehicle_id' => $vehicle->id,
             'season' => Tire::SEASON_SUMMER,
-            'quantity' => 4,
+            'position' => Tire::POSITION_FRONT_LEFT,
             'status' => Tire::STATUS_MOUNTED,
         ]);
 

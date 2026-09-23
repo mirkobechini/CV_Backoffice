@@ -186,7 +186,7 @@
                     <div class="dl-kv">
                         <span class="k">
                             <a href="{{ route('admin.tires.show', $tireItem->itemable->id) }}">
-                                {{ $tireItem->itemable->season_label }} ({{ $tireItem->itemable->axle_label }})
+                                {{ $tireItem->itemable->season_label }} ({{ $tireItem->itemable->position_label }})
                                 @if ($tireItem->itemable->brand)
                                     · {{ $tireItem->itemable->brand }}
                                 @endif

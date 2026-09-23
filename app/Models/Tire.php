@@ -30,17 +30,25 @@ class Tire extends Model
 
     public const STATUS_RETIRED = 'retired';
 
-    public const AXLE_FULL = 'full';
+    public const POSITION_FRONT_LEFT = 'front_left';
 
-    public const AXLE_FRONT = 'front';
+    public const POSITION_FRONT_RIGHT = 'front_right';
 
-    public const AXLE_REAR = 'rear';
+    public const POSITION_REAR_LEFT = 'rear_left';
+
+    public const POSITION_REAR_RIGHT = 'rear_right';
+
+    public const POSITIONS = [
+        self::POSITION_FRONT_LEFT,
+        self::POSITION_FRONT_RIGHT,
+        self::POSITION_REAR_LEFT,
+        self::POSITION_REAR_RIGHT,
+    ];
 
     protected $fillable = [
         'vehicle_id',
         'season',
-        'axle',
-        'quantity',
+        'position',
         'brand',
         'model_name',
         'size',
@@ -55,7 +63,6 @@ class Tire extends Model
     protected $casts = [
         'mounted_date' => 'date',
         'next_change_date' => 'date',
-        'quantity' => 'integer',
         'mounted_mileage' => 'integer',
         'next_change_mileage' => 'integer',
     ];
@@ -95,12 +102,30 @@ class Tire extends Model
         };
     }
 
-    public function getAxleLabelAttribute(): string
+    /**
+     * Posizioni coperte da una descrizione di gomma(e) nuova(e) nel form
+     * "Cambio Gomme": una singola posizione esplicita, una coppia
+     * anteriore/posteriore, o il set completo. Condivisa tra
+     * ValidatesTireSelection (validazione) e MaintenanceRecordController
+     * (creazione effettiva delle righe).
+     */
+    public static function positionsForGroup(?string $group, ?string $singlePosition): array
     {
-        return match ($this->axle) {
-            self::AXLE_FULL => 'Set completo',
-            self::AXLE_FRONT => 'Anteriori',
-            self::AXLE_REAR => 'Posteriori',
+        return match ($group) {
+            'front_pair' => [self::POSITION_FRONT_LEFT, self::POSITION_FRONT_RIGHT],
+            'rear_pair' => [self::POSITION_REAR_LEFT, self::POSITION_REAR_RIGHT],
+            'full_set' => self::POSITIONS,
+            default => array_filter([$singlePosition]),
+        };
+    }
+
+    public function getPositionLabelAttribute(): string
+    {
+        return match ($this->position) {
+            self::POSITION_FRONT_LEFT => 'Anteriore sinistra',
+            self::POSITION_FRONT_RIGHT => 'Anteriore destra',
+            self::POSITION_REAR_LEFT => 'Posteriore sinistra',
+            self::POSITION_REAR_RIGHT => 'Posteriore destra',
             default => 'N/A',
         };
     }

@@ -238,7 +238,7 @@ class IssueCrudTest extends TestCase
         $tire = \App\Models\Tire::create([
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
-            'quantity' => 4,
+            'position' => \App\Models\Tire::POSITION_FRONT_LEFT,
             'status' => 'mounted',
         ]);
         $issue = Issue::create([
@@ -264,7 +264,7 @@ class IssueCrudTest extends TestCase
         $tire = \App\Models\Tire::create([
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
-            'quantity' => 4,
+            'position' => \App\Models\Tire::POSITION_FRONT_LEFT,
             'status' => 'mounted',
         ]);
 

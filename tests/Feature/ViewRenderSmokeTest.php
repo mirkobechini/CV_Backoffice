@@ -139,7 +139,7 @@ class ViewRenderSmokeTest extends TestCase
         $tire = Tire::create([
             'vehicle_id' => $vehicle->id,
             'season' => 'winter',
-            'quantity' => 4,
+            'position' => Tire::POSITION_FRONT_LEFT,
             'brand' => 'Michelin',
             'status' => 'mounted',
         ]);

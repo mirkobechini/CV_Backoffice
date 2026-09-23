@@ -98,7 +98,7 @@
                                     title="{{ __('Ordina per stagionalità') }}">{{ $sortIcon('season') }}</a>
                             </div>
                         </th>
-                        <th>{{ __('Asse') }}</th>
+                        <th>{{ __('Posizione') }}</th>
                         <th>{{ __('Marca / Modello') }}</th>
                         <th>{{ __('Misura') }}</th>
                         <th>
@@ -129,7 +129,7 @@
                                 </div>
                             </td>
                             <td>{{ $tire->season_label }}</td>
-                            <td>{{ $tire->axle_label }}</td>
+                            <td>{{ $tire->position_label }}</td>
                             <td>{{ trim(($tire->brand ?? '') . ' ' . ($tire->model_name ?? '')) ?: '—' }}</td>
                             <td class="code">{{ $tire->size ?: '—' }}</td>
                             <td>

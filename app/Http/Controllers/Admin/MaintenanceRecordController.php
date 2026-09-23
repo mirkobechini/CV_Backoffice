@@ -185,7 +185,7 @@ class MaintenanceRecordController extends Controller
         // "Cambio Gomme": filtrati per veicolo lato client, come guasti/scadenze.
         $storedTires = Tire::where('status', Tire::STATUS_STORED)
             ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
-            ->get(['id', 'vehicle_id', 'season', 'axle', 'brand', 'model_name', 'size']);
+            ->get(['id', 'vehicle_id', 'season', 'position', 'brand', 'model_name', 'size']);
 
         // La view usa old(..., $preselected...) così old() ha priorità
         // dopo un errore validazione, altrimenti usa le preselezioni.
@@ -322,7 +322,7 @@ class MaintenanceRecordController extends Controller
             }
         })
             ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
-            ->get(['id', 'vehicle_id', 'season', 'axle', 'brand', 'model_name', 'size']);
+            ->get(['id', 'vehicle_id', 'season', 'position', 'brand', 'model_name', 'size']);
 
         return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'storedTires', 'linkedTireIds'));
     }
@@ -576,13 +576,12 @@ class MaintenanceRecordController extends Controller
     }
 
     /**
-     * Per un appuntamento "Cambio Gomme", collega i set di gomme da
-     * montare insieme: uno o più set esistenti (in magazzino) e/o uno
-     * nuovo appena descritto (validati in ValidatesTireSelection: la
-     * combinazione deve coprire esattamente 4 gomme della stessa
-     * stagionalità). Il montaggio vero e proprio (con la scelta di cosa
-     * fare delle gomme sostituite) avviene solo al completamento
-     * dell'appuntamento (vedi complete()), non qui.
+     * Per un appuntamento "Cambio Gomme", collega le gomme da montare: una
+     * o più esistenti (in magazzino, 1/2/4, validate in
+     * ValidatesTireSelection) e/o di nuove appena descritte. Il montaggio
+     * vero e proprio (con la scelta di cosa fare delle gomme sostituite)
+     * avviene solo al completamento dell'appuntamento (vedi complete()),
+     * non qui.
      */
     private function linkTireItems(MaintenanceRecord $maintenanceRecord, array $data): void
     {
@@ -599,16 +598,17 @@ class MaintenanceRecordController extends Controller
         }
 
         if (! empty($data['new_tire_season'])) {
-            $tires->push(Tire::create([
-                'vehicle_id' => $data['vehicle_id'],
-                'season' => $data['new_tire_season'],
-                'axle' => $data['new_tire_axle'] ?? Tire::AXLE_FULL,
-                'quantity' => $data['new_tire_quantity'] ?? 4,
-                'brand' => $data['new_tire_brand'] ?? null,
-                'model_name' => $data['new_tire_model_name'] ?? null,
-                'size' => $data['new_tire_size'] ?? null,
-                'status' => Tire::STATUS_STORED,
-            ]));
+            foreach (Tire::positionsForGroup($data['new_tire_group'] ?? null, $data['new_tire_position'] ?? null) as $position) {
+                $tires->push(Tire::create([
+                    'vehicle_id' => $data['vehicle_id'],
+                    'season' => $data['new_tire_season'],
+                    'position' => $position,
+                    'brand' => $data['new_tire_brand'] ?? null,
+                    'model_name' => $data['new_tire_model_name'] ?? null,
+                    'size' => $data['new_tire_size'] ?? null,
+                    'status' => Tire::STATUS_STORED,
+                ]));
+            }
         }
 
         foreach ($tires as $tire) {
