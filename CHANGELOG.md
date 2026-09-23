@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.36] - 2026-09-23
+
+### Fixed
+
+- La card "Guasti" nella scheda veicolo: lo scroll interno (rimosso in v1.2.35) torna, ma ora riempie tutta l'altezza della card invece di fermarsi a un tetto fisso in px che lasciava uno spazio vuoto sotto quando la card veniva stirata ad altezza pari con le vicine.
 ## [v1.2.35] - 2026-09-23
 
 ### Fixed
