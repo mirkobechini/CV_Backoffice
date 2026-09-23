@@ -218,4 +218,68 @@ class IssueCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('Rumore al motore');
     }
+
+    public function test_create_page_hides_tire_picker_behind_checkbox_by_default(): void
+    {
+        // Il selettore pneumatico non deve comparire per ogni guasto: resta
+        // nascosto finché non si seleziona "Guasto relativo a un pneumatico".
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user)->get(route('admin.issues.create'));
+
+        $response->assertOk();
+        $response->assertSee('Guasto relativo a un pneumatico');
+        $response->assertSee('id="tire-id-field" style="display:none;"', false);
+    }
+
+    public function test_edit_page_shows_tire_picker_when_issue_already_has_a_tire(): void
+    {
+        $vehicle = $this->createVehicle();
+        $tire = \App\Models\Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => 'summer',
+            'quantity' => 4,
+            'status' => 'mounted',
+        ]);
+        $issue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'tire_id' => $tire->id,
+            'description' => 'Foratura',
+            'status' => 'open',
+            'event_date' => '2025-01-02',
+        ]);
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user)->get(route('admin.issues.edit', $issue));
+
+        $response->assertOk();
+        $response->assertSee('id="is-tire-issue" checked', false);
+        $response->assertDontSee('id="tire-id-field" style="display:none;"', false);
+    }
+
+    public function test_issue_can_still_be_stored_with_a_linked_tire(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $tire = \App\Models\Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => 'summer',
+            'quantity' => 4,
+            'status' => 'mounted',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.issues.store'), [
+            'vehicle_id' => $vehicle->id,
+            'tire_id' => $tire->id,
+            'description' => 'Foratura',
+            'status' => 'open',
+            'event_date' => '2025-01-02',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('issues', [
+            'vehicle_id' => $vehicle->id,
+            'tire_id' => $tire->id,
+        ]);
+    }
 }
