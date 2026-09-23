@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.32] - 2026-09-23
+
+### Changed
+
+- Assegnazione attrezzatura dalla scheda veicolo: il pulsante "+" (sia quello generale che quelli sulle righe di attrezzatura mancante) apre ora un menu a tendina con l'attrezzatura esistente assegnabile e una voce per crearne una nuova, al posto del selettore fisso in fondo alla card.
 ## [v1.2.31] - 2026-09-23
 
 ### Changed
