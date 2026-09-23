@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.34] - 2026-09-23
+
+### Fixed
+
+- I menu a tendina "assegna attrezzatura" introdotti in v1.2.32 comparivano sempre aperti, in linea nel flusso della pagina, invece di restare nascosti finché non si preme il pulsante "+": il progetto non importa il CSS di Bootstrap (solo il JS), e mancavano le regole `.dropdown`/`.dropdown-menu` di base che tengono il menu nascosto per default.
 ## [v1.2.33] - 2026-09-23
 
 ### Added
