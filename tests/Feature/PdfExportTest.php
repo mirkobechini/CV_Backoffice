@@ -3,6 +3,7 @@ namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Group;
+use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -33,6 +34,16 @@ class PdfExportTest extends TestCase
             'vehicle_type_id' => $type->id,
             'immatricolation_date' => Carbon::today()->subYears(2),
             'group_id' => $group->id,
+        ]);
+        // Copre anche la sezione pneumatici del PDF (vedi
+        // resources/views/pdfs/scheda-veicolo.blade.php): senza una gomma
+        // registrata, un eventuale errore negli accessor usati lì (position_label,
+        // season_label, ecc.) non verrebbe mai esercitato da questo test.
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_WINTER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
         ]);
         $response = $this->actingAs($user)->get(route('admin.vehicles.pdf', $vehicle->id));
         $response->assertOk();
