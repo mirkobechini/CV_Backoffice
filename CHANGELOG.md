@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.30] - 2026-09-23
+
+### Added
+
+- Il picker delle scadenze in creazione/modifica appuntamento ora mostra anche il tempo (o i km) mancanti e un badge di stato (valida/in scadenza/scaduta), non solo tipo e data.
+
 ## [v1.2.29] - 2026-09-23
 
 ### Changed

@@ -169,8 +169,11 @@ class MaintenanceRecordController extends Controller
             ->whereDoesntHave('maintenanceRecordItems')
             ->get(['id', 'vehicle_id', 'description', 'event_date']);
 
-        // Una sola deadline per tipo per veicolo: prendiamo l'ultima non rinnovata
-        $pendingDeadlines = Deadline::whereIn('status', ['pending', 'expired', 'valid'])
+        // Una sola deadline per tipo per veicolo: prendiamo l'ultima non rinnovata.
+        // Eager load di vehicle.latestMileageLog: days_label/status_label (mostrati
+        // nel picker) lo caricherebbero altrimenti una scadenza alla volta.
+        $pendingDeadlines = Deadline::with('vehicle.latestMileageLog')
+            ->whereIn('status', ['pending', 'expired', 'valid'])
             ->orderByDesc('due_date')
             ->get()
             ->unique(function ($item) {
@@ -292,10 +295,15 @@ class MaintenanceRecordController extends Controller
         $linkedDeadlineIds = $maintenanceRecord->items
             ->where('itemable_type', Deadline::class)
             ->pluck('itemable_id');
-        $pendingDeadlines = Deadline::whereIn('status', ['pending', 'expired', 'valid'])
+        // vehicle.latestMileageLog eager-caricato: days_label/status_label
+        // (mostrati nel picker) lo caricherebbero altrimenti una alla volta.
+        // Non si può più limitare le colonne selezionate: quegli accessor
+        // leggono anche interval_km/last_mileage/status.
+        $pendingDeadlines = Deadline::with('vehicle.latestMileageLog')
+            ->whereIn('status', ['pending', 'expired', 'valid'])
             ->orWhereIn('id', $linkedDeadlineIds)
             ->orderByDesc('due_date')
-            ->get(['id', 'vehicle_id', 'type', 'due_date'])
+            ->get()
             // Una sola per veicolo+tipo (mantenendo quelle già collegate)
             ->unique(function ($item) {
                 return $item->vehicle_id . '-' . $item->type;
