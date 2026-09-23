@@ -106,6 +106,14 @@
                                 <label class="lbl" for="deadline_{{ $deadline->id }}">
                                     {{ ucfirst($deadline->type) }} —
                                     {{ $deadline->due_date?->format('d/m/Y') ?? 'N/A' }}
+                                    <span class="meta">({{ $deadline->days_label }})</span>
+                                    <span
+                                        class="badge {{ match ($deadline->status_color) {
+                                            'red' => 'b-red',
+                                            'yellow' => 'b-amber',
+                                            'green' => 'b-green',
+                                            default => 'b-gray',
+                                        } }}">{{ $deadline->status_label }}</span>
                                 </label>
                             </div>
                         @endforeach
