@@ -39,15 +39,15 @@ class StoreMaintenanceRecordRequest extends FormRequest
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'mileage_at_service' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:2000',
-            // "Cambio Gomme": si possono scegliere più set esistenti insieme
-            // (es. anteriori + posteriori) e/o descriverne uno nuovo; la
-            // combinazione deve coprire esattamente 4 gomme della stessa
-            // stagionalità (vedi ValidatesTireSelection).
+            // "Cambio Gomme": si possono scegliere più gomme esistenti insieme
+            // (1, 2 o 4, es. solo l'anteriore sinistra, o l'intero asse) e/o
+            // descriverne di nuove; devono avere tutte la stessa stagionalità
+            // e occupare ciascuna una posizione diversa (vedi ValidatesTireSelection).
             'target_tire_ids' => 'nullable|array',
             'target_tire_ids.*' => 'exists:tires,id',
             'new_tire_season' => 'nullable|in:summer,winter,all_season',
-            'new_tire_axle' => 'nullable|in:full,front,rear',
-            'new_tire_quantity' => 'nullable|integer|min:1|max:10',
+            'new_tire_group' => 'nullable|in:single,front_pair,rear_pair,full_set',
+            'new_tire_position' => 'nullable|in:front_left,front_right,rear_left,rear_right|required_if:new_tire_group,single',
             'new_tire_brand' => 'nullable|string|max:255',
             'new_tire_model_name' => 'nullable|string|max:255',
             'new_tire_size' => 'nullable|string|max:255',

@@ -4,6 +4,15 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.31] - 2026-09-23
+
+### Changed
+
+- Modello dati pneumatici: ogni riga ora rappresenta una singola gomma fisica con una posizione (anteriore/posteriore sinistra/destra) invece di un "set" con asse e quantità. Un appuntamento di cambio gomme può ora riguardare 1, 2 o 4 gomme, non solo un set completo. La migrazione converte automaticamente i dati esistenti, mantenendo l'id della riga originale su una posizione così cronologia e collegamenti restano validi.
+
+### Fixed
+
+- Il selettore pneumatico dei guasti e il picker gomme degli appuntamenti mostravano le gomme con l'etichetta d'asse; ora mostrano la posizione specifica.
 ## [v1.2.30] - 2026-09-23
 
 ### Added

@@ -11,7 +11,7 @@
 @section('content')
 
     <div class="page-header">
-        <h1>{{ __('Modifica set di gomme') }}</h1>
+        <h1>{{ __('Modifica pneumatico') }}</h1>
         <a href="{{ request('back', route('admin.tires.index')) }}" class="btn ghost">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Annulla') }}
         </a>
@@ -24,7 +24,7 @@
             @method('PUT')
 
             <div class="form-section" style="margin-bottom:0;">
-                <h2><span class="num">1</span> {{ __('Dettagli set di gomme') }}</h2>
+                <h2><span class="num">1</span> {{ __('Dettagli pneumatico') }}</h2>
                 <div class="row2">
                     <div class="field">
                         <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
@@ -63,24 +63,20 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="axle">{{ __('Asse') }} <span class="req">*</span></label>
-                        <select class="select @error('axle') is-invalid @enderror" id="axle" name="axle" required>
-                            <option value="full" {{ old('axle', $tire->axle) == 'full' ? 'selected' : '' }}>
-                                {{ __('Set completo (4)') }}</option>
-                            <option value="front" {{ old('axle', $tire->axle) == 'front' ? 'selected' : '' }}>
-                                {{ __('Anteriori (2)') }}</option>
-                            <option value="rear" {{ old('axle', $tire->axle) == 'rear' ? 'selected' : '' }}>
-                                {{ __('Posteriori (2)') }}</option>
+                        <label for="position">{{ __('Posizione') }} <span class="req">*</span></label>
+                        <select class="select @error('position') is-invalid @enderror" id="position" name="position"
+                            required>
+                            <option value="" disabled>{{ __('Seleziona...') }}</option>
+                            <option value="front_left" {{ old('position', $tire->position) == 'front_left' ? 'selected' : '' }}>
+                                {{ __('Anteriore sinistra') }}</option>
+                            <option value="front_right" {{ old('position', $tire->position) == 'front_right' ? 'selected' : '' }}>
+                                {{ __('Anteriore destra') }}</option>
+                            <option value="rear_left" {{ old('position', $tire->position) == 'rear_left' ? 'selected' : '' }}>
+                                {{ __('Posteriore sinistra') }}</option>
+                            <option value="rear_right" {{ old('position', $tire->position) == 'rear_right' ? 'selected' : '' }}>
+                                {{ __('Posteriore destra') }}</option>
                         </select>
-                        @error('axle')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="field">
-                        <label for="quantity">{{ __('Numero di gomme') }} <span class="req">*</span></label>
-                        <input type="number" class="input @error('quantity') is-invalid @enderror" id="quantity"
-                            name="quantity" value="{{ old('quantity', $tire->quantity) }}" min="1" max="10" required>
-                        @error('quantity')
+                        @error('position')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
