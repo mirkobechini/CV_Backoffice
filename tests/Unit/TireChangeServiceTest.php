@@ -42,89 +42,63 @@ class TireChangeServiceTest extends TestCase
         return Tire::create(array_merge([
             'vehicle_id' => $vehicle->id,
             'season' => 'winter',
-            'axle' => 'full',
-            'quantity' => 4,
+            'position' => Tire::POSITION_FRONT_LEFT,
             'status' => 'stored',
         ], $overrides));
     }
 
-    public function test_full_set_replaces_a_previously_mounted_full_set(): void
+    public function test_mounting_a_tire_unmounts_whatever_was_at_the_same_position(): void
     {
         $vehicle = $this->vehicle();
-        $oldFull = $this->tire($vehicle, ['status' => 'mounted']);
-        $newFull = $this->tire($vehicle, ['season' => 'summer']);
+        $old = $this->tire($vehicle, ['status' => 'mounted']);
+        $new = $this->tire($vehicle, ['season' => 'summer']);
 
-        $this->service()->recordChange($newFull, Carbon::parse('2026-04-15'), 50000, 'stored');
+        $this->service()->recordChange($new, Carbon::parse('2026-04-15'), 50000, 'stored');
 
-        $this->assertSame('mounted', $newFull->fresh()->status);
-        $this->assertSame('stored', $oldFull->fresh()->status);
+        $this->assertSame('mounted', $new->fresh()->status);
+        $this->assertSame('stored', $old->fresh()->status);
     }
 
-    public function test_full_set_replaces_both_a_mounted_front_and_rear_set(): void
+    public function test_mounting_a_tire_does_not_touch_other_positions(): void
     {
         $vehicle = $this->vehicle();
-        $front = $this->tire($vehicle, ['axle' => 'front', 'quantity' => 2, 'status' => 'mounted']);
-        $rear = $this->tire($vehicle, ['axle' => 'rear', 'quantity' => 2, 'status' => 'mounted']);
-        $newFull = $this->tire($vehicle, ['season' => 'summer']);
+        $frontLeft = $this->tire($vehicle, ['position' => Tire::POSITION_FRONT_LEFT, 'status' => 'mounted']);
+        $frontRight = $this->tire($vehicle, ['position' => Tire::POSITION_FRONT_RIGHT, 'status' => 'mounted']);
+        $rearLeft = $this->tire($vehicle, ['position' => Tire::POSITION_REAR_LEFT, 'status' => 'mounted']);
+        $rearRight = $this->tire($vehicle, ['position' => Tire::POSITION_REAR_RIGHT, 'status' => 'mounted']);
+        $newFrontLeft = $this->tire($vehicle, ['position' => Tire::POSITION_FRONT_LEFT, 'season' => 'summer', 'status' => 'stored']);
 
-        $this->service()->recordChange($newFull, Carbon::parse('2026-04-15'), null, 'retired');
+        $this->service()->recordChange($newFrontLeft, Carbon::parse('2026-04-15'), null, 'retired');
 
-        $this->assertSame('mounted', $newFull->fresh()->status);
-        $this->assertSame('retired', $front->fresh()->status);
-        $this->assertSame('retired', $rear->fresh()->status);
+        $this->assertSame('mounted', $newFrontLeft->fresh()->status);
+        $this->assertSame('retired', $frontLeft->fresh()->status);
+        $this->assertSame('mounted', $frontRight->fresh()->status);
+        $this->assertSame('mounted', $rearLeft->fresh()->status);
+        $this->assertSame('mounted', $rearRight->fresh()->status);
     }
 
-    public function test_replacing_only_front_axle_leaves_rear_of_full_set_mounted_via_split(): void
+    public function test_mounting_a_tire_with_nothing_previously_mounted_at_that_position(): void
     {
         $vehicle = $this->vehicle();
-        $oldFull = $this->tire($vehicle, ['status' => 'mounted', 'brand' => 'Michelin']);
-        $newFront = $this->tire($vehicle, ['axle' => 'front', 'quantity' => 2, 'status' => 'stored', 'brand' => 'Pirelli']);
+        $new = $this->tire($vehicle, ['status' => 'stored']);
 
-        $this->service()->recordChange($newFront, Carbon::parse('2026-04-15'), null, 'stored');
+        $change = $this->service()->recordChange($new, Carbon::parse('2026-04-15'), null, 'stored');
 
-        $this->assertSame('mounted', $newFront->fresh()->status);
-
-        // Il set originale non è più una gomma "attiva": è stato superato
-        // dallo split, non dismesso per scelta dell'utente.
-        $this->assertSame('retired', $oldFull->fresh()->status);
-
-        // Le posteriori del vecchio set restano montate su un nuovo record
-        // "rear" con gli stessi dati (stesso brand del set originale).
-        $splitRear = Tire::where('vehicle_id', $vehicle->id)
-            ->where('axle', 'rear')
-            ->where('status', 'mounted')
-            ->first();
-
-        $this->assertNotNull($splitRear);
-        $this->assertSame('Michelin', $splitRear->brand);
-        $this->assertSame(2, $splitRear->quantity);
-    }
-
-    public function test_replacing_front_axle_again_does_not_touch_separately_tracked_rear(): void
-    {
-        $vehicle = $this->vehicle();
-        $rear = $this->tire($vehicle, ['axle' => 'rear', 'quantity' => 2, 'status' => 'mounted']);
-        $oldFront = $this->tire($vehicle, ['axle' => 'front', 'quantity' => 2, 'status' => 'mounted']);
-        $newFront = $this->tire($vehicle, ['axle' => 'front', 'quantity' => 2, 'status' => 'stored']);
-
-        $this->service()->recordChange($newFront, Carbon::parse('2026-06-01'), null, 'retired');
-
-        $this->assertSame('mounted', $newFront->fresh()->status);
-        $this->assertSame('retired', $oldFront->fresh()->status);
-        $this->assertSame('mounted', $rear->fresh()->status);
+        $this->assertSame('mounted', $new->fresh()->status);
+        $this->assertNull($change->previous_tire_id);
     }
 
     public function test_records_tire_change_history_with_previous_tire(): void
     {
         $vehicle = $this->vehicle();
-        $oldFull = $this->tire($vehicle, ['status' => 'mounted']);
-        $newFull = $this->tire($vehicle, ['season' => 'summer']);
+        $old = $this->tire($vehicle, ['status' => 'mounted']);
+        $new = $this->tire($vehicle, ['season' => 'summer']);
 
-        $change = $this->service()->recordChange($newFull, Carbon::parse('2026-04-15'), 12345, 'stored', 'note di test');
+        $change = $this->service()->recordChange($new, Carbon::parse('2026-04-15'), 12345, 'stored', 'note di test');
 
         $this->assertSame($vehicle->id, $change->vehicle_id);
-        $this->assertSame($newFull->id, $change->tire_id);
-        $this->assertSame($oldFull->id, $change->previous_tire_id);
+        $this->assertSame($new->id, $change->tire_id);
+        $this->assertSame($old->id, $change->previous_tire_id);
         $this->assertSame(12345, $change->mileage_at_change);
         $this->assertSame('note di test', $change->notes);
     }

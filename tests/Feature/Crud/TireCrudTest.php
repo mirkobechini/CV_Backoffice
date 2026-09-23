@@ -50,7 +50,7 @@ class TireCrudTest extends TestCase
         return Tire::create(array_merge([
             'vehicle_id' => $vehicle->id,
             'season' => 'winter',
-            'quantity' => 4,
+            'position' => Tire::POSITION_FRONT_LEFT,
             'brand' => 'Michelin',
             'model_name' => 'Alpin 6',
             'size' => '205/55 R16',
@@ -95,8 +95,7 @@ class TireCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
-            'axle' => 'full',
-            'quantity' => 4,
+            'position' => 'front_left',
             'brand' => 'Pirelli',
             'model_name' => 'Cinturato',
             'size' => '205/55 R16',
@@ -122,8 +121,7 @@ class TireCrudTest extends TestCase
         $response = $this->actingAs($user)->put(route('admin.tires.update', $tire), [
             'vehicle_id' => $vehicle->id,
             'season' => 'winter',
-            'axle' => 'full',
-            'quantity' => 4,
+            'position' => 'front_left',
             'brand' => 'Continental',
             'model_name' => 'WinterContact',
             'size' => '205/55 R16',
@@ -156,7 +154,7 @@ class TireCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
-            'quantity' => 4,
+            'position' => 'front_left',
             'status' => 'stored',
         ]);
 
