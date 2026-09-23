@@ -15,7 +15,10 @@
 - **Controllo scadenze e dotazioni**: revisioni ministeriali, ossigeno, tagliando, cinghia distribuzione, assicurazione — con stato automatico basato su data e km
 - **Generazione automatica scadenze**: cinghia (10 anni o 100.000 km), tagliando (1 anno o km configurabili), rinnovo automatico al completamento intervento
 - **Chilometraggi**: rilevazione mensile bulk, storico, integrazione con scadenze km
-- **Dashboard interattiva**: statistiche, scadenze imminenti, guasti aperti, equipaggiamento incompleto
+- **Gestione pneumatici**: ogni gomma è una riga singola con posizione (anteriore/posteriore, sinistra/destra); i cambi in officina possono riguardare 1, 2 o 4 gomme, non solo un set completo
+- **Attrezzatura**: assegnazione di dotazioni già in anagrafica a un veicolo (anche spostandole da un altro veicolo)
+- **Pagina pubblica stato flotta**: link segreto e non indovinabile, senza account, che mostra solo la disponibilità dei mezzi (nessun dato sensibile)
+- **Dashboard interattiva**: statistiche, scadenze imminenti (con tempo/km residuo e stato), guasti aperti, equipaggiamento incompleto
 - **Calendario appuntamenti**: vista mese/settimana con colori per tipo attività
 - **Export PDF e CSV**: scheda veicolo PDF, export CSV per tutte le entità
 - **API REST**: 12 endpoint protetti da token (Sanctum), pensati per un'eventuale app mobile
@@ -29,7 +32,7 @@
 - **Backup database**: comando Artisan + pulsante nella pagina impostazioni
 - **Rate limiting**: protezione su login, route admin e API
 - **Tema chiaro/scuro**: persistente in localStorage
-- **354 test, 778 assertions — tutti verdi** ✅
+- **484 test, 1122 assertions — tutti verdi** ✅
 
 ---
 
@@ -101,7 +104,7 @@ Apri il browser su `http://127.0.0.1:8000`.
 
 ```bash
 php artisan test
-# 354 tests, 778 assertions — all green ✅
+# 484 tests, 1122 assertions — all green ✅
 ```
 
 ---
@@ -206,6 +209,9 @@ erDiagram
     VEHICLES ||--o{ MAINTENANCE_RECORDS : "ha"
     VEHICLES ||--o{ MILEAGE_LOGS : "ha"
     VEHICLES ||--o{ EQUIPMENT : "ha"
+    VEHICLES ||--o{ TIRES : "ha"
+    VEHICLES ||--o{ TIRE_CHANGES : "ha"
+    TIRES ||--o| ISSUES : "collegata a (opzionale)"
     VEHICLES }o--|| BRANDS : "marca"
     VEHICLES }o--|| CAR_MODELS : "modello"
     VEHICLES }o--|| VEHICLE_TYPES : "tipo"
@@ -243,6 +249,8 @@ erDiagram
 | `maintenance_records`                 | Appuntamenti officina                                                          |
 | `maintenance_record_items`            | Join polimorfico guasti/scadenze ↔ appuntamento                                |
 | `mileage_logs`                        | Storico chilometraggi                                                          |
+| `tires`                               | Pneumatici (uno per gomma fisica: stagionalità, posizione, stato)              |
+| `tire_changes`                        | Storico montaggi/cambi gomme                                                   |
 | `providers`                           | Fornitori (meccanico, carrozziere, gommista, ecc.)                             |
 | `equipment`                           | Dotazioni di bordo (estintori, barelle, ecc.)                                  |
 | `equipment_types`                     | Tipologie di dotazione (con frequenza revisione)                               |
