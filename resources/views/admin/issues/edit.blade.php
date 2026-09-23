@@ -46,10 +46,18 @@
                     </div>
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" :model="$issue" required />
                 </div>
-                <div class="field">
-                    <label for="tire_id">{{ __('Pneumatico collegato (opzionale)') }}</label>
+                <label class="check" style="margin-bottom:8px;">
+                    <input type="checkbox" id="is-tire-issue" {{ old('tire_id', $issue->tire_id) ? 'checked' : '' }}>
+                    <div>
+                        <div class="label">{{ __('Guasto relativo a un pneumatico') }}</div>
+                        <div class="sub">{{ __('Es. foratura, usura anomala') }}</div>
+                    </div>
+                </label>
+                <div class="field" id="tire-id-field"
+                    style="{{ old('tire_id', $issue->tire_id) ? '' : 'display:none;' }}">
+                    <label for="tire_id">{{ __('Pneumatico collegato') }}</label>
                     <select class="select @error('tire_id') is-invalid @enderror" id="tire_id" name="tire_id">
-                        <option value="">{{ __('Nessun pneumatico associato') }}</option>
+                        <option value="">{{ __('Seleziona un pneumatico') }}</option>
                         @foreach ($tires as $tire)
                             <option value="{{ $tire->id }}"
                                 {{ old('tire_id', $issue->tire_id) == $tire->id ? 'selected' : '' }}>
@@ -133,6 +141,21 @@
 
 @push('scripts')
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const isTireIssue = document.getElementById('is-tire-issue');
+            const tireIdField = document.getElementById('tire-id-field');
+            const tireIdSelect = document.getElementById('tire_id');
+
+            const toggleTireField = () => {
+                tireIdField.style.display = isTireIssue.checked ? '' : 'none';
+                if (!isTireIssue.checked) {
+                    tireIdSelect.value = '';
+                }
+            };
+
+            isTireIssue.addEventListener('change', toggleTireField);
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
             const imageInput = document.getElementById('image');
             const imageLabel = document.getElementById('image_label');
