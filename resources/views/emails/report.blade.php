@@ -253,7 +253,7 @@
                         <div>
                             <div class="label">{{ $deadline->type }}</div>
                             <div class="meta">{{ $deadline->vehicle->internal_code }} — Tra
-                                {{ $deadline->due_date->diffInDays(now()) }} giorni
+                                {{ \Illuminate\Support\Carbon::today()->diffInDays($deadline->due_date, false) }} giorni
                                 ({{ $deadline->due_date->format('d/m') }})
                             </div>
                         </div>

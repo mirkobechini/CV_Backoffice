@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.40] - 2026-09-24
+
+### Fixed
+
+- Il report email giornaliero/settimanale/mensile mostrava "Tra -N giorni" per ogni scadenza imminente invece di "Tra N giorni" (stesso bug del `diffInDays()` invertito già corretto in `Equipment.php`).
+- Lo stesso report non includeva mai una scadenza scaduta il cui `due_date` era passato senza che nessuno avesse modificato quel record (colonna `status` non risincronizzata) — stesso bug già corretto sulla dashboard in v1.2.37, ora corretto anche qui.
 ## [v1.2.39] - 2026-09-24
 
 ### Fixed
