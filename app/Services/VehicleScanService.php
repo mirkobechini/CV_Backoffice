@@ -46,8 +46,8 @@ class VehicleScanService
 
     private const SYSTEM_PROMPT = <<<'PROMPT'
 Sei un assistente che legge libretti di circolazione italiani (carta di
-circolazione) da una foto e ne estrae i dati in JSON. Il documento usa
-codici standard: A=targa, B=data di immatricolazione, D.1=marca,
+circolazione) da due foto, fronte e retro, e ne estrae i dati in JSON.
+Il documento usa codici standard: A=targa, B=data di immatricolazione, D.1=marca,
 D.3=denominazione commerciale (modello), E=numero di telaio (VIN),
 F.2=massa massima ammissibile in kg, P.1=cilindrata in cc,
 P.2=potenza massima netta in kW, P.3=alimentazione, R=colore,
@@ -95,18 +95,28 @@ PROMPT;
     }
 
     /**
+     * @param  string[]  $absoluteImagePaths  fronte e retro del libretto: i
+     *                                        dati anagrafici sono sul fronte,
+     *                                        i timbri di revisione sul retro.
      * @return array<string, mixed> campi come da EXPECTED_FIELDS, mancanti = null.
      *
      * @throws VehicleScanException
      */
-    public function scan(string $absoluteImagePath): array
+    public function scan(array $absoluteImagePaths): array
     {
         if (! $this->apiKey) {
             throw new VehicleScanException('Nessuna chiave API configurata per la scansione del libretto.');
         }
 
-        $mimeType = mime_content_type($absoluteImagePath) ?: 'image/jpeg';
-        $base64 = base64_encode(file_get_contents($absoluteImagePath));
+        $content = [
+            ['type' => 'text', 'text' => 'Estrai i dati da queste foto del libretto di circolazione (fronte e retro).'],
+        ];
+
+        foreach ($absoluteImagePaths as $imagePath) {
+            $mimeType = mime_content_type($imagePath) ?: 'image/jpeg';
+            $base64 = base64_encode(file_get_contents($imagePath));
+            $content[] = ['type' => 'image_url', 'image_url' => ['url' => "data:{$mimeType};base64,{$base64}"]];
+        }
 
         $response = Http::withToken($this->apiKey)
             ->timeout(30)
@@ -115,10 +125,7 @@ PROMPT;
                 'response_format' => ['type' => 'json_object'],
                 'messages' => [
                     ['role' => 'system', 'content' => self::SYSTEM_PROMPT],
-                    ['role' => 'user', 'content' => [
-                        ['type' => 'text', 'text' => 'Estrai i dati da questo libretto di circolazione.'],
-                        ['type' => 'image_url', 'image_url' => ['url' => "data:{$mimeType};base64,{$base64}"]],
-                    ]],
+                    ['role' => 'user', 'content' => $content],
                 ],
             ]);
 

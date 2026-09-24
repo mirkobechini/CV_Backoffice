@@ -22,16 +22,23 @@ class ScanVehicleRegistrationCardRequest extends FormRequest
             // esplicitamente. SVG escluso di proposito (stesso motivo di
             // StoreIssueRequest::$image): apertura diretta dell'URL salvato
             // eseguirebbe un eventuale <script> incluso — XSS salvato.
-            'photo' => 'required|mimes:jpeg,png,jpg,heic,heif|max:8192',
+            //
+            // Servono entrambe le facciate: i dati anagrafici sono sul
+            // fronte, i timbri di revisione periodica sul retro.
+            'photo_front' => 'required|mimes:jpeg,png,jpg,heic,heif|max:8192',
+            'photo_back' => 'required|mimes:jpeg,png,jpg,heic,heif|max:8192',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'photo.required' => 'La foto del libretto è obbligatoria.',
-            'photo.mimes' => 'La foto deve essere in formato JPG, PNG, HEIC o HEIF.',
-            'photo.max' => 'La foto non può superare gli 8MB.',
+            'photo_front.required' => 'La foto del fronte del libretto è obbligatoria.',
+            'photo_front.mimes' => 'La foto del fronte deve essere in formato JPG, PNG, HEIC o HEIF.',
+            'photo_front.max' => 'La foto del fronte non può superare gli 8MB.',
+            'photo_back.required' => 'La foto del retro del libretto è obbligatoria.',
+            'photo_back.mimes' => 'La foto del retro deve essere in formato JPG, PNG, HEIC o HEIF.',
+            'photo_back.max' => 'La foto del retro non può superare gli 8MB.',
         ];
     }
 }

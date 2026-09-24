@@ -132,29 +132,42 @@ class VehicleController extends Controller
     }
 
     /**
-     * Scansiona una foto del libretto di circolazione tramite VehicleScanService
-     * e reindirizza al form di creazione già pre-compilato (withInput, lo
-     * stesso meccanismo usato da una validazione fallita) perché l'utente
-     * verifichi/corregga prima di salvare — nessun veicolo viene creato qui.
+     * Scansiona fronte e retro del libretto di circolazione tramite
+     * VehicleScanService e reindirizza al form di creazione già precompilato
+     * (withInput, lo stesso meccanismo usato da una validazione fallita)
+     * perché l'utente verifichi/corregga prima di salvare — nessun veicolo
+     * viene creato qui.
      *
-     * La foto viene salvata subito in una posizione "pending" prima ancora
-     * di chiamare l'LLM, così resta disponibile (e riutilizzabile come carta
-     * di circolazione definitiva in store()) anche se l'estrazione fallisce.
+     * Entrambe le foto vengono salvate subito in una posizione "pending"
+     * prima ancora di chiamare l'LLM, così il fronte resta disponibile (e
+     * riutilizzabile come carta di circolazione definitiva in store())
+     * anche se l'estrazione fallisce. Il retro serve solo alla lettura (i
+     * timbri di revisione periodica) e non ha un campo dove essere
+     * conservato sul veicolo: viene eliminato subito dopo la scansione.
      */
     public function scanRegistrationCard(ScanVehicleRegistrationCardRequest $request, VehicleScanService $vehicleScanService)
     {
         $this->authorize('create', Vehicle::class);
 
-        $photo = $request->file('photo');
-        $randomFileName = Str::random(40) . '.' . $photo->getClientOriginalExtension();
-        $pendingPath = $photo->storeAs('registration_cards/pending', $randomFileName, 'public');
+        $frontPhoto = $request->file('photo_front');
+        $frontFileName = Str::random(40) . '.' . $frontPhoto->getClientOriginalExtension();
+        $frontPendingPath = $frontPhoto->storeAs('registration_cards/pending', $frontFileName, 'public');
+
+        $backPhoto = $request->file('photo_back');
+        $backFileName = Str::random(40) . '.' . $backPhoto->getClientOriginalExtension();
+        $backPendingPath = $backPhoto->storeAs('registration_cards/pending', $backFileName, 'public');
 
         try {
-            $extracted = $vehicleScanService->scan(Storage::disk('public')->path($pendingPath));
+            $extracted = $vehicleScanService->scan([
+                Storage::disk('public')->path($frontPendingPath),
+                Storage::disk('public')->path($backPendingPath),
+            ]);
         } catch (VehicleScanException $e) {
             return redirect()->route('admin.vehicles.create')
                 ->with('error', 'Impossibile leggere il libretto: inserisci i dati manualmente.')
-                ->with('scanned_registration_card_path', $pendingPath);
+                ->with('scanned_registration_card_path', $frontPendingPath);
+        } finally {
+            Storage::disk('public')->delete($backPendingPath);
         }
 
         $matched = $vehicleScanService->matchBrandAndModel($extracted['brand'], $extracted['car_model']);
@@ -181,7 +194,7 @@ class VehicleController extends Controller
 
         $redirect = redirect()->route('admin.vehicles.create')
             ->withInput($prefill)
-            ->with('scanned_registration_card_path', $pendingPath)
+            ->with('scanned_registration_card_path', $frontPendingPath)
             ->with('status', 'Dati importati dal libretto: verifica prima di salvare.');
 
         if ($extracted['has_timing_belt_suggested'] !== null) {
