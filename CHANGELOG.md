@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.48] - 2026-09-24
+
+### Added
+
+- Scadenza "Assicurazione": nuovi campi dedicati (compagnia, numero polizza, premio annuo, tipo di copertura, massimale, contatto broker/agenzia, note), mostrati solo per questo tipo nella creazione/modifica e in una card dedicata sulla scheda scadenza.
+- "Rinnova adesso" ora disponibile anche per l'Assicurazione: registra il rinnovo della polizza con intervallo fisso di un anno, riportando sulla prossima scadenza i dati della polizza già inseriti (modificabili in seguito).
+
 ## [v1.2.47] - 2026-09-24
 
 ### Added

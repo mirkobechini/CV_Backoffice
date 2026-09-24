@@ -166,6 +166,62 @@ class DeadlineCrudTest extends TestCase
         ]);
     }
 
+    public function test_insurance_deadline_stores_policy_fields(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_premium' => '850.50',
+            'insurance_coverage_type' => 'RCA',
+            'insurance_coverage_limit' => '5000000',
+            'insurance_broker_contact' => 'agenzia@example.com',
+            'notes' => 'Rinnovo automatico disattivato dal broker',
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+
+        $response->assertRedirect(route('admin.deadlines.show', $deadline));
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $deadline->id,
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_premium' => 850.50,
+            'insurance_coverage_type' => 'RCA',
+            'insurance_coverage_limit' => 5000000,
+            'insurance_broker_contact' => 'agenzia@example.com',
+            'notes' => 'Rinnovo automatico disattivato dal broker',
+        ]);
+    }
+
+    public function test_insurance_deadline_updates_policy_fields(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createDeadline();
+        $deadline = $data['deadline'];
+        $vehicle = $data['vehicle'];
+
+        $response = $this->actingAs($user)->put(route('admin.deadlines.update', $deadline), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2025-01',
+            'insurance_company' => 'Allianz',
+            'insurance_policy_number' => 'POL-999',
+        ]);
+
+        $response->assertRedirect(route('admin.deadlines.show', $deadline));
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $deadline->id,
+            'insurance_company' => 'Allianz',
+            'insurance_policy_number' => 'POL-999',
+        ]);
+    }
+
     public function test_deadline_can_be_deleted(): void
     {
         $user = $this->createUser();
