@@ -21,6 +21,19 @@ class CsvImportTest extends TestCase
         return User::factory()->withRole('admin')->create();
     }
 
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * il veicolo deve appartenervi per essere trovato dalle query di
+     * import, filtrate per gruppo.
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
+
     private function vehicle(): Vehicle
     {
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
@@ -34,6 +47,7 @@ class CsvImportTest extends TestCase
             'car_model_id' => $model->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
         ]);
     }
 
@@ -74,6 +88,46 @@ class CsvImportTest extends TestCase
      * ricontrollarlo, un utente poteva alterarlo prima di confermare e
      * importare dati sul veicolo di un altro gruppo.
      */
+    /**
+     * validateMileageLogsPivot() batcha il controllo duplicati in un'unica
+     * query (vedi CsvImportController) invece di una exists() per ogni
+     * cella veicolo×mese: qui verifica che il duplicato venga comunque
+     * rilevato correttamente dopo la modifica.
+     */
+    public function test_preview_pivot_flags_existing_mileage_log_as_duplicate(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+        \App\Models\MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-01-01',
+            'mileage' => 1000,
+        ]);
+
+        $csv = "SIGLA,TARGA,GENNAIO,FEBBRAIO\n1234,AB123CD,1200,1500\n";
+        $file = UploadedFile::fake()->createWithContent('pivot.csv', $csv);
+
+        $response = $this->actingAs($user)->post(route('admin.csv-import.preview'), [
+            'entity' => 'mileage-logs',
+            'csv_file' => $file,
+            'import_year' => 2025,
+        ]);
+
+        $response->assertOk();
+        $results = $response->viewData('results');
+
+        $january = collect($results)->first(fn ($r) => $r['data']['_label_date'] === '01/2025');
+        $february = collect($results)->first(fn ($r) => $r['data']['_label_date'] === '02/2025');
+
+        $this->assertNotNull($january);
+        $this->assertTrue($january['data']['_exists']);
+        $this->assertFalse($january['valid']);
+
+        $this->assertNotNull($february);
+        $this->assertFalse($february['data']['_exists']);
+        $this->assertTrue($february['valid']);
+    }
+
     public function test_confirm_rejects_vehicle_id_from_another_group(): void
     {
         $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);

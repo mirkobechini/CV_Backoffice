@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.45] - 2026-09-24
+
+### Changed
+
+- Import CSV chilometraggi (formato pivot): il controllo duplicati eseguiva una query per ogni cella veicolo×mese del file (fino a centinaia per un import tipico); ora è un'unica query per l'intero import.
 ## [v1.2.44] - 2026-09-24
 
 ### Security
