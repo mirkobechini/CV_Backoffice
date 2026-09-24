@@ -598,6 +598,8 @@ class MaintenanceRecordController extends Controller
         }
 
         if (! empty($data['new_tire_season'])) {
+            $vehicle = $maintenanceRecord->vehicle;
+
             foreach (Tire::positionsForGroup($data['new_tire_group'] ?? null, $data['new_tire_position'] ?? null) as $position) {
                 $tires->push(Tire::create([
                     'vehicle_id' => $data['vehicle_id'],
@@ -608,6 +610,10 @@ class MaintenanceRecordController extends Controller
                     'size' => $data['new_tire_size'] ?? null,
                     'status' => Tire::STATUS_STORED,
                 ]));
+            }
+
+            if ($warning = Tire::sizeMismatchWarning($data['new_tire_size'] ?? null, $vehicle)) {
+                session()->flash('tire_size_warning', $warning);
             }
         }
 

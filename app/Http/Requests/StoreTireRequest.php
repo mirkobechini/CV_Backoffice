@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Tire;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
@@ -24,7 +25,7 @@ class StoreTireRequest extends FormRequest
             'position' => 'required|in:front_left,front_right,rear_left,rear_right',
             'brand' => 'nullable|string|max:255',
             'model_name' => 'nullable|string|max:255',
-            'size' => 'nullable|string|max:255',
+            'size' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
             'status' => 'required|in:mounted,stored,retired',
             'mounted_date' => 'nullable|date',
             'mounted_mileage' => 'nullable|integer|min:0',
@@ -44,6 +45,7 @@ class StoreTireRequest extends FormRequest
             'position.in' => 'La posizione selezionata non è valida.',
             'status.required' => 'Lo stato è obbligatorio.',
             'status.in' => 'Lo stato selezionato non è valido.',
+            'size.regex' => 'La misura deve essere nel formato standard (es. 225/75R16C).',
             'mounted_date.date' => 'La data di montaggio deve essere una data valida.',
             'mounted_mileage.integer' => 'Il chilometraggio di montaggio deve essere un numero intero.',
             'next_change_date.date' => 'La data del prossimo cambio deve essere una data valida.',

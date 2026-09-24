@@ -19,6 +19,10 @@
 
 @section('content')
 
+    @if (session('tire_size_warning'))
+        <div class="alert warning">{{ session('tire_size_warning') }}</div>
+    @endif
+
     <div class="page-actions">
         <a href="{{ request('back', route('admin.tires.index')) }}" class="btn ghost">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}

@@ -36,12 +36,25 @@ class Vehicle extends Model
         'has_warranty_extension',
         'warranty_extension_duration',
         'has_timing_belt',
+        'vin',
+        'color',
+        'seats',
+        'environmental_class',
+        'max_mass_kg',
+        'engine_displacement_cc',
+        'engine_power_kw',
+        'vehicle_category',
+        'allowed_tire_size',
     ];
 
     protected $casts = [
         'immatricolation_date' => 'date',
         'warranty_expiration_date' => 'date',
         'has_timing_belt' => 'boolean',
+        'seats' => 'integer',
+        'max_mass_kg' => 'integer',
+        'engine_displacement_cc' => 'integer',
+        'engine_power_kw' => 'integer',
     ];
 
     protected $searchable = ['internal_code', 'license_plate'];

@@ -45,6 +45,14 @@ class Tire extends Model
         self::POSITION_REAR_RIGHT,
     ];
 
+    /**
+     * Formato canonico di una misura pneumatico (es. "225/75R16C 121/120Q"),
+     * lo stesso composto da <x-form.tire-size-input>. Condiviso da Tire,
+     * MaintenanceRecord (new_tire_size) e Vehicle (allowed_tire_size) così
+     * i tre punti restano sempre confrontabili direttamente come stringhe.
+     */
+    public const SIZE_REGEX = '/^\d{2,3}\/\d{2,3}R\d{2}C?(\s[A-Z0-9\/]{2,10})?$/i';
+
     protected $fillable = [
         'vehicle_id',
         'season',
@@ -144,6 +152,26 @@ class Tire extends Model
      * True se il cambio è scaduto (per data o per km), calcolato rispetto
      * al chilometraggio attuale del veicolo, se disponibile.
      */
+    /**
+     * Avviso non bloccante (non una regola di validazione) quando la misura
+     * inserita differisce da quella consigliata per il veicolo: entrambe
+     * passano dallo stesso componente/formato canonico, quindi un confronto
+     * diretto (case-insensitive) è affidabile. Nessun avviso se il veicolo
+     * non ha una misura consigliata impostata.
+     */
+    public static function sizeMismatchWarning(?string $enteredSize, ?Vehicle $vehicle): ?string
+    {
+        if (! $enteredSize || ! $vehicle?->allowed_tire_size) {
+            return null;
+        }
+
+        if (strcasecmp(trim($enteredSize), trim($vehicle->allowed_tire_size)) === 0) {
+            return null;
+        }
+
+        return "La misura inserita ({$enteredSize}) non corrisponde alla misura consigliata per questo veicolo ({$vehicle->allowed_tire_size}).";
+    }
+
     public function getChangeDueAttribute(): bool
     {
         if ($this->status !== self::STATUS_MOUNTED) {

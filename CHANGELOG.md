@@ -4,6 +4,15 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.49] - 2026-09-24
+
+### Added
+
+- Scansione del libretto di circolazione alla creazione di un veicolo: carica una foto, un LLM vision (OpenRouter di default, provider/modello configurabili via `.env`) estrae targa, marca/modello (abbinati automaticamente a quelli esistenti), carburante, data di immatricolazione, VIN, colore, posti, classe ambientale, massa massima, cilindrata, potenza, categoria veicolo e misura pneumatici consigliata, precompilando il form di creazione per la verifica dell'utente prima del salvataggio. La foto caricata diventa la carta di circolazione del veicolo. Il campo "cinghia/catena di distribuzione" riceve anch'esso un suggerimento dall'AI, segnalato come tale perché è una stima e non un dato letto dal documento.
+- Nuovi campi facoltativi sul veicolo: numero di telaio, colore, numero posti, classe ambientale, massa massima ammissibile, cilindrata, potenza, categoria veicolo, misura pneumatici consigliata.
+- Misura pneumatici (sul veicolo e sulle gomme) ora inserita tramite un input strutturato (larghezza/profilo/cerchio/rinforzato/indice) che garantisce un formato standard, invece di testo libero.
+- Avviso (non bloccante) quando la misura di una gomma montata/creata non corrisponde alla misura consigliata per il veicolo.
+
 ## [v1.2.48] - 2026-09-24
 
 ### Added
