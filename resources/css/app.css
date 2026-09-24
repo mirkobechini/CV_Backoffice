@@ -1810,6 +1810,41 @@ body {
     margin-top: 4px;
 }
 
+.tire-size-fields {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.tire-size-fields .tire-size-width,
+.tire-size-fields .tire-size-ratio {
+    width: 64px;
+}
+
+.tire-size-fields .tire-size-rim {
+    width: 56px;
+}
+
+.tire-size-fields .tire-size-index {
+    width: 100px;
+}
+
+.tire-size-sep {
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.tire-size-reinforced-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+}
+
 /* Versioni "sciolte" (fuori da un .field) delle due classi sopra: stessa
    resa visiva quando un hint/errore non è annidato in un campo form. */
 .hint {

@@ -117,9 +117,95 @@
                 </div>
             </div>
 
-            {{-- Sezione 2: Garanzia --}}
+            {{-- Sezione 2: Specifiche tecniche (dal libretto, tutte facoltative) --}}
             <div class="form-section">
-                <h2><span class="num">2</span> {{ __('Garanzia') }}</h2>
+                <h2><span class="num">2</span> {{ __('Specifiche tecniche') }}</h2>
+                <div class="row2">
+                    <div class="field">
+                        <label for="vin">{{ __('Numero di telaio (VIN)') }}</label>
+                        <input type="text" class="input @error('vin') is-invalid @enderror" id="vin" name="vin"
+                            value="{{ old('vin', $vehicle->vin) }}">
+                        @error('vin')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="color">{{ __('Colore') }}</label>
+                        <input type="text" class="input @error('color') is-invalid @enderror" id="color" name="color"
+                            value="{{ old('color', $vehicle->color) }}">
+                        @error('color')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="seats">{{ __('Numero posti') }}</label>
+                        <input type="number" class="input @error('seats') is-invalid @enderror" id="seats"
+                            name="seats" value="{{ old('seats', $vehicle->seats) }}" min="1" max="99">
+                        @error('seats')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="vehicle_category">{{ __('Categoria veicolo') }}</label>
+                        <input type="text" class="input @error('vehicle_category') is-invalid @enderror"
+                            id="vehicle_category" name="vehicle_category"
+                            value="{{ old('vehicle_category', $vehicle->vehicle_category) }}"
+                            placeholder="{{ __('es. M1') }}">
+                        @error('vehicle_category')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="environmental_class">{{ __('Classe ambientale') }}</label>
+                        <input type="text" class="input @error('environmental_class') is-invalid @enderror"
+                            id="environmental_class" name="environmental_class"
+                            value="{{ old('environmental_class', $vehicle->environmental_class) }}"
+                            placeholder="{{ __('es. Euro 6') }}">
+                        @error('environmental_class')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="max_mass_kg">{{ __('Massa massima ammissibile (kg)') }}</label>
+                        <input type="number" class="input @error('max_mass_kg') is-invalid @enderror"
+                            id="max_mass_kg" name="max_mass_kg" value="{{ old('max_mass_kg', $vehicle->max_mass_kg) }}"
+                            min="0">
+                        @error('max_mass_kg')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="engine_displacement_cc">{{ __('Cilindrata (cc)') }}</label>
+                        <input type="number" class="input @error('engine_displacement_cc') is-invalid @enderror"
+                            id="engine_displacement_cc" name="engine_displacement_cc"
+                            value="{{ old('engine_displacement_cc', $vehicle->engine_displacement_cc) }}" min="0">
+                        @error('engine_displacement_cc')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="engine_power_kw">{{ __('Potenza (kW)') }}</label>
+                        <input type="number" class="input @error('engine_power_kw') is-invalid @enderror"
+                            id="engine_power_kw" name="engine_power_kw"
+                            value="{{ old('engine_power_kw', $vehicle->engine_power_kw) }}" min="0">
+                        @error('engine_power_kw')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <x-form.tire-size-input name="allowed_tire_size" label="{{ __('Misura pneumatici consigliata') }}"
+                    :model="$vehicle" />
+            </div>
+
+            {{-- Sezione 3: Garanzia --}}
+            <div class="form-section">
+                <h2><span class="num">3</span> {{ __('Garanzia') }}</h2>
                 <div class="row2">
                     <x-form.date-input name="warranty_expiration_date" label="{{ __('Data di scadenza originale') }}"
                         :value="$warrantyOriginalExpirationDate"
@@ -149,9 +235,9 @@
                 @enderror
             </div>
 
-            {{-- Sezione 3: Distribuzione --}}
+            {{-- Sezione 4: Distribuzione --}}
             <div class="form-section" style="margin-bottom:0;">
-                <h2><span class="num">3</span> {{ __('Distribuzione') }}</h2>
+                <h2><span class="num">4</span> {{ __('Distribuzione') }}</h2>
                 <div class="row2">
                     <label class="check">
                         <input type="radio" value="1" id="has_timing_belt_cinghia" name="has_timing_belt"

@@ -17,10 +17,46 @@
         </a>
     </div>
 
+    @if (session('status'))
+        <div class="alert success">{{ session('status') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert danger">{{ session('error') }}</div>
+    @endif
+
+    <div class="form-card" style="margin-bottom:16px;">
+        <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
+            enctype="multipart/form-data" data-single-submit="true">
+            @csrf
+            <div class="form-section" style="margin-bottom:0;">
+                <h2>{{ __('Scansiona libretto') }}</h2>
+                <div class="hint" style="margin-bottom:10px;">
+                    {{ __('Carica una foto del libretto di circolazione per precompilare il form: verifica sempre i dati prima di salvare.') }}
+                </div>
+                <div class="row2">
+                    <div class="field" style="margin-bottom:0;">
+                        <input type="file" class="input" name="photo" accept=".jpg,.jpeg,.png,.heic,.heif" required>
+                        @error('photo')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <button type="submit" class="btn"
+                        data-loading-text="{{ __('Scansione in corso...') }}">
+                        <i class="fa-solid fa-camera"></i> {{ __('Scansiona') }}
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
     <div class="form-card">
         <form id="vehicle-form" method="POST" action="{{ route('admin.vehicles.store') }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
+            @if (session('scanned_registration_card_path'))
+                <input type="hidden" name="scanned_registration_card_path"
+                    value="{{ session('scanned_registration_card_path') }}">
+            @endif
 
             {{-- Sezione 1: Dettagli veicolo --}}
             <div class="form-section">
@@ -51,6 +87,12 @@
                     'brand_id' => old('brand_id'),
                     'car_model_id' => old('car_model_id'),
                 ])
+                @if (session('unmatched_brand_text'))
+                    <div class="hint">{{ __('Marca letta dal libretto (da selezionare a mano): :text', ['text' => session('unmatched_brand_text')]) }}</div>
+                @endif
+                @if (session('unmatched_model_text'))
+                    <div class="hint">{{ __('Modello letto dal libretto (da selezionare a mano): :text', ['text' => session('unmatched_model_text')]) }}</div>
+                @endif
 
                 <div class="row2">
                     <div class="field">
@@ -103,9 +145,91 @@
                 </div>
             </div>
 
-            {{-- Sezione 2: Garanzia --}}
+            {{-- Sezione 2: Specifiche tecniche (dal libretto, tutte facoltative) --}}
             <div class="form-section">
-                <h2><span class="num">2</span> {{ __('Garanzia') }}</h2>
+                <h2><span class="num">2</span> {{ __('Specifiche tecniche') }}</h2>
+                <div class="row2">
+                    <div class="field">
+                        <label for="vin">{{ __('Numero di telaio (VIN)') }}</label>
+                        <input type="text" class="input @error('vin') is-invalid @enderror" id="vin" name="vin"
+                            value="{{ old('vin') }}">
+                        @error('vin')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="color">{{ __('Colore') }}</label>
+                        <input type="text" class="input @error('color') is-invalid @enderror" id="color" name="color"
+                            value="{{ old('color') }}">
+                        @error('color')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="seats">{{ __('Numero posti') }}</label>
+                        <input type="number" class="input @error('seats') is-invalid @enderror" id="seats"
+                            name="seats" value="{{ old('seats') }}" min="1" max="99">
+                        @error('seats')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="vehicle_category">{{ __('Categoria veicolo') }}</label>
+                        <input type="text" class="input @error('vehicle_category') is-invalid @enderror"
+                            id="vehicle_category" name="vehicle_category" value="{{ old('vehicle_category') }}"
+                            placeholder="{{ __('es. M1') }}">
+                        @error('vehicle_category')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="environmental_class">{{ __('Classe ambientale') }}</label>
+                        <input type="text" class="input @error('environmental_class') is-invalid @enderror"
+                            id="environmental_class" name="environmental_class"
+                            value="{{ old('environmental_class') }}" placeholder="{{ __('es. Euro 6') }}">
+                        @error('environmental_class')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="max_mass_kg">{{ __('Massa massima ammissibile (kg)') }}</label>
+                        <input type="number" class="input @error('max_mass_kg') is-invalid @enderror"
+                            id="max_mass_kg" name="max_mass_kg" value="{{ old('max_mass_kg') }}" min="0">
+                        @error('max_mass_kg')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="engine_displacement_cc">{{ __('Cilindrata (cc)') }}</label>
+                        <input type="number" class="input @error('engine_displacement_cc') is-invalid @enderror"
+                            id="engine_displacement_cc" name="engine_displacement_cc"
+                            value="{{ old('engine_displacement_cc') }}" min="0">
+                        @error('engine_displacement_cc')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="engine_power_kw">{{ __('Potenza (kW)') }}</label>
+                        <input type="number" class="input @error('engine_power_kw') is-invalid @enderror"
+                            id="engine_power_kw" name="engine_power_kw" value="{{ old('engine_power_kw') }}"
+                            min="0">
+                        @error('engine_power_kw')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <x-form.tire-size-input name="allowed_tire_size" label="{{ __('Misura pneumatici consigliata') }}" />
+            </div>
+
+            {{-- Sezione 3: Garanzia --}}
+            <div class="form-section">
+                <h2><span class="num">3</span> {{ __('Garanzia') }}</h2>
                 <div class="row2">
                     <x-form.date-input name="warranty_expiration_date" label="{{ __('Data di scadenza originale') }}"
                         :required="old('has_warranty_extension')" />
@@ -134,15 +258,21 @@
                 @enderror
             </div>
 
-            {{-- Sezione 3: Assicurazione --}}
+            {{-- Sezione 4: Assicurazione --}}
             <div class="form-section">
-                <h2><span class="num">3</span> {{ __('Assicurazione') }}</h2>
+                <h2><span class="num">4</span> {{ __('Assicurazione') }}</h2>
                 <x-form.month-input name="insurance_due_date" label="{{ __('Data di scadenza') }}" />
             </div>
 
-            {{-- Sezione 4: Distribuzione --}}
+            {{-- Sezione 5: Distribuzione --}}
             <div class="form-section" style="margin-bottom:0;">
-                <h2><span class="num">4</span> {{ __('Distribuzione') }}</h2>
+                <h2><span class="num">5</span> {{ __('Distribuzione') }}
+                    @if (session('timing_belt_suggested'))
+                        <span class="badge b-amber" title="{{ __('Stima basata su marca/modello: verifica prima di salvare.') }}">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Suggerito dall\'AI — verifica') }}
+                        </span>
+                    @endif
+                </h2>
                 <div class="row2">
                     <label class="check">
                         <input type="radio" value="1" id="has_timing_belt_cinghia" name="has_timing_belt"

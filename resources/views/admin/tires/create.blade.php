@@ -112,14 +112,7 @@
                         @enderror
                     </div>
                 </div>
-                <div class="field">
-                    <label for="size">{{ __('Misura') }}</label>
-                    <input type="text" class="input @error('size') is-invalid @enderror" id="size" name="size"
-                        value="{{ old('size') }}" placeholder="{{ __('es. 205/55 R16') }}">
-                    @error('size')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
-                </div>
+                <x-form.tire-size-input name="size" label="{{ __('Misura') }}" />
                 <div class="row2">
                     <x-form.date-input name="mounted_date" label="{{ __('Data di montaggio') }}" />
                     <div class="field">

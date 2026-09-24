@@ -53,7 +53,7 @@ class TireCrudTest extends TestCase
             'position' => Tire::POSITION_FRONT_LEFT,
             'brand' => 'Michelin',
             'model_name' => 'Alpin 6',
-            'size' => '205/55 R16',
+            'size' => '205/55R16',
             'status' => 'stored',
         ], $overrides));
     }
@@ -98,7 +98,7 @@ class TireCrudTest extends TestCase
             'position' => 'front_left',
             'brand' => 'Pirelli',
             'model_name' => 'Cinturato',
-            'size' => '205/55 R16',
+            'size' => '205/55R16',
             'status' => 'stored',
         ]);
 
@@ -124,7 +124,7 @@ class TireCrudTest extends TestCase
             'position' => 'front_left',
             'brand' => 'Continental',
             'model_name' => 'WinterContact',
-            'size' => '205/55 R16',
+            'size' => '205/55R16',
             'status' => 'stored',
         ]);
 

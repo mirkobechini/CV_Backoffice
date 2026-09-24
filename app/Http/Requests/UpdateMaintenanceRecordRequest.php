@@ -51,7 +51,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'new_tire_position' => 'nullable|in:front_left,front_right,rear_left,rear_right|required_if:new_tire_group,single',
             'new_tire_brand' => 'nullable|string|max:255',
             'new_tire_model_name' => 'nullable|string|max:255',
-            'new_tire_size' => 'nullable|string|max:255',
+            'new_tire_size' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
         ];
     }
 
@@ -70,6 +70,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'activity_type.string' => 'Il campo tipologia attività deve essere una stringa.',
             'activity_type.max' => 'Il campo tipologia attività non può superare i 255 caratteri.',
             'activity_type.in' => 'La tipologia attività selezionata non è valida.',
+            'new_tire_size.regex' => 'La misura deve essere nel formato standard (es. 225/75R16C).',
             'issue_resolved.boolean' => 'Il valore selezionato per la risoluzione del guasto non è valido.',
             'notes.string' => 'Il campo note deve essere testo.',
             'notes.max' => 'Le note non possono superare i 2000 caratteri.',
