@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Deadline;
+use App\Models\Group;
 use App\Models\Issue;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -21,6 +22,19 @@ class CsvExportTest extends TestCase
         return User::factory()->withRole('admin')->create();
     }
 
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * il veicolo deve appartenervi per essere accessibile (le query di
+     * export sono filtrate per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
+
     private function vehicle(): Vehicle
     {
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
@@ -34,6 +48,7 @@ class CsvExportTest extends TestCase
             'car_model_id' => $model->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
         ]);
     }
 
@@ -74,5 +89,29 @@ class CsvExportTest extends TestCase
     {
         $response = $this->get(route('admin.csv.export', 'vehicles'));
         $response->assertRedirect(route('login'));
+    }
+
+    /**
+     * Excel/Sheets/LibreOffice interpretano come formula qualunque cella
+     * che inizia con =, +, -, @, tab o ritorno a capo: un campo testo
+     * libero (es. descrizione guasto) scritto da un membro qualunque
+     * poteva eseguire una formula quando il CSV veniva riaperto da
+     * qualcun altro.
+     */
+    public function test_export_neutralizes_formula_injection_in_free_text_fields(): void
+    {
+        $vehicle = $this->vehicle();
+        Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => '=HYPERLINK("http://evil.example","click")',
+            'event_date' => '2025-01-01',
+        ]);
+
+        $response = $this->actingAs($this->admin())->get(route('admin.csv.export', 'issues'));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+        $this->assertStringContainsString("'=HYPERLINK", $content);
+        $this->assertStringNotContainsString(';=HYPERLINK', $content);
     }
 }

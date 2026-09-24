@@ -160,7 +160,7 @@ class CsvExportController extends Controller
             fputcsv($file, $headers, ';');
 
             foreach ($rows as $row) {
-                fputcsv($file, $row, ';');
+                fputcsv($file, array_map([$this, 'escapeCsvFormula'], $row), ';');
             }
 
             fclose($file);
@@ -170,5 +170,25 @@ class CsvExportController extends Controller
             'Content-Type' => 'text/csv; charset=utf-8',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
+    }
+
+    /**
+     * Neutralizza l'iniezione di formule CSV (Excel/Sheets/LibreOffice
+     * interpretano come formula qualunque cella che inizia con =, +, -, @,
+     * tab o ritorno a capo): un campo testo libero come descrizione guasto
+     * o nome fornitore, scritto da un membro qualunque del gruppo, poteva
+     * eseguire una formula quando il CSV veniva riaperto da qualcun altro.
+     * Anteponendo un apice, il programma di fogli di calcolo lo tratta
+     * come testo letterale invece che come formula.
+     */
+    private function escapeCsvFormula(mixed $value): mixed
+    {
+        if (!is_string($value) || $value === '') {
+            return $value;
+        }
+
+        return in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)
+            ? "'" . $value
+            : $value;
     }
 }
