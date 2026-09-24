@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.41] - 2026-09-24
+
+### Security
+
+- L'import CSV (guasti/chilometraggi) verificava il veicolo solo nel passo di anteprima; la conferma finale riaccettava l'id veicolo così com'era tornato dal form, senza ricontrollare che appartenesse ancora al proprio gruppo — un campo nascosto alterabile prima dell'invio.
 ## [v1.2.40] - 2026-09-24
 
 ### Fixed

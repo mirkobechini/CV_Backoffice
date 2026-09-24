@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Group;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -65,5 +66,57 @@ class CsvImportTest extends TestCase
                 'vehicle_ref' => '1234',
             ]);
         $response->assertOk();
+    }
+
+    /**
+     * preview() risolve _vehicle_id scoperto per gruppo, ma confirm() lo
+     * riceve indietro solo come campo nascosto del form: senza
+     * ricontrollarlo, un utente poteva alterarlo prima di confermare e
+     * importare dati sul veicolo di un altro gruppo.
+     */
+    public function test_confirm_rejects_vehicle_id_from_another_group(): void
+    {
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $userA = User::factory()->create();
+        $groupA->addUser($userA, Group::ROLE_CAPO);
+
+        $vt = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $vehicleB = Vehicle::create([
+            'license_plate' => 'EF456GH',
+            'vehicle_type_id' => $vt->id,
+            'internal_code' => '0002',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $groupB->id,
+        ]);
+
+        $this->actingAs($userA)->post(route('admin.csv-import.confirm'), [
+            'entity' => 'issues',
+            'editable' => [
+                [
+                    '_valid' => '1',
+                    '_vehicle_id' => $vehicleB->id,
+                    '_description' => 'Guasto indebito',
+                    '_date' => '2025-01-01',
+                    '_status' => 'open',
+                ],
+            ],
+        ]);
+
+        $this->assertDatabaseCount('issues', 0);
+
+        $this->actingAs($userA)->post(route('admin.csv-import.confirm'), [
+            'entity' => 'mileage-logs',
+            'editable' => [
+                [
+                    '_valid' => '1',
+                    '_vehicle_id' => $vehicleB->id,
+                    '_date' => '2025-01-01',
+                    '_mileage' => 1000,
+                ],
+            ],
+        ]);
+
+        $this->assertDatabaseCount('mileage_logs', 0);
     }
 }
