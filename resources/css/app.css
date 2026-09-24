@@ -1302,14 +1302,27 @@ body {
     margin-top: 16px;
 }
 
+/* Riga Stato Scadenze / Guasti / Equipaggiamento: altezza delle 3 card
+   fissata allo stesso tetto invece di seguire il contenuto più lungo (che
+   avrebbe trascinato in alto anche le altre) — ciascun corpo scrolla
+   internamente oltre quel limite, invece di far crescere la card. */
+.veh-grid-capped .veh-card {
+    max-height: 620px;
+}
+
+.veh-grid-capped .veh-card .body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .veh-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     box-shadow: var(--shadow);
-    /* Permette a un .body con flex:1 (es. .veh-issue-scroll) di riempire
-       tutta l'altezza della card, invece di lasciare uno spazio vuoto in
-       fondo quando .veh-grid la stira per pareggiarla alle card vicine. */
+    /* flex column: nella riga con tetto fisso (.veh-grid-capped) permette
+       al .body di riempire lo spazio sotto l'header (vedi sopra). */
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -1659,28 +1672,20 @@ body {
     font-weight: 400;
 }
 
-/* Riempie tutta l'altezza residua della card (stirata da .veh-grid ad
-   altezza pari con le vicine, es. Equipaggiamento) invece di un tetto
-   fisso in px che lascia uno spazio vuoto sotto lo scroll quando la card
-   è più alta del contenuto. min-height:0 è necessario perché un flex item
-   non si restringa oltre il contenuto e vanifichi lo scroll. */
-.veh-issue-scroll {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding-right: 6px;
+.veh-grid-capped .veh-card .body {
+    padding-right: 10px;
 }
 
-.veh-issue-scroll::-webkit-scrollbar {
+.veh-grid-capped .veh-card .body::-webkit-scrollbar {
     width: 8px;
 }
 
-.veh-issue-scroll::-webkit-scrollbar-thumb {
+.veh-grid-capped .veh-card .body::-webkit-scrollbar-thumb {
     background: var(--border);
     border-radius: 4px;
 }
 
-.veh-issue-scroll::-webkit-scrollbar-track {
+.veh-grid-capped .veh-card .body::-webkit-scrollbar-track {
     background: transparent;
 }
 

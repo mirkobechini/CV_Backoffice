@@ -229,7 +229,7 @@
     </div>
 
     {{-- Stato Scadenze (ultima per tipo), Guasti, Equipaggiamento --}}
-    <div class="veh-grid">
+    <div class="veh-grid veh-grid-capped">
         <div class="veh-card">
             <div class="head">
                 <h3>{{ __('Stato Scadenze') }}</h3>
@@ -274,7 +274,7 @@
                 <a href="{{ route('admin.issues.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
                     class="veh-btn-add" title="{{ __('Nuovo guasto') }}"><i class="fa-solid fa-plus"></i></a>
             </div>
-            <div class="body veh-issue-scroll">
+            <div class="body">
                 @php
                     $issueStatusClasses = ['open' => 'open', 'in_progress' => 'work'];
 

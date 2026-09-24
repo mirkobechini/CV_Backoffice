@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.37] - 2026-09-24
+
+### Fixed
+
+- La card "Guasti"/"Stato Scadenze"/"Equipaggiamento" nella scheda veicolo: ora hanno tutte lo stesso tetto d'altezza fisso, con scroll interno oltre quel limite, invece di crescere in base al contenuto e disallinearsi tra loro.
+- Dashboard: le scadenze scadute non ancora rinnovate venivano lette dalla colonna `status` persistita, risincronizzata solo alla creazione/modifica della scadenza o visitando l'elenco scadenze — una scadenza il cui `due_date` passava senza che nessuno la toccasse restava "in regola" in dashboard anche se ormai scaduta. Ora lo stato viene calcolato live come nell'elenco scadenze.
 ## [v1.2.36] - 2026-09-23
 
 ### Fixed
