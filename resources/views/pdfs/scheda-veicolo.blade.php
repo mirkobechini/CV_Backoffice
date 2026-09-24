@@ -299,6 +299,49 @@
         </div>
     </div>
 
+    <div class="info-card">
+        <h3>Specifiche tecniche</h3>
+        <div class="info-row">
+            <span class="label">Telaio (VIN)</span>
+            <span class="value">{{ $vehicle->vin ?? 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Colore</span>
+            <span class="value">{{ $vehicle->color ?? 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Numero posti</span>
+            <span class="value">{{ $vehicle->seats ?? 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Categoria veicolo</span>
+            <span class="value">{{ $vehicle->vehicle_category ?? 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Classe ambientale</span>
+            <span class="value">{{ $vehicle->environmental_class ?? 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Massa massima</span>
+            <span
+                class="value">{{ $vehicle->max_mass_kg ? number_format($vehicle->max_mass_kg, 0, ',', '.') . ' kg' : 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Cilindrata</span>
+            <span
+                class="value">{{ $vehicle->engine_displacement_cc ? number_format($vehicle->engine_displacement_cc, 0, ',', '.') . ' cc' : 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Potenza</span>
+            <span class="value">{{ $vehicle->engine_power_kw ? $vehicle->engine_power_kw . ' kW' : 'N/A' }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Misure pneumatici</span>
+            <span
+                class="value">{{ ! empty($vehicle->allowed_tire_sizes) ? implode(', ', $vehicle->allowed_tire_sizes) : 'N/A' }}</span>
+        </div>
+    </div>
+
 </div>
 
 <!-- SCADENZE -->

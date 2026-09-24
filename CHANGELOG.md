@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.54] - 2026-09-24
+
+### Fixed
+
+- La carta di circolazione (e le foto guasti) continuavano a dare "pagina non trovata" anche dopo `storage:link`: Laravel Cloud gira su compute che non serve i file scritti sul disco locale dell'app, quindi il disco "public" non funziona in produzione. I caricamenti ora passano da un disco configurabile (`UPLOADS_DISK`, vedi anche `config/filesystems.php`), locale in sviluppo e Cloudflare R2 (compatibile S3) in produzione — richiede impostare le variabili `UPLOADS_DISK=s3` e `R2_*` nel pannello Laravel Cloud (vedi docs/DEPLOY.md).
+
+### Added
+
+- Le nuove specifiche veicolo (VIN, colore, posti, categoria, classe ambientale, massa, cilindrata, potenza, misure pneumatici) sono ora incluse anche nella scheda veicolo PDF, non solo nella pagina web.
+
 ## [v1.2.53] - 2026-09-24
 
 ### Added

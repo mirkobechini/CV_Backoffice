@@ -19,17 +19,20 @@
     | `APP_LOCALE`            | `it`                                     |                                                            |
     | `MAIL_MAILER`           | `log`                                    | For testing, then switch to SMTP (Laravel Cloud injects it via `MAIL_URL` if you enable the email add-on) |
     | `OPENROUTER_API_KEY`    | your OpenRouter key                      | Required for the registration document scan; without it the feature fails gracefully, the rest of the app is unaffected |
+    | `UPLOADS_DISK`          | `s3`                                     | **Required.** User-uploaded files (registration cards, fault photos) must not use the `public` (local disk) driver — Laravel Cloud's compute doesn't serve files written to local disk, so they 404 even after `storage:link`. See `R2_*` below. |
+    | `R2_ACCESS_KEY_ID`      | from your Cloudflare R2 API token        |                                                            |
+    | `R2_SECRET_ACCESS_KEY`  | from your Cloudflare R2 API token        |                                                            |
+    | `R2_BUCKET`             | your R2 bucket name                      |                                                            |
+    | `R2_ENDPOINT`           | `https://<account_id>.r2.cloudflarestorage.com` | Cloudflare account-specific S3 API endpoint         |
+    | `R2_URL`                | your bucket's public URL or custom domain | Used to build the links shown to users (e.g. "Apri file") |
 
 3. **After deploying**, open the Laravel Cloud terminal and run:
 
     ```bash
-    php artisan storage:link
     php artisan migrate --seed
     php artisan import:car-data
     php artisan make:admin
     ```
-
-    `storage:link` is required for uploaded files (registration cards, fault photos, etc.) to be reachable — without it, every uploaded file 404s even though it was saved correctly.
 
 4. **Follow the interactive prompts** of `make:admin` to create the first admin
 

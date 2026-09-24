@@ -147,7 +147,8 @@
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                         @if ($vehicle->registration_card_path)
-                            <div class="hint"><a href="{{ Storage::url($vehicle->registration_card_path) }}"
+                            <div class="hint"><a
+                                    href="{{ Storage::disk(config('filesystems.uploads_disk'))->url($vehicle->registration_card_path) }}"
                                     target="_blank" rel="noopener noreferrer">{{ __('Apri file attuale') }}</a></div>
                         @endif
                     </div>
