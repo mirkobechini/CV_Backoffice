@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Uploads Disk
+    |--------------------------------------------------------------------------
+    |
+    | Disco usato per i file caricati dagli utenti (carta di circolazione,
+    | foto guasti). Locale ("public") per lo sviluppo — nessuna credenziale
+    | da configurare. In produzione va impostato a "s3" (Cloudflare R2,
+    | vedi env R2_*): il disco locale su Laravel Cloud non è raggiungibile
+    | dal layer che serve i file statici, anche dopo storage:link.
+    */
+
+    'uploads_disk' => env('UPLOADS_DISK', 'public'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -47,15 +61,18 @@ return [
             'report' => false,
         ],
 
+        // Cloudflare R2 (compatibile S3). "region" è ignorata da R2 ma
+        // richiesta dal driver: 'auto' è il valore convenzionale.
+        // "use_path_style_endpoint" true perché richiesto dall'endpoint R2.
         's3' => [
             'driver' => 's3',
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
-            'region' => env('AWS_DEFAULT_REGION'),
-            'bucket' => env('AWS_BUCKET'),
-            'url' => env('AWS_URL'),
-            'endpoint' => env('AWS_ENDPOINT'),
-            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => env('R2_REGION', 'auto'),
+            'bucket' => env('R2_BUCKET'),
+            'url' => env('R2_URL'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', true),
             'throw' => false,
             'report' => false,
         ],
