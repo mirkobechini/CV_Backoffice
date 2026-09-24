@@ -140,10 +140,8 @@
                         class="v">{{ $vehicle->fuel_type ?? '—' }}</span></div>
                 <div class="veh-kv"><span class="k">{{ __('Tipo') }}</span><span
                         class="v">{{ $vehicle->vehicleType->name ?? 'N/A' }}</span></div>
-                <div class="veh-kv"><span class="k">{{ __('Cinghia distribuzione') }}</span><span class="v">
-                        <span class="{{ $vehicle->has_timing_belt ? 'ok' : 'no' }}">
-                            {{ $vehicle->has_timing_belt ? __('Sì') : __('No') }}
-                        </span>
+                <div class="veh-kv"><span class="k">{{ __('Distribuzione') }}</span><span class="v">
+                        {{ $vehicle->has_timing_belt ? __('Cinghia') : __('Catena') }}
                     </span>
                 </div>
             </div>

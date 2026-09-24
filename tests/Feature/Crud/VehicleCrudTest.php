@@ -402,6 +402,26 @@ class VehicleCrudTest extends TestCase
         $this->assertDatabaseHas('deadlines', ['id' => $deadline->id, 'deleted_at' => null]);
     }
 
+    public function test_show_page_displays_cinghia_or_catena_instead_of_yes_no(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $data['vehicle']->update(['has_timing_belt' => true]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $data['vehicle']));
+
+        $response->assertOk();
+        $response->assertSee('Cinghia');
+        $response->assertDontSee('Catena');
+
+        $data['vehicle']->update(['has_timing_belt' => false]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $data['vehicle']));
+
+        $response->assertOk();
+        $response->assertSee('Catena');
+    }
+
     public function test_index_toolbar_stats_and_incomplete_filter(): void
     {
         $user = $this->createUser();
