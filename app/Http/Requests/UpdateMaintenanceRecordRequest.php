@@ -4,8 +4,12 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Http\Requests\Concerns\ValidatesTireSelection;
+use App\Models\Deadline;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
+use App\Models\Tire;
+use App\Models\Vehicle;
+use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Support\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,15 +28,15 @@ class UpdateMaintenanceRecordRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_id' => 'required|exists:vehicles,id',
+            'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'issue_ids' => 'nullable|array',
-            'issue_ids.*' => 'exists:issues,id',
+            'issue_ids.*' => new BelongsToCurrentUserGroup(Issue::class, message: 'Uno o più guasti selezionati non esistono o non appartengono al tuo gruppo.'),
             'deadline_ids' => 'nullable|array',
-            'deadline_ids.*' => 'exists:deadlines,id',
+            'deadline_ids.*' => new BelongsToCurrentUserGroup(Deadline::class, message: 'Una o più scadenze selezionate non esistono o non appartengono al tuo gruppo.'),
             'completed_issue_ids' => 'nullable|array',
-            'completed_issue_ids.*' => 'exists:issues,id',
+            'completed_issue_ids.*' => new BelongsToCurrentUserGroup(Issue::class, message: 'Uno o più guasti selezionati non esistono o non appartengono al tuo gruppo.'),
             'completed_deadline_ids' => 'nullable|array',
-            'completed_deadline_ids.*' => 'exists:deadlines,id',
+            'completed_deadline_ids.*' => new BelongsToCurrentUserGroup(Deadline::class, message: 'Una o più scadenze selezionate non esistono o non appartengono al tuo gruppo.'),
             'provider_id' => 'required|exists:providers,id',
             'appointment_date' => 'required|date',
             'return_date' => 'nullable|date|after_or_equal:appointment_date',
@@ -41,7 +45,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'mileage_at_service' => 'nullable|integer|min:0',
             'notes' => 'nullable|string|max:2000',
             'target_tire_ids' => 'nullable|array',
-            'target_tire_ids.*' => 'exists:tires,id',
+            'target_tire_ids.*' => new BelongsToCurrentUserGroup(Tire::class, message: 'Uno o più pneumatici selezionati non esistono o non appartengono al tuo gruppo.'),
             'new_tire_season' => 'nullable|in:summer,winter,all_season',
             'new_tire_group' => 'nullable|in:single,front_pair,rear_pair,full_set',
             'new_tire_position' => 'nullable|in:front_left,front_right,rear_left,rear_right|required_if:new_tire_group,single',
@@ -55,11 +59,8 @@ class UpdateMaintenanceRecordRequest extends FormRequest
     {
         return [
             'vehicle_id.required' => 'Il campo veicolo è obbligatorio.',
-            'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'issue_ids.array' => 'Il formato dei guasti non è valido.',
-            'issue_ids.*.exists' => 'Uno o più guasti selezionati non esistono.',
             'deadline_ids.array' => 'Il formato delle scadenze non è valido.',
-            'deadline_ids.*.exists' => 'Una o più scadenze selezionate non esistono.',
             'provider_id.required' => 'Il campo fornitore è obbligatorio.',
             'provider_id.exists' => 'Il fornitore selezionato non esiste.',
             'appointment_date.required' => 'Il campo data appuntamento è obbligatorio.',
