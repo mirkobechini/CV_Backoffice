@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.47] - 2026-09-24
+
+### Added
+
+- "Rinnova adesso" sulla scheda scadenza: per un veicolo acquistato usato la cui ultima revisione/tagliando/cinghia è già stata fatta dal precedente proprietario, permette di registrare la data (e opzionalmente il km) di quel rinnovo senza dover creare un appuntamento in officina. Calcola la prossima scadenza con la stessa logica del completamento di un intervento. Disponibile per Revisione Ministeriale, Revisione Impianto Ossigeno, Tagliando e Cinghia Distribuzione.
 ## [v1.2.46] - 2026-09-24
 
 ### Changed

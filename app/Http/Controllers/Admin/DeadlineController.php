@@ -10,6 +10,7 @@ use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Services\DeadlineService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
 class DeadlineController extends Controller
 {
@@ -200,7 +201,6 @@ class DeadlineController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    // TODO: quando si spunta "mark as renewed" su una scadenza in scadenza/scaduta, creare automaticamente la scadenza successiva con data di rinnovo opzionale (se non inserita, calcolata in automatico).invece è già lontana dovrebbe rimanere "rinnovata"
     public function update(UpdateDeadlineRequest $request, Deadline $deadline)
     {
         $data = $request->validated();
@@ -214,6 +214,39 @@ class DeadlineController extends Controller
         } catch (\RuntimeException $e) {
             return back()->withErrors(['due_date' => $e->getMessage()])->withInput();
         }
+    }
+
+    /**
+     * Rinnova una scadenza periodica senza un appuntamento in officina: per
+     * un veicolo acquistato usato, la cui ultima revisione/tagliando/
+     * cinghia è già stata effettuata dal precedente proprietario prima che
+     * questo sistema iniziasse a tracciare il veicolo. Vedi
+     * DeadlineService::renewWithoutAppointment().
+     */
+    public function renew(Request $request, Deadline $deadline)
+    {
+        $this->authorize('update', $deadline);
+
+        if (! in_array($deadline->type, DeadlineService::RENEWABLE_TYPES, true)) {
+            abort(400, 'Questa tipologia di scadenza non supporta il rinnovo automatico.');
+        }
+
+        $data = $request->validate([
+            'renewed_date' => 'required|date_format:Y-m',
+            'mileage' => 'nullable|integer|min:0',
+        ], [
+            'renewed_date.required' => 'La data di rinnovo è obbligatoria.',
+            'renewed_date.date_format' => 'La data di rinnovo deve essere nel formato mese/anno valido.',
+            'mileage.integer' => 'Il chilometraggio deve essere un numero intero.',
+            'mileage.min' => 'Il chilometraggio non può essere negativo.',
+        ]);
+
+        $renewedDate = Carbon::createFromFormat('Y-m', $data['renewed_date'])->endOfMonth();
+        $vehicle = $deadline->vehicle;
+
+        $this->deadlineService->renewWithoutAppointment($deadline, $vehicle, $renewedDate, $data['mileage'] ?? null);
+
+        return back()->with('success', 'Scadenza rinnovata con successo.');
     }
 
     /**
