@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.50] - 2026-09-24
+
+### Changed
+
+- Creazione veicolo: dopo una scansione del libretto, il campo "Carta di circolazione" ora indica che la foto scansionata è già allegata (invece di apparire vuoto), chiarendo che caricare un file lì la sostituisce anziché essere un passaggio obbligatorio.
+
 ## [v1.2.49] - 2026-09-24
 
 ### Added
