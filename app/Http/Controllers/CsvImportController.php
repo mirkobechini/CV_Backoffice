@@ -541,7 +541,7 @@ class CsvImportController extends Controller
 
     private function importIssue(array $row): array
     {
-        if (!isset($row['_vehicle_id'])) {
+        if (!isset($row['_vehicle_id']) || !$this->vehicleBelongsToCurrentUser($row['_vehicle_id'])) {
             return ['error' => 'Veicolo non valido'];
         }
 
@@ -605,7 +605,7 @@ class CsvImportController extends Controller
 
     private function importMileageLog(array $row): array
     {
-        if (!isset($row['_vehicle_id'])) {
+        if (!isset($row['_vehicle_id']) || !$this->vehicleBelongsToCurrentUser($row['_vehicle_id'])) {
             return ['error' => 'Veicolo non valido'];
         }
 
@@ -628,5 +628,17 @@ class CsvImportController extends Controller
         ]);
 
         return ['success' => true];
+    }
+
+    /**
+     * preview() risolve _vehicle_id scoperto per gruppo (forCurrentUser()),
+     * ma confirm() lo riceve indietro solo come campo nascosto del form:
+     * senza ricontrollarlo qui, un utente poteva alterarlo prima di
+     * inviare la conferma e importare guasti/chilometraggi sul veicolo di
+     * un altro gruppo.
+     */
+    private function vehicleBelongsToCurrentUser(mixed $vehicleId): bool
+    {
+        return Vehicle::forCurrentUser()->whereKey($vehicleId)->exists();
     }
 }
