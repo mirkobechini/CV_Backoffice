@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\HandlesWarrantyExtension;
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Tire;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreVehicleRequest extends FormRequest
@@ -30,6 +31,20 @@ class StoreVehicleRequest extends FormRequest
             'warranty_expiration_date' => 'nullable|date|required_if_accepted:has_warranty_extension|after_or_equal:immatricolation_date',
             'warranty_extension_duration' => 'nullable|integer|min:1|required_if_accepted:has_warranty_extension',
             'has_timing_belt' => 'nullable|boolean',
+            'vin' => 'nullable|string|max:255',
+            'color' => 'nullable|string|max:255',
+            'seats' => 'nullable|integer|min:1|max:99',
+            'environmental_class' => 'nullable|string|max:255',
+            'max_mass_kg' => 'nullable|integer|min:0',
+            'engine_displacement_cc' => 'nullable|integer|min:0',
+            'engine_power_kw' => 'nullable|integer|min:0',
+            'vehicle_category' => 'nullable|string|max:255',
+            'allowed_tire_size' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
+            // Percorso "pending" della foto già caricata durante la
+            // scansione del libretto (vedi VehicleController::scanRegistrationCard()
+            // e promoteScannedRegistrationCard()): non è un campo del
+            // modello, viene rimosso da $data prima di Vehicle::create().
+            'scanned_registration_card_path' => 'nullable|string',
         ];
     }
 
@@ -60,7 +75,13 @@ class StoreVehicleRequest extends FormRequest
             'warranty_expiration_date.after_or_equal' => "La data di scadenza originale della garanzia deve essere successiva o uguale alla data di immatricolazione.",
             'warranty_extension_duration.required_if_accepted' => "La durata estensione è obbligatoria quando l'estensione garanzia è attiva.",
             'warranty_extension_duration.integer' => "La durata dell'estensione della garanzia deve essere un numero intero.",
-            'warranty_extension_duration.min' => "La durata dell'estensione della garanzia deve essere almeno di 1 mese."
+            'warranty_extension_duration.min' => "La durata dell'estensione della garanzia deve essere almeno di 1 mese.",
+            'seats.integer' => 'Il numero di posti deve essere un numero intero.',
+            'seats.min' => 'Il numero di posti deve essere almeno 1.',
+            'max_mass_kg.integer' => 'La massa massima deve essere un numero intero.',
+            'engine_displacement_cc.integer' => 'La cilindrata deve essere un numero intero.',
+            'engine_power_kw.integer' => 'La potenza deve essere un numero intero.',
+            'allowed_tire_size.regex' => 'La misura deve essere nel formato standard (es. 225/75R16C).',
         ];
     }
 

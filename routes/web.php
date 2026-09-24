@@ -125,6 +125,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
             ->name('vehicles.pdf');
 
+        Route::post('vehicles/scan-libretto', [VehicleController::class, 'scanRegistrationCard'])
+            ->middleware('throttle:vehicle-scan')
+            ->name('vehicles.scan-libretto');
+
         Route::post('vehicles/{vehicle}/timing-belt-deadline', [VehicleController::class, 'createTimingBeltDeadline'])
             ->name('vehicles.timing-belt-deadline.create');
 

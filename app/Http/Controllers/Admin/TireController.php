@@ -129,7 +129,12 @@ class TireController extends Controller
      */
     public function store(StoreTireRequest $request)
     {
-        $tire = Tire::create($request->validated());
+        $data = $request->validated();
+        $tire = Tire::create($data);
+
+        if ($warning = Tire::sizeMismatchWarning($tire->size, $tire->vehicle)) {
+            session()->flash('tire_size_warning', $warning);
+        }
 
         return redirect()->route('admin.tires.show', $tire)->with('status', 'Set di gomme creato con successo.');
     }
@@ -160,6 +165,10 @@ class TireController extends Controller
     public function update(UpdateTireRequest $request, Tire $tire)
     {
         $tire->update($request->validated());
+
+        if ($warning = Tire::sizeMismatchWarning($tire->size, $tire->vehicle)) {
+            session()->flash('tire_size_warning', $warning);
+        }
 
         return redirect()->route('admin.tires.show', $tire)->with('status', 'Set di gomme aggiornato con successo.');
     }

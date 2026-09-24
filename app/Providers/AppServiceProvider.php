@@ -73,6 +73,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('public-fleet-status', function (Request $request) {
             return Limit::perMinute(20)->by($request->ip());
         });
+
+        // Rate limiting per la scansione del libretto: chiamata a un LLM
+        // esterno, lenta e a pagamento, quindi un budget più stretto della
+        // fascia generica admin-mutations.
+        RateLimiter::for('vehicle-scan', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
         // Registra le policy
         Gate::policy(Vehicle::class, VehiclePolicy::class);
         Gate::policy(Provider::class, ProviderPolicy::class);

@@ -255,11 +255,7 @@
                                     value="{{ old('new_tire_model_name') }}" placeholder="{{ __('es. Alpin 6') }}">
                             </div>
                         </div>
-                        <div class="field">
-                            <label for="new_tire_size">{{ __('Misura') }}</label>
-                            <input type="text" class="input" id="new_tire_size" name="new_tire_size"
-                                value="{{ old('new_tire_size') }}" placeholder="{{ __('es. 205/55 R16') }}">
-                        </div>
+                        <x-form.tire-size-input name="new_tire_size" label="{{ __('Misura') }}" />
                     </div>
                 </div>
                 <div class="row2">
