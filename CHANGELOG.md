@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.44] - 2026-09-24
+
+### Security
+
+- Rimosso SVG dai formati accettati per la foto di un guasto: se il file conteneva `<script>`, aprire direttamente l'URL salvato (non tramite `<img>`) lo eseguiva nel browser.
 ## [v1.2.43] - 2026-09-24
 
 ### Changed
