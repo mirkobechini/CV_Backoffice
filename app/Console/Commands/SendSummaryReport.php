@@ -107,10 +107,21 @@ class SendSummaryReport extends Command
                     'totalVehicles' => $allVehicles->count(),
                     'vehiclesOk' => $allVehicles->reject(fn ($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count(),
                     'openIssues' => Issue::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))->open()->get(),
-                    'expiredDeadlines' => Deadline::whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
-                        ->where('status', Deadline::STATUS_EXPIRED)
+                    // Filtriamo su automatic_status (calcolato live da data/km), non
+                    // sulla colonna status persistita: quest'ultima viene
+                    // risincronizzata solo alla creazione/modifica di una scadenza o
+                    // visitando l'elenco scadenze (Deadline::syncStatusesFromRules())
+                    // — una scadenza il cui due_date passa senza che nessuno la tocchi
+                    // resta "in regola" in DB anche se ormai scaduta, e il report
+                    // giornaliero non la includeva mai (stesso bug già corretto sulla
+                    // dashboard, vedi DashboardController).
+                    'expiredDeadlines' => Deadline::with('vehicle.latestMileageLog')
+                        ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
                         ->where('is_renewed', false)
-                        ->get(),
+                        ->get()
+                        ->filter(fn (Deadline $d) => $d->automatic_status === Deadline::STATUS_EXPIRED)
+                        ->sortBy('due_date')
+                        ->values(),
                     'upcomingDeadlines' => Deadline::with('vehicle')
                         ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
                         ->upcoming($reminderDays)

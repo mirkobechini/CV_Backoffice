@@ -162,4 +162,59 @@ class SendSummaryReportTest extends TestCase
             return $mail->hasTo('capoA@example.com');
         });
     }
+
+    public function test_report_shows_positive_days_remaining_for_upcoming_deadline(): void
+    {
+        // diffInDays() è firmato da Carbon 3 in poi: chiamarlo nell'ordine
+        // sbagliato (due_date->diffInDays(now()) invece di
+        // today->diffInDays(due_date)) dava "-5 giorni" per una scadenza
+        // fra 5 giorni invece di "5 giorni".
+        Mail::fake();
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+        $vehicle = $this->vehicle();
+        \App\Models\Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_TAGLIANDO,
+            'due_date' => now()->addDays(5),
+            'status' => \App\Models\Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertSent(ReportMail::class, function (ReportMail $mail) {
+            $html = preg_replace('/\s+/', ' ', $mail->render());
+            $this->assertStringContainsString('Tra 5 giorni', $html);
+            $this->assertStringNotContainsString('Tra -5 giorni', $html);
+
+            return true;
+        });
+    }
+
+    public function test_report_includes_deadline_expired_by_date_even_if_status_column_is_stale(): void
+    {
+        // Stesso bug già corretto sulla dashboard (v1.2.37): la colonna
+        // status persistita viene risincronizzata solo alla creazione/
+        // modifica della scadenza o visitando l'elenco scadenze, quindi una
+        // scadenza il cui due_date passa senza che nessuno la tocchi resta
+        // "pending" in DB anche se ormai scaduta.
+        Mail::fake();
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+        $vehicle = $this->vehicle();
+        \App\Models\Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_TAGLIANDO,
+            'due_date' => now()->subDays(10),
+            'status' => \App\Models\Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertSent(ReportMail::class, function (ReportMail $mail) {
+            return $mail->data['expiredDeadlines']->contains('type', \App\Models\Deadline::TYPE_TAGLIANDO);
+        });
+    }
 }
