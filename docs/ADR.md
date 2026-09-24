@@ -1,185 +1,185 @@
-# ADR — Decisioni architetturali di CV Backoffice
+# ADR — CV Backoffice Architecture Decisions
 
-## Stato
+## Status
 
-✅ Adottato
+✅ Adopted
 
-## Contesto
+## Context
 
-CV Backoffice è un'applicazione web per la gestione centralizzata di una flotta di mezzi di pubblica assistenza. Durante lo sviluppo sono state prese diverse decisioni architetturali che è utile documentare in un unico documento di riferimento.
-
----
-
-## 1. Collegamento polimorfico guasti/scadenze ↔ appuntamenti officina
-
-### Decisione
-
-Abbiamo usato una relazione **morphMany** (`maintenance_record_items`) per collegare `MaintenanceRecord` (appuntamento officina) con `Issue` (guasti) e `Deadline` (scadenze). La tabella `maintenance_record_items` ha i campi `itemable_id` e `itemable_type`.
-
-### Motivazione
-
-- Un appuntamento in officina può coinvolgere sia un guasto che una scadenza (es. tagliando)
-- La relazione polimorfica evita di duplicare colonne nullable (`issue_id`, `deadline_id`)
-- Permette di estendere facilmente ad altre entità future
-
-### Conseguenze
-
-- `MaintenanceRecord` non ha più FK dirette a `issues` o `deadlines`
-- Le query richiedono `with('items.itemable')` per il caricamento eager
+CV Backoffice is a web application for the centralized management of a public-assistance vehicle fleet. Several architectural decisions were made during development that are worth documenting in a single reference document.
 
 ---
 
-## 2. SoftDeletes su veicoli, guasti, scadenze, manutenzioni, fornitori
+## 1. Polymorphic link between faults/deadlines ↔ workshop appointments
 
-### Decisione
+### Decision
 
-Abbiamo applicato `SoftDeletes` (Laravel) su `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord` e `Provider`. I record cancellati rimangono nel DB con `deleted_at` valorizzato.
+We used a **morphMany** relation (`maintenance_record_items`) to link `MaintenanceRecord` (workshop appointment) with `Issue` (faults) and `Deadline` (deadlines). The `maintenance_record_items` table has the fields `itemable_id` and `itemable_type`.
 
-### Motivazione
+### Rationale
 
-- Dati sensibili: non vogliamo perdere storico guasti e manutenzioni
-- Integrità referenziale: le relazioni esistenti non si rompono alla cancellazione
-- Recupero facile in caso di errore
+- A workshop appointment can involve both a fault and a deadline (e.g. a service)
+- The polymorphic relation avoids duplicating nullable columns (`issue_id`, `deadline_id`)
+- It allows easy extension to other entities in the future
 
-### Conseguenze
+### Consequences
 
-- Tutte le query usano automaticamente `WHERE deleted_at IS NULL`
-- Per includere cancellati serve `withTrashed()`
-- Le view e report possono accedere anche allo storico cancellato
-
----
-
-## 3. Stato automatico delle scadenze (data + km)
-
-### Decisione
-
-Lo stato di una scadenza (`pending`, `valid`, `expired`, `renewed`) viene calcolato automaticamente tramite l'accessor `getAutomaticStatusAttribute()` sul modello `Deadline`, basato su:
-- **Data**: `due_date` confrontata con oggi + finestra di warning (`DEADLINE_WARNING_MONTHS`)
-- **Chilometraggio**: `last_mileage + interval_km` confrontato con l'ultimo km registrato
-
-### Motivazione
-
-- Stato sempre aggiornato senza bisogno di cron job o aggiornamenti manuali
-- Integrazione con chilometraggi: scadenze come tagliando e cinghia distribuzione dipendono dai km
-- L'accessor Eloquent ricalcola ogni volta, garantendo freschezza
-
-### Conseguenze
-
-- `is_renewed` è l'unico flag manuale e prevale sull'auto-calcolo
-- `loadMissing('vehicle.latestMileageLog')` necessario per evitare N+1
-- `deadlines.warning_months` configurabile via `.env` (default: 3 mesi)
+- `MaintenanceRecord` no longer has direct FKs to `issues` or `deadlines`
+- Queries require `with('items.itemable')` for eager loading
 
 ---
 
-## 4. Autenticazione con Sanctum e ruoli
+## 2. SoftDeletes on vehicles, faults, deadlines, maintenance records, providers
 
-### Decisione
+### Decision
 
-Abbiamo usato **Laravel Sanctum** per:
-- Autenticazione web (sessioni) per il backoffice
-- API token per 11 endpoint REST (consumati da app esterne)
+We applied `SoftDeletes` (Laravel) to `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord` and `Provider`. Deleted records remain in the DB with `deleted_at` set.
 
-I ruoli (`admin`, `manager`, `worker`, `volunteer`) sono gestiti tramite **Laravel Policies**.
+### Rationale
 
-### Motivazione
+- Sensitive data: we don't want to lose the history of faults and maintenance
+- Referential integrity: existing relations aren't broken on deletion
+- Easy recovery in case of a mistake
 
-- Sanctum è nativo Laravel, zero dipendenze esterne
-- Unico pacchetto per sessioni + API token
-- Leggero rispetto a Passport / Jetstream
-- Le policy permettono autorizzazione granulare senza introdurre pacchetti esterni
+### Consequences
 
-### Conseguenze
-
-- Nessuna rotta di registrazione pubblica: gli account si creano solo su invito (codice/email di gruppo) o da un capo direttamente nella pagina del gruppo
-- Il primo utente diventa automaticamente admin (comando `php artisan make:admin`)
-- Rate limiting: 30 req/min per route admin, 5 req/min per login
+- All queries automatically use `WHERE deleted_at IS NULL`
+- `withTrashed()` is needed to include deleted records
+- Views and reports can also access deleted history
 
 ---
 
-## 5. Notifiche email con scheduler
+## 3. Automatic deadline status (date + mileage)
 
-### Decisione
+### Decision
 
-Abbiamo un comando Artisan `app:send-summary-report` schedulato in `routes/console.php` che invia un report riassuntivo via email (Laravel Mail + `Mailpit/SMTP`).
+The status of a deadline (`pending`, `valid`, `expired`, `renewed`) is automatically computed via the `getAutomaticStatusAttribute()` accessor on the `Deadline` model, based on:
+- **Date**: `due_date` compared with today plus a warning window (`DEADLINE_WARNING_MONTHS`)
+- **Mileage**: `last_mileage + interval_km` compared with the latest recorded mileage
 
-### Motivazione
+### Rationale
 
-- Report periodici configurabili (daily/weekly/monthly) senza servizi esterni
-- Configurazione via tabella `notification_settings` modificabile dalla UI
-- Lo scheduler di Laravel gestisce la cadenza senza cron job manuali
+- Status is always up to date without cron jobs or manual updates
+- Integration with mileage: deadlines such as service and timing belt depend on mileage
+- The Eloquent accessor recalculates every time, guaranteeing freshness
 
-### Conseguenze
+### Consequences
 
-- Richiede che lo scheduler sia attivo (`php artisan schedule:run` ogni minuto sul server)
-- Le email usano `ReportMail` (Mailable) con template Blade
-
----
-
-## 6. Export PDF e CSV
-
-### Decisione
-
-- **PDF**: DomPDF per la scheda veicolo (`PdfExportController@vehiclePdf`)
-- **CSV**: Export generico per 7 entità (`CsvExportController@export`)
-
-### Motivazione
-
-- DomPDF non richiede browser headless (leggero, funziona su hosting basic)
-- CSV con stream response per gestire volumi di dati senza memory leak
+- `is_renewed` is the only manual flag and overrides the auto-calculation
+- `loadMissing('vehicle.latestMileageLog')` is needed to avoid N+1 queries
+- `deadlines.warning_months` is configurable via `.env` (default: 3 months)
 
 ---
 
-## 7. Cache dashboard
+## 4. Authentication with Sanctum and roles
 
-### Decisione
+### Decision
 
-`DashboardController@index` usa `Cache::remember()` con TTL 5 minuti.
+We used **Laravel Sanctum** for:
+- Web authentication (sessions) for the backoffice
+- API tokens for 11 REST endpoints (consumed by external apps)
 
-### Motivazione
+Roles (`admin`, `manager`, `worker`, `volunteer`) are managed via **Laravel Policies**.
 
-- La dashboard esegue 6+ query (conteggi, scadenze, guasti aperti) su dati che cambiano raramente
-- Riduce il carico sul DB nelle ore di picco
+### Rationale
 
----
+- Sanctum is native to Laravel, zero external dependencies
+- A single package for both sessions and API tokens
+- Lightweight compared to Passport / Jetstream
+- Policies allow granular authorization without introducing external packages
 
-## 8. Audit logging con spatie/laravel-activitylog
+### Consequences
 
-### Decisione
-
-Abbiamo usato il pacchetto `spatie/laravel-activitylog` su `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord`, `MileageLog`, `Equipment`. La UI del registro attività è in `admin/activity-log`.
-
-### Motivazione
-
-- Conformità: tracciare chi ha fatto cosa su dati sensibili (mezzi di pubblica assistenza)
-- `logAll()` + `logOnlyDirty()` registra solo le modifiche effettive
-- La UI con filtri (per utente, entità, data) rende consultabile lo storico
-
-### Conseguenze
-
-- Ogni modello con audit ha il trait `LogsActivity` e il metodo `getActivitylogOptions()`
-- La tabella `activity_log` può crescere rapidamente — tenerlo monitorato
+- No public registration route: accounts are only created by invitation (group code/email) or by a lead directly from the group page
+- The first user automatically becomes admin (`php artisan make:admin` command)
+- Rate limiting: 30 req/min for admin routes, 5 req/min for login
 
 ---
 
-## 9. Ricerca testuale (Searchable trait)
+## 5. Email notifications with the scheduler
 
-### Decisione
+### Decision
 
-Abbiamo un trait `Searchable` con scope `search()` che:
-- Su **MySQL/MariaDB**: usa `FULLTEXT MATCH` per colonne lunghe (`issues.description`)
-- Su **SQLite**: usa `LIKE %term%` come fallback
+We have an Artisan command `app:send-summary-report` scheduled in `routes/console.php` that sends a summary report via email (Laravel Mail + `Mailpit/SMTP`).
 
-### Motivazione
+### Rationale
 
-- Uniformità tra ambienti di sviluppo (SQLite) e produzione (MySQL)
-- FULLTEXT scalabile su volumi elevati senza modificare i controller
-- Ogni modello dichiara `$searchable` e opzionalmente `$fulltextable`
+- Configurable periodic reports (daily/weekly/monthly) without external services
+- Configuration via the `notification_settings` table, editable from the UI
+- Laravel's scheduler handles the cadence without manual cron jobs
+
+### Consequences
+
+- Requires the scheduler to be active (`php artisan schedule:run` every minute on the server)
+- Emails use `ReportMail` (Mailable) with a Blade template
 
 ---
 
-## Riferimenti
+## 6. PDF and CSV export
 
-- [Documentazione Laravel SoftDeletes](https://laravel.com/docs/11/eloquent#soft-deleting)
+### Decision
+
+- **PDF**: DomPDF for the vehicle info sheet (`PdfExportController@vehiclePdf`)
+- **CSV**: generic export for 7 entities (`CsvExportController@export`)
+
+### Rationale
+
+- DomPDF doesn't require a headless browser (lightweight, works on basic hosting)
+- CSV with a streamed response to handle large data volumes without memory leaks
+
+---
+
+## 7. Dashboard cache
+
+### Decision
+
+`DashboardController@index` uses `Cache::remember()` with a 5-minute TTL.
+
+### Rationale
+
+- The dashboard runs 6+ queries (counts, deadlines, open faults) on data that rarely changes
+- Reduces DB load during peak hours
+
+---
+
+## 8. Audit logging with spatie/laravel-activitylog
+
+### Decision
+
+We used the `spatie/laravel-activitylog` package on `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord`, `MileageLog`, `Equipment`. The activity log UI is at `admin/activity-log`.
+
+### Rationale
+
+- Compliance: tracking who did what on sensitive data (public-assistance vehicles)
+- `logAll()` + `logOnlyDirty()` records only actual changes
+- The UI with filters (by user, entity, date) makes the history easy to consult
+
+### Consequences
+
+- Every audited model has the `LogsActivity` trait and the `getActivitylogOptions()` method
+- The `activity_log` table can grow quickly — keep it monitored
+
+---
+
+## 9. Full-text search (Searchable trait)
+
+### Decision
+
+We have a `Searchable` trait with a `search()` scope that:
+- On **MySQL/MariaDB**: uses `FULLTEXT MATCH` for long columns (`issues.description`)
+- On **SQLite**: uses `LIKE %term%` as a fallback
+
+### Rationale
+
+- Consistency between development (SQLite) and production (MySQL) environments
+- FULLTEXT scales on large volumes without changing the controllers
+- Every model declares `$searchable` and, optionally, `$fulltextable`
+
+---
+
+## References
+
+- [Laravel SoftDeletes documentation](https://laravel.com/docs/11/eloquent#soft-deleting)
 - [Laravel Sanctum](https://laravel.com/docs/11/sanctum)
 - [spatie/laravel-activitylog](https://spatie.be/docs/laravel-activitylog)
 - [DomPDF](https://github.com/barryvdh/laravel-dompdf)

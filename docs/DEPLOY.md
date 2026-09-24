@@ -1,26 +1,26 @@
-# Deploy su Laravel Cloud
+# Deploy to Laravel Cloud
 
-## Prerequisiti
+## Prerequisites
 
-- Un account [Laravel Cloud](https://cloud.laravel.com) (piano gratuito sufficiente)
-- Il repository su GitHub
+- A [Laravel Cloud](https://cloud.laravel.com) account (free tier is enough)
+- The repository on GitHub
 
-## Passi
+## Steps
 
-1. **Crea un nuovo progetto** su Laravel Cloud e collega il repository GitHub
-2. **Imposta le variabili d'ambiente** nel pannello di controllo Laravel Cloud:
+1. **Create a new project** on Laravel Cloud and connect the GitHub repository
+2. **Set the environment variables** in the Laravel Cloud control panel:
 
-    | Variabile             | Valore                                 | Note                                                  |
-    | :--------------------- | :-------------------------------------- | :----------------------------------------------------- |
-    | `APP_ENV`               | `production`                            |                                                          |
-    | `APP_DEBUG`             | `false`                                  |                                                          |
-    | `APP_URL`               | `https://il-tuo-dominio.laravel.cloud`   |                                                          |
-    | `DB_CONNECTION`         | `mysql`                                  | Laravel Cloud fornisce MySQL                             |
-    | `APP_LOCALE`            | `it`                                     |                                                          |
-    | `MAIL_MAILER`           | `log`                                    | Per test, poi passa a SMTP (Laravel Cloud lo inietta via `MAIL_URL` se abiliti l'add-on email) |
-    | `OPENROUTER_API_KEY`    | la tua chiave OpenRouter                 | Obbligatoria per la scansione del libretto; senza fallisce con un errore gestito, il resto dell'app non è impattato |
+    | Variable                | Value                                    | Notes                                                    |
+    | :------------------------ | :----------------------------------------- | :---------------------------------------------------------- |
+    | `APP_ENV`               | `production`                             |                                                            |
+    | `APP_DEBUG`             | `false`                                  |                                                            |
+    | `APP_URL`               | `https://your-domain.laravel.cloud`      |                                                            |
+    | `DB_CONNECTION`         | `mysql`                                  | Laravel Cloud provides MySQL                               |
+    | `APP_LOCALE`            | `it`                                     |                                                            |
+    | `MAIL_MAILER`           | `log`                                    | For testing, then switch to SMTP (Laravel Cloud injects it via `MAIL_URL` if you enable the email add-on) |
+    | `OPENROUTER_API_KEY`    | your OpenRouter key                      | Required for the registration document scan; without it the feature fails gracefully, the rest of the app is unaffected |
 
-3. **Dopo il deploy**, apri il terminale di Laravel Cloud ed esegui:
+3. **After deploying**, open the Laravel Cloud terminal and run:
 
     ```bash
     php artisan migrate --seed
@@ -28,26 +28,26 @@
     php artisan make:admin
     ```
 
-4. **Segui le istruzioni interattive** di `make:admin` per creare il primo admin
+4. **Follow the interactive prompts** of `make:admin` to create the first admin
 
-    In alternativa, in modalità non interattiva (CI/CD):
+    Alternatively, in non-interactive mode (CI/CD):
 
     ```bash
-    php artisan make:admin --email="tua@email.com" --password="password-sicura"
+    php artisan make:admin --email="your@email.com" --password="secure-password"
     ```
 
-5. **Configura lo scheduler** (per report email automatici):
-    - Su Laravel Cloud, aggiungi un cron job che esegua `php artisan schedule:run` ogni minuto
-    - Oppure usa il worker integrato di Laravel Cloud
+5. **Configure the scheduler** (for automatic email reports):
+    - On Laravel Cloud, add a cron job that runs `php artisan schedule:run` every minute
+    - Or use Laravel Cloud's built-in worker
 
-## Comandi utili
+## Useful commands
 
-| Comando                                          | Cosa fa                                                          |
-| :------------------------------------------------ | :----------------------------------------------------------------- |
-| `php artisan make:admin`                         | Crea il primo utente amministratore (capo del gruppo di default) |
-| `php artisan import:car-data`                    | Importa marche e modelli auto                                    |
-| `php artisan app:send-summary-report`            | Invia report manuale                                             |
-| `php artisan app:generate-notifications`         | Genera notifiche in-app (scadenze, guasti, attrezzature)         |
-| `php artisan app:generate-notifications --email` | Genera notifiche + invia email automatiche                       |
-| `php artisan app:backup-database`                | Crea un backup del database in JSON                              |
-| `php artisan schedule:run`                       | Esegue i comandi schedulati                                      |
+| Command                                          | What it does                                                    |
+| :------------------------------------------------ | :------------------------------------------------------------------ |
+| `php artisan make:admin`                         | Creates the first admin user (lead of the default group)         |
+| `php artisan import:car-data`                    | Imports car brands and models                                    |
+| `php artisan app:send-summary-report`            | Sends a manual report                                             |
+| `php artisan app:generate-notifications`         | Generates in-app notifications (deadlines, faults, equipment)     |
+| `php artisan app:generate-notifications --email` | Generates notifications + sends automatic emails                  |
+| `php artisan app:backup-database`                | Creates a JSON database backup                                    |
+| `php artisan schedule:run`                       | Runs scheduled commands                                           |
