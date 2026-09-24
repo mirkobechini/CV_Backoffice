@@ -71,6 +71,13 @@ class DeadlineService
             // noto. Va sulla precedente, non qui.
             'last_mileage' => $previousDeadline ? null : ($data['last_mileage'] ?? null),
             'interval_days' => $data['interval_days'] ?? null,
+            'insurance_company' => $data['insurance_company'] ?? null,
+            'insurance_policy_number' => $data['insurance_policy_number'] ?? null,
+            'insurance_premium' => $data['insurance_premium'] ?? null,
+            'insurance_coverage_type' => $data['insurance_coverage_type'] ?? null,
+            'insurance_coverage_limit' => $data['insurance_coverage_limit'] ?? null,
+            'insurance_broker_contact' => $data['insurance_broker_contact'] ?? null,
+            'notes' => $data['notes'] ?? null,
         ]);
 
         $deadline->syncStatusFromRules();
@@ -168,6 +175,13 @@ class DeadlineService
             'interval_km' => $data['interval_km'] ?? null,
             'last_mileage' => $data['last_mileage'] ?? null,
             'interval_days' => $data['interval_days'] ?? null,
+            'insurance_company' => $data['insurance_company'] ?? null,
+            'insurance_policy_number' => $data['insurance_policy_number'] ?? null,
+            'insurance_premium' => $data['insurance_premium'] ?? null,
+            'insurance_coverage_type' => $data['insurance_coverage_type'] ?? null,
+            'insurance_coverage_limit' => $data['insurance_coverage_limit'] ?? null,
+            'insurance_broker_contact' => $data['insurance_broker_contact'] ?? null,
+            'notes' => $data['notes'] ?? null,
         ];
 
         // syncStatusFromRules() non tocca lo stato di una scadenza rinnovata
@@ -282,16 +296,19 @@ class DeadlineService
 
     /**
      * Tipi periodici per cui esiste una logica di calcolo della prossima
-     * occorrenza dopo un rinnovo (vedi renewWithoutAppointment() e
-     * MaintenanceRecordController::renewDeadline(), che duplica
-     * volutamente questa lista per lo stesso motivo: "Assicurazione" non
-     * ha un intervallo automatico, va gestita a mano).
+     * occorrenza dopo un rinnovo (vedi renewWithoutAppointment()).
+     * "Assicurazione" ha un intervallo fisso di un anno (vedi
+     * INSURANCE_INTERVAL_MONTHS) ma solo per questo rinnovo manuale: il
+     * completamento di un intervento in officina
+     * (MaintenanceRecordController::renewDeadline()) non la include, dato
+     * che una polizza non si rinnova con un appuntamento.
      */
     public const RENEWABLE_TYPES = [
         Deadline::TYPE_MINISTERIAL,
         Deadline::TYPE_OXYGEN,
         Deadline::TYPE_TAGLIANDO,
         Deadline::TYPE_CINGHIA,
+        Deadline::TYPE_ASSICURAZIONE,
     ];
 
     /**
@@ -337,6 +354,22 @@ class DeadlineService
                 'last_mileage' => $mileage ?? 0,
                 'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
                 'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+            ]);
+
+            return $deadline;
+        }
+
+        if ($deadline->type === Deadline::TYPE_ASSICURAZIONE) {
+            // I dati della polizza (compagnia, numero, premio...) restano
+            // gli stessi sulla prossima scadenza finché non viene aggiornata
+            // al rinnovo successivo: evita di doverli reinserire da zero.
+            $this->createNextOccurrence($deadline, $vehicle, $renewedDate->copy()->addMonthsNoOverflow(Deadline::INSURANCE_INTERVAL_MONTHS), [
+                'insurance_company' => $deadline->insurance_company,
+                'insurance_policy_number' => $deadline->insurance_policy_number,
+                'insurance_premium' => $deadline->insurance_premium,
+                'insurance_coverage_type' => $deadline->insurance_coverage_type,
+                'insurance_coverage_limit' => $deadline->insurance_coverage_limit,
+                'insurance_broker_contact' => $deadline->insurance_broker_contact,
             ]);
 
             return $deadline;

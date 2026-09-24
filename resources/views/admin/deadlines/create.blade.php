@@ -118,6 +118,79 @@
                 </div>
             </div>
 
+            {{-- Sezione 2b: Polizza (visibile solo per Assicurazione) --}}
+            <div class="form-section" id="insurance-fields-group" style="display:none;">
+                <h2><span class="num">2</span> {{ __('Dettagli polizza') }}</h2>
+                <div class="row2">
+                    <div class="field">
+                        <label for="insurance_company">{{ __('Compagnia') }}</label>
+                        <input type="text" class="input @error('insurance_company') is-invalid @enderror"
+                            id="insurance_company" name="insurance_company" value="{{ old('insurance_company') }}">
+                        @error('insurance_company')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="insurance_policy_number">{{ __('Numero polizza') }}</label>
+                        <input type="text" class="input @error('insurance_policy_number') is-invalid @enderror"
+                            id="insurance_policy_number" name="insurance_policy_number"
+                            value="{{ old('insurance_policy_number') }}">
+                        @error('insurance_policy_number')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="insurance_premium">{{ __('Premio annuo (€)') }}</label>
+                        <input type="number" step="0.01" class="input @error('insurance_premium') is-invalid @enderror"
+                            id="insurance_premium" name="insurance_premium" value="{{ old('insurance_premium') }}"
+                            min="0">
+                        @error('insurance_premium')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="insurance_coverage_limit">{{ __('Massimale (€)') }}</label>
+                        <input type="number" step="0.01"
+                            class="input @error('insurance_coverage_limit') is-invalid @enderror"
+                            id="insurance_coverage_limit" name="insurance_coverage_limit"
+                            value="{{ old('insurance_coverage_limit') }}" min="0">
+                        @error('insurance_coverage_limit')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="insurance_coverage_type">{{ __('Tipo di copertura') }}</label>
+                        <input type="text" class="input @error('insurance_coverage_type') is-invalid @enderror"
+                            id="insurance_coverage_type" name="insurance_coverage_type"
+                            value="{{ old('insurance_coverage_type') }}" placeholder="{{ __('es. RCA, Kasko, Furto e incendio') }}">
+                        @error('insurance_coverage_type')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field">
+                        <label for="insurance_broker_contact">{{ __('Contatto broker/agenzia') }}</label>
+                        <input type="text" class="input @error('insurance_broker_contact') is-invalid @enderror"
+                            id="insurance_broker_contact" name="insurance_broker_contact"
+                            value="{{ old('insurance_broker_contact') }}">
+                        @error('insurance_broker_contact')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+                <div class="field" style="margin-bottom:0;">
+                    <label for="notes">{{ __('Note') }}</label>
+                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes"
+                        rows="2">{{ old('notes') }}</textarea>
+                    @error('notes')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
             {{-- Sezione 3: Stato --}}
             <div class="form-section" style="margin-bottom:0;">
                 <h2><span class="num">3</span> {{ __('Stato') }}</h2>
@@ -161,8 +234,10 @@
             const kmSettingsTitle = document.getElementById('km-settings-title');
             const lastMileageLabel = document.getElementById('last-mileage-label');
             const kmSettingsHint = document.getElementById('km-settings-hint');
+            const insuranceFieldsGroup = document.getElementById('insurance-fields-group');
             const ministerialType = 'Revisione Ministeriale';
             const oxygenType = 'Revisione Impianto Ossigeno';
+            const insuranceType = 'Assicurazione';
             const kmTypes = ['Tagliando', 'Cinghia Distribuzione'];
 
             // Abilita revisione ossigeno solo per tipologie mezzo che la prevedono.
@@ -203,9 +278,12 @@
                 // Per Tagliando/Cinghia servono intervallo km/giorni per calcolare
                 // la prossima scadenza; per le revisioni (data auto-calcolata) si
                 // mostra solo il km facoltativo come semplice annotazione.
+                const isInsurance = typeSelect.value === insuranceType;
+
                 kmSettingsGroup.style.display = (isKmType || isAutoCalculated) ? '' : 'none';
                 intervalKmField.style.display = isKmType ? '' : 'none';
                 intervalDaysField.style.display = isKmType ? '' : 'none';
+                insuranceFieldsGroup.style.display = isInsurance ? '' : 'none';
 
                 if (isAutoCalculated) {
                     kmSettingsTitle.textContent = @json(__('Km alla revisione (facoltativo)'));
