@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.38] - 2026-09-24
+
+### Security
+
+- Corretta una violazione dell'isolamento tra gruppi in scrittura: le richieste di creazione/modifica di gomme, chilometraggi, guasti, scadenze, interventi e attrezzature verificavano solo che il veicolo indicato esistesse da qualche parte nel database (`exists:vehicles,id`), non che appartenesse al gruppo dell'utente — un capo/sottocapo poteva collegare dati al veicolo di un altro gruppo semplicemente indovinandone l'id. Le liste in lettura erano già correttamente filtrate per gruppo; solo la validazione in scrittura aveva questa lacuna.
 ## [v1.2.37] - 2026-09-24
 
 ### Fixed

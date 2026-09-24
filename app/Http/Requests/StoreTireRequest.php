@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Vehicle;
+use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTireRequest extends FormRequest
@@ -17,7 +19,7 @@ class StoreTireRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_id' => 'required|exists:vehicles,id',
+            'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'season' => 'required|in:summer,winter,all_season',
             'position' => 'required|in:front_left,front_right,rear_left,rear_right',
             'brand' => 'nullable|string|max:255',
@@ -36,7 +38,6 @@ class StoreTireRequest extends FormRequest
     {
         return [
             'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-            'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'season.required' => 'La stagionalità è obbligatoria.',
             'season.in' => 'La stagionalità selezionata non è valida.',
             'position.required' => 'La posizione è obbligatoria.',

@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Tire;
+use App\Models\Vehicle;
+use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateIssueRequest extends FormRequest
@@ -17,8 +20,8 @@ class UpdateIssueRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_id' => 'required|exists:vehicles,id',
-            'tire_id' => 'nullable|exists:tires,id',
+            'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
+            'tire_id' => ['nullable', new BelongsToCurrentUserGroup(Tire::class, message: 'Il pneumatico selezionato non esiste o non appartiene al tuo gruppo.')],
             'description' => 'required|string',
             'notes' => 'nullable|string',
             'event_date' => 'required|date',
@@ -35,8 +38,6 @@ class UpdateIssueRequest extends FormRequest
     {
         return [
             'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-            'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
-            'tire_id.exists' => 'Il set di gomme selezionato non esiste.',
             'description.required' => 'La descrizione è obbligatoria.',
             'description.string' => 'La descrizione deve essere una stringa.',
             'notes.string' => 'Le note devono essere una stringa.',
