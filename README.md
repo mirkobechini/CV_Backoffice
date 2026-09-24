@@ -1,67 +1,67 @@
 # 🚀 CV Backoffice
 
-> Applicazione web per la gestione centralizzata di una flotta di mezzi di pubblica assistenza.
-> Guasti, manutenzioni, scadenze, chilometraggi e dotazioni di bordo in un unico pannello.
+> Web application for centralized management of a public-assistance vehicle fleet.
+> Faults, maintenance, deadlines, mileage and onboard equipment in a single panel.
 
 ![GitHub license](https://img.shields.io/github/license/mirkobechini/CV_Backoffice)
 ![CI](https://github.com/mirkobechini/CV_Backoffice/actions/workflows/ci.yml/badge.svg)
 
 ---
 
-## 🌟 Caratteristiche principali
+## 🌟 Key Features
 
-- **Gestione completa del parco mezzi**: anagrafica veicoli, marche, modelli, tipologie e documenti
-- **Flusso guasti e manutenzioni**: dalla segnalazione alla chiusura intervento, con collegamento polimorfico tra guasti, scadenze e appuntamenti in officina
-- **Controllo scadenze e dotazioni**: revisioni ministeriali, ossigeno, tagliando, cinghia distribuzione, assicurazione — con stato automatico basato su data e km
-- **Generazione automatica scadenze**: cinghia (10 anni o 100.000 km), tagliando (1 anno o km configurabili), rinnovo automatico al completamento intervento
-- **Chilometraggi**: rilevazione mensile bulk, storico, integrazione con scadenze km
-- **Gestione pneumatici**: ogni gomma è una riga singola con posizione (anteriore/posteriore, sinistra/destra); i cambi in officina possono riguardare 1, 2 o 4 gomme, non solo un set completo
-- **Attrezzatura**: assegnazione di dotazioni già in anagrafica a un veicolo (anche spostandole da un altro veicolo)
-- **Pagina pubblica stato flotta**: link segreto e non indovinabile, senza account, che mostra solo la disponibilità dei mezzi (nessun dato sensibile)
-- **Dashboard interattiva**: statistiche, scadenze imminenti (con tempo/km residuo e stato), guasti aperti, equipaggiamento incompleto
-- **Calendario appuntamenti**: vista mese/settimana con colori per tipo attività
-- **Export PDF e CSV**: scheda veicolo PDF, export CSV per tutte le entità
-- **API REST**: 12 endpoint protetti da token (Sanctum), pensati per un'eventuale app mobile
-- **Audit log**: tracciamento completo di tutte le modifiche
-- **Notifiche in-app**: campanella con badge, elenco notifiche, segna come letto
-- **Notifiche email**: report giornaliero/settimanale/mensile configurabile con allegato PDF + email automatiche su eventi (scadenze, guasti, attrezzature)
-- **Multi-tenancy per gruppo**: ogni utente appartiene a un gruppo (capo/sottocapo/membro), inviti via codice; l'isolamento dei dati tra gruppi è applicato in modo coerente su ogni superficie — pagine admin, Policies, API mobile, export CSV/PDF, cache, notifiche ed email schedulate
-- **Gestione utenti**: creazione e gestione ruoli dal backoffice (solo capo)
-- **Token API**: creazione e revoca dal profilo
-- **Privacy/GDPR**: pagina privacy, cookie banner, export dati personali, trasferimento ruolo capo al delete account
-- **Backup database**: comando Artisan + pulsante nella pagina impostazioni
-- **Rate limiting**: protezione su login, route admin e API
-- **Tema chiaro/scuro**: persistente in localStorage
-- **Scansione libretto di circolazione**: crea un veicolo caricando fronte/retro del libretto, con un LLM vision (provider configurabile, OpenRouter di default) che precompila targa, marca/modello, dati tecnici e misura pneumatici — sempre verificati dall'utente prima di salvare
+- **Full fleet management**: vehicle records, brands, models, types and documents
+- **Fault and maintenance workflow**: from report to closed intervention, with a polymorphic link between faults, deadlines and workshop appointments
+- **Deadline and equipment tracking**: ministerial inspections, oxygen check, service, timing belt, insurance — with automatic status based on date and mileage
+- **Automatic deadline generation**: timing belt (10 years or 100,000 km), service (1 year or configurable mileage), automatic renewal on intervention completion
+- **Mileage tracking**: bulk monthly entry, history, integration with mileage-based deadlines
+- **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set
+- **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle)
+- **Public fleet status page**: a secret, unguessable link, no account required, showing only vehicle availability (no sensitive data)
+- **Interactive dashboard**: stats, upcoming deadlines (with remaining time/mileage and status), open faults, incomplete equipment
+- **Appointment calendar**: month/week view with color-coding by activity type
+- **PDF and CSV export**: vehicle info sheet as PDF, CSV export for every entity
+- **REST API**: 12 token-protected endpoints (Sanctum), built for a future mobile app
+- **Audit log**: full tracking of every change
+- **In-app notifications**: bell icon with badge, notification list, mark as read
+- **Email notifications**: configurable daily/weekly/monthly report with PDF attachment + automatic emails on events (deadlines, faults, equipment)
+- **Group-based multi-tenancy**: every user belongs to a group (lead/deputy/member), invite via code; data isolation between groups is applied consistently across every surface — admin pages, Policies, mobile API, CSV/PDF export, cache, notifications and scheduled emails
+- **User management**: create and manage roles from the backoffice (lead role only)
+- **API tokens**: create and revoke from the profile page
+- **Privacy/GDPR**: privacy page, cookie banner, personal data export, lead-role transfer on account deletion
+- **Database backup**: Artisan command + button on the settings page
+- **Rate limiting**: protection on login, admin routes and API
+- **Light/dark theme**: persisted in localStorage
+- **Vehicle registration document scan**: create a vehicle by uploading the front/back of the registration document, with an LLM vision provider (configurable, OpenRouter by default) pre-filling license plate, brand/model, technical data and tire size — always reviewed by the user before saving
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Tecnologia                       | Scopo                               |
-| :------------------------------- | :---------------------------------- |
-| **Laravel 12 (PHP 8.2+)**        | Core applicativo e logica backend   |
-| **Blade + Bootstrap 5 (Breeze)** | Interfaccia amministrativa          |
-| **Livewire 4**                   | Componenti dinamici (VehicleSelect) |
-| **MySQL / SQLite**               | Persistenza dati                    |
+| Technology                       | Purpose                             |
+| :-------------------------------- | :----------------------------------- |
+| **Laravel 12 (PHP 8.2+)**        | Core application and backend logic  |
+| **Blade + Bootstrap 5 (Breeze)** | Admin interface                     |
+| **Livewire 4**                   | Dynamic components (VehicleSelect)  |
+| **MySQL / SQLite**               | Data persistence                    |
 | **Laravel Sanctum**              | API token authentication            |
 | **spatie/laravel-activitylog**   | Audit logging                       |
-| **DomPDF**                       | Export PDF                          |
-| **FullCalendar**                 | Calendario appuntamenti             |
-| **OpenRouter (LLM vision)**      | Scansione libretto di circolazione  |
+| **DomPDF**                       | PDF export                          |
+| **FullCalendar**                 | Appointment calendar                |
+| **OpenRouter (LLM vision)**      | Vehicle registration document scan  |
 
 ---
 
 ## 🚀 Quick Start
 
-### Requisiti
+### Requirements
 
 - PHP 8.2+
 - Composer
-- Node.js 18+ e npm
-- MySQL (oppure SQLite per sviluppo locale)
+- Node.js 18+ and npm
+- MySQL (or SQLite for local development)
 
-### Installazione
+### Installation
 
 ```bash
 git clone https://github.com/mirkobechini/CV_Backoffice.git
@@ -70,7 +70,7 @@ composer install
 npm install
 ```
 
-### Configurazione
+### Configuration
 
 ```bash
 cp .env.example .env
@@ -81,27 +81,27 @@ php artisan import:car-data
 php artisan make:admin
 ```
 
-> **Nota:** non esiste una pagina di registrazione pubblica. Il primo account si crea con `php artisan make:admin` (diventa capo di un gruppo di default); da lì in poi i nuovi utenti vengono creati dal backoffice da un capo/sottocapo, oppure si uniscono a un gruppo esistente con il relativo codice invito.
+> **Note:** there is no public registration page. The first account is created with `php artisan make:admin` (becomes the lead of a default group); from there, new users are created from the backoffice by a lead/deputy, or join an existing group with its invite code.
 
-### Avvio
+### Run
 
 ```bash
-# Due terminali separati:
+# Two separate terminals:
 npm run dev
 php artisan serve
 ```
 
-Apri il browser su `http://127.0.0.1:8000`.
+Open your browser at `http://127.0.0.1:8000`.
 
 ---
 
-## 📸 Screenshot
+## 📸 Screenshots
 
-<!-- Aggiungi qui screenshot dell'app -->
+<!-- Add app screenshots here -->
 
 ---
 
-## 🧪 Test
+## 🧪 Tests
 
 ```bash
 php artisan test
@@ -111,11 +111,11 @@ php artisan test
 
 ## ☁️ Deploy
 
-L'app gira in produzione su [Laravel Cloud](https://cloud.laravel.com). Passi, variabili d'ambiente e comandi post-deploy sono documentati in [docs/DEPLOY.md](docs/DEPLOY.md).
+The app runs in production on [Laravel Cloud](https://cloud.laravel.com). Steps, environment variables and post-deploy commands are documented in [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ---
 
-## 📂 Struttura del progetto
+## 📂 Project Structure
 
 ```text
 .
@@ -125,7 +125,7 @@ L'app gira in produzione su [Laravel Cloud](https://cloud.laravel.com). Passi, v
 |-- database/
 |-- docs/
 |   |-- ADR.md           # Architecture Decision Records
-|   |-- DEPLOY.md        # Deploy su Laravel Cloud
+|   |-- DEPLOY.md        # Deploy to Laravel Cloud
 |-- public/
 |-- resources/
 |-- routes/
@@ -137,105 +137,105 @@ L'app gira in produzione su [Laravel Cloud](https://cloud.laravel.com). Passi, v
 
 ---
 
-## 📐 Decisioni architetturali
+## 📐 Architecture Decisions
 
-Le scelte architetturali del progetto sono documentate in un unico [Architecture Decision Record](docs/ADR.md). Copre:
+The project's architectural choices are documented in a single [Architecture Decision Record](docs/ADR.md). It covers:
 
-- Relazioni polimorfiche (guasti/scadenze ↔ manutenzioni)
-- SoftDeletes e stato automatico scadenze (data + km)
-- Autenticazione Sanctum + ruoli (Policies)
-- Notifiche email con scheduler
-- Export PDF (DomPDF) e CSV
-- Audit logging e ricerca FULLTEXT
-- Gruppi e ruoli (capo/sottocapo/membro) con scoping dati per gruppo
+- Polymorphic relations (faults/deadlines ↔ maintenance)
+- SoftDeletes and automatic deadline status (date + mileage)
+- Sanctum authentication + roles (Policies)
+- Email notifications with the scheduler
+- PDF (DomPDF) and CSV export
+- Audit logging and FULLTEXT search
+- Groups and roles (lead/deputy/member) with per-group data scoping
 
 ---
 
-## 🗄️ Schema del database
+## 🗄️ Database Schema
 
 ```mermaid
 erDiagram
-    %% Veicoli e anagrafica
-    VEHICLES ||--o{ ISSUES : "ha"
-    VEHICLES ||--o{ DEADLINES : "ha"
-    VEHICLES ||--o{ MAINTENANCE_RECORDS : "ha"
-    VEHICLES ||--o{ MILEAGE_LOGS : "ha"
-    VEHICLES ||--o{ EQUIPMENT : "ha"
-    VEHICLES ||--o{ TIRES : "ha"
-    VEHICLES ||--o{ TIRE_CHANGES : "ha"
-    TIRES ||--o| ISSUES : "collegata a (opzionale)"
-    VEHICLES }o--|| BRANDS : "marca"
-    VEHICLES }o--|| CAR_MODELS : "modello"
-    VEHICLES }o--|| VEHICLE_TYPES : "tipo"
+    %% Vehicles and records
+    VEHICLES ||--o{ ISSUES : "has"
+    VEHICLES ||--o{ DEADLINES : "has"
+    VEHICLES ||--o{ MAINTENANCE_RECORDS : "has"
+    VEHICLES ||--o{ MILEAGE_LOGS : "has"
+    VEHICLES ||--o{ EQUIPMENT : "has"
+    VEHICLES ||--o{ TIRES : "has"
+    VEHICLES ||--o{ TIRE_CHANGES : "has"
+    TIRES ||--o| ISSUES : "linked to (optional)"
+    VEHICLES }o--|| BRANDS : "brand"
+    VEHICLES }o--|| CAR_MODELS : "model"
+    VEHICLES }o--|| VEHICLE_TYPES : "type"
 
-    BRANDS ||--o{ CAR_MODELS : "ha"
+    BRANDS ||--o{ CAR_MODELS : "has"
 
-    EQUIPMENT_TYPES ||--o{ EQUIPMENT : "categorizza"
-    EQUIPMENT_TYPES }o--o{ VEHICLE_TYPES : "richiesto per"
+    EQUIPMENT_TYPES ||--o{ EQUIPMENT : "categorizes"
+    EQUIPMENT_TYPES }o--o{ VEHICLE_TYPES : "required for"
 
     VEHICLE_TYPE_EQUIPMENT_REQUIREMENTS }o--|| VEHICLE_TYPES : ""
     VEHICLE_TYPE_EQUIPMENT_REQUIREMENTS }o--|| EQUIPMENT_TYPES : ""
 
-    %% Manutenzione polimorfica
-    MAINTENANCE_RECORDS ||--o{ MAINTENANCE_RECORD_ITEMS : "contiene"
+    %% Polymorphic maintenance
+    MAINTENANCE_RECORDS ||--o{ MAINTENANCE_RECORD_ITEMS : "contains"
     MAINTENANCE_RECORD_ITEMS }o--|| ISSUES : "itemable"
     MAINTENANCE_RECORD_ITEMS }o--|| DEADLINES : "itemable"
-    MAINTENANCE_RECORDS }o--|| PROVIDERS : "fornitore"
+    MAINTENANCE_RECORDS }o--|| PROVIDERS : "provider"
 
-    %% Utenti e configurazione
+    %% Users and configuration
     USERS |o--o{ NOTIFICATION_SETTINGS : ""
-    USERS }o--o{ GROUPS : "appartiene (con ruolo)"
-    GROUPS ||--o{ VEHICLES : "possiede"
+    USERS }o--o{ GROUPS : "belongs to (with role)"
+    GROUPS ||--o{ VEHICLES : "owns"
 ```
 
-**Legenda entità:**
+**Entity legend:**
 
-| Tabella                               | Descrizione                                                                    |
-| :------------------------------------ | :----------------------------------------------------------------------------- |
-| `vehicles`                            | Veicoli (targa, codice, marca/modello, garanzia, cinghia, gruppo)              |
-| `brands`                              | Marche veicoli                                                                 |
-| `car_models`                          | Modelli veicoli (FK → brands)                                                  |
-| `vehicle_types`                       | Tipologie mezzo (MSB, MSDA, ecc.) con requisiti equipaggiamento                |
-| `issues`                              | Guasti (descrizione, stato, foto)                                              |
-| `deadlines`                           | Scadenze (revisione ministeriale, ossigeno, tagliando, cinghia, assicurazione) |
-| `maintenance_records`                 | Appuntamenti officina                                                          |
-| `maintenance_record_items`            | Join polimorfico guasti/scadenze ↔ appuntamento                                |
-| `mileage_logs`                        | Storico chilometraggi                                                          |
-| `tires`                               | Pneumatici (uno per gomma fisica: stagionalità, posizione, stato)              |
-| `tire_changes`                        | Storico montaggi/cambi gomme                                                   |
-| `providers`                           | Fornitori (meccanico, carrozziere, gommista, ecc.)                             |
-| `equipment`                           | Dotazioni di bordo (estintori, barelle, ecc.)                                  |
-| `equipment_types`                     | Tipologie di dotazione (con frequenza revisione)                               |
-| `vehicle_type_equipment_requirements` | Equipaggiamento obbligatorio per tipo mezzo                                    |
-| `notification_settings`               | Configurazione report email                                                    |
-| `notifications`                       | Notifiche in-app per utente                                                    |
-| `groups`                              | Gruppi/associazioni (con codice invito)                                        |
-| `group_user`                          | Pivot utenti ↔ gruppi con ruolo (capo/sottocapo/membro)                        |
-| `users`                               | Utenti (il ruolo vive nel pivot group_user)                                    |
+| Table                                  | Description                                                                |
+| :-------------------------------------- | :---------------------------------------------------------------------------- |
+| `vehicles`                            | Vehicles (plate, code, brand/model, warranty, timing belt, group)          |
+| `brands`                              | Vehicle brands                                                             |
+| `car_models`                          | Vehicle models (FK → brands)                                               |
+| `vehicle_types`                       | Vehicle types (e.g. ambulance variants) with equipment requirements        |
+| `issues`                              | Faults (description, status, photo)                                       |
+| `deadlines`                           | Deadlines (ministerial inspection, oxygen check, service, timing belt, insurance) |
+| `maintenance_records`                 | Workshop appointments                                                     |
+| `maintenance_record_items`            | Polymorphic join between faults/deadlines ↔ appointment                    |
+| `mileage_logs`                        | Mileage history                                                            |
+| `tires`                               | Tires (one row per physical tire: season, position, status)                |
+| `tire_changes`                        | Tire mounting/change history                                              |
+| `providers`                           | Providers (mechanic, body shop, tire shop, etc.)                          |
+| `equipment`                           | Onboard equipment (fire extinguishers, stretchers, etc.)                  |
+| `equipment_types`                     | Equipment types (with inspection frequency)                               |
+| `vehicle_type_equipment_requirements` | Mandatory equipment per vehicle type                                       |
+| `notification_settings`               | Email report configuration                                                |
+| `notifications`                       | Per-user in-app notifications                                             |
+| `groups`                              | Groups/associations (with invite code)                                    |
+| `group_user`                          | Users ↔ groups pivot with role (lead/deputy/member)                        |
+| `users`                               | Users (the role lives in the group_user pivot)                            |
 
 ---
 
 ## 🗺️ Roadmap
 
-### 🔜 Prossimi step
+### 🔜 Next steps
 
-- [x] Notifiche in-app (badge e toast nella navbar)
-- [x] Gestione utenti e ruoli da backoffice (gruppi e ruoli)
-- [x] Gestione token API nel profilo
-- [x] Privacy/GDPR (pagina privacy, cookie banner, export dati)
-- [x] Backup database
-- [ ] App mobile nativa (via API REST)
+- [x] In-app notifications (badge and toast in the navbar)
+- [x] User and role management from the backoffice (groups and roles)
+- [x] API token management in the profile
+- [x] Privacy/GDPR (privacy page, cookie banner, data export)
+- [x] Database backup
+- [ ] Native mobile app (via REST API)
 
 ---
 
-## 👤 Contatti
+## 👤 Contact
 
-**Sviluppatore:** Bechini Mirko  
-**Email:** mirkobechini@gmail.com  
+**Developer:** Bechini Mirko
+**Email:** mirkobechini@gmail.com
 **GitHub:** [github.com/mirkobechini](https://github.com/mirkobechini)
 
 ---
 
-## 📄 Licenza
+## 📄 License
 
 MIT
