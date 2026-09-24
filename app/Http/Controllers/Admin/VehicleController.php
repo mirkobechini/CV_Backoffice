@@ -133,21 +133,32 @@ class VehicleController extends Controller
 
     /**
      * Scansiona fronte e retro del libretto di circolazione tramite
-     * VehicleScanService e reindirizza al form di creazione già precompilato
-     * (withInput, lo stesso meccanismo usato da una validazione fallita)
-     * perché l'utente verifichi/corregga prima di salvare — nessun veicolo
-     * viene creato qui.
+     * VehicleScanService e reindirizza al form di creazione (o, se
+     * scansionato dalla pagina di modifica di un veicolo esistente, al form
+     * di modifica di quel veicolo) già precompilato (withInput, lo stesso
+     * meccanismo usato da una validazione fallita) perché l'utente
+     * verifichi/corregga prima di salvare — nessun veicolo viene
+     * creato/modificato qui.
      *
      * Entrambe le foto vengono salvate subito in una posizione "pending"
      * prima ancora di chiamare l'LLM, così il fronte resta disponibile (e
-     * riutilizzabile come carta di circolazione definitiva in store())
-     * anche se l'estrazione fallisce. Il retro serve solo alla lettura (i
-     * timbri di revisione periodica) e non ha un campo dove essere
-     * conservato sul veicolo: viene eliminato subito dopo la scansione.
+     * riutilizzabile come carta di circolazione definitiva in store()/
+     * update()) anche se l'estrazione fallisce. Il retro serve solo alla
+     * lettura (i timbri di revisione periodica) e non ha un campo dove
+     * essere conservato sul veicolo: viene eliminato subito dopo la
+     * scansione.
      */
     public function scanRegistrationCard(ScanVehicleRegistrationCardRequest $request, VehicleScanService $vehicleScanService)
     {
-        $this->authorize('create', Vehicle::class);
+        $vehicle = $request->filled('vehicle_id')
+            ? Vehicle::forCurrentUser()->findOrFail($request->input('vehicle_id'))
+            : null;
+
+        $this->authorize($vehicle ? 'update' : 'create', $vehicle ?? Vehicle::class);
+
+        $targetRoute = $vehicle
+            ? route('admin.vehicles.edit', $vehicle)
+            : route('admin.vehicles.create');
 
         $frontPhoto = $request->file('photo_front');
         $frontFileName = Str::random(40) . '.' . $frontPhoto->getClientOriginalExtension();
@@ -163,7 +174,7 @@ class VehicleController extends Controller
                 Storage::disk('public')->path($backPendingPath),
             ]);
         } catch (VehicleScanException $e) {
-            return redirect()->route('admin.vehicles.create')
+            return redirect()->to($targetRoute)
                 ->with('error', 'Impossibile leggere il libretto: inserisci i dati manualmente.')
                 ->with('scanned_registration_card_path', $frontPendingPath);
         } finally {
@@ -186,13 +197,13 @@ class VehicleController extends Controller
             'engine_displacement_cc' => $extracted['engine_displacement_cc'],
             'engine_power_kw' => $extracted['engine_power_kw'],
             'vehicle_category' => $extracted['vehicle_category'],
-            'allowed_tire_size' => $extracted['allowed_tire_size'],
+            'allowed_tire_sizes' => empty($extracted['allowed_tire_sizes']) ? null : $extracted['allowed_tire_sizes'],
             'has_timing_belt' => $extracted['has_timing_belt_suggested'] === null
                 ? null
                 : ($extracted['has_timing_belt_suggested'] ? '1' : '0'),
         ], fn ($value) => $value !== null);
 
-        $redirect = redirect()->route('admin.vehicles.create')
+        $redirect = redirect()->to($targetRoute)
             ->withInput($prefill)
             ->with('scanned_registration_card_path', $frontPendingPath)
             ->with('status', 'Dati importati dal libretto: verifica prima di salvare.');
@@ -329,6 +340,9 @@ class VehicleController extends Controller
         $data = $request->validated();
         $data['has_timing_belt'] = $request->boolean('has_timing_belt');
 
+        $pendingScanPath = $data['scanned_registration_card_path'] ?? null;
+        unset($data['scanned_registration_card_path']);
+
         if ($request->hasFile('registration_card')) {
             // Elimina il file precedente per evitare leak di storage
             if ($vehicle->registration_card_path) {
@@ -338,6 +352,12 @@ class VehicleController extends Controller
             $registrationCardFile = $request->file('registration_card');
             $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
             $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
+        } elseif ($pendingScanPath && ($promotedPath = $this->promoteScannedRegistrationCard($pendingScanPath))) {
+            if ($vehicle->registration_card_path) {
+                Storage::disk('public')->delete($vehicle->registration_card_path);
+            }
+
+            $data['registration_card_path'] = $promotedPath;
         }
 
         $hadTimingBelt = (bool) $vehicle->has_timing_belt;

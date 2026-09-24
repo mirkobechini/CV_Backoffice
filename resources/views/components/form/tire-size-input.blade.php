@@ -1,4 +1,4 @@
-@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false])
+@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false, 'removable' => false])
 
 @php
     $inputId = $id ?? $name;
@@ -23,6 +23,11 @@
         </label>
         <input type="text" class="input tire-size-index" placeholder="{{ __('es. 121/120Q') }}" maxlength="10"
             aria-label="{{ __('Indice di carico/velocità (facoltativo)') }}">
+        @if ($removable)
+            <button type="button" class="mini-btn tire-size-remove" aria-label="{{ __('Rimuovi questa misura') }}">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        @endif
     </div>
     <input type="hidden" id="{{ $inputId }}" name="{{ $name }}" value="{{ $rawValue }}">
     @error($name)

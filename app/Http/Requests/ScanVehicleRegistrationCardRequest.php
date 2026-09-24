@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Vehicle;
+use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ScanVehicleRegistrationCardRequest extends FormRequest
@@ -27,6 +29,10 @@ class ScanVehicleRegistrationCardRequest extends FormRequest
             // fronte, i timbri di revisione periodica sul retro.
             'photo_front' => 'required|mimes:jpeg,png,jpg,heic,heif|max:8192',
             'photo_back' => 'required|mimes:jpeg,png,jpg,heic,heif|max:8192',
+            // Presente solo quando si scansiona dalla pagina di modifica di
+            // un veicolo esistente (vedi VehicleController::scanRegistrationCard()):
+            // assente = scansione per la creazione di un nuovo veicolo.
+            'vehicle_id' => ['nullable', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
         ];
     }
 

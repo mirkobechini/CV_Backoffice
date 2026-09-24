@@ -56,8 +56,10 @@
                     <select class="select @error('tire_id') is-invalid @enderror" id="tire_id" name="tire_id">
                         <option value="">{{ __('Seleziona un pneumatico') }}</option>
                         @foreach ($tires as $tire)
-                            <option value="{{ $tire->id }}" {{ old('tire_id') == $tire->id ? 'selected' : '' }}>
-                                {{ $tire->vehicle->internal_code ?? 'N/A' }} · {{ $tire->season_label }}
+                            <option value="{{ $tire->id }}" data-vehicle-id="{{ $tire->vehicle_id }}"
+                                {{ old('tire_id') == $tire->id ? 'selected' : '' }}>
+                                {{ $tire->vehicle->internal_code ?? 'N/A' }} · {{ $tire->position_label }} ·
+                                {{ $tire->season_label }}
                                 @if ($tire->brand)
                                     · {{ $tire->brand }}
                                 @endif
@@ -132,6 +134,7 @@
             const isTireIssue = document.getElementById('is-tire-issue');
             const tireIdField = document.getElementById('tire-id-field');
             const tireIdSelect = document.getElementById('tire_id');
+            const vehicleSelect = document.getElementById('vehicle_id');
 
             const toggleTireField = () => {
                 tireIdField.style.display = isTireIssue.checked ? '' : 'none';
@@ -140,7 +143,28 @@
                 }
             };
 
+            // Mostra solo le gomme del veicolo selezionato: senza questo
+            // filtro l'elenco mescolava le gomme di tutti i veicoli del
+            // gruppo, rendendo facile collegare per errore la gomma di un
+            // altro mezzo.
+            const filterTiresByVehicle = () => {
+                const selectedVehicleId = vehicleSelect.value;
+
+                Array.from(tireIdSelect.options).forEach((option) => {
+                    if (!option.value) return;
+
+                    const matches = option.dataset.vehicleId === selectedVehicleId;
+                    option.hidden = !matches;
+
+                    if (!matches && option.selected) {
+                        tireIdSelect.value = '';
+                    }
+                });
+            };
+
             isTireIssue.addEventListener('change', toggleTireField);
+            vehicleSelect.addEventListener('change', filterTiresByVehicle);
+            filterTiresByVehicle();
         });
 
         document.addEventListener('DOMContentLoaded', function() {
