@@ -245,4 +245,72 @@ class GroupScopingTest extends TestCase
 
         $response->assertNotFound();
     }
+
+    /**
+     * Prima di App\Rules\BelongsToCurrentUserGroup, le regole di
+     * validazione dei vari Store/Update*Request controllavano solo
+     * "exists:vehicles,id" (qualunque veicolo dell'intero database, non
+     * solo del proprio gruppo): un capo del gruppo A poteva creare gomme,
+     * chilometraggi, guasti, scadenze, interventi o attrezzature sul
+     * veicolo di un gruppo B semplicemente indovinandone l'id.
+     */
+    public function test_cannot_create_records_against_another_groups_vehicle(): void
+    {
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $userA = User::factory()->create();
+        $groupA->addUser($userA, Group::ROLE_CAPO);
+        $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
+        $providerId = \App\Models\Provider::create(['name' => 'Officina', 'type' => 'Meccanico'])->id;
+
+        $this->actingAs($userA)->post(route('admin.tires.store'), [
+            'vehicle_id' => $vehicleB->id,
+            'season' => 'summer',
+            'position' => 'front_left',
+            'status' => 'stored',
+        ])->assertSessionHasErrors('vehicle_id');
+        $this->assertDatabaseCount('tires', 0);
+
+        $this->actingAs($userA)->post(route('admin.issues.store'), [
+            'vehicle_id' => $vehicleB->id,
+            'description' => 'Guasto indebito',
+            'event_date' => '2025-01-01',
+            'status' => 'open',
+        ])->assertSessionHasErrors('vehicle_id');
+        $this->assertDatabaseCount('issues', 0);
+
+        // VehicleObserver crea già scadenze di base (es. Revisione
+        // Ministeriale) alla creazione del veicolo B poco sopra: qui si
+        // verifica solo che la POST non ne aggiunga altre, non che la
+        // tabella sia vuota.
+        $deadlineCountBefore = \App\Models\Deadline::count();
+        $this->actingAs($userA)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicleB->id,
+            'type' => 'Tagliando',
+            'due_date' => '2027-01',
+        ])->assertSessionHasErrors('vehicle_id');
+        $this->assertEquals($deadlineCountBefore, \App\Models\Deadline::count());
+
+        $this->actingAs($userA)->post(route('admin.mileage-logs.store'), [
+            'vehicle_id' => $vehicleB->id,
+            'log_date' => '2025-01-01',
+            'mileage' => 1000,
+        ])->assertSessionHasErrors('vehicle_id');
+        $this->assertDatabaseCount('mileage_logs', 0);
+
+        $this->actingAs($userA)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicleB->id,
+            'provider_id' => $providerId,
+            'appointment_date' => '2025-02-01',
+        ])->assertSessionHasErrors('vehicle_id');
+        $this->assertDatabaseCount('maintenance_records', 0);
+
+        $this->actingAs($userA)->post(route('admin.equipments.store'), [
+            'vehicle_id' => $vehicleB->id,
+            'name' => 'Estintore indebito',
+            'equipment_type_id' => \App\Models\EquipmentType::create(['name' => 'Estintore'])->id,
+            'status' => 'stored',
+        ])->assertSessionHasErrors('vehicle_id');
+        $this->assertDatabaseCount('equipment', 0);
+    }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Vehicle;
+use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreDeadlineRequest extends FormRequest
@@ -17,7 +19,7 @@ class StoreDeadlineRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_id' => 'required|exists:vehicles,id',
+            'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno,Tagliando,Cinghia Distribuzione',
             'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
             'status' => 'nullable|in:pending,expired,renewed,valid',
@@ -32,7 +34,6 @@ class StoreDeadlineRequest extends FormRequest
     {
         return [
             'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-            'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'type.required' => 'La tipologia è obbligatoria.',
             'type.in' => 'La tipologia selezionata non è valida.',
             'due_date.required' => 'La data di scadenza è obbligatoria.',

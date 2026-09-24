@@ -4,6 +4,8 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\MileageLog;
+use App\Models\Vehicle;
+use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -18,7 +20,7 @@ class UpdateMileageLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_id' => ['required', 'exists:vehicles,id'],
+            'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'log_date' => ['required', 'date'],
             'mileage' => ['required', 'integer', 'min:0'],
         ];
@@ -28,7 +30,6 @@ class UpdateMileageLogRequest extends FormRequest
     {
         return [
             'vehicle_id.required' => 'Il campo veicolo è obbligatorio.',
-            'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'log_date.required' => 'Il campo data del registro è obbligatorio.',
             'log_date.date' => 'Il campo data del registro deve essere una data valida.',
             'mileage.required' => 'Il campo chilometraggio è obbligatorio.',

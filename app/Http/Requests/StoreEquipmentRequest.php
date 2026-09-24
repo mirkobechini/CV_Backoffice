@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Vehicle;
+use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Support\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -19,7 +21,7 @@ class StoreEquipmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'vehicle_id' => 'nullable|exists:vehicles,id',
+            'vehicle_id' => ['nullable', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'name' => 'required|string|max:255',
             'brand' => 'nullable|string|max:255',
             'model' => 'nullable|string|max:255',
@@ -42,7 +44,6 @@ class StoreEquipmentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'vehicle_id.exists' => 'Il veicolo selezionato non esiste.',
             'name.required' => 'Il campo nome è obbligatorio.',
             'name.string' => 'Il campo nome deve essere una stringa.',
             'name.max' => 'Il campo nome non può superare i 255 caratteri.',
