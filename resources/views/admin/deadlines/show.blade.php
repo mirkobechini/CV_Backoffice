@@ -74,14 +74,20 @@
                         </div>
                         <div class="modal-body">
                             <div class="hint" style="margin-bottom:12px;">
-                                {{ __('Per un veicolo usato la cui ultima revisione è già stata fatta dal precedente proprietario: indica quando è avvenuta, senza dover registrare un intervento in officina.') }}
+                                @if ($deadline->type === \App\Models\Deadline::TYPE_ASSICURAZIONE)
+                                    {{ __('Indica quando è stata rinnovata la polizza, senza dover creare un appuntamento. I dati della polizza (compagnia, numero, premio) restano quelli attuali sulla prossima scadenza, modificabili in seguito.') }}
+                                @else
+                                    {{ __('Per un veicolo usato la cui ultima revisione è già stata fatta dal precedente proprietario: indica quando è avvenuta, senza dover registrare un intervento in officina.') }}
+                                @endif
                             </div>
                             <x-form.month-input name="renewed_date" label="{{ __('Data di rinnovo') }}" required />
-                            <div class="field" style="margin-bottom:0;">
-                                <label for="mileage_{{ $deadline->id }}">{{ __('Km al rinnovo (facoltativo)') }}</label>
-                                <input type="number" class="input" id="mileage_{{ $deadline->id }}" name="mileage"
-                                    min="0" placeholder="{{ __('es. 85000') }}">
-                            </div>
+                            @unless ($deadline->type === \App\Models\Deadline::TYPE_ASSICURAZIONE)
+                                <div class="field" style="margin-bottom:0;">
+                                    <label for="mileage_{{ $deadline->id }}">{{ __('Km al rinnovo (facoltativo)') }}</label>
+                                    <input type="number" class="input" id="mileage_{{ $deadline->id }}" name="mileage"
+                                        min="0" placeholder="{{ __('es. 85000') }}">
+                                </div>
+                            @endunless
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Annulla') }}</button>
@@ -237,6 +243,46 @@
             @endif
         </div>
     </div>
+
+    @if ($deadline->type === \App\Models\Deadline::TYPE_ASSICURAZIONE)
+        <div class="dl-info-card">
+            <div class="head">
+                <h3>{{ __('Dettagli polizza') }}</h3>
+            </div>
+            <div class="body">
+                <div class="dl-kv">
+                    <span class="k">{{ __('Compagnia') }}</span>
+                    <span class="v">{{ $deadline->insurance_company ?? 'N/A' }}</span>
+                </div>
+                <div class="dl-kv">
+                    <span class="k">{{ __('Numero polizza') }}</span>
+                    <span class="v">{{ $deadline->insurance_policy_number ?? 'N/A' }}</span>
+                </div>
+                <div class="dl-kv">
+                    <span class="k">{{ __('Premio annuo') }}</span>
+                    <span class="v">{{ $deadline->insurance_premium !== null ? '€ ' . number_format((float) $deadline->insurance_premium, 2, ',', '.') : 'N/A' }}</span>
+                </div>
+                <div class="dl-kv">
+                    <span class="k">{{ __('Tipo di copertura') }}</span>
+                    <span class="v">{{ $deadline->insurance_coverage_type ?? 'N/A' }}</span>
+                </div>
+                <div class="dl-kv">
+                    <span class="k">{{ __('Massimale') }}</span>
+                    <span class="v">{{ $deadline->insurance_coverage_limit !== null ? '€ ' . number_format((float) $deadline->insurance_coverage_limit, 2, ',', '.') : 'N/A' }}</span>
+                </div>
+                <div class="dl-kv">
+                    <span class="k">{{ __('Contatto broker/agenzia') }}</span>
+                    <span class="v">{{ $deadline->insurance_broker_contact ?? 'N/A' }}</span>
+                </div>
+                @if ($deadline->notes)
+                    <div class="dl-kv">
+                        <span class="k">{{ __('Note') }}</span>
+                        <span class="v">{{ $deadline->notes }}</span>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
 
     <x-admin.delete-modal type="deadline" :object="$deadline" />
 @endsection

@@ -39,6 +39,8 @@ class Deadline extends Model
     public const STATUS_VALID = 'valid';
 
     // type
+    public const TYPE_ASSICURAZIONE = 'Assicurazione';
+
     public const TYPE_MINISTERIAL = 'Revisione Ministeriale';
 
     public const TYPE_OXYGEN = 'Revisione Impianto Ossigeno';
@@ -55,6 +57,8 @@ class Deadline extends Model
 
     public const TAGLIANDO_INTERVAL_MONTHS = 12; // 1 anno
 
+    public const INSURANCE_INTERVAL_MONTHS = 12; // 1 anno (rinnovo polizza)
+
     protected $fillable = [
         'vehicle_id',
         'type',
@@ -65,6 +69,13 @@ class Deadline extends Model
         'interval_km',
         'last_mileage',
         'interval_days',
+        'insurance_company',
+        'insurance_policy_number',
+        'insurance_premium',
+        'insurance_coverage_type',
+        'insurance_coverage_limit',
+        'insurance_broker_contact',
+        'notes',
     ];
 
     protected $casts = [
@@ -73,6 +84,8 @@ class Deadline extends Model
         'interval_km' => 'integer',
         'last_mileage' => 'integer',
         'interval_days' => 'integer',
+        'insurance_premium' => 'decimal:2',
+        'insurance_coverage_limit' => 'decimal:2',
     ];
 
     protected $searchable = ['type', 'status'];
