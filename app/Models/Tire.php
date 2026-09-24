@@ -154,22 +154,31 @@ class Tire extends Model
      */
     /**
      * Avviso non bloccante (non una regola di validazione) quando la misura
-     * inserita differisce da quella consigliata per il veicolo: entrambe
-     * passano dallo stesso componente/formato canonico, quindi un confronto
-     * diretto (case-insensitive) è affidabile. Nessun avviso se il veicolo
-     * non ha una misura consigliata impostata.
+     * inserita non corrisponde a nessuna di quelle consigliate per il
+     * veicolo (un veicolo può averne più di una, es. assale anteriore
+     * diverso dal posteriore): tutte passano dallo stesso componente/
+     * formato canonico, quindi un confronto diretto (case-insensitive) è
+     * affidabile. Nessun avviso se il veicolo non ha misure consigliate
+     * impostate.
      */
     public static function sizeMismatchWarning(?string $enteredSize, ?Vehicle $vehicle): ?string
     {
-        if (! $enteredSize || ! $vehicle?->allowed_tire_size) {
+        $allowedSizes = $vehicle?->allowed_tire_sizes ?? [];
+
+        if (! $enteredSize || empty($allowedSizes)) {
             return null;
         }
 
-        if (strcasecmp(trim($enteredSize), trim($vehicle->allowed_tire_size)) === 0) {
+        $enteredSize = trim($enteredSize);
+        $matches = collect($allowedSizes)->contains(fn ($size) => strcasecmp($enteredSize, trim($size)) === 0);
+
+        if ($matches) {
             return null;
         }
 
-        return "La misura inserita ({$enteredSize}) non corrisponde alla misura consigliata per questo veicolo ({$vehicle->allowed_tire_size}).";
+        $allowedList = implode(', ', $allowedSizes);
+
+        return "La misura inserita ({$enteredSize}) non corrisponde a nessuna delle misure consigliate per questo veicolo ({$allowedList}).";
     }
 
     public function getChangeDueAttribute(): bool

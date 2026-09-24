@@ -40,7 +40,7 @@ class VehicleScanService
         'engine_displacement_cc',
         'engine_power_kw',
         'vehicle_category',
-        'allowed_tire_size',
+        'allowed_tire_sizes',
         'has_timing_belt_suggested',
     ];
 
@@ -52,9 +52,11 @@ D.3=denominazione commerciale (modello), E=numero di telaio (VIN),
 F.2=massa massima ammissibile in kg, P.1=cilindrata in cc,
 P.2=potenza massima netta in kW, P.3=alimentazione, R=colore,
 S.1=numero posti a sedere, V.9=classe ambientale (es. "Euro 6"),
-J=categoria del veicolo (es. "M1"). La misura dei pneumatici, se presente,
-va restituita nel formato canonico "LARGHEZZA/PROFILOR DIAMETROC" (es.
-"225/75R16C"), senza spazi prima di "R", con "C" solo se rinforzato.
+J=categoria del veicolo (es. "M1"). Le misure dei pneumatici, se presenti,
+vanno restituite nel formato canonico "LARGHEZZA/PROFILOR DIAMETROC" (es.
+"225/75R16C"), senza spazi prima di "R", con "C" solo se rinforzato: se il
+documento indica misure diverse per assale anteriore e posteriore,
+restituiscile entrambe come voci separate dell'array.
 
 Rispondi SOLO con un oggetto JSON con queste chiavi (usa null se un dato
 non è leggibile o non è presente sul documento):
@@ -72,7 +74,7 @@ non è leggibile o non è presente sul documento):
   "engine_displacement_cc": integer|null,
   "engine_power_kw": integer|null,
   "vehicle_category": string|null,
-  "allowed_tire_size": string|null,
+  "allowed_tire_sizes": string[] (array vuoto se non presenti),
   "has_timing_belt_suggested": boolean|null
 }
 

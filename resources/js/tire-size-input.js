@@ -66,4 +66,54 @@ const initializeTireSizeInputs = () => {
     });
 };
 
-document.addEventListener('DOMContentLoaded', initializeTireSizeInputs);
+// Esposta per poter re-inizializzare solo i nuovi campi dopo averne clonato
+// uno (vedi addTireSizeRow sotto), senza ripetere qui la logica di ricerca.
+window.initTireSizeInputs = initializeTireSizeInputs;
+
+let tireSizeRowCounter = 0;
+
+// Aggiunge una riga "misura pneumatico" clonando il <template> del gruppo
+// (usato per l'elenco ripetibile "misure consigliate" del veicolo, dove un
+// veicolo può avere più di una misura, es. assale anteriore/posteriore
+// diversi). Gli id vengono resi unici per ogni riga clonata sostituendo il
+// suffisso "_new" usato nel template.
+const addTireSizeRow = (group) => {
+    const container = group.querySelector('[data-tire-size-container]');
+    const template = group.querySelector('[data-tire-size-template]');
+    if (!container || !template) return;
+
+    const clone = template.content.cloneNode(true);
+    const root = clone.querySelector('.tire-size-input');
+    if (!root) return;
+
+    const uniqueSuffix = `_added_${tireSizeRowCounter++}`;
+    const oldFor = root.dataset.tireSizeFor;
+    const newFor = oldFor.replace('_new', uniqueSuffix);
+    root.dataset.tireSizeFor = newFor;
+
+    clone.querySelectorAll('[id]').forEach((el) => {
+        el.id = el.id.replace('_new', uniqueSuffix);
+    });
+    clone.querySelectorAll('label[for]').forEach((el) => {
+        el.setAttribute('for', el.getAttribute('for').replace('_new', uniqueSuffix));
+    });
+
+    container.appendChild(clone);
+    initializeTireSizeInputs();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeTireSizeInputs();
+
+    document.querySelectorAll('[data-tire-size-group]').forEach((group) => {
+        group.querySelector('[data-tire-size-add]')?.addEventListener('click', () => addTireSizeRow(group));
+    });
+
+    // Delegato: le righe rimovibili possono essere aggiunte dinamicamente.
+    document.addEventListener('click', (event) => {
+        const removeBtn = event.target.closest('.tire-size-remove');
+        if (removeBtn) {
+            removeBtn.closest('.tire-size-input')?.remove();
+        }
+    });
+});

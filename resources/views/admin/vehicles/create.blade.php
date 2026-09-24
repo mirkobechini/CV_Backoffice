@@ -242,7 +242,25 @@
                         @enderror
                     </div>
                 </div>
-                <x-form.tire-size-input name="allowed_tire_size" label="{{ __('Misura pneumatici consigliata') }}" />
+                <div class="field" data-tire-size-group>
+                    <label>{{ __('Misure pneumatici consigliate') }}</label>
+                    <div class="hint" style="margin-top:0;margin-bottom:8px;">
+                        {{ __('Un veicolo può averne più di una (es. assale anteriore diverso dal posteriore).') }}
+                    </div>
+                    <div data-tire-size-container>
+                        @foreach (old('allowed_tire_sizes', []) as $i => $size)
+                            <x-form.tire-size-input name="allowed_tire_sizes[]" id="allowed_tire_sizes_{{ $i }}"
+                                :value="$size" label="{{ __('Misura pneumatici') }}" removable />
+                        @endforeach
+                    </div>
+                    <button type="button" class="btn ghost" data-tire-size-add>
+                        <i class="fa-solid fa-plus"></i> {{ __("Aggiungi un'altra misura") }}
+                    </button>
+                    <template data-tire-size-template>
+                        <x-form.tire-size-input name="allowed_tire_sizes[]" id="allowed_tire_sizes_new"
+                            label="{{ __('Misura pneumatici') }}" removable />
+                    </template>
+                </div>
             </div>
 
             {{-- Sezione 3: Garanzia --}}

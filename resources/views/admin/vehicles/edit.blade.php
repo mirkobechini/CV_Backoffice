@@ -18,11 +18,35 @@
         </a>
     </div>
 
+    @if (session('status'))
+        <div class="alert success">{{ session('status') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert danger">{{ session('error') }}</div>
+    @endif
+
+    {{-- Form nascosto usato solo per inviare la scansione: i file caricati
+    sono quelli del fronte/retro libretto qui sotto (copiati via JS, vedi
+    script in fondo), così non ci sono selettori file duplicati. vehicle_id
+    indica al controller di reindirizzare qui (modifica) invece che alla
+    creazione di un nuovo veicolo. --}}
+    <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
+        enctype="multipart/form-data" style="display:none;">
+        @csrf
+        <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
+        <input type="file" name="photo_front" id="scan_photo_front_hidden">
+        <input type="file" name="photo_back" id="scan_photo_back_hidden">
+    </form>
+
     <div class="form-card">
         <form id="vehicle-edit-form" method="POST" action="{{ route('admin.vehicles.update', $vehicle->id) }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
             @method('PUT')
+            @if (session('scanned_registration_card_path'))
+                <input type="hidden" name="scanned_registration_card_path"
+                    value="{{ session('scanned_registration_card_path') }}">
+            @endif
 
             {{-- Sezione 1: Dettagli veicolo --}}
             <div class="form-section">
@@ -54,6 +78,12 @@
                     'brand_id' => old('brand_id', $vehicle->brand_id),
                     'car_model_id' => old('car_model_id', $vehicle->car_model_id),
                 ])
+                @if (session('unmatched_brand_text'))
+                    <div class="hint">{{ __('Marca letta dal libretto (da selezionare a mano): :text', ['text' => session('unmatched_brand_text')]) }}</div>
+                @endif
+                @if (session('unmatched_model_text'))
+                    <div class="hint">{{ __('Modello letto dal libretto (da selezionare a mano): :text', ['text' => session('unmatched_model_text')]) }}</div>
+                @endif
 
                 <div class="row2">
                     <div class="field">
@@ -96,23 +126,54 @@
                     <x-form.date-input name="immatricolation_date" label="{{ __('Data immatricolazione') }}"
                         :model="$vehicle" required />
                     <div class="field">
-                        <label for="registration_card">{{ __('Carta di circolazione') }}</label>
+                        <label for="registration_card">{{ __('Libretto — fronte (carta di circolazione)') }}</label>
                         <label class="file-drop" for="registration_card" id="registration_card_label">
-                            @if ($vehicle->registration_card_path)
+                            @if (session('scanned_registration_card_path'))
+                                <i class="fa-solid fa-file-circle-check"></i>
+                                {{ __('Foto scansionata già allegata · clicca per sostituirla') }}
+                            @elseif ($vehicle->registration_card_path)
                                 <i class="fa-solid fa-file-circle-check"></i> {{ __('File caricato · clicca per sostituire') }}
                             @else
-                                <i class="fa-solid fa-file-arrow-up"></i> {{ __('Clicca per caricare (PDF, JPG, PNG)') }}
+                                <i class="fa-solid fa-file-arrow-up"></i>
+                                {{ __('Clicca per caricare (PDF, JPG, PNG, HEIC)') }}
                             @endif
                         </label>
                         <input type="file" class="@error('registration_card') is-invalid @enderror" id="registration_card"
-                            name="registration_card" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                            name="registration_card" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif" hidden>
                         @error('registration_card')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        @error('photo_front')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                         @if ($vehicle->registration_card_path)
                             <div class="hint"><a href="{{ Storage::url($vehicle->registration_card_path) }}"
                                     target="_blank" rel="noopener noreferrer">{{ __('Apri file attuale') }}</a></div>
                         @endif
+                    </div>
+                </div>
+
+                <div class="row2">
+                    <div class="field">
+                        <label for="registration_card_back">{{ __('Libretto — retro') }}</label>
+                        <label class="file-drop" for="registration_card_back" id="registration_card_back_label">
+                            <i class="fa-solid fa-file-arrow-up"></i> {{ __('Clicca per caricare (JPG, PNG, HEIC)') }}
+                        </label>
+                        <input type="file" id="registration_card_back" accept=".jpg,.jpeg,.png,.heic,.heif" hidden>
+                        @error('photo_back')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        <div class="hint">{{ __('Serve solo per la scansione (timbri di revisione): non viene salvata.') }}</div>
+                    </div>
+                    <div class="field">
+                        <label>&nbsp;</label>
+                        <button type="button" id="scan-libretto-btn" class="btn" disabled
+                            data-loading-text="{{ __('Scansione in corso...') }}">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Compila automaticamente con AI') }}
+                        </button>
+                        <div class="hint">
+                            {{ __('Carica fronte e retro del libretto per abilitare la lettura automatica dei dati: verifica sempre prima di salvare.') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -199,8 +260,25 @@
                         @enderror
                     </div>
                 </div>
-                <x-form.tire-size-input name="allowed_tire_size" label="{{ __('Misura pneumatici consigliata') }}"
-                    :model="$vehicle" />
+                <div class="field" data-tire-size-group>
+                    <label>{{ __('Misure pneumatici consigliate') }}</label>
+                    <div class="hint" style="margin-top:0;margin-bottom:8px;">
+                        {{ __('Un veicolo può averne più di una (es. assale anteriore diverso dal posteriore).') }}
+                    </div>
+                    <div data-tire-size-container>
+                        @foreach (old('allowed_tire_sizes', $vehicle->allowed_tire_sizes ?? []) as $i => $size)
+                            <x-form.tire-size-input name="allowed_tire_sizes[]" id="allowed_tire_sizes_{{ $i }}"
+                                :value="$size" label="{{ __('Misura pneumatici') }}" removable />
+                        @endforeach
+                    </div>
+                    <button type="button" class="btn ghost" data-tire-size-add>
+                        <i class="fa-solid fa-plus"></i> {{ __("Aggiungi un'altra misura") }}
+                    </button>
+                    <template data-tire-size-template>
+                        <x-form.tire-size-input name="allowed_tire_sizes[]" id="allowed_tire_sizes_new"
+                            label="{{ __('Misura pneumatici') }}" removable />
+                    </template>
+                </div>
             </div>
 
             {{-- Sezione 3: Garanzia --}}
@@ -237,7 +315,13 @@
 
             {{-- Sezione 4: Distribuzione --}}
             <div class="form-section" style="margin-bottom:0;">
-                <h2><span class="num">4</span> {{ __('Distribuzione') }}</h2>
+                <h2><span class="num">4</span> {{ __('Distribuzione') }}
+                    @if (session('timing_belt_suggested'))
+                        <span class="badge b-amber" title="{{ __('Stima basata su marca/modello: verifica prima di salvare.') }}">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Suggerito dall\'AI — verifica') }}
+                        </span>
+                    @endif
+                </h2>
                 <div class="row2">
                     <label class="check">
                         <input type="radio" value="1" id="has_timing_belt_cinghia" name="has_timing_belt"
@@ -279,6 +363,13 @@
             const registrationCardInput = document.getElementById('registration_card');
             const registrationCardLabel = document.getElementById('registration_card_label');
             const registrationCardDefaultText = registrationCardLabel.innerHTML;
+            const registrationCardBackInput = document.getElementById('registration_card_back');
+            const registrationCardBackLabel = document.getElementById('registration_card_back_label');
+            const registrationCardBackDefaultText = registrationCardBackLabel.innerHTML;
+            const scanBtn = document.getElementById('scan-libretto-btn');
+            const scanForm = document.getElementById('scan-libretto-form');
+            const scanPhotoFrontInput = document.getElementById('scan_photo_front_hidden');
+            const scanPhotoBackInput = document.getElementById('scan_photo_back_hidden');
 
             // Mantiene lato client il formato targa coerente con le regole server.
             function uppercaseLicensePlate() {
@@ -302,11 +393,54 @@
                 }
             }
 
+            function updateRegistrationCardBackLabel() {
+                if (registrationCardBackInput.files.length > 0) {
+                    registrationCardBackLabel.textContent = registrationCardBackInput.files[0].name;
+                } else {
+                    registrationCardBackLabel.innerHTML = registrationCardBackDefaultText;
+                }
+            }
+
+            // La scansione richiede fronte E retro (i dati anagrafici sono
+            // sul fronte, i timbri di revisione sul retro): il pulsante
+            // resta disabilitato finché non sono stati caricati entrambi.
+            function updateScanButtonState() {
+                scanBtn.disabled = !(registrationCardInput.files.length && registrationCardBackInput.files.length);
+            }
+
+            // Invia allo scan gli stessi file scelti per fronte/retro, senza
+            // selettori duplicati: li copia nel form nascosto tramite
+            // DataTransfer e lo invia.
+            scanBtn.addEventListener('click', () => {
+                if (scanBtn.disabled) {
+                    return;
+                }
+
+                const frontTransfer = new DataTransfer();
+                frontTransfer.items.add(registrationCardInput.files[0]);
+                scanPhotoFrontInput.files = frontTransfer.files;
+
+                const backTransfer = new DataTransfer();
+                backTransfer.items.add(registrationCardBackInput.files[0]);
+                scanPhotoBackInput.files = backTransfer.files;
+
+                scanBtn.disabled = true;
+                scanBtn.innerHTML = scanBtn.dataset.loadingText;
+                scanForm.submit();
+            });
+
             toggleWarrantyRequiredFields();
             uppercaseLicensePlate();
             warrantyExtensionCheckbox.addEventListener('change', toggleWarrantyRequiredFields);
             licensePlateInput.addEventListener('input', uppercaseLicensePlate);
-            registrationCardInput.addEventListener('change', updateRegistrationCardLabel);
+            registrationCardInput.addEventListener('change', () => {
+                updateRegistrationCardLabel();
+                updateScanButtonState();
+            });
+            registrationCardBackInput.addEventListener('change', () => {
+                updateRegistrationCardBackLabel();
+                updateScanButtonState();
+            });
         });
     </script>
 @endsection

@@ -4,6 +4,19 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.53] - 2026-09-24
+
+### Added
+
+- Un veicolo può avere più di una misura pneumatici consigliata (es. assale anteriore diverso dal posteriore): il campo è ora un elenco ripetibile invece di un valore singolo.
+- Scheda veicolo: nuova card "Specifiche tecniche" che mostra VIN, colore, posti, categoria, classe ambientale, massa massima, cilindrata, potenza e misure pneumatici — questi dati erano raccoglibili da creazione/modifica ma non venivano mostrati da nessuna parte.
+- La scansione del libretto è ora disponibile anche dalla pagina di modifica di un veicolo esistente, non solo in creazione.
+
+### Fixed
+
+- Aprire la carta di circolazione caricata restituiva "pagina non trovata": mancava il collegamento simbolico `public/storage` (creato con `php artisan storage:link`, ora anche nei comandi post-deploy in docs/DEPLOY.md).
+- Guasto collegato a un pneumatico: l'elenco pneumatici mostrava quelli di tutti i veicoli del gruppo invece di solo quelli del veicolo selezionato, e non indicava la posizione (anteriore/posteriore, sinistra/destra) per distinguerli.
+
 ## [v1.2.52] - 2026-09-24
 
 ### Changed
