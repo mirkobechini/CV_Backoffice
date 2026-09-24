@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.39] - 2026-09-24
+
+### Fixed
+
+- Migrazione pneumatici (v1.2.31): il caso "axle=full" con quantity 2 o 3 (raggiungibile perché il vecchio form validava asse e quantità indipendentemente) non aveva un ramo dedicato e scartava silenziosamente le gomme oltre la prima. Corretto per correttezza di eventuali repliche future della migrazione (es. da un backup precedente a v1.2.31); non recupera dati già persi durante il deploy originale.
 ## [v1.2.38] - 2026-09-24
 
 ### Security
