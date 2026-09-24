@@ -64,6 +64,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("providers", ProviderController::class);
         Route::resource("issues", IssueController::class);
         Route::resource("deadlines", DeadlineController::class);
+        Route::patch('deadlines/{deadline}/renew', [DeadlineController::class, 'renew'])
+            ->name('deadlines.renew');
         Route::resource("equipments", EquipmentController::class);
         Route::post('equipments/{equipment}/record-revision', [EquipmentController::class, 'recordRevision'])
             ->name('equipments.record-revision');
