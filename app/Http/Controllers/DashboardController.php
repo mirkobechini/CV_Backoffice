@@ -44,13 +44,21 @@ class DashboardController extends Controller
                 ->upcoming()
                 ->get();
 
-            // Scadenze scadute e non ancora rinnovate
-            $expiredDeadlines = Deadline::with('vehicle')
+            // Scadenze scadute e non ancora rinnovate. Filtriamo su
+            // automatic_status (calcolato live da data/km), non sulla
+            // colonna status persistita: quest'ultima viene risincronizzata
+            // solo quando qualcuno crea/modifica una scadenza o visita
+            // l'elenco scadenze (vedi Deadline::syncStatusesFromRules()) —
+            // una scadenza il cui due_date passa senza che nessuno tocchi
+            // quel record resta "pending"/"valid" in DB anche quando ormai
+            // è scaduta, e la dashboard non la mostrava mai.
+            $expiredDeadlines = Deadline::with('vehicle.latestMileageLog')
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
-                ->where('status', Deadline::STATUS_EXPIRED)
                 ->where('is_renewed', false)
-                ->orderBy('due_date')
-                ->get();
+                ->get()
+                ->filter(fn (Deadline $d) => $d->automatic_status === Deadline::STATUS_EXPIRED)
+                ->sortBy('due_date')
+                ->values();
 
             // appointment_date è una colonna date (senza ora): confrontarla
             // con now() (data+ora corrente) la escludeva se l'appuntamento

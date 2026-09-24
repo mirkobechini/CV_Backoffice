@@ -66,6 +66,36 @@ class DashboardTest extends TestCase
         $response->assertSee('Tagliando');
     }
 
+    public function test_dashboard_shows_deadline_expired_by_date_even_if_status_column_is_stale(): void
+    {
+        // La colonna status persistita viene risincronizzata solo alla
+        // creazione/modifica della scadenza o visitando l'elenco scadenze
+        // (Deadline::syncStatusesFromRules()): se il due_date passa senza
+        // che nessuno tocchi quel record, status resta "pending" in DB
+        // anche se la scadenza è ormai scaduta. La dashboard deve comunque
+        // mostrarla, calcolando lo stato live invece di fidarsi di status.
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => now()->subDays(10),
+            'status' => Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Scadenze scadute e non rinnovate');
+        $response->assertSee('Tagliando');
+    }
+
     public function test_dashboard_shows_todays_appointment_later_in_the_day(): void
     {
         // appointment_date è una colonna date (mezzanotte); confrontarla con
