@@ -281,6 +281,82 @@ class DeadlineService
     }
 
     /**
+     * Tipi periodici per cui esiste una logica di calcolo della prossima
+     * occorrenza dopo un rinnovo (vedi renewWithoutAppointment() e
+     * MaintenanceRecordController::renewDeadline(), che duplica
+     * volutamente questa lista per lo stesso motivo: "Assicurazione" non
+     * ha un intervallo automatico, va gestita a mano).
+     */
+    public const RENEWABLE_TYPES = [
+        Deadline::TYPE_MINISTERIAL,
+        Deadline::TYPE_OXYGEN,
+        Deadline::TYPE_TAGLIANDO,
+        Deadline::TYPE_CINGHIA,
+    ];
+
+    /**
+     * Rinnova una scadenza periodica SENZA un appuntamento in officina: un
+     * veicolo acquistato usato può avere l'ultima revisione/tagliando/
+     * cinghia già effettuati dal precedente proprietario, prima che questo
+     * sistema iniziasse a tracciare il veicolo — non c'è un intervento da
+     * registrare qui dentro, solo la data (e opzionalmente il km) in cui è
+     * realmente avvenuto.
+     *
+     * Stessa logica di calcolo della prossima occorrenza di
+     * MaintenanceRecordController::renewDeadline(), con $renewedDate come
+     * base al posto della data di rientro di un appuntamento.
+     */
+    public function renewWithoutAppointment(Deadline $deadline, Vehicle $vehicle, Carbon $renewedDate, ?int $mileage = null): Deadline
+    {
+        $deadline->status = Deadline::STATUS_RENEWED;
+        $deadline->is_renewed = true;
+        if ($mileage !== null) {
+            $deadline->last_mileage = $mileage;
+        }
+        $deadline->save();
+
+        if ($mileage !== null) {
+            $this->mileageLogService->recordReading($vehicle, $renewedDate, $mileage);
+        }
+
+        if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
+            $dueDate = $renewedDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
+            $intervalKm = (int) ($vehicle->vehicleType?->regular_tagliando_km ?? 20000);
+
+            $this->createNextOccurrence($deadline, $vehicle, $dueDate, [
+                'last_mileage' => $mileage,
+                'interval_km' => $intervalKm,
+                'interval_days' => Deadline::TAGLIANDO_INTERVAL_MONTHS * 30,
+            ]);
+
+            return $deadline;
+        }
+
+        if ($deadline->type === Deadline::TYPE_CINGHIA) {
+            $this->createNextOccurrence($deadline, $vehicle, $renewedDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS), [
+                'last_mileage' => $mileage ?? 0,
+                'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+                'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+            ]);
+
+            return $deadline;
+        }
+
+        $nextDueDate = null;
+        if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
+            $nextDueDate = $renewedDate->copy()->addMonthsNoOverflow((int) $vehicle->vehicleType->regular_inspection_months);
+        } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($vehicle)) {
+            $nextDueDate = $renewedDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
+        }
+
+        if ($nextDueDate) {
+            $this->createNextOccurrence($deadline, $vehicle, $nextDueDate);
+        }
+
+        return $deadline;
+    }
+
+    /**
      * Verifica che il tipo ossigeno sia valido per il veicolo.
      *
      * @throws \RuntimeException

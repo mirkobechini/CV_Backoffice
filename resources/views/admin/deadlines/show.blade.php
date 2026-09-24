@@ -32,12 +32,23 @@
 
 @section('content')
 
+    @php
+        $canRenewWithoutAppointment = ! $deadline->is_renewed
+            && in_array($deadline->type, \App\Services\DeadlineService::RENEWABLE_TYPES, true);
+    @endphp
+
     <div class="page-actions">
         <a href="{{ request('back', route('admin.deadlines.index')) }}" class="btn ghost">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}
         </a>
+        @if ($canRenewWithoutAppointment)
+            <button type="button" class="btn primary" data-bs-toggle="modal"
+                data-bs-target="#renewDeadlineModal-{{ $deadline->id }}">
+                <i class="fa-solid fa-rotate"></i> {{ __('Rinnova adesso') }}
+            </button>
+        @endif
         <a href="{{ route('admin.deadlines.edit', ['deadline' => $deadline->id, 'back' => url()->full()]) }}"
-            class="btn primary">
+            class="btn ghost">
             <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}
         </a>
         <button type="button" class="btn danger" data-bs-toggle="modal"
@@ -45,6 +56,43 @@
             <i class="fa-solid fa-trash"></i> {{ __('Elimina') }}
         </button>
     </div>
+
+    @if ($canRenewWithoutAppointment)
+        <div class="modal fade" id="renewDeadlineModal-{{ $deadline->id }}" tabindex="-1"
+            aria-labelledby="renewDeadlineModalLabel-{{ $deadline->id }}" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <form method="POST" action="{{ route('admin.deadlines.renew', $deadline) }}"
+                        data-single-submit="true">
+                        @csrf
+                        @method('PATCH')
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="renewDeadlineModalLabel-{{ $deadline->id }}">
+                                {{ __('Rinnova senza appuntamento') }}</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                aria-label="Chiudi"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="hint" style="margin-bottom:12px;">
+                                {{ __('Per un veicolo usato la cui ultima revisione è già stata fatta dal precedente proprietario: indica quando è avvenuta, senza dover registrare un intervento in officina.') }}
+                            </div>
+                            <x-form.month-input name="renewed_date" label="{{ __('Data di rinnovo') }}" required />
+                            <div class="field" style="margin-bottom:0;">
+                                <label for="mileage_{{ $deadline->id }}">{{ __('Km al rinnovo (facoltativo)') }}</label>
+                                <input type="number" class="input" id="mileage_{{ $deadline->id }}" name="mileage"
+                                    min="0" placeholder="{{ __('es. 85000') }}">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Annulla') }}</button>
+                            <button type="submit" class="btn btn-primary"
+                                data-loading-text="{{ __('Salvataggio...') }}">{{ __('Rinnova') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <div class="dl-header">
         <div class="dl-avatar"><i class="{{ $icons[$deadline->type_slug] ?? 'fa-solid fa-clock' }}"></i></div>
