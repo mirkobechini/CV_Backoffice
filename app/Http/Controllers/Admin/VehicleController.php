@@ -121,7 +121,7 @@ class VehicleController extends Controller
         if ($request->hasFile('registration_card')) {
             $registrationCardFile = $request->file('registration_card');
             $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
-            $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
+            $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, $this->uploadsDisk());
         } elseif ($pendingScanPath && ($promotedPath = $this->promoteScannedRegistrationCard($pendingScanPath))) {
             $data['registration_card_path'] = $promotedPath;
         }
@@ -140,13 +140,18 @@ class VehicleController extends Controller
      * verifichi/corregga prima di salvare — nessun veicolo viene
      * creato/modificato qui.
      *
-     * Entrambe le foto vengono salvate subito in una posizione "pending"
-     * prima ancora di chiamare l'LLM, così il fronte resta disponibile (e
-     * riutilizzabile come carta di circolazione definitiva in store()/
-     * update()) anche se l'estrazione fallisce. Il retro serve solo alla
-     * lettura (i timbri di revisione periodica) e non ha un campo dove
-     * essere conservato sul veicolo: viene eliminato subito dopo la
-     * scansione.
+     * Il fronte viene salvato subito in una posizione "pending" prima ancora
+     * di chiamare l'LLM, così resta disponibile (e riutilizzabile come carta
+     * di circolazione definitiva in store()/update()) anche se l'estrazione
+     * fallisce. La lettura per la scansione vera e propria avviene invece
+     * dai file temporanei dell'upload (validi solo per la durata di questa
+     * richiesta): funziona indipendentemente dal disco di storage
+     * configurato (locale in sviluppo, S3/R2 in produzione — vedi
+     * config('filesystems.uploads_disk')), che per un disco remoto non
+     * espone un percorso locale leggibile direttamente. Il retro non viene
+     * salvato da nessuna parte: serve solo alla lettura dei timbri di
+     * revisione periodica, non ha un campo dove essere conservato sul
+     * veicolo.
      */
     public function scanRegistrationCard(ScanVehicleRegistrationCardRequest $request, VehicleScanService $vehicleScanService)
     {
@@ -161,24 +166,19 @@ class VehicleController extends Controller
             : route('admin.vehicles.create');
 
         $frontPhoto = $request->file('photo_front');
-        $frontFileName = Str::random(40) . '.' . $frontPhoto->getClientOriginalExtension();
-        $frontPendingPath = $frontPhoto->storeAs('registration_cards/pending', $frontFileName, 'public');
-
         $backPhoto = $request->file('photo_back');
-        $backFileName = Str::random(40) . '.' . $backPhoto->getClientOriginalExtension();
-        $backPendingPath = $backPhoto->storeAs('registration_cards/pending', $backFileName, 'public');
+        $frontTempPath = $frontPhoto->getRealPath();
+        $backTempPath = $backPhoto->getRealPath();
+
+        $frontFileName = Str::random(40) . '.' . $frontPhoto->getClientOriginalExtension();
+        $frontPendingPath = $frontPhoto->storeAs('registration_cards/pending', $frontFileName, $this->uploadsDisk());
 
         try {
-            $extracted = $vehicleScanService->scan([
-                Storage::disk('public')->path($frontPendingPath),
-                Storage::disk('public')->path($backPendingPath),
-            ]);
+            $extracted = $vehicleScanService->scan([$frontTempPath, $backTempPath]);
         } catch (VehicleScanException $e) {
             return redirect()->to($targetRoute)
                 ->with('error', 'Impossibile leggere il libretto: inserisci i dati manualmente.')
                 ->with('scanned_registration_card_path', $frontPendingPath);
-        } finally {
-            Storage::disk('public')->delete($backPendingPath);
         }
 
         $matched = $vehicleScanService->matchBrandAndModel($extracted['brand'], $extracted['car_model']);
@@ -236,14 +236,23 @@ class VehicleController extends Controller
             return null;
         }
 
-        if (! Storage::disk('public')->exists($pendingPath)) {
+        if (! Storage::disk($this->uploadsDisk())->exists($pendingPath)) {
             return null;
         }
 
         $finalPath = 'registration_cards/' . Str::random(40) . '.' . pathinfo($pendingPath, PATHINFO_EXTENSION);
-        Storage::disk('public')->move($pendingPath, $finalPath);
+        Storage::disk($this->uploadsDisk())->move($pendingPath, $finalPath);
 
         return $finalPath;
+    }
+
+    /**
+     * Disco per i file caricati dagli utenti: locale in sviluppo, S3/R2 in
+     * produzione (vedi config/filesystems.php e la variabile UPLOADS_DISK).
+     */
+    private function uploadsDisk(): string
+    {
+        return config('filesystems.uploads_disk');
     }
 
     /**
@@ -346,15 +355,15 @@ class VehicleController extends Controller
         if ($request->hasFile('registration_card')) {
             // Elimina il file precedente per evitare leak di storage
             if ($vehicle->registration_card_path) {
-                Storage::disk('public')->delete($vehicle->registration_card_path);
+                Storage::disk($this->uploadsDisk())->delete($vehicle->registration_card_path);
             }
 
             $registrationCardFile = $request->file('registration_card');
             $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
-            $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, 'public');
+            $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, $this->uploadsDisk());
         } elseif ($pendingScanPath && ($promotedPath = $this->promoteScannedRegistrationCard($pendingScanPath))) {
             if ($vehicle->registration_card_path) {
-                Storage::disk('public')->delete($vehicle->registration_card_path);
+                Storage::disk($this->uploadsDisk())->delete($vehicle->registration_card_path);
             }
 
             $data['registration_card_path'] = $promotedPath;

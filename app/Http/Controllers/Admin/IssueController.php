@@ -196,10 +196,10 @@ class IssueController extends Controller
         if ($request->hasFile('image')) {
             // Elimina l'immagine precedente per evitare leak di storage
             if ($issue && $issue->photo) {
-                Storage::disk('public')->delete($issue->photo);
+                Storage::disk(config('filesystems.uploads_disk'))->delete($issue->photo);
             }
 
-            $path = $request->file('image')->store('issue_images', 'public');
+            $path = $request->file('image')->store('issue_images', config('filesystems.uploads_disk'));
             $issueData['photo'] = $path;
         }
 

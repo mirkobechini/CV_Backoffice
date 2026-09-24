@@ -186,8 +186,8 @@
                         class="v">{{ $vehicle->immatricolation_date_formatted ?? 'N/A' }}</span></div>
                 <div class="veh-kv"><span class="k">{{ __('Carta circolazione') }}</span><span class="v">
                         @if ($vehicle->registration_card_path)
-                            <a href="{{ Storage::url($vehicle->registration_card_path) }}" target="_blank"
-                                rel="noopener noreferrer">{{ __('Apri file') }}</a>
+                            <a href="{{ Storage::disk(config('filesystems.uploads_disk'))->url($vehicle->registration_card_path) }}"
+                                target="_blank" rel="noopener noreferrer">{{ __('Apri file') }}</a>
                         @else
                             N/A
                         @endif

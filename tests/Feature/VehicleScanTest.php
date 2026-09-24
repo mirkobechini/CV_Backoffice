@@ -375,6 +375,50 @@ class VehicleScanTest extends TestCase
         Storage::disk('public')->assertMissing($pendingPath);
     }
 
+    public function test_registration_card_uses_configured_uploads_disk(): void
+    {
+        config(['filesystems.uploads_disk' => 's3']);
+        Storage::fake('s3');
+        Storage::fake('public');
+        $user = $this->capo();
+        $deps = $this->vehicleDeps();
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'registration_card' => UploadedFile::fake()->create('libretto.jpg', 100, 'image/jpeg'),
+        ]);
+
+        $response->assertRedirect();
+        $vehicle = Vehicle::where('license_plate', 'AB123CD')->first();
+        $this->assertNotNull($vehicle->registration_card_path);
+        Storage::disk('s3')->assertExists($vehicle->registration_card_path);
+        Storage::disk('public')->assertMissing($vehicle->registration_card_path);
+    }
+
+    public function test_scan_endpoint_works_when_uploads_disk_is_s3(): void
+    {
+        config(['filesystems.uploads_disk' => 's3']);
+        Storage::fake('s3');
+        $user = $this->capo();
+
+        $this->fakeChatCompletion($this->extractedFieldsStub());
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
+            'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
+            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
+        ]);
+
+        $response->assertRedirect(route('admin.vehicles.create'));
+        $response->assertSessionHasInput('license_plate', 'AB123CD');
+        $pendingPath = $response->getSession()->get('scanned_registration_card_path');
+        Storage::disk('s3')->assertExists($pendingPath);
+    }
+
     public function test_store_ignores_tampered_scanned_registration_card_path(): void
     {
         Storage::fake('public');

@@ -123,8 +123,9 @@
                         <div class="field-error">{{ $message }}</div>
                     @enderror
                     @if ($issue->photo)
-                        <div class="hint"><a href="{{ asset('storage/' . $issue->photo) }}" target="_blank"
-                                rel="noopener noreferrer">{{ __('Apri immagine attuale') }}</a></div>
+                        <div class="hint"><a
+                                href="{{ Storage::disk(config('filesystems.uploads_disk'))->url($issue->photo) }}"
+                                target="_blank" rel="noopener noreferrer">{{ __('Apri immagine attuale') }}</a></div>
                     @endif
                 </div>
             </div>
