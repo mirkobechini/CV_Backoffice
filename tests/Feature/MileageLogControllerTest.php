@@ -186,4 +186,31 @@ class MileageLogControllerTest extends TestCase
 
         $this->assertDatabaseMissing('mileage_logs', ['vehicle_id' => $otherVehicle->id]);
     }
+
+    /**
+     * Il calcolo del delta km (sotto-testo nella colonna Km) leggeva TUTTI
+     * i mileage log dell'app senza filtro di gruppo: qui verifica sia che
+     * il delta resti corretto per il proprio veicolo, sia che i log di un
+     * altro gruppo non vengano mai caricati nella pagina.
+     */
+    public function test_index_computes_delta_only_from_own_groups_logs(): void
+    {
+        $vehicle = $this->vehicle();
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2025-01-01', 'mileage' => 1000]);
+        $latest = MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2025-02-01', 'mileage' => 1500]);
+
+        $otherGroup = Group::create(['name' => 'Altro Gruppo', 'invite_code' => 'ZZZZ9999']);
+        $vt = VehicleType::create(['name' => 'Furgone', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $otherVehicle = Vehicle::create(['license_plate' => 'XY000ZZ', 'vehicle_type_id' => $vt->id, 'internal_code' => '5678', 'brand_id' => null, 'car_model_id' => null, 'fuel_type' => 'diesel', 'immatricolation_date' => '2023-06-01', 'group_id' => $otherGroup->id]);
+        MileageLog::create(['vehicle_id' => $otherVehicle->id, 'log_date' => '2025-01-01', 'mileage' => 9000]);
+        MileageLog::create(['vehicle_id' => $otherVehicle->id, 'log_date' => '2025-02-01', 'mileage' => 9999]);
+
+        $response = $this->actingAs($this->admin())->get(route('admin.mileage-logs.index'));
+
+        $response->assertOk();
+        $response->assertViewHas('deltaByLogId', function ($deltaByLogId) use ($latest, $otherVehicle) {
+            return $deltaByLogId[$latest->id] === 500
+                && ! MileageLog::where('vehicle_id', $otherVehicle->id)->pluck('id')->contains(fn ($id) => isset($deltaByLogId[$id]));
+        });
+    }
 }
