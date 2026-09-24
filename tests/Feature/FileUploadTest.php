@@ -148,6 +148,40 @@ class FileUploadTest extends TestCase
         Storage::disk('public')->assertExists($issue->photo);
     }
 
+    /**
+     * SVG esclusa di proposito da StoreIssueRequest/UpdateIssueRequest: se
+     * il file caricato come "foto guasto" contenesse <script>, aprire
+     * direttamente l'URL del file salvato (non tramite <img>) lo esegue nel
+     * browser — XSS memorizzato.
+     */
+    public function test_issue_image_rejects_svg(): void
+    {
+        Storage::fake('public');
+        $user = $this->admin();
+        $deps = $this->vehicleDeps();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $user->activeGroup()->id,
+        ]);
+
+        $image = UploadedFile::fake()->create('guasto.svg', 10, 'image/svg+xml');
+
+        $response = $this->actingAs($user)->post(route('admin.issues.store'), [
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Motore non parte',
+            'event_date' => '2024-01-01',
+            'status' => 'open',
+            'image' => $image,
+        ]);
+
+        $response->assertSessionHasErrors('image');
+    }
+
     public function test_issue_image_rejects_oversized_file(): void
     {
         Storage::fake('public');
