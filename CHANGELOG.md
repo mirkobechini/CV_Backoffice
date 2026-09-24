@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.51] - 2026-09-24
+
+### Changed
+
+- Creazione veicolo: un solo campo di caricamento file per "Carta di circolazione", invece di due selettori distinti (uno per la scansione, uno per l'allegato). Il pulsante "Compila automaticamente con AI" ora scansiona il file già selezionato lì, invece di richiederne uno separato, ed è coerente nello stile con il resto del form.
+
 ## [v1.2.50] - 2026-09-24
 
 ### Changed
