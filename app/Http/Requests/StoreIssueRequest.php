@@ -30,7 +30,11 @@ class StoreIssueRequest extends FormRequest
             // il formato di default delle foto su iPhone: da mobile il
             // caricamento falliva sempre per quelle. "mimes" verifica invece
             // l'estensione, quindi possiamo includerle esplicitamente.
-            'image' => 'nullable|mimes:jpeg,png,jpg,gif,bmp,svg,webp,heic,heif|max:2048',
+            // SVG esclusa di proposito: caricata come foto di un guasto (una
+            // foto scattata col telefono, mai davvero un SVG) può contenere
+            // <script> eseguito dal browser se l'URL del file viene aperto
+            // direttamente invece che tramite <img> — XSS memorizzato.
+            'image' => 'nullable|mimes:jpeg,png,jpg,gif,bmp,webp,heic,heif|max:2048',
         ];
     }
 
