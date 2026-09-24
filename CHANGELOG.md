@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.52] - 2026-09-24
+
+### Changed
+
+- Scansione libretto: ora richiede sia il fronte sia il retro (i timbri di revisione periodica sono sul retro), invece di una sola foto. Il pulsante "Compila automaticamente con AI" si abilita solo dopo aver caricato entrambe le facciate; solo il fronte viene conservato come carta di circolazione del veicolo.
+
 ## [v1.2.51] - 2026-09-24
 
 ### Changed
