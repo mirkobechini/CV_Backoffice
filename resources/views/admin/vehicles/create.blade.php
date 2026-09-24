@@ -24,13 +24,14 @@
         <div class="alert danger">{{ session('error') }}</div>
     @endif
 
-    {{-- Form nascosto usato solo per inviare la scansione: il file caricato
-    è lo stesso del campo "Carta di circolazione" qui sotto (copiato via JS,
-    vedi script in fondo), così non c'è un secondo selettore file duplicato. --}}
+    {{-- Form nascosto usato solo per inviare la scansione: i file caricati
+    sono quelli del fronte/retro libretto qui sotto (copiati via JS, vedi
+    script in fondo), così non ci sono selettori file duplicati. --}}
     <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
         enctype="multipart/form-data" style="display:none;">
         @csrf
-        <input type="file" name="photo" id="scan_photo_hidden">
+        <input type="file" name="photo_front" id="scan_photo_front_hidden">
+        <input type="file" name="photo_back" id="scan_photo_back_hidden">
     </form>
 
     <div class="form-card">
@@ -116,7 +117,7 @@
                 <div class="row2">
                     <x-form.date-input name="immatricolation_date" label="{{ __('Data immatricolazione') }}" required />
                     <div class="field">
-                        <label for="registration_card">{{ __('Carta di circolazione / libretto') }}</label>
+                        <label for="registration_card">{{ __('Libretto — fronte (carta di circolazione)') }}</label>
                         <label class="file-drop" for="registration_card" id="registration_card_label">
                             @if (session('scanned_registration_card_path'))
                                 <i class="fa-solid fa-file-circle-check"></i>
@@ -131,15 +132,32 @@
                         @error('registration_card')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
-                        @error('photo')
+                        @error('photo_front')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
-                        <button type="button" id="scan-libretto-btn" class="btn" style="margin-top:8px;"
+                    </div>
+                </div>
+
+                <div class="row2">
+                    <div class="field">
+                        <label for="registration_card_back">{{ __('Libretto — retro') }}</label>
+                        <label class="file-drop" for="registration_card_back" id="registration_card_back_label">
+                            <i class="fa-solid fa-file-arrow-up"></i> {{ __('Clicca per caricare (JPG, PNG, HEIC)') }}
+                        </label>
+                        <input type="file" id="registration_card_back" accept=".jpg,.jpeg,.png,.heic,.heif" hidden>
+                        @error('photo_back')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        <div class="hint">{{ __('Serve solo per la scansione (timbri di revisione): non viene salvata.') }}</div>
+                    </div>
+                    <div class="field">
+                        <label>&nbsp;</label>
+                        <button type="button" id="scan-libretto-btn" class="btn" disabled
                             data-loading-text="{{ __('Scansione in corso...') }}">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Compila automaticamente con AI') }}
                         </button>
                         <div class="hint">
-                            {{ __('Carica una foto o un PDF, poi (facoltativo) usa "Compila automaticamente" per farlo leggere: funziona solo su foto (JPG, PNG, HEIC), non su PDF.') }}
+                            {{ __('Carica fronte e retro del libretto per abilitare la lettura automatica dei dati: verifica sempre prima di salvare.') }}
                         </div>
                     </div>
                 </div>
@@ -313,9 +331,13 @@
             const registrationCardInput = document.getElementById('registration_card');
             const registrationCardLabel = document.getElementById('registration_card_label');
             const registrationCardDefaultText = registrationCardLabel.innerHTML;
+            const registrationCardBackInput = document.getElementById('registration_card_back');
+            const registrationCardBackLabel = document.getElementById('registration_card_back_label');
+            const registrationCardBackDefaultText = registrationCardBackLabel.innerHTML;
             const scanBtn = document.getElementById('scan-libretto-btn');
             const scanForm = document.getElementById('scan-libretto-form');
-            const scanPhotoInput = document.getElementById('scan_photo_hidden');
+            const scanPhotoFrontInput = document.getElementById('scan_photo_front_hidden');
+            const scanPhotoBackInput = document.getElementById('scan_photo_back_hidden');
 
             // Mantiene lato client il formato targa coerente con le regole server.
             function uppercaseLicensePlate() {
@@ -339,18 +361,36 @@
                 }
             }
 
-            // Invia allo scan lo stesso file scelto per la carta di
-            // circolazione, senza un secondo selettore duplicato: lo copia
-            // nel form nascosto tramite DataTransfer e lo invia.
+            function updateRegistrationCardBackLabel() {
+                if (registrationCardBackInput.files.length > 0) {
+                    registrationCardBackLabel.textContent = registrationCardBackInput.files[0].name;
+                } else {
+                    registrationCardBackLabel.innerHTML = registrationCardBackDefaultText;
+                }
+            }
+
+            // La scansione richiede fronte E retro (i dati anagrafici sono
+            // sul fronte, i timbri di revisione sul retro): il pulsante
+            // resta disabilitato finché non sono stati caricati entrambi.
+            function updateScanButtonState() {
+                scanBtn.disabled = !(registrationCardInput.files.length && registrationCardBackInput.files.length);
+            }
+
+            // Invia allo scan gli stessi file scelti per fronte/retro, senza
+            // selettori duplicati: li copia nel form nascosto tramite
+            // DataTransfer e lo invia.
             scanBtn.addEventListener('click', () => {
-                if (!registrationCardInput.files.length) {
-                    registrationCardInput.click();
+                if (scanBtn.disabled) {
                     return;
                 }
 
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(registrationCardInput.files[0]);
-                scanPhotoInput.files = dataTransfer.files;
+                const frontTransfer = new DataTransfer();
+                frontTransfer.items.add(registrationCardInput.files[0]);
+                scanPhotoFrontInput.files = frontTransfer.files;
+
+                const backTransfer = new DataTransfer();
+                backTransfer.items.add(registrationCardBackInput.files[0]);
+                scanPhotoBackInput.files = backTransfer.files;
 
                 scanBtn.disabled = true;
                 scanBtn.innerHTML = scanBtn.dataset.loadingText;
@@ -361,7 +401,14 @@
             uppercaseLicensePlate();
             warrantyExtensionCheckbox.addEventListener('change', toggleWarrantyRequiredFields);
             licensePlateInput.addEventListener('input', uppercaseLicensePlate);
-            registrationCardInput.addEventListener('change', updateRegistrationCardLabel);
+            registrationCardInput.addEventListener('change', () => {
+                updateRegistrationCardLabel();
+                updateScanButtonState();
+            });
+            registrationCardBackInput.addEventListener('change', () => {
+                updateRegistrationCardBackLabel();
+                updateScanButtonState();
+            });
         });
     </script>
 @endsection
