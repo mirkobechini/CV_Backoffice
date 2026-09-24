@@ -24,30 +24,14 @@
         <div class="alert danger">{{ session('error') }}</div>
     @endif
 
-    <div class="form-card" style="margin-bottom:16px;">
-        <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
-            enctype="multipart/form-data" data-single-submit="true">
-            @csrf
-            <div class="form-section" style="margin-bottom:0;">
-                <h2>{{ __('Scansiona libretto') }}</h2>
-                <div class="hint" style="margin-bottom:10px;">
-                    {{ __('Carica una foto del libretto di circolazione per precompilare il form: verifica sempre i dati prima di salvare.') }}
-                </div>
-                <div class="row2">
-                    <div class="field" style="margin-bottom:0;">
-                        <input type="file" class="input" name="photo" accept=".jpg,.jpeg,.png,.heic,.heif" required>
-                        @error('photo')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <button type="submit" class="btn"
-                        data-loading-text="{{ __('Scansione in corso...') }}">
-                        <i class="fa-solid fa-camera"></i> {{ __('Scansiona') }}
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
+    {{-- Form nascosto usato solo per inviare la scansione: il file caricato
+    è lo stesso del campo "Carta di circolazione" qui sotto (copiato via JS,
+    vedi script in fondo), così non c'è un secondo selettore file duplicato. --}}
+    <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
+        enctype="multipart/form-data" style="display:none;">
+        @csrf
+        <input type="file" name="photo" id="scan_photo_hidden">
+    </form>
 
     <div class="form-card">
         <form id="vehicle-form" method="POST" action="{{ route('admin.vehicles.store') }}"
@@ -132,20 +116,31 @@
                 <div class="row2">
                     <x-form.date-input name="immatricolation_date" label="{{ __('Data immatricolazione') }}" required />
                     <div class="field">
-                        <label for="registration_card">{{ __('Carta di circolazione') }}</label>
+                        <label for="registration_card">{{ __('Carta di circolazione / libretto') }}</label>
                         <label class="file-drop" for="registration_card" id="registration_card_label">
                             @if (session('scanned_registration_card_path'))
                                 <i class="fa-solid fa-file-circle-check"></i>
                                 {{ __('Foto scansionata già allegata · clicca per sostituirla') }}
                             @else
-                                <i class="fa-solid fa-file-arrow-up"></i> {{ __('Clicca per caricare (PDF, JPG, PNG)') }}
+                                <i class="fa-solid fa-file-arrow-up"></i>
+                                {{ __('Clicca per caricare (PDF, JPG, PNG, HEIC)') }}
                             @endif
                         </label>
                         <input type="file" class="@error('registration_card') is-invalid @enderror" id="registration_card"
-                            name="registration_card" accept=".pdf,.jpg,.jpeg,.png" hidden>
+                            name="registration_card" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif" hidden>
                         @error('registration_card')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
+                        @error('photo')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        <button type="button" id="scan-libretto-btn" class="btn" style="margin-top:8px;"
+                            data-loading-text="{{ __('Scansione in corso...') }}">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Compila automaticamente con AI') }}
+                        </button>
+                        <div class="hint">
+                            {{ __('Carica una foto o un PDF, poi (facoltativo) usa "Compila automaticamente" per farlo leggere: funziona solo su foto (JPG, PNG, HEIC), non su PDF.') }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,6 +313,9 @@
             const registrationCardInput = document.getElementById('registration_card');
             const registrationCardLabel = document.getElementById('registration_card_label');
             const registrationCardDefaultText = registrationCardLabel.innerHTML;
+            const scanBtn = document.getElementById('scan-libretto-btn');
+            const scanForm = document.getElementById('scan-libretto-form');
+            const scanPhotoInput = document.getElementById('scan_photo_hidden');
 
             // Mantiene lato client il formato targa coerente con le regole server.
             function uppercaseLicensePlate() {
@@ -340,6 +338,24 @@
                     registrationCardLabel.innerHTML = registrationCardDefaultText;
                 }
             }
+
+            // Invia allo scan lo stesso file scelto per la carta di
+            // circolazione, senza un secondo selettore duplicato: lo copia
+            // nel form nascosto tramite DataTransfer e lo invia.
+            scanBtn.addEventListener('click', () => {
+                if (!registrationCardInput.files.length) {
+                    registrationCardInput.click();
+                    return;
+                }
+
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(registrationCardInput.files[0]);
+                scanPhotoInput.files = dataTransfer.files;
+
+                scanBtn.disabled = true;
+                scanBtn.innerHTML = scanBtn.dataset.loadingText;
+                scanForm.submit();
+            });
 
             toggleWarrantyRequiredFields();
             uppercaseLicensePlate();
