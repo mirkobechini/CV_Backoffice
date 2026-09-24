@@ -45,9 +45,15 @@ class MileageLogController extends Controller
 
         // Delta rispetto alla lettura precedente per lo stesso veicolo (mostrato
         // come sotto-testo nella colonna Km). Calcolato su tutti i log per non
-        // dipendere dall'ordinamento/paginazione correnti della tabella.
+        // dipendere dall'ordinamento/paginazione correnti della tabella — ma
+        // solo quelli del proprio gruppo: senza forCurrentUser() qui, ogni
+        // richiesta caricava e processava anche i log di TUTTI gli altri
+        // gruppi (non mostrati, ma comunque letti e tenuti in memoria).
         $deltaByLogId = [];
-        foreach (MileageLog::orderBy('log_date')->get(['id', 'vehicle_id', 'mileage'])->groupBy('vehicle_id') as $logsForVehicle) {
+        $allLogsForDelta = MileageLog::whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->orderBy('log_date')
+            ->get(['id', 'vehicle_id', 'mileage']);
+        foreach ($allLogsForDelta->groupBy('vehicle_id') as $logsForVehicle) {
             $previous = null;
             foreach ($logsForVehicle as $log) {
                 if ($previous !== null) {

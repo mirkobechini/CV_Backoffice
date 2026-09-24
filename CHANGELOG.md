@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.43] - 2026-09-24
+
+### Changed
+
+- Elenco veicoli: rimossa una query full-collection duplicata (calcolava due volte la stessa cosa per la stat "flotta completa" e per il filtro "da integrare") e sostituito un conteggio guasti caricato in memoria e sommato in PHP con una singola query di conteggio diretta.
+- Elenco chilometraggi: il calcolo del delta km leggeva i mileage log di TUTTI i gruppi invece di solo quelli del proprio.
 ## [v1.2.42] - 2026-09-24
 
 ### Security

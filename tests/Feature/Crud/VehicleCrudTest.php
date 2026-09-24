@@ -401,4 +401,49 @@ class VehicleCrudTest extends TestCase
         $response->assertSessionHas('timingBeltPrompt', fn($prompt) => $prompt['action'] === 'delete' && $prompt['deadline_id'] === $deadline->id);
         $this->assertDatabaseHas('deadlines', ['id' => $deadline->id, 'deleted_at' => null]);
     }
+
+    public function test_index_toolbar_stats_and_incomplete_filter(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $completeVehicle = $data['vehicle'];
+
+        $extinguisherType = \App\Models\EquipmentType::create([
+            'name' => 'Estintore',
+            'category' => \App\Models\EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
+        ]);
+        $data['vehicleType']->equipmentTypes()->attach($extinguisherType->id, ['required_quantity' => 1]);
+        \App\Models\Equipment::create([
+            'name' => 'Estintore cabina',
+            'equipment_type_id' => $extinguisherType->id,
+            'vehicle_id' => $completeVehicle->id,
+            'serial_number' => 'EX-1',
+        ]);
+
+        $incompleteVehicle = Vehicle::create([
+            'license_plate' => 'XY987ZZ',
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => '5678',
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        \App\Models\Issue::create([
+            'vehicle_id' => $incompleteVehicle->id,
+            'description' => 'Guasto aperto',
+            'status' => 'open',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.index'));
+        $response->assertOk();
+        $response->assertViewHas('totalVehicles', 2);
+        $response->assertViewHas('openIssuesCount', 1);
+        $response->assertViewHas('completeFleet', 1);
+
+        $filtered = $this->actingAs($user)->get(route('admin.vehicles.index', ['filter' => 'incomplete']));
+        $filtered->assertOk();
+        $filtered->assertViewHas('vehicles', fn ($vehicles) => $vehicles->pluck('id')->all() === [$incompleteVehicle->id]);
+    }
 }
