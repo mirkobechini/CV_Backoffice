@@ -39,7 +39,8 @@ class StoreVehicleRequest extends FormRequest
             'engine_displacement_cc' => 'nullable|integer|min:0',
             'engine_power_kw' => 'nullable|integer|min:0',
             'vehicle_category' => 'nullable|string|max:255',
-            'allowed_tire_size' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
+            'allowed_tire_sizes' => 'nullable|array',
+            'allowed_tire_sizes.*' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
             // Percorso "pending" della foto già caricata durante la
             // scansione del libretto (vedi VehicleController::scanRegistrationCard()
             // e promoteScannedRegistrationCard()): non è un campo del
@@ -81,7 +82,7 @@ class StoreVehicleRequest extends FormRequest
             'max_mass_kg.integer' => 'La massa massima deve essere un numero intero.',
             'engine_displacement_cc.integer' => 'La cilindrata deve essere un numero intero.',
             'engine_power_kw.integer' => 'La potenza deve essere un numero intero.',
-            'allowed_tire_size.regex' => 'La misura deve essere nel formato standard (es. 225/75R16C).',
+            'allowed_tire_sizes.*.regex' => 'La misura deve essere nel formato standard (es. 225/75R16C).',
         ];
     }
 
@@ -92,6 +93,13 @@ class StoreVehicleRequest extends FormRequest
         $this->merge([
             'license_plate' => strtoupper(str_replace(' ', '', (string) $this->input('license_plate'))),
             'has_warranty_extension' => $this->boolean('has_warranty_extension'),
+            // Le righe rimosse/vuote del repeater misure pneumatici inviano
+            // comunque un campo nascosto vuoto: le scartiamo prima di
+            // validare, invece di farle fallire come stringa vuota non valida.
+            'allowed_tire_sizes' => array_values(array_filter(
+                $this->input('allowed_tire_sizes', []),
+                fn ($value) => filled($value)
+            )),
         ]);
     }
 }

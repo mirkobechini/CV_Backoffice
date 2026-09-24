@@ -44,7 +44,7 @@ class Vehicle extends Model
         'engine_displacement_cc',
         'engine_power_kw',
         'vehicle_category',
-        'allowed_tire_size',
+        'allowed_tire_sizes',
     ];
 
     protected $casts = [
@@ -55,6 +55,7 @@ class Vehicle extends Model
         'max_mass_kg' => 'integer',
         'engine_displacement_cc' => 'integer',
         'engine_power_kw' => 'integer',
+        'allowed_tire_sizes' => 'array',
     ];
 
     protected $searchable = ['internal_code', 'license_plate'];

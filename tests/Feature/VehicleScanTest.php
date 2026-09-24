@@ -80,7 +80,7 @@ class VehicleScanTest extends TestCase
             'engine_displacement_cc' => 2287,
             'engine_power_kw' => 96,
             'vehicle_category' => 'M1',
-            'allowed_tire_size' => '225/75R16C',
+            'allowed_tire_sizes' => ['225/75R16C'],
             'has_timing_belt_suggested' => true,
         ], $overrides);
     }
@@ -95,7 +95,7 @@ class VehicleScanTest extends TestCase
 
         $this->assertSame('AB123CD', $result['license_plate']);
         $this->assertSame('Fiat', $result['brand']);
-        $this->assertSame('225/75R16C', $result['allowed_tire_size']);
+        $this->assertSame(['225/75R16C'], $result['allowed_tire_sizes']);
         $this->assertTrue($result['has_timing_belt_suggested']);
     }
 
@@ -168,7 +168,7 @@ class VehicleScanTest extends TestCase
         $response->assertSessionHasInput('license_plate', 'AB123CD');
         $response->assertSessionHasInput('brand_id', $deps['brand']->id);
         $response->assertSessionHasInput('car_model_id', $deps['model']->id);
-        $response->assertSessionHasInput('allowed_tire_size', '225/75R16C');
+        $response->assertSessionHasInput('allowed_tire_sizes', ['225/75R16C']);
     }
 
     public function test_scan_endpoint_flags_unmatched_brand_and_model(): void
@@ -241,6 +241,62 @@ class VehicleScanTest extends TestCase
         $this->assertCount(1, $pendingFiles);
     }
 
+    public function test_scan_endpoint_redirects_to_edit_when_scanning_for_existing_vehicle(): void
+    {
+        Storage::fake('public');
+        $user = $this->capo();
+        $deps = $this->vehicleDeps();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $user->activeGroup()->id,
+        ]);
+
+        $this->fakeChatCompletion($this->extractedFieldsStub());
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
+            'vehicle_id' => $vehicle->id,
+            'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
+            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
+        ]);
+
+        $response->assertRedirect(route('admin.vehicles.edit', $vehicle));
+        $response->assertSessionHasInput('license_plate', 'AB123CD');
+    }
+
+    public function test_scan_endpoint_rejects_vehicle_from_another_group(): void
+    {
+        Storage::fake('public');
+        $user = $this->capo();
+        $otherGroup = Group::create(['name' => 'Gruppo B', 'invite_code' => Group::generateInviteCode()]);
+        $otherOwner = User::factory()->create();
+        $otherGroup->addUser($otherOwner, Group::ROLE_CAPO);
+        $otherBrand = Brand::create(['name' => 'Iveco']);
+        $otherModel = CarModel::create(['name' => 'Daily', 'brand_id' => $otherBrand->id]);
+        $otherType = VehicleType::create(['name' => 'Ambulanza B', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $otherVehicle = Vehicle::create([
+            'license_plate' => 'XY987ZZ',
+            'internal_code' => '0002',
+            'brand_id' => $otherBrand->id,
+            'car_model_id' => $otherModel->id,
+            'vehicle_type_id' => $otherType->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $otherGroup->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
+            'vehicle_id' => $otherVehicle->id,
+            'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
+            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
+        ]);
+
+        $response->assertSessionHasErrors('vehicle_id');
+    }
+
     public function test_member_cannot_scan_registration_card(): void
     {
         Storage::fake('public');
@@ -282,6 +338,43 @@ class VehicleScanTest extends TestCase
         Storage::disk('public')->assertMissing($pendingPath);
     }
 
+    public function test_update_promotes_pending_scanned_photo_into_registration_card(): void
+    {
+        Storage::fake('public');
+        $user = $this->capo();
+        $deps = $this->vehicleDeps();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $user->activeGroup()->id,
+        ]);
+
+        $pendingPath = UploadedFile::fake()->create('libretto.jpg', 100, 'image/jpeg')
+            ->storeAs('registration_cards/pending', 'abc123.jpg', 'public');
+
+        $response = $this->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
+            'license_plate' => $vehicle->license_plate,
+            'internal_code' => $vehicle->internal_code,
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'scanned_registration_card_path' => $pendingPath,
+        ]);
+
+        $response->assertRedirect();
+        $vehicle->refresh();
+        $this->assertNotNull($vehicle->registration_card_path);
+        $this->assertStringStartsWith('registration_cards/', $vehicle->registration_card_path);
+        $this->assertStringNotContainsString('pending', $vehicle->registration_card_path);
+        Storage::disk('public')->assertExists($vehicle->registration_card_path);
+        Storage::disk('public')->assertMissing($pendingPath);
+    }
+
     public function test_store_ignores_tampered_scanned_registration_card_path(): void
     {
         Storage::fake('public');
@@ -316,7 +409,7 @@ class VehicleScanTest extends TestCase
             'vehicle_type_id' => $deps['type']->id,
             'immatricolation_date' => '2024-01-01',
             'group_id' => $user->activeGroup()->id,
-            'allowed_tire_size' => '225/75R16C',
+            'allowed_tire_sizes' => ['225/75R16C'],
         ]);
 
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
@@ -330,6 +423,34 @@ class VehicleScanTest extends TestCase
         $response->assertRedirect();
         $response->assertSessionHas('tire_size_warning');
         $this->assertDatabaseHas('tires', ['vehicle_id' => $vehicle->id, 'size' => '205/55R16']);
+    }
+
+    public function test_no_tire_size_warning_when_size_matches_any_of_several_allowed(): void
+    {
+        Storage::fake('public');
+        $user = $this->capo();
+        $deps = $this->vehicleDeps();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $user->activeGroup()->id,
+            'allowed_tire_sizes' => ['225/75R16C', '205/55R16'],
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.tires.store'), [
+            'vehicle_id' => $vehicle->id,
+            'season' => 'summer',
+            'position' => 'front_left',
+            'size' => '205/55R16',
+            'status' => 'stored',
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionMissing('tire_size_warning');
     }
 
     public function test_no_tire_size_warning_when_vehicle_has_no_allowed_size(): void

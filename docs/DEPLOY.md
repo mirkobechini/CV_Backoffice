@@ -23,10 +23,13 @@
 3. **After deploying**, open the Laravel Cloud terminal and run:
 
     ```bash
+    php artisan storage:link
     php artisan migrate --seed
     php artisan import:car-data
     php artisan make:admin
     ```
+
+    `storage:link` is required for uploaded files (registration cards, fault photos, etc.) to be reachable — without it, every uploaded file 404s even though it was saved correctly.
 
 4. **Follow the interactive prompts** of `make:admin` to create the first admin
 
