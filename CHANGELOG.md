@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.46] - 2026-09-24
+
+### Changed
+
+- Distribuzione veicolo: da checkbox "cinghia sì/no" a scelta esplicita "Cinghia di distribuzione" / "Catena di distribuzione". Il comportamento resta lo stesso (cinghia genera la scadenza periodica, catena no), cambia solo la chiarezza del form e della scheda veicolo.
 ## [v1.2.45] - 2026-09-24
 
 ### Changed

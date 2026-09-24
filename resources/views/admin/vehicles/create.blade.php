@@ -140,19 +140,29 @@
                 <x-form.month-input name="insurance_due_date" label="{{ __('Data di scadenza') }}" />
             </div>
 
-            {{-- Sezione 4: Cinghia distribuzione --}}
+            {{-- Sezione 4: Distribuzione --}}
             <div class="form-section" style="margin-bottom:0;">
-                <h2><span class="num">4</span> {{ __('Cinghia distribuzione') }}</h2>
-                <label class="check">
-                    <input type="checkbox" value="1" id="has_timing_belt" name="has_timing_belt"
-                        {{ old('has_timing_belt') ? 'checked' : '' }}>
-                    <div>
-                        <div class="label">{{ __('Veicolo dotato di cinghia di distribuzione') }}</div>
-                        <div class="sub">
-                            {{ __('Se attivo, potrai creare una scadenza "Cinghia Distribuzione" che scatta dopo 100.000 km o 10 anni.') }}
+                <h2><span class="num">4</span> {{ __('Distribuzione') }}</h2>
+                <div class="row2">
+                    <label class="check">
+                        <input type="radio" value="1" id="has_timing_belt_cinghia" name="has_timing_belt"
+                            {{ old('has_timing_belt', '0') == '1' ? 'checked' : '' }}>
+                        <div>
+                            <div class="label">{{ __('Cinghia di distribuzione') }}</div>
+                            <div class="sub">
+                                {{ __('Genera una scadenza "Cinghia Distribuzione" dopo 100.000 km o 10 anni.') }}
+                            </div>
                         </div>
-                    </div>
-                </label>
+                    </label>
+                    <label class="check">
+                        <input type="radio" value="0" id="has_timing_belt_catena" name="has_timing_belt"
+                            {{ old('has_timing_belt', '0') == '0' ? 'checked' : '' }}>
+                        <div>
+                            <div class="label">{{ __('Catena di distribuzione') }}</div>
+                            <div class="sub">{{ __('Nessuna scadenza: la catena non richiede sostituzioni periodiche.') }}</div>
+                        </div>
+                    </label>
+                </div>
             </div>
 
             <div class="form-actions">
