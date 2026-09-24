@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.2.42] - 2026-09-24
+
+### Security
+
+- Gli export CSV non neutralizzavano l'iniezione di formule: un campo testo libero (descrizione guasto, nome fornitore, ecc.) che iniziasse con `=`, `+`, `-` o `@` veniva interpretato come formula da Excel/Sheets/LibreOffice alla riapertura del file esportato. Ora questi valori vengono anteposti da un apice per forzarne l'interpretazione come testo letterale.
 ## [v1.2.41] - 2026-09-24
 
 ### Security
