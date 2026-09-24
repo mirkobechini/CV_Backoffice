@@ -225,6 +225,16 @@ class CsvImportController extends Controller
             }
         }
 
+        // Una sola query per tutti i chilometraggi dell'anno (del proprio
+        // gruppo), invece di una query exists() per ogni cella veicolo×mese
+        // del CSV — un import tipico (decine di veicoli × 12 mesi) arrivava
+        // a centinaia di query solo per il controllo duplicati.
+        $existingLogDates = MileageLog::whereYear('log_date', $year)
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->get(['vehicle_id', 'log_date'])
+            ->map(fn ($log) => $log->vehicle_id . '|' . $log->log_date->toDateString())
+            ->flip();
+
         foreach ($rows as $index => $row) {
             $sigla = $row['SIGLA'] ?? $row['sigla'] ?? '';
             $targa = $row['TARGA'] ?? $row['targa'] ?? '';
@@ -273,9 +283,7 @@ class CsvImportController extends Controller
                 $dateStr = sprintf('%04d-%02d-01', $year, $monthNum);
 
                 // Controllo duplicato
-                $exists = MileageLog::where('vehicle_id', $vehicle->id)
-                    ->where('log_date', $dateStr)
-                    ->exists();
+                $exists = isset($existingLogDates[$vehicle->id . '|' . $dateStr]);
 
                 $warnings = [];
                 if ($exists) {
