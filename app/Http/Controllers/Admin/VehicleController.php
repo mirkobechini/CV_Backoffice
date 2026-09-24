@@ -7,6 +7,7 @@ use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\Issue;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Services\DeadlineService;
@@ -28,6 +29,16 @@ class VehicleController extends Controller
     public function index(Request $request)
     {
         $filter = $request->get('filter', 'all');
+
+        // Usata sia dal filtro "da integrare" sia dalla stat $completeFleet
+        // sotto: prima venivano eseguite due query identiche (get() di tutti
+        // i veicoli con vehicleType.equipmentTypes+equipment) per calcolare
+        // la stessa cosa (hasAllRequiredEquipment()) in due punti diversi —
+        // una condizionata al filtro, una sempre, ad ogni caricamento pagina.
+        $vehiclesWithEquipment = Vehicle::forCurrentUser()
+            ->with('vehicleType.equipmentTypes', 'equipment')
+            ->get();
+        $completeFleet = $vehiclesWithEquipment->filter(fn($v) => $v->hasAllRequiredEquipment())->count();
 
         $vehicles = Vehicle::query()
             ->forCurrentUser()
@@ -51,9 +62,7 @@ class VehicleController extends Controller
         } elseif ($filter === 'deadline') {
             $vehicles = $vehicles->whereHas('deadlines', fn($q) => $q->where('is_renewed', false)->whereIn('status', ['pending', 'expired']));
         } elseif ($filter === 'incomplete') {
-            $incompleteIds = Vehicle::forCurrentUser()
-                ->with('vehicleType.equipmentTypes', 'equipment')
-                ->get()
+            $incompleteIds = $vehiclesWithEquipment
                 ->reject(fn($v) => $v->hasAllRequiredEquipment())
                 ->pluck('id');
             $vehicles = $vehicles->whereIn('id', $incompleteIds);
@@ -63,18 +72,12 @@ class VehicleController extends Controller
 
         // Stats per la toolbar
         $totalVehicles = Vehicle::forCurrentUser()->count();
-        $openIssuesCount = Vehicle::forCurrentUser()
-            ->withCount(['issues as c' => fn($q) => $q->whereIn('status', ['open', 'in_progress'])])
-            ->get()
-            ->sum('c');
+        $openIssuesCount = Issue::whereIn('status', ['open', 'in_progress'])
+            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->count();
         $deadlinesIn30 = Deadline::where('is_renewed', false)
             ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
             ->upcoming(30)
-            ->count();
-        $completeFleet = Vehicle::forCurrentUser()
-            ->with('vehicleType.equipmentTypes', 'equipment')
-            ->get()
-            ->filter(fn($v) => $v->hasAllRequiredEquipment())
             ->count();
 
         return view('admin.vehicles.index', compact(
