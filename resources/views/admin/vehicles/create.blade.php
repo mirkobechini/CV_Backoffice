@@ -134,7 +134,12 @@
                     <div class="field">
                         <label for="registration_card">{{ __('Carta di circolazione') }}</label>
                         <label class="file-drop" for="registration_card" id="registration_card_label">
-                            <i class="fa-solid fa-file-arrow-up"></i> {{ __('Clicca per caricare (PDF, JPG, PNG)') }}
+                            @if (session('scanned_registration_card_path'))
+                                <i class="fa-solid fa-file-circle-check"></i>
+                                {{ __('Foto scansionata già allegata · clicca per sostituirla') }}
+                            @else
+                                <i class="fa-solid fa-file-arrow-up"></i> {{ __('Clicca per caricare (PDF, JPG, PNG)') }}
+                            @endif
                         </label>
                         <input type="file" class="@error('registration_card') is-invalid @enderror" id="registration_card"
                             name="registration_card" accept=".pdf,.jpg,.jpeg,.png" hidden>
