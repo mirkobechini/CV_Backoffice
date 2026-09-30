@@ -259,7 +259,7 @@ class TireCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
-            'tire_id' => $tire->id,
+            'tire_ids' => [$tire->id],
             'description' => 'Forature ricorrenti',
             'event_date' => '2026-05-01',
             'status' => 'open',
@@ -268,8 +268,8 @@ class TireCrudTest extends TestCase
         $issue = Issue::first();
 
         $response->assertRedirect(route('admin.issues.show', $issue));
-        $this->assertDatabaseHas('issues', [
-            'id' => $issue->id,
+        $this->assertDatabaseHas('issue_tire', [
+            'issue_id' => $issue->id,
             'tire_id' => $tire->id,
         ]);
     }

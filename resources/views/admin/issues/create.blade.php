@@ -44,31 +44,38 @@
                     </div>
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" required />
                 </div>
+                @php($issueTireIds = old('tire_ids', []))
                 <label class="check" style="margin-bottom:8px;">
-                    <input type="checkbox" id="is-tire-issue" {{ old('tire_id') ? 'checked' : '' }}>
+                    <input type="checkbox" id="is-tire-issue" {{ !empty($issueTireIds) ? 'checked' : '' }}>
                     <div>
-                        <div class="label">{{ __('Guasto relativo a un pneumatico') }}</div>
+                        <div class="label">{{ __('Guasto relativo a uno o più pneumatici') }}</div>
                         <div class="sub">{{ __('Es. foratura, usura anomala') }}</div>
                     </div>
                 </label>
-                <div class="field" id="tire-id-field" style="{{ old('tire_id') ? '' : 'display:none;' }}">
-                    <label for="tire_id">{{ __('Pneumatico collegato') }}</label>
-                    <select class="select @error('tire_id') is-invalid @enderror" id="tire_id" name="tire_id">
-                        <option value="">{{ __('Seleziona un pneumatico') }}</option>
+                <div class="field" id="tire-id-field" style="{{ !empty($issueTireIds) ? '' : 'display:none;' }}">
+                    <label>{{ __('Pneumatici collegati') }}</label>
+                    <div class="check-list" id="tire-checkboxes">
+                        @error('tire_ids')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
                         @foreach ($tires as $tire)
-                            <option value="{{ $tire->id }}" data-vehicle-id="{{ $tire->vehicle_id }}"
-                                {{ old('tire_id') == $tire->id ? 'selected' : '' }}>
-                                {{ $tire->vehicle->internal_code ?? 'N/A' }} · {{ $tire->position_label }} ·
-                                {{ $tire->season_label }}
-                                @if ($tire->brand)
-                                    · {{ $tire->brand }}
-                                @endif
-                            </option>
+                            <div class="item tire-checkbox" data-vehicle-id="{{ $tire->vehicle_id }}"
+                                style="display:none;">
+                                <input type="checkbox" name="tire_ids[]" value="{{ $tire->id }}"
+                                    id="tire_{{ $tire->id }}"
+                                    {{ in_array((string) $tire->id, $issueTireIds) ? 'checked' : '' }}>
+                                <label class="lbl" for="tire_{{ $tire->id }}">
+                                    {{ $tire->position_label }} · {{ $tire->season_label }}
+                                    @if ($tire->brand)
+                                        <span class="meta">— {{ $tire->brand }}</span>
+                                    @endif
+                                </label>
+                            </div>
                         @endforeach
-                    </select>
-                    @error('tire_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="empty" id="no-tire-msg" style="display:none;">
+                            {{ __('Nessun pneumatico per il veicolo selezionato.') }}
+                        </div>
+                    </div>
                 </div>
                 <div class="row2">
                     <div class="field">
@@ -133,13 +140,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             const isTireIssue = document.getElementById('is-tire-issue');
             const tireIdField = document.getElementById('tire-id-field');
-            const tireIdSelect = document.getElementById('tire_id');
             const vehicleSelect = document.getElementById('vehicle_id');
+            const noTireMsg = document.getElementById('no-tire-msg');
 
             const toggleTireField = () => {
                 tireIdField.style.display = isTireIssue.checked ? '' : 'none';
                 if (!isTireIssue.checked) {
-                    tireIdSelect.value = '';
+                    document.querySelectorAll('.tire-checkbox input').forEach(input => input.checked = false);
                 }
             };
 
@@ -149,17 +156,20 @@
             // altro mezzo.
             const filterTiresByVehicle = () => {
                 const selectedVehicleId = vehicleSelect.value;
+                const tireChecks = document.querySelectorAll('.tire-checkbox');
+                let hasVisibleTire = false;
 
-                Array.from(tireIdSelect.options).forEach((option) => {
-                    if (!option.value) return;
-
-                    const matches = option.dataset.vehicleId === selectedVehicleId;
-                    option.hidden = !matches;
-
-                    if (!matches && option.selected) {
-                        tireIdSelect.value = '';
+                tireChecks.forEach(el => {
+                    const matches = el.dataset.vehicleId === selectedVehicleId;
+                    el.style.display = matches ? '' : 'none';
+                    if (matches) {
+                        hasVisibleTire = true;
+                    } else {
+                        el.querySelector('input').checked = false;
                     }
                 });
+
+                noTireMsg.style.display = (selectedVehicleId && !hasVisibleTire) ? '' : 'none';
             };
 
             isTireIssue.addEventListener('change', toggleTireField);

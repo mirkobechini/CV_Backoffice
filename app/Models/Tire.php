@@ -82,7 +82,7 @@ class Tire extends Model
 
     public function issues()
     {
-        return $this->hasMany(Issue::class);
+        return $this->belongsToMany(Issue::class, 'issue_tire');
     }
 
     public function changes()

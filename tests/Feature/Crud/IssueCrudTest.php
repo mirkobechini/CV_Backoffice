@@ -228,7 +228,7 @@ class IssueCrudTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.issues.create'));
 
         $response->assertOk();
-        $response->assertSee('Guasto relativo a un pneumatico');
+        $response->assertSee('Guasto relativo a uno o più pneumatici');
         $response->assertSee('id="tire-id-field" style="display:none;"', false);
     }
 
@@ -243,11 +243,11 @@ class IssueCrudTest extends TestCase
         ]);
         $issue = Issue::create([
             'vehicle_id' => $vehicle->id,
-            'tire_id' => $tire->id,
             'description' => 'Foratura',
             'status' => 'open',
             'event_date' => '2025-01-02',
         ]);
+        $issue->tires()->sync([$tire->id]);
         $user = $this->createUser();
 
         $response = $this->actingAs($user)->get(route('admin.issues.edit', $issue));
@@ -270,7 +270,7 @@ class IssueCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
-            'tire_id' => $tire->id,
+            'tire_ids' => [$tire->id],
             'description' => 'Foratura',
             'status' => 'open',
             'event_date' => '2025-01-02',
@@ -279,6 +279,10 @@ class IssueCrudTest extends TestCase
         $response->assertRedirect();
         $this->assertDatabaseHas('issues', [
             'vehicle_id' => $vehicle->id,
+        ]);
+        $issue = Issue::where('vehicle_id', $vehicle->id)->firstOrFail();
+        $this->assertDatabaseHas('issue_tire', [
+            'issue_id' => $issue->id,
             'tire_id' => $tire->id,
         ]);
     }

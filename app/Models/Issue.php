@@ -20,7 +20,6 @@ class Issue extends Model
     }
     protected $fillable = [
         'vehicle_id',
-        'tire_id',
         'description',
         'notes',
         'status',
@@ -70,9 +69,9 @@ class Issue extends Model
         return $this->belongsTo(Vehicle::class);
     }
 
-    public function tire()
+    public function tires()
     {
-        return $this->belongsTo(Tire::class);
+        return $this->belongsToMany(Tire::class, 'issue_tire');
     }
 
     public function maintenanceRecordItems()
