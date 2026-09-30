@@ -133,6 +133,21 @@ class UpdateMaintenanceRecordRequest extends FormRequest
                 }
             }
 
+            // Il km inserito deve essere coerente con la cronologia chilometraggi
+            // del veicolo: non può essere inferiore a una lettura precedente né
+            // superiore a una successiva (stessa regola usata per l'inserimento
+            // manuale in MileageLog, vedi UpdateMileageLogRequest).
+            $mileageAtService = $this->input('mileage_at_service');
+            $logDate = $this->input('return_date') ?: $this->input('appointment_date');
+
+            if ($vehicleId && $mileageAtService !== null && $logDate) {
+                $conflict = \App\Models\MileageLog::findChronologyConflict((int) $vehicleId, $logDate, (int) $mileageAtService);
+
+                if ($conflict) {
+                    $validator->errors()->add('mileage_at_service', $conflict);
+                }
+            }
+
             $this->validateTireSelection($validator);
         });
     }

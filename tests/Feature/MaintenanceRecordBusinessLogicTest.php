@@ -654,6 +654,50 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $response->assertSessionHasErrors('mileage_at_service');
     }
 
+    public function test_store_rejects_mileage_lower_than_previous_reading(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        \App\Models\MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-09-01',
+            'mileage' => 90000,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-09-15',
+            'mileage_at_service' => 85000,
+        ]);
+
+        $response->assertSessionHasErrors('mileage_at_service');
+    }
+
+    public function test_store_allows_mileage_consistent_with_history(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        \App\Models\MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-09-01',
+            'mileage' => 90000,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-09-15',
+            'mileage_at_service' => 91000,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('mileage_at_service');
+    }
+
     public function test_complete_with_tagliando_revision_and_issue_together(): void
     {
         $user = $this->createUser();
