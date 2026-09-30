@@ -74,6 +74,22 @@ class Equipment extends Model
             ->orderBy('next_collaudo_date');
     }
 
+    /**
+     * Come expiringSoon()/collaudoExpiringSoon() ma unite: un'attrezzatura
+     * con revisione e collaudo entra nel risultato se una qualunque delle
+     * due scadenze è imminente/scaduta. Usata dove prima si guardava solo
+     * expiringSoon(), che ignorava silenziosamente il collaudo.
+     */
+    public function scopeExpiringSoonOverall(Builder $query, int $days = 30): Builder
+    {
+        $threshold = Carbon::today()->addDays($days);
+
+        return $query->where(function (Builder $q) use ($threshold) {
+            $q->where(fn (Builder $sub) => $sub->whereNotNull('expiration_date')->where('expiration_date', '<=', $threshold))
+                ->orWhere(fn (Builder $sub) => $sub->whereNotNull('next_collaudo_date')->where('next_collaudo_date', '<=', $threshold));
+        });
+    }
+
     public function getFabricationDateFormattedAttribute(): ?string
     {
         return $this->fabrication_date?->format('m/Y');
@@ -182,6 +198,72 @@ class Equipment extends Model
         }
 
         return 'Valido';
+    }
+
+    /**
+     * Stato complessivo (usato per filtro/badge nell'elenco): un'attrezzatura
+     * come l'estintore ha sia la revisione che il collaudo, due scadenze
+     * indipendenti. "Valida" solo se entrambe lo sono; la più urgente delle
+     * due vince — altrimenti l'indice segnalava "Valida" anche quando il
+     * collaudo era scaduto ma la revisione no (o viceversa).
+     */
+    public function getOverallStatusLabelAttribute(): string
+    {
+        $labels = array_filter(
+            [$this->status_label, $this->collaudo_status_label],
+            fn ($label) => $label !== 'N/A'
+        );
+
+        if (empty($labels)) {
+            return 'N/A';
+        }
+
+        if (in_array('Scaduta', $labels, true) || in_array('Scaduto', $labels, true)) {
+            return 'Scaduta';
+        }
+
+        if (in_array('In scadenza', $labels, true)) {
+            return 'In scadenza';
+        }
+
+        return 'Valida';
+    }
+
+    public function getOverallStatusColorAttribute(): string
+    {
+        return match ($this->overall_status_label) {
+            'Scaduta' => 'red',
+            'In scadenza' => 'yellow',
+            'Valida' => 'green',
+            default => 'blue',
+        };
+    }
+
+    /**
+     * La più urgente tra revisione e collaudo (quella con data più vicina),
+     * per i widget/riepiloghi che mostrano una sola scadenza per riga:
+     * senza questo, mostravano sempre expiration_date anche quando era il
+     * collaudo, non la revisione, a essere imminente/scaduto.
+     */
+    public function getNextDueDateAttribute(): ?Carbon
+    {
+        return collect([$this->expiration_date, $this->next_collaudo_date])
+            ->filter()
+            ->sort()
+            ->first();
+    }
+
+    public function getNextDueLabelAttribute(): ?string
+    {
+        if (! $this->expiration_date) {
+            return $this->next_collaudo_date ? 'Collaudo' : null;
+        }
+
+        if (! $this->next_collaudo_date) {
+            return 'Revisione';
+        }
+
+        return $this->expiration_date->lte($this->next_collaudo_date) ? 'Revisione' : 'Collaudo';
     }
 
     /**

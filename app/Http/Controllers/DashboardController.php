@@ -86,8 +86,10 @@ class DashboardController extends Controller
                     $q->whereDoesntHave('vehicle')
                         ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
                 })
-                ->expiringSoon()
-                ->get();
+                ->expiringSoonOverall()
+                ->get()
+                ->sortBy('next_due_date')
+                ->values();
 
             // Veicoli attualmente in officina: check-in avvenuto, non ancora rientrati.
             $inWorkshopCount = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forCurrentUser())

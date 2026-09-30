@@ -222,6 +222,7 @@
             <thead>
                 <tr>
                     <th>Nome</th>
+                    <th>Tipo</th>
                     <th>Veicolo</th>
                     <th>Scadenza</th>
                     <th>Stato</th>
@@ -231,9 +232,10 @@
                 @foreach ($data['expiringEquipment'] as $equipment)
                     <tr>
                         <td>{{ $equipment->name }}</td>
+                        <td>{{ $equipment->next_due_label }}</td>
                         <td>{{ $equipment->vehicle->internal_code }}</td>
-                        <td>{{ $equipment->expiration_date->format('d/m/Y') }}</td>
-                        <td>{{ $equipment->expiration_date->isPast() ? 'Scaduta' : 'In scadenza' }}</td>
+                        <td>{{ $equipment->next_due_date->format('d/m/Y') }}</td>
+                        <td>{{ $equipment->next_due_date->isPast() ? 'Scaduta' : 'In scadenza' }}</td>
                     </tr>
                 @endforeach
             </tbody>

@@ -57,7 +57,7 @@ class EquipmentController extends Controller
         if ($statusFilter !== 'all') {
             $labelMap = ['expired' => 'Scaduta', 'pending' => 'In scadenza', 'valid' => 'Valida'];
             $allEquipments = $allEquipments->filter(
-                fn (Equipment $e) => $e->status_label === $labelMap[$statusFilter]
+                fn (Equipment $e) => $e->overall_status_label === $labelMap[$statusFilter]
             )->values();
         }
 
@@ -154,7 +154,13 @@ class EquipmentController extends Controller
                 continue;
             }
 
-            $parsed = Carbon::createFromFormat('Y-m', $data[$field]);
+            // Formato esplicito con giorno fissato a 1: createFromFormat('Y-m', ...)
+            // da solo lascia il giorno al valore corrente (es. 30 se oggi è
+            // il 30), e per mesi più corti (es. febbraio) quel giorno
+            // trabocca già al mese successivo PRIMA di endOfMonth(), dando
+            // il risultato sbagliato (es. "2032-02" -> 31 marzo invece di
+            // 29 febbraio).
+            $parsed = Carbon::createFromFormat('Y-m-d', $data[$field] . '-01');
             $data[$field] = $parsed ? $parsed->endOfMonth()->toDateString() : null;
         }
 
