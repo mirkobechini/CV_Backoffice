@@ -163,6 +163,34 @@ class SendSummaryReportTest extends TestCase
         });
     }
 
+    public function test_report_failure_for_one_recipient_does_not_block_others(): void
+    {
+        // Prima di questo fix, un'eccezione nel calcolo/invio per UN
+        // destinatario interrompeva l'intero comando prima di raggiungere
+        // gli altri destinatari nel ciclo — nessuno riceveva più nulla.
+        // Qui forziamo il fallimento dell'invio al primo destinatario e
+        // verifichiamo che il secondo lo riceva comunque.
+        $userA = User::factory()->create();
+        $userB = User::factory()->create();
+        NotificationSetting::create(['user_id' => $userA->id, 'key' => 'report_email', 'value' => 'a@example.com']);
+        NotificationSetting::create(['user_id' => $userB->id, 'key' => 'report_email', 'value' => 'b@example.com']);
+
+        $this->vehicle();
+
+        Mail::shouldReceive('to')
+            ->once()
+            ->with('a@example.com')
+            ->andThrow(new \RuntimeException('SMTP down'));
+        Mail::shouldReceive('to')
+            ->once()
+            ->with('b@example.com')
+            ->andReturn(new class {
+                public function send($mailable) {}
+            });
+
+        $this->artisan('app:send-summary-report');
+    }
+
     public function test_report_shows_positive_days_remaining_for_upcoming_deadline(): void
     {
         // diffInDays() è firmato da Carbon 3 in poi: chiamarlo nell'ordine

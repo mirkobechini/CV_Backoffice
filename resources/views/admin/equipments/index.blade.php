@@ -56,6 +56,7 @@
                         <th>{{ __('Nome') }}</th>
                         <th>{{ __('Numero Seriale') }}</th>
                         <th>{{ __('Data di revisione') }}</th>
+                        <th>{{ __('Prossimo collaudo') }}</th>
                         <th>{{ __('Sigla') }}</th>
                         <th>{{ __('Targa') }}</th>
                         <th></th>
@@ -86,6 +87,21 @@
                                     </div>
                                 @endif
                             </td>
+                            <td>
+                                @if ($equipment->next_collaudo_date)
+                                    {{ $equipment->next_collaudo_date_formatted }}
+                                    <div class="cell-sub">
+                                        @php($collaudoDaysDiff = \Carbon\Carbon::today()->diffInDays($equipment->next_collaudo_date, false))
+                                        @if ($collaudoDaysDiff < 0)
+                                            {{ __('scaduto da :n gg', ['n' => abs($collaudoDaysDiff)]) }}
+                                        @else
+                                            {{ __('scade tra :n gg', ['n' => $collaudoDaysDiff]) }}
+                                        @endif
+                                    </div>
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td class="code">{{ $equipment->vehicle?->internal_code ?? 'N/A' }}</td>
                             <td class="code">{{ $equipment->vehicle?->license_plate ?? 'N/A' }}</td>
                             <td>
@@ -104,7 +120,7 @@
                         <x-admin.delete-modal type="equipment" :object="$equipment" />
                     @empty
                         <tr>
-                            <td colspan="6" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
+                            <td colspan="7" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

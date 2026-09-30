@@ -74,17 +74,19 @@
                     @endif
                 </span>
             </div>
-            @if ($issue->tire)
+            @if ($issue->tires->isNotEmpty())
                 <div class="dl-kv">
-                    <span class="k">{{ __('Pneumatico collegato') }}</span>
+                    <span class="k">{{ __('Pneumatici collegati') }}</span>
                     <span class="v">
-                        <a class="dl-veh-link" href="{{ route('admin.tires.show', $issue->tire->id) }}">
-                            {{ $issue->tire->season_label }}
-                            @if ($issue->tire->brand)
-                                · {{ $issue->tire->brand }}
-                            @endif
-                            <span class="arrow">›</span>
-                        </a>
+                        @foreach ($issue->tires as $tire)
+                            <a class="dl-veh-link" href="{{ route('admin.tires.show', $tire->id) }}">
+                                {{ $tire->position_label }} · {{ $tire->season_label }}
+                                @if ($tire->brand)
+                                    · {{ $tire->brand }}
+                                @endif
+                                <span class="arrow">›</span>
+                            </a>
+                        @endforeach
                     </span>
                 </div>
             @endif

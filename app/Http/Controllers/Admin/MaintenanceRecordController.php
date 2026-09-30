@@ -157,7 +157,9 @@ class MaintenanceRecordController extends Controller
             $preselectedActivityType = $rawActivityType;
         }
 
-        $vehicles = Vehicle::forCurrentUser()->get();
+        // latestMileageLog eager-caricato: serve per mostrare l'ultimo km noto
+        // come placeholder/suggerimento nel campo "Chilometraggio all'appuntamento".
+        $vehicles = Vehicle::with('latestMileageLog')->forCurrentUser()->get();
         $providers = Provider::all();
         // Guasti aperti o in lavorazione: selezionabili per nuovi appuntamenti.
         // Includiamo anche 'in_progress' così un guasto non risolto in un appuntamento
@@ -276,7 +278,9 @@ class MaintenanceRecordController extends Controller
     {
         $maintenanceRecord->load(['vehicle', 'provider', 'items.itemable']);
 
-        $vehicles = Vehicle::forCurrentUser()->get();
+        // latestMileageLog eager-caricato: serve per mostrare l'ultimo km noto
+        // come placeholder/suggerimento nel campo "Chilometraggio all'appuntamento".
+        $vehicles = Vehicle::with('latestMileageLog')->forCurrentUser()->get();
         $providers = Provider::all();
         // In edit rendiamo selezionabili i guasti attivi + quelli già collegati al record.
         $linkedIssueIds = $maintenanceRecord->items

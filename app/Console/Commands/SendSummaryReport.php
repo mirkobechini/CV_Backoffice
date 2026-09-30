@@ -13,6 +13,8 @@ use App\Models\Equipment;
 use App\Models\MaintenanceRecord;
 use App\Models\NotificationSetting;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class SendSummaryReport extends Command
 {
@@ -39,7 +41,12 @@ class SendSummaryReport extends Command
             ->get(['user_id', 'value']);
 
         if ($recipientRows->isEmpty()) {
+            // Anche su console: senza questo, uno scheduler che gira senza
+            // terminale attaccato (il caso normale in produzione) non lascia
+            // alcuna traccia di questo esito, che dall'esterno è indistinguibile
+            // da "tutto ok, nessuno doveva ricevere nulla oggi".
             $this->warn('Nessun destinatario configurato. Ogni utente imposta la propria email nelle impostazioni notifiche.');
+            Log::warning('app:send-summary-report: nessun destinatario configurato (nessuna NotificationSetting report_email valorizzata).');
 
             return Command::SUCCESS;
         }
@@ -86,14 +93,21 @@ class SendSummaryReport extends Command
                 continue;
             }
 
-            $reminderDays = (int) ($userSettings->firstWhere('key', 'reminder_days_before')?->value ?? 7);
-            $groupId = $groupIdByUserId->get($userId);
+            // L'intero corpo è in try/catch: senza, un'eccezione nel calcolo
+            // dati di UN destinatario (es. un gruppo con dati inattesi)
+            // interrompeva l'intero comando prima di raggiungere gli altri
+            // destinatari nel ciclo, bloccando l'invio a TUTTI senza lasciare
+            // traccia in laravel.log — solo nell'output console, che nessuno
+            // legge quando il comando gira via scheduler.
+            try {
+                $reminderDays = (int) ($userSettings->firstWhere('key', 'reminder_days_before')?->value ?? 7);
+                $groupId = $groupIdByUserId->get($userId);
 
-            // 'reminder_days_before' cambia i dati per-utente anche a parità
-            // di gruppo, quindi la cache è per gruppo + giorni di preavviso.
-            $cacheKey = ($groupId ?? 'none') . ':' . $reminderDays;
+                // 'reminder_days_before' cambia i dati per-utente anche a parità
+                // di gruppo, quindi la cache è per gruppo + giorni di preavviso.
+                $cacheKey = ($groupId ?? 'none') . ':' . $reminderDays;
 
-            if (! isset($perGroupData[$cacheKey])) {
+                if (! isset($perGroupData[$cacheKey])) {
                 $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
                     ->forGroup($groupId)
                     ->get();
@@ -146,14 +160,20 @@ class SendSummaryReport extends Command
                             $q->whereDoesntHave('vehicle')
                                 ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
                         })
-                        ->expiringSoon($reminderDays)
-                        ->get(),
+                        ->expiringSoonOverall($reminderDays)
+                        ->get()
+                        ->sortBy('next_due_date')
+                        ->values(),
                 ];
             }
 
-            Mail::to($row->value)->send(new ReportMail($perGroupData[$cacheKey]));
-            $this->info("Report inviato con successo a {$row->value}!");
-            $sentCount++;
+                Mail::to($row->value)->send(new ReportMail($perGroupData[$cacheKey]));
+                $this->info("Report inviato con successo a {$row->value}!");
+                $sentCount++;
+            } catch (Throwable $e) {
+                $this->error("Errore nell'invio del report a {$row->value}: {$e->getMessage()}");
+                Log::error("app:send-summary-report: invio fallito per {$row->value} (user_id {$userId}): {$e->getMessage()}", ['exception' => $e]);
+            }
         }
 
         if ($sentCount === 0) {

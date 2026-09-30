@@ -228,17 +228,17 @@
                 @forelse ($expiringEquipment as $equipment)
                     <a href="{{ route('admin.equipments.index') }}" class="dash-list-item">
                         <div>
-                            <div class="name">{{ $equipment->name }}</div>
+                            <div class="name">{{ $equipment->name }} <span class="meta">({{ $equipment->next_due_label }})</span></div>
                             <div class="meta">{{ $equipment->vehicle?->internal_code ?? '—' }} ·
-                                @if ($equipment->expiration_date?->isPast())
+                                @if ($equipment->next_due_date?->isPast())
                                     {{ __('scaduta') }}
                                 @else
-                                    {{ __('scade tra :days giorni', ['days' => \Carbon\Carbon::today()->diffInDays($equipment->expiration_date)]) }}
+                                    {{ __('scade tra :days giorni', ['days' => \Carbon\Carbon::today()->diffInDays($equipment->next_due_date)]) }}
                                 @endif
                             </div>
                         </div>
                         <span
-                            class="badge {{ $equipment->expiration_date?->isPast() ? 'b-red' : 'b-amber' }}">{{ $equipment->expiration_date?->isPast() ? __('Scaduta') : \Carbon\Carbon::today()->diffInDays($equipment->expiration_date) . ' ' . __('gg') }}</span>
+                            class="badge {{ $equipment->next_due_date?->isPast() ? 'b-red' : 'b-amber' }}">{{ $equipment->next_due_date?->isPast() ? __('Scaduta') : \Carbon\Carbon::today()->diffInDays($equipment->next_due_date) . ' ' . __('gg') }}</span>
                     </a>
                 @empty
                     <div class="dash-empty">

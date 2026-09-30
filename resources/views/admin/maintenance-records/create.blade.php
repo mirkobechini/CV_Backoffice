@@ -32,6 +32,8 @@
                         <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}"
+                                data-mileage="{{ $vehicle->mileage }}"
+                                data-mileage-date="{{ $vehicle->latestMileageLog?->log_date_formatted }}"
                                 {{ (string) old('vehicle_id', $preselectedVehicleId ?? '') === (string) $vehicle->id ? 'selected' : '' }}>
                                 {{ $vehicle->internal_code }}</option>
                         @endforeach
@@ -271,6 +273,7 @@
                         @error('mileage_at_service')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
+                        <div class="hint" id="mileage-last-known-hint"></div>
                         <div class="hint">
                             {{ __("Obbligatorio se è selezionato un tagliando — km al momento del conferimento in officina.") }}
                         </div>
@@ -419,6 +422,30 @@
 
             filterByVehicle();
             vehicleSelect.addEventListener('change', filterByVehicle);
+
+            // Mostra l'ultimo km noto del veicolo selezionato come placeholder
+            // e come promemoria sotto il campo, per aiutare a non inserire un
+            // valore incoerente con la cronologia (vedi anche la validazione
+            // server-side in StoreMaintenanceRecordRequest).
+            const mileageInput = document.getElementById('mileage_at_service');
+            const mileageHint = document.getElementById('mileage-last-known-hint');
+            const updateMileageHint = () => {
+                const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+                const lastMileage = selectedOption?.dataset.mileage;
+                const lastMileageDate = selectedOption?.dataset.mileageDate;
+
+                if (lastMileage) {
+                    mileageInput.placeholder = lastMileage;
+                    mileageHint.textContent = lastMileageDate
+                        ? `{{ __('Ultimo km noto') }}: ${Number(lastMileage).toLocaleString('it-IT')} km ({{ __('il') }} ${lastMileageDate})`
+                        : `{{ __('Ultimo km noto') }}: ${Number(lastMileage).toLocaleString('it-IT')} km`;
+                } else {
+                    mileageInput.placeholder = 'es. 87400';
+                    mileageHint.textContent = '';
+                }
+            };
+            updateMileageHint();
+            vehicleSelect.addEventListener('change', updateMileageHint);
 
             // --- Sezione "Cambio Gomme" ---
             const activityTypeSelect = document.getElementById('activity_type');

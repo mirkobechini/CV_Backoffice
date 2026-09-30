@@ -133,6 +133,7 @@ class IssueController extends Controller
         $issueData = $this->buildIssueData($data, $request);
 
         $newIssue = Issue::create($issueData);
+        $newIssue->tires()->sync($data['tire_ids'] ?? []);
 
         return redirect()->route('admin.issues.show', $newIssue->id)->with('status', 'Guasto aggiunto con successo.');
     }
@@ -164,6 +165,7 @@ class IssueController extends Controller
         $data = $request->validated();
         $issueData = $this->buildIssueData($data, $request, $issue);
         $issue->update($issueData);
+        $issue->tires()->sync($data['tire_ids'] ?? []);
 
         return redirect()->route('admin.issues.show', $issue->id)->with('status', 'Guasto aggiornato con successo.');
     }
@@ -186,7 +188,6 @@ class IssueController extends Controller
     {
         $issueData = [
             'vehicle_id' => $data['vehicle_id'],
-            'tire_id' => $data['tire_id'] ?? null,
             'description' => $data['description'],
             'notes' => $data['notes'] ?? null,
             'event_date' => $data['event_date'],

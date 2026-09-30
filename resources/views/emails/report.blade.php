@@ -314,12 +314,12 @@
                 @foreach ($data['expiringEquipment'] as $equipment)
                     <div class="section-item">
                         <div>
-                            <div class="label">{{ $equipment->name }}</div>
+                            <div class="label">{{ $equipment->name }} ({{ $equipment->next_due_label }})</div>
                             <div class="meta">{{ $equipment->vehicle->internal_code }} —
-                                {{ $equipment->expiration_date->format('d/m/Y') }}</div>
+                                {{ $equipment->next_due_date->format('d/m/Y') }}</div>
                         </div>
-                        <span class="badge {{ $equipment->expiration_date->isPast() ? 'badge-red' : 'badge-yellow' }}">
-                            {{ $equipment->expiration_date->isPast() ? 'Scaduta' : 'In scadenza' }}
+                        <span class="badge {{ $equipment->next_due_date->isPast() ? 'badge-red' : 'badge-yellow' }}">
+                            {{ $equipment->next_due_date->isPast() ? 'Scaduta' : 'In scadenza' }}
                         </span>
                     </div>
                 @endforeach

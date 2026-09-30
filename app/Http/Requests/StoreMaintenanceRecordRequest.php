@@ -114,6 +114,21 @@ class StoreMaintenanceRecordRequest extends FormRequest
             $startDate = $this->input('appointment_date');
             $endDate = $this->input('return_date') ?? $startDate;
 
+            // Il km inserito deve essere coerente con la cronologia chilometraggi
+            // del veicolo: non può essere inferiore a una lettura precedente né
+            // superiore a una successiva (stessa regola usata per l'inserimento
+            // manuale in MileageLog, vedi StoreMileageLogRequest).
+            $mileageAtService = $this->input('mileage_at_service');
+            $logDate = $this->input('return_date') ?: $this->input('appointment_date');
+
+            if ($vehicleId && $mileageAtService !== null && $logDate) {
+                $conflict = \App\Models\MileageLog::findChronologyConflict((int) $vehicleId, $logDate, (int) $mileageAtService);
+
+                if ($conflict) {
+                    $validator->errors()->add('mileage_at_service', $conflict);
+                }
+            }
+
             if ($vehicleId && $startDate) {
                 $conflict = \App\Models\MaintenanceRecord::where('vehicle_id', $vehicleId)
                     ->where(function ($q) use ($startDate, $endDate) {

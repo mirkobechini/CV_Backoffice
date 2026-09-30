@@ -21,7 +21,8 @@ class UpdateIssueRequest extends FormRequest
     {
         return [
             'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
-            'tire_id' => ['nullable', new BelongsToCurrentUserGroup(Tire::class, message: 'Il pneumatico selezionato non esiste o non appartiene al tuo gruppo.')],
+            'tire_ids' => ['nullable', 'array'],
+            'tire_ids.*' => [new BelongsToCurrentUserGroup(Tire::class, message: 'Uno o più pneumatici selezionati non esistono o non appartengono al tuo gruppo.')],
             'description' => 'required|string',
             'notes' => 'nullable|string',
             'event_date' => 'required|date',
