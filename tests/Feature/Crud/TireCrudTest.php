@@ -251,6 +251,14 @@ class TireCrudTest extends TestCase
         $response->assertViewHas('tires', fn ($tires) => $tires->pluck('id')->all() === [$tireB->id, $tireA->id]);
     }
 
+    public function test_size_is_normalized_to_uppercase(): void
+    {
+        $vehicle = $this->createVehicle();
+        $tire = $this->createTire($vehicle, ['size' => '195/60r16c 99/97h']);
+
+        $this->assertSame('195/60R16C 99/97H', $tire->fresh()->size);
+    }
+
     public function test_issue_can_be_linked_to_a_tire(): void
     {
         $user = $this->admin();

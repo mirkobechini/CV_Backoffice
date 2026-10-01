@@ -13,7 +13,7 @@ const composeTireSize = (root) => {
     const ratio = root.querySelector('.tire-size-ratio')?.value.trim();
     const rim = root.querySelector('.tire-size-rim')?.value.trim();
     const reinforced = root.querySelector('.tire-size-reinforced')?.checked;
-    const index = root.querySelector('.tire-size-index')?.value.trim();
+    const index = root.querySelector('.tire-size-index')?.value.trim().toUpperCase();
 
     if (!width || !ratio || !rim) {
         hidden.value = '';
