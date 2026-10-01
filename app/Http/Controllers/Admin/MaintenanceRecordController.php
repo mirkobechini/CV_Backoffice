@@ -13,10 +13,7 @@ use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\Tire;
 use App\Models\Vehicle;
-use App\Services\DeadlineService;
 use App\Services\MaintenanceCompletionService;
-use App\Services\MileageLogService;
-use App\Services\TireChangeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -27,9 +24,6 @@ class MaintenanceRecordController extends Controller
     use SortableAndGroupable;
 
     public function __construct(
-        private readonly DeadlineService $deadlineService,
-        private readonly MileageLogService $mileageLogService,
-        private readonly TireChangeService $tireChangeService,
         private readonly MaintenanceCompletionService $completionService,
     ) {
         $this->authorizeResource(MaintenanceRecord::class, 'maintenanceRecord');
@@ -527,85 +521,7 @@ class MaintenanceRecordController extends Controller
                 ->withErrors(['issue_resolved' => 'Non puoi completare un appuntamento la cui data non è ancora arrivata (' . $maintenanceRecord->appointment_date_formatted . ').']);
         }
 
-        $issues = $maintenanceRecord->items->where('itemable_type', Issue::class);
-        $deadlines = $maintenanceRecord->items->where('itemable_type', Deadline::class);
-
-        // Transazione unica: aggiornamento intervento/guasto/scadenza deve essere atomico.
-        DB::transaction(function () use ($maintenanceRecord, $data, $issues, $deadlines, $tireItems) {
-            // 1) complete maintenance
-            // Se l'utente ha già indicato una data di rientro (es. un tagliando
-            // registrato retroattivamente), la rispettiamo. Altrimenti usiamo oggi.
-            if (! $maintenanceRecord->return_date) {
-                $maintenanceRecord->return_date = Carbon::today();
-            }
-            $maintenanceRecord->save();
-
-            // 2) update issues
-            foreach ($issues as $item) {
-                $issue = $item->itemable;
-                if ($issue) {
-                    if ((bool) $data['issue_resolved']) {
-                        $issue->status = 'closed';
-                        $issue->save();
-                    } else {
-                        $issue->status = 'in_progress';
-                        $issue->save();
-                    }
-                }
-            }
-
-            // 3) update deadlines + create next ones
-            foreach ($deadlines as $item) {
-                $deadline = $item->itemable;
-                if (! $deadline || ! in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
-                    continue;
-                }
-
-                if ((bool) $data['issue_resolved']) {
-                    $this->completionService->renewDeadline($maintenanceRecord, $deadline);
-                } else {
-                    $deadline->status = 'pending';
-                    $deadline->save();
-                }
-            }
-
-            // 4) Cambio cinghia distribuzione: riparte la scadenza dalla data
-            //    e dal chilometraggio del cambio effettuato. Non è collegata
-            //    come MaintenanceRecordItem (il passo 3 sopra esclude apposta
-            //    TYPE_CINGHIA), quindi va trovata qui sul veicolo.
-            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) $data['issue_resolved']) {
-                $timingBeltDeadline = $maintenanceRecord->vehicle->deadlines()
-                    ->where('type', Deadline::TYPE_CINGHIA)
-                    ->where('is_renewed', false)
-                    ->latest('due_date')
-                    ->first();
-
-                if ($timingBeltDeadline) {
-                    $this->completionService->renewDeadline($maintenanceRecord, $timingBeltDeadline);
-                }
-            }
-
-            // 5) Cambio gomme: monta i set collegati (uno o più, es. anteriori
-            // + posteriori insieme), applicando alle gomme sostituite la
-            // disposizione scelta (magazzino o dismesse). Le chiamate in
-            // sequenza si compongono correttamente anche quando un set
-            // "full" già montato va diviso tra i due nuovi assi montati
-            // (vedi TireChangeService).
-            foreach ($tireItems as $tireItem) {
-                if ($tireItem->completed) {
-                    continue;
-                }
-
-                $this->tireChangeService->recordChange(
-                    $tireItem->itemable,
-                    $maintenanceRecord->return_date,
-                    $maintenanceRecord->mileage_at_service,
-                    $data['previous_disposition'],
-                    "Appuntamento del {$maintenanceRecord->appointment_date_formatted}",
-                );
-                $tireItem->update(['completed' => true]);
-            }
-        });
+        $this->completionService->complete($maintenanceRecord, $data);
 
         return redirect()
             ->route('admin.maintenance-records.show', $maintenanceRecord->id)
