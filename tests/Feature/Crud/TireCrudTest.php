@@ -251,6 +251,87 @@ class TireCrudTest extends TestCase
         $response->assertViewHas('tires', fn ($tires) => $tires->pluck('id')->all() === [$tireB->id, $tireA->id]);
     }
 
+    public function test_bulk_update_applies_brand_model_and_size_to_selected_tires_only(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+        $tireA = $this->createTire($vehicle, ['brand' => null, 'model_name' => null, 'size' => null]);
+        $tireB = $this->createTire($vehicle, ['brand' => null, 'model_name' => null, 'size' => null]);
+        $untouched = $this->createTire($vehicle, ['brand' => 'Pirelli', 'model_name' => 'Cinturato', 'size' => '195/65R15']);
+
+        $response = $this->actingAs($user)->patch(route('admin.tires.bulk-update'), [
+            'tire_ids' => [$tireA->id, $tireB->id],
+            'brand' => 'Michelin',
+            'model_name' => 'Agilis',
+            'size' => '225/75r16c',
+        ]);
+
+        $response->assertRedirect(route('admin.tires.index'));
+
+        foreach ([$tireA, $tireB] as $tire) {
+            $tire->refresh();
+            $this->assertSame('Michelin', $tire->brand);
+            $this->assertSame('Agilis', $tire->model_name);
+            $this->assertSame('225/75R16C', $tire->size);
+        }
+
+        $this->assertSame('Pirelli', $untouched->fresh()->brand);
+    }
+
+    public function test_bulk_update_leaves_blank_fields_unchanged(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+        $tire = $this->createTire($vehicle, ['brand' => 'Pirelli', 'model_name' => 'Cinturato', 'size' => '195/65R15']);
+
+        $this->actingAs($user)->patch(route('admin.tires.bulk-update'), [
+            'tire_ids' => [$tire->id],
+            'brand' => 'Michelin',
+            // model_name e size non compilati: devono restare quelli originali
+        ]);
+
+        $tire->refresh();
+        $this->assertSame('Michelin', $tire->brand);
+        $this->assertSame('Cinturato', $tire->model_name);
+        $this->assertSame('195/65R15', $tire->size);
+    }
+
+    public function test_bulk_update_requires_at_least_one_field(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+        $tire = $this->createTire($vehicle);
+
+        $response = $this->actingAs($user)->patch(route('admin.tires.bulk-update'), [
+            'tire_ids' => [$tire->id],
+        ]);
+
+        $response->assertSessionHasErrors('brand');
+    }
+
+    public function test_bulk_update_rejects_tire_from_another_group(): void
+    {
+        $user = $this->admin();
+        $otherGroup = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $otherVehicle = Vehicle::create([
+            'group_id' => $otherGroup->id,
+            'license_plate' => 'ZZ999ZZ',
+            'internal_code' => '0002',
+            'brand_id' => Brand::create(['name' => 'Iveco ' . uniqid()])->id,
+            'car_model_id' => CarModel::create(['name' => 'Daily', 'brand_id' => Brand::first()->id])->id,
+            'vehicle_type_id' => VehicleType::create(['name' => 'Ambulanza ' . uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24])->id,
+            'immatricolation_date' => '2024-01-01',
+        ]);
+        $otherTire = $this->createTire($otherVehicle);
+
+        $response = $this->actingAs($user)->patch(route('admin.tires.bulk-update'), [
+            'tire_ids' => [$otherTire->id],
+            'brand' => 'Michelin',
+        ]);
+
+        $response->assertSessionHasErrors('tire_ids.0');
+    }
+
     public function test_size_is_normalized_to_uppercase(): void
     {
         $vehicle = $this->createVehicle();

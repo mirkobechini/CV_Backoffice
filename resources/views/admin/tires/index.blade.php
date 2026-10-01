@@ -20,6 +20,34 @@
         $seasonLabels = ['summer' => __('Estive'), 'winter' => __('Invernali'), 'all_season' => __('Quattro stagioni')];
     @endphp
 
+    {{-- Barra modifica di gruppo: fuori dalla tabella (niente form annidate
+    con quelle dei modal di eliminazione), compilata via JS dagli id
+    selezionati prima dell'invio. --}}
+    <form id="tire-bulk-form" method="POST" action="{{ route('admin.tires.bulk-update') }}"
+        class="bulk-edit-bar" style="display:none;" data-single-submit="true">
+        @csrf
+        @method('PATCH')
+        <div id="tire-bulk-hidden-ids"></div>
+        <div class="bulk-edit-bar-inner">
+            <span id="tire-bulk-count" class="bulk-edit-count"></span>
+            <div class="field">
+                <input type="text" class="input sm" name="brand" placeholder="{{ __('Marca') }}">
+            </div>
+            <div class="field">
+                <input type="text" class="input sm" name="model_name" placeholder="{{ __('Modello') }}">
+            </div>
+            <x-form.tire-size-input name="size" label="{{ __('Misura') }}" />
+            <button type="submit" class="btn primary sm">{{ __('Applica a selezionate') }}</button>
+            <button type="button" id="tire-bulk-clear" class="btn ghost sm">{{ __('Annulla selezione') }}</button>
+        </div>
+        @error('brand')
+            <div class="field-error">{{ $message }}</div>
+        @enderror
+        @error('size')
+            <div class="field-error">{{ $message }}</div>
+        @enderror
+    </form>
+
     <div class="table-card">
         <div class="toolbar">
             <div class="toolbar-left">
@@ -84,6 +112,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th><input type="checkbox" id="tire-select-all" title="{{ __('Seleziona tutte (pagina corrente)') }}"></th>
                         <th>
                             <div class="th-wrap"><span>{{ __('Veicolo') }}</span>
                                 <a href="{{ $sortToggleUrl('vehicle') }}"
@@ -121,6 +150,7 @@
                 <tbody>
                     @forelse ($tires as $tire)
                         <tr>
+                            <td><input type="checkbox" class="tire-select" value="{{ $tire->id }}"></td>
                             <td>
                                 <div class="vin">
                                     <span class="thumb t{{ ($tire->id % 5) + 1 }}"><i
@@ -157,7 +187,7 @@
                         <x-admin.delete-modal type="tire" :object="$tire" />
                     @empty
                         <tr>
-                            <td colspan="8" class="empty">{{ __('Nessun set di gomme trovato.') }}</td>
+                            <td colspan="9" class="empty">{{ __('Nessun set di gomme trovato.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -174,4 +204,53 @@
             </div>
         @endif
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const selectAll = document.getElementById('tire-select-all');
+                const checkboxes = () => Array.from(document.querySelectorAll('.tire-select'));
+                const bar = document.getElementById('tire-bulk-form');
+                const countLabel = document.getElementById('tire-bulk-count');
+                const hiddenContainer = document.getElementById('tire-bulk-hidden-ids');
+                const clearBtn = document.getElementById('tire-bulk-clear');
+
+                const updateBar = () => {
+                    const selected = checkboxes().filter(c => c.checked);
+                    if (selected.length > 0) {
+                        bar.style.display = '';
+                        countLabel.textContent = selected.length === 1
+                            ? '{{ __('1 pneumatico selezionato') }}'
+                            : selected.length + ' {{ __('pneumatici selezionati') }}';
+                    } else {
+                        bar.style.display = 'none';
+                    }
+                };
+
+                checkboxes().forEach(cb => cb.addEventListener('change', updateBar));
+
+                selectAll?.addEventListener('change', () => {
+                    checkboxes().forEach(cb => cb.checked = selectAll.checked);
+                    updateBar();
+                });
+
+                clearBtn?.addEventListener('click', () => {
+                    checkboxes().forEach(cb => cb.checked = false);
+                    if (selectAll) selectAll.checked = false;
+                    updateBar();
+                });
+
+                bar?.addEventListener('submit', () => {
+                    hiddenContainer.innerHTML = '';
+                    checkboxes().filter(c => c.checked).forEach(c => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'tire_ids[]';
+                        input.value = c.value;
+                        hiddenContainer.appendChild(input);
+                    });
+                });
+            });
+        </script>
+    @endpush
 @endsection
