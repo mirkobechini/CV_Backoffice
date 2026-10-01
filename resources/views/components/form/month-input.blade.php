@@ -1,4 +1,4 @@
-@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false])
+@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false, 'hint' => null])
 
 @php
     $inputId = $id ?? $name;
@@ -24,4 +24,7 @@
     @error($name)
         <div class="field-error">{{ $message }}</div>
     @enderror
+    @if ($hint)
+        <div class="hint">{{ $hint }}</div>
+    @endif
 </div>

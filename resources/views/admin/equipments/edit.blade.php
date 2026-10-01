@@ -94,10 +94,11 @@
                 <div class="row2">
                     <x-form.date-input name="fabrication_date" label="{{ __('Data di fabbricazione') }}"
                         :model="$equipment" />
-                    <x-form.date-input name="revision_date" label="{{ __('Data revisione') }}" :model="$equipment" />
+                    <x-form.date-input name="revision_date" label="{{ __('Ultima revisione effettuata') }}" :model="$equipment" />
                 </div>
                 <div class="row2">
-                    <x-form.month-input name="expiration_date" label="{{ __('Data scadenza') }}" :model="$equipment" />
+                    <x-form.month-input name="expiration_date" label="{{ __('Prossima revisione') }}" :model="$equipment"
+                        hint="{{ __('Se lasciata vuota, calcolata automaticamente dall\'ultima revisione in base all\'intervallo del tipo di attrezzatura.') }}" />
                 </div>
 
                 {{-- Campi specifici estintori --}}
@@ -130,10 +131,11 @@
                         </div>
                     </div>
                     <div class="row2">
-                        <x-form.date-input name="collaudo_date" label="{{ __('Data collaudo') }}"
+                        <x-form.date-input name="collaudo_date" label="{{ __('Ultimo collaudo effettuato') }}"
                             :model="$equipment" />
                         <x-form.month-input name="next_collaudo_date" label="{{ __('Prossimo collaudo') }}"
-                            :model="$equipment" />
+                            :model="$equipment"
+                            hint="{{ __('Se lasciata vuota, calcolata automaticamente dall\'ultimo collaudo in base all\'intervallo del tipo di attrezzatura.') }}" />
                     </div>
                 </div>
 

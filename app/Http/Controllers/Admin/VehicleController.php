@@ -15,6 +15,7 @@ use App\Models\VehicleType;
 use App\Services\DeadlineService;
 use App\Services\VehicleScanService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -176,6 +177,15 @@ class VehicleController extends Controller
         try {
             $extracted = $vehicleScanService->scan([$frontTempPath, $backTempPath]);
         } catch (VehicleScanException $e) {
+            // Il messaggio mostrato all'utente resta generico (non è un
+            // dettaglio su cui può agire), ma senza questo log la causa
+            // reale (chiave API mancante, chiamata fallita, risposta non
+            // valida...) restava impossibile da scoprire dopo il fatto.
+            Log::warning("Scansione libretto fallita: {$e->getMessage()}", [
+                'vehicle_id' => $vehicle?->id,
+                'user_id' => $request->user()?->id,
+            ]);
+
             return redirect()->to($targetRoute)
                 ->with('error', 'Impossibile leggere il libretto: inserisci i dati manualmente.')
                 ->with('scanned_registration_card_path', $frontPendingPath);
