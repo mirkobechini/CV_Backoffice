@@ -65,15 +65,6 @@ class MaintenanceRecord extends Model
         return $this->hasMany(MaintenanceRecordItem::class);
     }
 
-    public function issues()
-    {
-        return $this->morphToMany(Issue::class, 'itemable', 'maintenance_record_items');
-    }
-
-    public function deadlines()
-    {
-        return $this->morphToMany(Deadline::class, 'itemable', 'maintenance_record_items');
-    }
 
     public function tires()
     {

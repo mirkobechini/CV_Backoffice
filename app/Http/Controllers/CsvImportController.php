@@ -618,8 +618,18 @@ class CsvImportController extends Controller
                 'activity_type' => 'Riparazione',
             ]);
 
-            // Collega il guasto all'appuntamento
-            $maintenanceRecord->issues()->attach($issue->id);
+            // Collega il guasto all'appuntamento. NON $maintenanceRecord->issues()
+            // ->attach(): quella relazione (vedi MaintenanceRecord::issues(),
+            // rimossa) non corrispondeva allo schema reale della pivot
+            // (maintenance_record_items ha una FK diretta a
+            // maintenance_record_id + itemable_id/itemable_type verso
+            // Issue/Deadline/Tire, non una coppia issue_id+itemable polimorfica
+            // sul lato MaintenanceRecord) — stesso pattern usato ovunque
+            // altrove nell'app per collegare un guasto a un appuntamento.
+            $maintenanceRecord->items()->create([
+                'itemable_id' => $issue->id,
+                'itemable_type' => Issue::class,
+            ]);
         }
 
         return ['success' => true];
