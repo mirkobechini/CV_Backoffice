@@ -387,12 +387,17 @@ class MaintenanceRecordController extends Controller
                 $newIssueIds = $data['issue_ids'];
             }
 
-            // I guasti rimossi tornano in open
+            // I guasti rimossi tornano in open. Loop su modelli singoli (non
+            // una query di massa): whereIn()->update() bypassa gli Eloquent
+            // event, quindi LogsActivity non registrava questi cambi di
+            // stato nello storico, a differenza della modifica manuale di
+            // un guasto dalla sua pagina.
             $removedIssueIds = array_diff($oldIssueIds, $newIssueIds);
             if (! empty($removedIssueIds)) {
                 Issue::whereIn('id', $removedIssueIds)
                     ->where('status', 'in_progress')
-                    ->update(['status' => 'open']);
+                    ->get()
+                    ->each(fn (Issue $issue) => $issue->update(['status' => 'open']));
             }
             if (! empty($data['deadline_ids'])) {
                 foreach ($data['deadline_ids'] as $deadlineId) {
@@ -428,14 +433,16 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecord->loadMissing('items.itemable');
 
-        // I guasti in lavorazione tornano in open
+        // I guasti in lavorazione tornano in open (loop su modelli singoli,
+        // non query di massa — vedi commento in update() sullo stesso tema).
         $issueIds = $maintenanceRecord->items
             ->where('itemable_type', Issue::class)
             ->pluck('itemable_id');
         if ($issueIds->isNotEmpty()) {
             Issue::whereIn('id', $issueIds)
                 ->where('status', 'in_progress')
-                ->update(['status' => 'open']);
+                ->get()
+                ->each(fn (Issue $issue) => $issue->update(['status' => 'open']));
         }
 
         // Ripristina lo stato precedente delle scadenze rinnovate da questo
@@ -765,9 +772,12 @@ class MaintenanceRecordController extends Controller
     {
         $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
 
-        // Chiudi i guasti completati
+        // Chiudi i guasti completati (loop su modelli singoli, non query di
+        // massa — vedi commento in update() sullo stesso tema).
         if (! empty($completedIssueIds)) {
-            Issue::whereIn('id', $completedIssueIds)->update(['status' => 'closed']);
+            Issue::whereIn('id', $completedIssueIds)
+                ->get()
+                ->each(fn (Issue $issue) => $issue->update(['status' => 'closed']));
         }
 
         // Rinnova le scadenze completate
