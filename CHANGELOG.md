@@ -4,6 +4,30 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.3.0] - 2026-10-01
+
+### Added
+
+- Un guasto può ora coprire più pneumatici insieme (es. tutte e quattro le gomme forate nello stesso evento), invece di dover creare un guasto separato per ogni gomma.
+- La cinghia di distribuzione distingue ora catena (nessuna scadenza), cinghia a secco (scadenza solo a km) e cinghia a bagno d'olio (scadenza a km o a 10 anni) — prima un unico flag "cinghia sì/no" generava sempre la stessa scadenza combinata km+tempo per ogni veicolo con cinghia.
+- Più pneumatici possono essere modificati insieme (marca/modello/misura) dall'elenco gomme, utile per gomme dello stesso lotto.
+- Più attrezzature possono essere revisionate/collaudate insieme con un'unica data condivisa, per il caso comune di controlli fatti in blocco (es. tutti gli estintori lo stesso giorno).
+- Nuovo PDF riepilogo flotta dall'elenco veicoli: una riga per veicolo con prossimo tagliando, revisioni e ultimo chilometraggio.
+- Gli appuntamenti ora validano il chilometraggio inserito contro la cronologia del veicolo (stessa regola già in uso per l'inserimento manuale dei km), con l'ultimo km noto mostrato come suggerimento nel campo.
+
+### Fixed
+
+- L'indice attrezzature mostrava la data dell'ultima revisione accanto al conto alla rovescia della prossima scadenza — due date diverse presentate come se corrispondessero. Mostra ora la data di scadenza corretta, e include anche la scadenza del collaudo (prima ignorata silenziosamente se diversa da quella della revisione).
+- Un errore di formato mese/anno su anno bisestile poteva far calcolare la scadenza di un'attrezzatura un mese più avanti del dovuto.
+- Completare un appuntamento di tipo "Cambio Cinghia" andava sempre in errore (argomento mancante): non aveva mai funzionato.
+- Il report email periodico non veniva inviato da settimane: causa reale sullo scheduler di Laravel Cloud (non configurato), ma nel frattempo i comandi schedulati ora loggano gli errori invece di fallire in silenzio, e un destinatario che fallisce non blocca più l'invio agli altri.
+- Le misure pneumatico potevano salvarsi con lettere minuscole, rendendo due gomme identiche difficili da confrontare a colpo d'occhio; ora normalizzate in maiuscolo.
+- Chiarite le etichette dei campi data nel form attrezzature (distinzione tra "ultima effettuata" e "prossima", con testo che spiega il calcolo automatico).
+
+### Docs
+
+- README e ADR allineati con l'architettura reale: ruoli corretti (capo/sottocapo/member), aggiunte le sezioni mancanti su multi-tenancy a gruppi e scansione AI del libretto, corretta la nota sullo scheduler.
+
 ## [v1.2.54] - 2026-09-24
 
 ### Fixed
