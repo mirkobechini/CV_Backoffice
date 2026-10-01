@@ -95,6 +95,68 @@ class EquipmentRevisionTest extends TestCase
         $this->assertDatabaseCount('equipment_revisions', 2);
     }
 
+    public function test_bulk_record_revision_applies_same_date_to_all_selected(): void
+    {
+        $user = $this->admin();
+        $extinguisherA = $this->extinguisherEquipment();
+        $extinguisherB = Equipment::create([
+            'name' => 'Estintore B',
+            'equipment_type_id' => $extinguisherA->equipment_type_id,
+            'serial_number' => 'EX-101',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.equipments.bulk-record-revision'), [
+            'equipment_ids' => [$extinguisherA->id, $extinguisherB->id],
+            'kind' => 'revision',
+            'performed_date' => '2026-02-10',
+        ]);
+
+        $response->assertRedirect(route('admin.equipments.index'));
+
+        foreach ([$extinguisherA, $extinguisherB] as $equipment) {
+            $equipment->refresh();
+            $this->assertSame('2026-02-10', $equipment->revision_date->toDateString());
+            $this->assertSame('2026-08-10', $equipment->expiration_date->toDateString());
+        }
+
+        $this->assertDatabaseCount('equipment_revisions', 2);
+    }
+
+    public function test_bulk_record_revision_rejects_equipment_from_another_group(): void
+    {
+        $user = $this->admin();
+        $equipment = $this->extinguisherEquipment();
+
+        $otherGroup = \App\Models\Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $otherVehicleType = \App\Models\VehicleType::create(['name' => 'Ambulanza B', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $otherBrand = \App\Models\Brand::create(['name' => 'Iveco']);
+        $otherModel = \App\Models\CarModel::create(['name' => 'Daily', 'brand_id' => $otherBrand->id]);
+        $otherVehicle = \App\Models\Vehicle::create([
+            'group_id' => $otherGroup->id,
+            'license_plate' => 'ZZ999ZZ',
+            'internal_code' => '0002',
+            'brand_id' => $otherBrand->id,
+            'car_model_id' => $otherModel->id,
+            'vehicle_type_id' => $otherVehicleType->id,
+            'immatricolation_date' => '2024-01-01',
+        ]);
+        $otherEquipment = Equipment::create([
+            'name' => 'Estintore altro gruppo',
+            'equipment_type_id' => $equipment->equipmentType->id,
+            'serial_number' => 'EX-200',
+            'vehicle_id' => $otherVehicle->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.equipments.bulk-record-revision'), [
+            'equipment_ids' => [$otherEquipment->id],
+            'kind' => 'revision',
+            'performed_date' => '2026-02-10',
+        ]);
+
+        $response->assertSessionHasErrors('equipment_ids');
+        $this->assertDatabaseCount('equipment_revisions', 0);
+    }
+
     public function test_kind_is_required(): void
     {
         $user = $this->admin();

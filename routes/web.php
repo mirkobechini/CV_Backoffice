@@ -69,6 +69,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("equipments", EquipmentController::class);
         Route::post('equipments/{equipment}/record-revision', [EquipmentController::class, 'recordRevision'])
             ->name('equipments.record-revision');
+        Route::post('equipments/bulk-record-revision', [EquipmentController::class, 'bulkRecordRevision'])
+            ->name('equipments.bulk-record-revision');
         // Prima della resource route: "tires/{tire}" (PATCH) altrimenti
         // intercetterebbe "tires/bulk-update" risolvendo {tire} come
         // "bulk-update" e fallendo il model binding.

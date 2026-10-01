@@ -12,6 +12,33 @@
         $statusFilterUrl = fn($status) => route('admin.equipments.index', array_merge(request()->except(['status_filter', 'page']), $status === 'all' ? [] : ['status_filter' => $status]));
     @endphp
 
+    {{-- Barra revisione/collaudo multipla: fuori dalla tabella (niente form
+    annidate con quelle dei modal di eliminazione), compilata via JS dagli
+    id selezionati prima dell'invio. --}}
+    <form id="equipment-bulk-form" method="POST" action="{{ route('admin.equipments.bulk-record-revision') }}"
+        class="bulk-edit-bar" style="display:none;" data-single-submit="true">
+        @csrf
+        <div id="equipment-bulk-hidden-ids"></div>
+        <div class="bulk-edit-bar-inner">
+            <span id="equipment-bulk-count" class="bulk-edit-count"></span>
+            <div class="field">
+                <select class="select sm" name="kind" required>
+                    <option value="revision">{{ __('Revisione') }}</option>
+                    <option value="collaudo">{{ __('Collaudo') }}</option>
+                </select>
+            </div>
+            <x-form.date-input name="performed_date" label="{{ __('Data effettuata') }}" required />
+            <button type="submit" class="btn primary sm">{{ __('Registra per selezionate') }}</button>
+            <button type="button" id="equipment-bulk-clear" class="btn ghost sm">{{ __('Annulla selezione') }}</button>
+        </div>
+        @error('equipment_ids')
+            <div class="field-error">{{ $message }}</div>
+        @enderror
+        @error('performed_date')
+            <div class="field-error">{{ $message }}</div>
+        @enderror
+    </form>
+
     <div class="table-card">
         <div class="toolbar">
             <div class="toolbar-left">
@@ -53,6 +80,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th><input type="checkbox" id="equipment-select-all" title="{{ __('Seleziona tutte (pagina corrente)') }}"></th>
                         <th>{{ __('Nome') }}</th>
                         <th>{{ __('Numero Seriale') }}</th>
                         <th>{{ __('Data di revisione') }}</th>
@@ -65,6 +93,7 @@
                 <tbody>
                     @forelse ($equipments as $equipment)
                         <tr>
+                            <td><input type="checkbox" class="equipment-select" value="{{ $equipment->id }}"></td>
                             <td>
                                 <div class="vin">
                                     <span class="thumb t{{ ($equipment->id % 5) + 1 }}"><i
@@ -120,7 +149,7 @@
                         <x-admin.delete-modal type="equipment" :object="$equipment" />
                     @empty
                         <tr>
-                            <td colspan="7" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
+                            <td colspan="8" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -137,4 +166,53 @@
             </div>
         @endif
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const selectAll = document.getElementById('equipment-select-all');
+                const checkboxes = () => Array.from(document.querySelectorAll('.equipment-select'));
+                const bar = document.getElementById('equipment-bulk-form');
+                const countLabel = document.getElementById('equipment-bulk-count');
+                const hiddenContainer = document.getElementById('equipment-bulk-hidden-ids');
+                const clearBtn = document.getElementById('equipment-bulk-clear');
+
+                const updateBar = () => {
+                    const selected = checkboxes().filter(c => c.checked);
+                    if (selected.length > 0) {
+                        bar.style.display = '';
+                        countLabel.textContent = selected.length === 1
+                            ? '{{ __('1 attrezzatura selezionata') }}'
+                            : selected.length + ' {{ __('attrezzature selezionate') }}';
+                    } else {
+                        bar.style.display = 'none';
+                    }
+                };
+
+                checkboxes().forEach(cb => cb.addEventListener('change', updateBar));
+
+                selectAll?.addEventListener('change', () => {
+                    checkboxes().forEach(cb => cb.checked = selectAll.checked);
+                    updateBar();
+                });
+
+                clearBtn?.addEventListener('click', () => {
+                    checkboxes().forEach(cb => cb.checked = false);
+                    if (selectAll) selectAll.checked = false;
+                    updateBar();
+                });
+
+                bar?.addEventListener('submit', () => {
+                    hiddenContainer.innerHTML = '';
+                    checkboxes().filter(c => c.checked).forEach(c => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'equipment_ids[]';
+                        input.value = c.value;
+                        hiddenContainer.appendChild(input);
+                    });
+                });
+            });
+        </script>
+    @endpush
 @endsection
