@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BulkUpdateTireRequest;
 use App\Http\Requests\StoreTireChangeRequest;
 use App\Http\Requests\StoreTireRequest;
 use App\Http\Requests\UpdateTireRequest;
@@ -171,6 +172,31 @@ class TireController extends Controller
         }
 
         return redirect()->route('admin.tires.show', $tire)->with('status', 'Set di gomme aggiornato con successo.');
+    }
+
+    /**
+     * Applica marca/modello/misura a più pneumatici insieme (gomme dello
+     * stesso lotto, per non reinserire gli stessi dati una per una). Solo i
+     * campi compilati vengono sovrascritti; aggiorna un modello alla volta
+     * (non una query di massa) per mantenere mutator e audit log attivi.
+     */
+    public function bulkUpdate(BulkUpdateTireRequest $request)
+    {
+        $data = $request->validated();
+
+        $updates = array_filter([
+            'brand' => $data['brand'] ?? null,
+            'model_name' => $data['model_name'] ?? null,
+            'size' => $data['size'] ?? null,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $tires = Tire::whereIn('id', $data['tire_ids'])->get();
+
+        foreach ($tires as $tire) {
+            $tire->update($updates);
+        }
+
+        return redirect()->route('admin.tires.index')->with('status', count($tires) . ' pneumatici aggiornati con successo.');
     }
 
     /**

@@ -3742,3 +3742,31 @@ td .email {
 .guest-footer a:hover {
     text-decoration: underline;
 }
+
+/* Barra modifica di gruppo (es. elenco pneumatici): sticky sopra la
+   tabella, compare solo quando c'è almeno una riga selezionata. */
+.bulk-edit-bar {
+    position: sticky;
+    top: 8px;
+    z-index: 5;
+    background: var(--surface);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 10px 12px;
+    margin-bottom: 12px;
+}
+
+.bulk-edit-bar-inner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.bulk-edit-count {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--primary);
+    white-space: nowrap;
+}
