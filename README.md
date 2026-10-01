@@ -15,12 +15,12 @@
 - **Deadline and equipment tracking**: ministerial inspections, oxygen check, service, timing belt, insurance — with automatic status based on date and mileage; equipment with a separate inspection cycle (e.g. fire extinguisher collaudo) tracks both expiries independently, surfacing whichever is more urgent
 - **Automatic deadline generation**: timing belt (chain: none; dry belt: 100,000 km only; oil bath belt: 100,000 km or 10 years), service (1 year or configurable mileage), automatic renewal on intervention completion
 - **Mileage tracking**: bulk monthly entry, history, integration with mileage-based deadlines
-- **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set; a single fault report can also link several tires at once (e.g. all four punctured together)
-- **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle)
+- **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set; a single fault report can also link several tires at once (e.g. all four punctured together); brand/model/size can be bulk-edited across several tires from the same batch in one go
+- **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle); record a revision or collaudo for several pieces of equipment at once with one shared date (e.g. all fire extinguishers checked the same day)
 - **Public fleet status page**: a secret, unguessable link, no account required, showing only vehicle availability (no sensitive data)
 - **Interactive dashboard**: stats, upcoming deadlines (with remaining time/mileage and status), open faults, incomplete equipment
 - **Appointment calendar**: month/week view with color-coding by activity type
-- **PDF and CSV export**: vehicle info sheet as PDF, CSV export for every entity
+- **PDF and CSV export**: vehicle info sheet as PDF, a fleet-wide overview PDF (next deadlines and last mileage for every vehicle, one page), CSV export for every entity
 - **REST API**: 12 token-protected endpoints (Sanctum), built for a future mobile app
 - **Audit log**: full tracking of every change
 - **In-app notifications**: bell icon with badge, notification list, mark as read
@@ -141,13 +141,14 @@ The app runs in production on [Laravel Cloud](https://cloud.laravel.com). Steps,
 
 The project's architectural choices are documented in a single [Architecture Decision Record](docs/ADR.md). It covers:
 
-- Polymorphic relations (faults/deadlines ↔ maintenance)
+- Polymorphic relations (faults/deadlines/tires ↔ maintenance), plus the separate faults↔tires many-to-many
 - SoftDeletes and automatic deadline status (date + mileage)
 - Sanctum authentication + roles (Policies)
 - Email notifications with the scheduler
 - PDF (DomPDF) and CSV export
 - Audit logging and FULLTEXT search
-- Groups and roles (lead/deputy/member) with per-group data scoping
+- Group-based multi-tenancy (lead/deputy/member) with per-group data scoping
+- AI vision scan for vehicle registration documents
 
 ---
 
@@ -180,6 +181,7 @@ erDiagram
     MAINTENANCE_RECORDS ||--o{ MAINTENANCE_RECORD_ITEMS : "contains"
     MAINTENANCE_RECORD_ITEMS }o--|| ISSUES : "itemable"
     MAINTENANCE_RECORD_ITEMS }o--|| DEADLINES : "itemable"
+    MAINTENANCE_RECORD_ITEMS }o--|| TIRES : "itemable"
     MAINTENANCE_RECORDS }o--|| PROVIDERS : "provider"
 
     %% Users and configuration
