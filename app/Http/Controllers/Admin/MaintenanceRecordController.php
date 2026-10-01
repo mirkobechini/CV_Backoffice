@@ -215,48 +215,57 @@ class MaintenanceRecordController extends Controller
                 ->with('status', 'Intervento già registrato: creazione duplicata bloccata.');
         }
 
-        $newRecord = MaintenanceRecord::create([
-            'vehicle_id' => $data['vehicle_id'],
-            'provider_id' => $data['provider_id'],
-            'appointment_date' => $data['appointment_date'],
-            'return_date' => $data['return_date'] ?? null,
-            'activity_type' => $data['activity_type'] ?? null,
-            'mileage_at_service' => $data['mileage_at_service'] ?? null,
-            'notes' => $data['notes'] ?? null,
-        ]);
+        // Transazione unica: creazione del record, collegamento di
+        // guasti/scadenze/gomme e l'eventuale completamento immediato (se
+        // return_date è già compilata) devono riuscire o fallire insieme —
+        // senza, un errore a metà (es. su linkTireItems) lasciava il record
+        // creato ma con item/stati guasto incoerenti.
+        $newRecord = DB::transaction(function () use ($data) {
+            $newRecord = MaintenanceRecord::create([
+                'vehicle_id' => $data['vehicle_id'],
+                'provider_id' => $data['provider_id'],
+                'appointment_date' => $data['appointment_date'],
+                'return_date' => $data['return_date'] ?? null,
+                'activity_type' => $data['activity_type'] ?? null,
+                'mileage_at_service' => $data['mileage_at_service'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
 
-        $completedIssueIds = $data['completed_issue_ids'] ?? [];
-        $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
+            $completedIssueIds = $data['completed_issue_ids'] ?? [];
+            $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
 
-        if (! empty($data['issue_ids'])) {
-            foreach ($data['issue_ids'] as $issueId) {
-                $newRecord->items()->create([
-                    'itemable_id' => $issueId,
-                    'itemable_type' => Issue::class,
-                    'completed' => in_array((string) $issueId, $completedIssueIds, true),
-                ]);
-                // Il guasto passa automaticamente in lavorazione
-                Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
+            if (! empty($data['issue_ids'])) {
+                foreach ($data['issue_ids'] as $issueId) {
+                    $newRecord->items()->create([
+                        'itemable_id' => $issueId,
+                        'itemable_type' => Issue::class,
+                        'completed' => in_array((string) $issueId, $completedIssueIds, true),
+                    ]);
+                    // Il guasto passa automaticamente in lavorazione
+                    Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
+                }
             }
-        }
-        if (! empty($data['deadline_ids'])) {
-            foreach ($data['deadline_ids'] as $deadlineId) {
-                $newRecord->items()->create([
-                    'itemable_id' => $deadlineId,
-                    'itemable_type' => Deadline::class,
-                    'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
-                ]);
+            if (! empty($data['deadline_ids'])) {
+                foreach ($data['deadline_ids'] as $deadlineId) {
+                    $newRecord->items()->create([
+                        'itemable_id' => $deadlineId,
+                        'itemable_type' => Deadline::class,
+                        'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
+                    ]);
+                }
             }
-        }
 
-        $this->linkTireItems($newRecord, $data);
+            $this->linkTireItems($newRecord, $data);
 
-        // Se la data di rientro è compilata, l'appuntamento è considerato
-        // completato: aggiorna i guasti e rinnova le scadenze marcate come
-        // completate, partendo dalla data di rientro.
-        if ($newRecord->return_date) {
-            $this->processCompletedItems($newRecord, $completedIssueIds, $completedDeadlineIds);
-        }
+            // Se la data di rientro è compilata, l'appuntamento è considerato
+            // completato: aggiorna i guasti e rinnova le scadenze marcate come
+            // completate, partendo dalla data di rientro.
+            if ($newRecord->return_date) {
+                $this->processCompletedItems($newRecord, $completedIssueIds, $completedDeadlineIds);
+            }
+
+            return $newRecord;
+        });
 
         return redirect()->route('admin.maintenance-records.show', $newRecord->id)->with('status', 'Intervento aggiunto con successo.');
     }
@@ -338,65 +347,70 @@ class MaintenanceRecordController extends Controller
     {
         $data = $request->validated();
 
-        $maintenanceRecord->update([
-            'vehicle_id' => $data['vehicle_id'],
-            'provider_id' => $data['provider_id'],
-            'appointment_date' => $data['appointment_date'],
-            'return_date' => $data['return_date'] ?? null,
-            'activity_type' => $data['activity_type'] ?? null,
-            'mileage_at_service' => $data['mileage_at_service'] ?? null,
-            'notes' => $data['notes'] ?? null,
-        ]);
+        // Transazione unica, stesso motivo di store(): sincronizzare gli
+        // item (cancella e ricrea), gli stati guasto e l'eventuale
+        // completamento devono riuscire o fallire insieme.
+        DB::transaction(function () use ($data, $maintenanceRecord) {
+            $maintenanceRecord->update([
+                'vehicle_id' => $data['vehicle_id'],
+                'provider_id' => $data['provider_id'],
+                'appointment_date' => $data['appointment_date'],
+                'return_date' => $data['return_date'] ?? null,
+                'activity_type' => $data['activity_type'] ?? null,
+                'mileage_at_service' => $data['mileage_at_service'] ?? null,
+                'notes' => $data['notes'] ?? null,
+            ]);
 
-        // Sincronizza gli item: cancella e ricrea
-        // Prima di cancellare, registra i guasti attualmente collegati
-        $oldIssueIds = $maintenanceRecord->items()
-            ->where('itemable_type', Issue::class)
-            ->pluck('itemable_id')
-            ->toArray();
+            // Sincronizza gli item: cancella e ricrea
+            // Prima di cancellare, registra i guasti attualmente collegati
+            $oldIssueIds = $maintenanceRecord->items()
+                ->where('itemable_type', Issue::class)
+                ->pluck('itemable_id')
+                ->toArray();
 
-        $maintenanceRecord->items()->delete();
+            $maintenanceRecord->items()->delete();
 
-        $completedIssueIds = $data['completed_issue_ids'] ?? [];
-        $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
+            $completedIssueIds = $data['completed_issue_ids'] ?? [];
+            $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
 
-        $newIssueIds = [];
-        if (! empty($data['issue_ids'])) {
-            foreach ($data['issue_ids'] as $issueId) {
-                $maintenanceRecord->items()->create([
-                    'itemable_id' => $issueId,
-                    'itemable_type' => Issue::class,
-                    'completed' => in_array((string) $issueId, $completedIssueIds, true),
-                ]);
-                // Il guasto nuovo passa in lavorazione
-                Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
+            $newIssueIds = [];
+            if (! empty($data['issue_ids'])) {
+                foreach ($data['issue_ids'] as $issueId) {
+                    $maintenanceRecord->items()->create([
+                        'itemable_id' => $issueId,
+                        'itemable_type' => Issue::class,
+                        'completed' => in_array((string) $issueId, $completedIssueIds, true),
+                    ]);
+                    // Il guasto nuovo passa in lavorazione
+                    Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
+                }
+                $newIssueIds = $data['issue_ids'];
             }
-            $newIssueIds = $data['issue_ids'];
-        }
 
-        // I guasti rimossi tornano in open
-        $removedIssueIds = array_diff($oldIssueIds, $newIssueIds);
-        if (! empty($removedIssueIds)) {
-            Issue::whereIn('id', $removedIssueIds)
-                ->where('status', 'in_progress')
-                ->update(['status' => 'open']);
-        }
-        if (! empty($data['deadline_ids'])) {
-            foreach ($data['deadline_ids'] as $deadlineId) {
-                $maintenanceRecord->items()->create([
-                    'itemable_id' => $deadlineId,
-                    'itemable_type' => Deadline::class,
-                    'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
-                ]);
+            // I guasti rimossi tornano in open
+            $removedIssueIds = array_diff($oldIssueIds, $newIssueIds);
+            if (! empty($removedIssueIds)) {
+                Issue::whereIn('id', $removedIssueIds)
+                    ->where('status', 'in_progress')
+                    ->update(['status' => 'open']);
             }
-        }
+            if (! empty($data['deadline_ids'])) {
+                foreach ($data['deadline_ids'] as $deadlineId) {
+                    $maintenanceRecord->items()->create([
+                        'itemable_id' => $deadlineId,
+                        'itemable_type' => Deadline::class,
+                        'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
+                    ]);
+                }
+            }
 
-        $this->linkTireItems($maintenanceRecord, $data);
+            $this->linkTireItems($maintenanceRecord, $data);
 
-        // Se la data di rientro è compilata, processa gli item completati
-        if ($maintenanceRecord->return_date) {
-            $this->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds);
-        }
+            // Se la data di rientro è compilata, processa gli item completati
+            if ($maintenanceRecord->return_date) {
+                $this->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds);
+            }
+        });
 
         return redirect()->route('admin.maintenance-records.show', $maintenanceRecord->id)->with('status', 'Intervento aggiornato con successo.');
     }
