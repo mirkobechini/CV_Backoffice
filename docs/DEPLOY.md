@@ -42,9 +42,12 @@
     php artisan make:admin --email="your@email.com" --password="secure-password"
     ```
 
-5. **Configure the scheduler** (for automatic email reports):
-    - On Laravel Cloud, add a cron job that runs `php artisan schedule:run` every minute
-    - Or use Laravel Cloud's built-in worker
+5. **Enable the scheduler** (for automatic email reports and notifications):
+    - On Laravel Cloud, open the environment's **App cluster settings** (from the Commands tab, or the cluster settings entry under the environment), **General** tab
+    - Turn on the **Scheduler** toggle ("Enabling the Laravel scheduler will wake your app to execute tasks when scheduled")
+    - This is free and distinct from "Background processes" (a separate, always-on, paid resource) — don't create one just for this
+    - Without this toggle, `app:send-summary-report` and `app:generate-notifications` never run automatically; running them manually from the Commands tab works regardless, which can make the toggle being off easy to miss
+    - The "Scheduled tasks" panel in the same settings area lists the registered commands with their cron expressions as confirmation
 
 ## Useful commands
 
