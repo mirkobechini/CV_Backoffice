@@ -21,7 +21,8 @@
         <label class="tire-size-reinforced-label" title="{{ __('Rinforzato / commerciale') }}">
             <input type="checkbox" class="tire-size-reinforced"> C
         </label>
-        <input type="text" class="input tire-size-index" placeholder="{{ __('es. 121/120Q') }}" maxlength="10"
+        <input type="text" class="input tire-size-index" style="text-transform:uppercase"
+            placeholder="{{ __('es. 121/120Q') }}" maxlength="10"
             aria-label="{{ __('Indice di carico/velocità (facoltativo)') }}">
         @if ($removable)
             <button type="button" class="mini-btn tire-size-remove" aria-label="{{ __('Rimuovi questa misura') }}">

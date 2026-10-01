@@ -53,6 +53,17 @@ class Tire extends Model
      */
     public const SIZE_REGEX = '/^\d{2,3}\/\d{2,3}R\d{2}C?(\s[A-Z0-9\/]{2,10})?$/i';
 
+    /**
+     * Normalizza sempre in maiuscolo (R, C, indice carico/velocità come
+     * "99/97H"): senza questo, la stessa misura finiva salvata in forme
+     * diverse a seconda di come l'utente la digitava (es. "91v" vs "91V"),
+     * rendendo due gomme identiche difficili da confrontare a colpo d'occhio.
+     */
+    public function setSizeAttribute(?string $value): void
+    {
+        $this->attributes['size'] = $value === null ? null : strtoupper($value);
+    }
+
     protected $fillable = [
         'vehicle_id',
         'season',
