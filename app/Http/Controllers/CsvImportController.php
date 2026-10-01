@@ -560,10 +560,13 @@ class CsvImportController extends Controller
         $appointmentDate = $row['_appointment_date'] ?? '';
         $providerName = $row['_provider_name'] ?? '';
 
-        // Controllo se esiste già un guasto simile
+        // Controllo se esiste già un guasto simile. whereDate() invece di
+        // where(): un confronto di uguaglianza esatta su stringa falliva
+        // sempre se la colonna conteneva un suffisso orario, non rilevando
+        // mai il duplicato.
         $exists = Issue::where('vehicle_id', $vehicleId)
             ->where('description', $description)
-            ->where('event_date', $eventDate)
+            ->whereDate('event_date', $eventDate)
             ->exists();
 
         if ($exists) {
@@ -621,8 +624,9 @@ class CsvImportController extends Controller
             return ['error' => 'Chilometraggio già presente per ' . ($row['_label_date'] ?? $row['_date'])];
         }
 
+        // whereDate(): vedi commento in importIssue() sullo stesso tema.
         $exists = MileageLog::where('vehicle_id', $row['_vehicle_id'])
-            ->where('log_date', $row['_date'])
+            ->whereDate('log_date', $row['_date'])
             ->exists();
 
         if ($exists) {

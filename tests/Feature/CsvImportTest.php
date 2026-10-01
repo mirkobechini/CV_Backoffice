@@ -173,4 +173,56 @@ class CsvImportTest extends TestCase
 
         $this->assertDatabaseCount('mileage_logs', 0);
     }
+
+    public function test_confirm_rejects_duplicate_mileage_log_even_if_marked_valid(): void
+    {
+        // whereDate() invece di where(): prima un confronto di uguaglianza
+        // esatta su stringa non rilevava mai il duplicato se la colonna
+        // conteneva un suffisso orario.
+        $vehicle = $this->vehicle();
+        \App\Models\MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2025-03-01', 'mileage' => 9000]);
+
+        $this->actingAs($this->admin())->post(route('admin.csv-import.confirm'), [
+            'entity' => 'mileage-logs',
+            'editable' => [
+                [
+                    '_valid' => '1',
+                    '_vehicle_id' => $vehicle->id,
+                    '_date' => '2025-03-01',
+                    '_label_date' => '03/2025',
+                    '_mileage' => 15000,
+                ],
+            ],
+        ]);
+
+        $this->assertDatabaseCount('mileage_logs', 1);
+        $this->assertDatabaseHas('mileage_logs', ['mileage' => 9000]);
+    }
+
+    public function test_confirm_imports_issue_and_detects_duplicate(): void
+    {
+        // Stesso tema del test precedente, lato guasti.
+        $vehicle = $this->vehicle();
+        $payload = [
+            'entity' => 'issues',
+            'editable' => [
+                [
+                    '_valid' => '1',
+                    '_vehicle_id' => $vehicle->id,
+                    '_description' => 'Guasto motore',
+                    '_date' => '2025-01-15',
+                    '_status' => 'open',
+                ],
+            ],
+        ];
+
+        $user = $this->admin();
+        $this->actingAs($user)->post(route('admin.csv-import.confirm'), $payload);
+        $this->assertDatabaseCount('issues', 1);
+
+        // Stesso import rilanciato: il duplicato va rilevato, non raddoppiato.
+        $response = $this->actingAs($user)->post(route('admin.csv-import.confirm'), $payload);
+        $this->assertDatabaseCount('issues', 1);
+        $response->assertSessionHas('status_errors');
+    }
 }
