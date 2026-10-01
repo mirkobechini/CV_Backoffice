@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\BulkRecordEquipmentRevisionRequest;
 use App\Http\Requests\StoreEquipmentRequest;
 use App\Http\Requests\StoreEquipmentRevisionRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
@@ -236,8 +237,50 @@ class EquipmentController extends Controller
         $this->authorize('update', $equipment);
 
         $data = $request->validated();
+        $this->applyRevision($equipment, $data);
 
-        $equipment->revisions()->create($data);
+        $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
+            ? 'Collaudo registrato con successo.'
+            : 'Revisione registrata con successo.';
+
+        return redirect()->route('admin.equipments.show', $equipment)->with('status', $message);
+    }
+
+    /**
+     * Come recordRevision(), ma per più attrezzature insieme con la stessa
+     * data: utile quando un gruppo di attrezzature (es. tutti gli estintori,
+     * o tutte le barelle/sedie) viene revisionato lo stesso giorno, invece
+     * di ripetere la stessa data un'attrezzatura alla volta.
+     */
+    public function bulkRecordRevision(BulkRecordEquipmentRevisionRequest $request)
+    {
+        $data = $request->validated();
+
+        $equipments = Equipment::whereIn('id', $data['equipment_ids'])->get();
+
+        foreach ($equipments as $equipment) {
+            $this->applyRevision($equipment, $data);
+        }
+
+        $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
+            ? count($equipments) . ' collaudi registrati con successo.'
+            : count($equipments) . ' revisioni registrate con successo.';
+
+        return redirect()->route('admin.equipments.index')->with('status', $message);
+    }
+
+    /**
+     * Crea la voce di storico e aggiorna la data corrente (+ la relativa
+     * scadenza) di quel tipo di controllo sull'attrezzatura. Condivisa da
+     * recordRevision() e bulkRecordRevision().
+     */
+    private function applyRevision(Equipment $equipment, array $data): void
+    {
+        $equipment->revisions()->create([
+            'kind' => $data['kind'],
+            'performed_date' => $data['performed_date'],
+            'notes' => $data['notes'] ?? null,
+        ]);
 
         if ($data['kind'] === EquipmentRevision::KIND_COLLAUDO) {
             $update = $this->resolveNextCollaudoDate([
@@ -258,12 +301,6 @@ class EquipmentController extends Controller
                 'expiration_date' => $update['expiration_date'] ?? null,
             ]);
         }
-
-        $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
-            ? 'Collaudo registrato con successo.'
-            : 'Revisione registrata con successo.';
-
-        return redirect()->route('admin.equipments.show', $equipment)->with('status', $message);
     }
 
     /**
