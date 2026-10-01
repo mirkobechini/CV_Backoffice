@@ -15,6 +15,18 @@ class Vehicle extends Model
 {
     use LogsActivity, Searchable, SoftDeletes;
 
+    public const TIMING_BELT_TYPE_CHAIN = 'chain';
+
+    public const TIMING_BELT_TYPE_DRY_BELT = 'dry_belt';
+
+    public const TIMING_BELT_TYPE_OIL_BATH_BELT = 'oil_bath_belt';
+
+    public const TIMING_BELT_TYPES = [
+        self::TIMING_BELT_TYPE_CHAIN,
+        self::TIMING_BELT_TYPE_DRY_BELT,
+        self::TIMING_BELT_TYPE_OIL_BATH_BELT,
+    ];
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
@@ -35,7 +47,7 @@ class Vehicle extends Model
         'warranty_expiration_date',
         'has_warranty_extension',
         'warranty_extension_duration',
-        'has_timing_belt',
+        'timing_belt_type',
         'vin',
         'color',
         'seats',
@@ -50,7 +62,6 @@ class Vehicle extends Model
     protected $casts = [
         'immatricolation_date' => 'date',
         'warranty_expiration_date' => 'date',
-        'has_timing_belt' => 'boolean',
         'seats' => 'integer',
         'max_mass_kg' => 'integer',
         'engine_displacement_cc' => 'integer',
@@ -97,6 +108,34 @@ class Vehicle extends Model
         }
 
         return $date->toDateString();
+    }
+
+    public function getTimingBeltTypeLabelAttribute(): string
+    {
+        return match ($this->timing_belt_type) {
+            self::TIMING_BELT_TYPE_DRY_BELT => 'Cinghia a secco',
+            self::TIMING_BELT_TYPE_OIL_BATH_BELT => "Cinghia a bagno d'olio",
+            default => 'Catena',
+        };
+    }
+
+    public function needsTimingBeltDeadline(): bool
+    {
+        return in_array($this->timing_belt_type, [
+            self::TIMING_BELT_TYPE_DRY_BELT,
+            self::TIMING_BELT_TYPE_OIL_BATH_BELT,
+        ], true);
+    }
+
+    /**
+     * Solo la cinghia a bagno d'olio ha anche una scadenza temporale: quella
+     * a secco scade solo in base ai km percorsi, senza limite di tempo.
+     */
+    public function timingBeltIntervalDays(): ?int
+    {
+        return $this->timing_belt_type === self::TIMING_BELT_TYPE_OIL_BATH_BELT
+            ? Deadline::TIMING_BELT_INTERVAL_DAYS
+            : null;
     }
 
     public function vehicleType()

@@ -65,9 +65,9 @@ class VehicleObserver
             $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_OXYGEN, $oxygenDueDate, false);
         }
 
-        // Cinghia distribuzione: se il veicolo ne è dotato, genera la scadenza
-        // (10 anni o 100.000 km dall'immatricolazione / precedente cambio).
-        if ($vehicle->has_timing_belt) {
+        // Cinghia distribuzione: se il veicolo ne è dotato (a secco o a
+        // bagno d'olio, non catena), genera la scadenza.
+        if ($vehicle->needsTimingBeltDeadline()) {
             $this->createTimingBeltDeadline($vehicle);
         }
 

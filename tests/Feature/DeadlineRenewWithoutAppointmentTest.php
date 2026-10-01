@@ -41,7 +41,7 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
             'internal_code' => '1234',
             'vehicle_type_id' => $vt->id,
             'immatricolation_date' => '2020-01-01',
-            'has_timing_belt' => true,
+            'timing_belt_type' => 'oil_bath_belt',
             'group_id' => $group->id,
         ]);
     }
