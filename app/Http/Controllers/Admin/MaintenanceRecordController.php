@@ -547,9 +547,19 @@ class MaintenanceRecordController extends Controller
             }
 
             // 4) Cambio cinghia distribuzione: riparte la scadenza dalla data
-            //    e dal chilometraggio del cambio effettuato.
+            //    e dal chilometraggio del cambio effettuato. Non è collegata
+            //    come MaintenanceRecordItem (il passo 3 sopra esclude apposta
+            //    TYPE_CINGHIA), quindi va trovata qui sul veicolo.
             if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) $data['issue_resolved']) {
-                $this->renewTimingBeltDeadline($maintenanceRecord);
+                $timingBeltDeadline = $maintenanceRecord->vehicle->deadlines()
+                    ->where('type', Deadline::TYPE_CINGHIA)
+                    ->where('is_renewed', false)
+                    ->latest('due_date')
+                    ->first();
+
+                if ($timingBeltDeadline) {
+                    $this->renewDeadline($maintenanceRecord, $timingBeltDeadline);
+                }
             }
 
             // 5) Cambio gomme: monta i set collegati (uno o più, es. anteriori
@@ -769,17 +779,20 @@ class MaintenanceRecordController extends Controller
      */
     private function renewTimingBeltDeadline(MaintenanceRecord $maintenanceRecord, Deadline $deadline): void
     {
+        $vehicle = $maintenanceRecord->vehicle;
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
         $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
+        $intervalDays = $vehicle->timingBeltIntervalDays();
+        $nextDueDate = $intervalDays ? $baseDate->copy()->addDays($intervalDays) : null;
 
         $this->deadlineService->createNextOccurrence(
             $deadline,
-            $maintenanceRecord->vehicle,
-            $baseDate->copy()->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS),
+            $vehicle,
+            $nextDueDate,
             [
                 'last_mileage' => $baseKm,
                 'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
-                'interval_days' => Deadline::TIMING_BELT_INTERVAL_DAYS,
+                'interval_days' => $intervalDays,
             ]
         );
     }

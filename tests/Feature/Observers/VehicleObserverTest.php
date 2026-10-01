@@ -24,7 +24,7 @@ class VehicleObserverTest extends TestCase
         ]);
     }
 
-    private function createVehicle(VehicleType $vehicleType, bool $hasTimingBelt = false): Vehicle
+    private function createVehicle(VehicleType $vehicleType, string $timingBeltType = Vehicle::TIMING_BELT_TYPE_CHAIN): Vehicle
     {
         return Vehicle::create([
             'license_plate' => 'AB123CD',
@@ -34,7 +34,7 @@ class VehicleObserverTest extends TestCase
             'car_model_id' => null,
             'fuel_type' => 'diesel',
             'immatricolation_date' => today()->toDateString(),
-            'has_timing_belt' => $hasTimingBelt,
+            'timing_belt_type' => $timingBeltType,
         ]);
     }
 
@@ -118,10 +118,10 @@ class VehicleObserverTest extends TestCase
         ]);
     }
 
-    public function test_vehicle_creation_generates_timing_belt_deadline_when_has_timing_belt(): void
+    public function test_vehicle_creation_generates_timing_belt_deadline_with_date_and_km_for_oil_bath_belt(): void
     {
         $vehicleType = $this->createVehicleType();
-        $vehicle = $this->createVehicle($vehicleType, true);
+        $vehicle = $this->createVehicle($vehicleType, Vehicle::TIMING_BELT_TYPE_OIL_BATH_BELT);
 
         $this->assertDatabaseHas('deadlines', [
             'vehicle_id' => $vehicle->id,
@@ -131,10 +131,23 @@ class VehicleObserverTest extends TestCase
         ]);
     }
 
-    public function test_vehicle_creation_does_not_generate_timing_belt_deadline_when_not_has_timing_belt(): void
+    public function test_vehicle_creation_generates_timing_belt_deadline_with_km_only_for_dry_belt(): void
     {
         $vehicleType = $this->createVehicleType();
-        $vehicle = $this->createVehicle($vehicleType, false);
+        $vehicle = $this->createVehicle($vehicleType, Vehicle::TIMING_BELT_TYPE_DRY_BELT);
+
+        $deadline = Deadline::where('vehicle_id', $vehicle->id)->where('type', Deadline::TYPE_CINGHIA)->first();
+
+        $this->assertNotNull($deadline);
+        $this->assertSame(Deadline::TIMING_BELT_INTERVAL_KM, $deadline->interval_km);
+        $this->assertNull($deadline->interval_days);
+        $this->assertNull($deadline->due_date);
+    }
+
+    public function test_vehicle_creation_does_not_generate_timing_belt_deadline_for_chain(): void
+    {
+        $vehicleType = $this->createVehicleType();
+        $vehicle = $this->createVehicle($vehicleType, Vehicle::TIMING_BELT_TYPE_CHAIN);
 
         $this->assertDatabaseMissing('deadlines', [
             'vehicle_id' => $vehicle->id,

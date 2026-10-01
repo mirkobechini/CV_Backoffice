@@ -111,7 +111,6 @@ class VehicleController extends Controller
     {
 
         $data = $request->validated();
-        $data['has_timing_belt'] = $request->boolean('has_timing_belt');
 
         // Assegna il veicolo al gruppo dell'utente autenticato.
         $data['group_id'] = $request->user()->activeGroup()?->id;
@@ -208,9 +207,12 @@ class VehicleController extends Controller
             'engine_power_kw' => $extracted['engine_power_kw'],
             'vehicle_category' => $extracted['vehicle_category'],
             'allowed_tire_sizes' => empty($extracted['allowed_tire_sizes']) ? null : $extracted['allowed_tire_sizes'],
-            'has_timing_belt' => $extracted['has_timing_belt_suggested'] === null
+            // Il libretto non distingue cinghia a secco/bagno d'olio (va
+            // verificata fisicamente): "a secco" è la stima più prudente,
+            // l'utente la corregge se necessario prima di salvare.
+            'timing_belt_type' => $extracted['has_timing_belt_suggested'] === null
                 ? null
-                : ($extracted['has_timing_belt_suggested'] ? '1' : '0'),
+                : ($extracted['has_timing_belt_suggested'] ? Vehicle::TIMING_BELT_TYPE_DRY_BELT : Vehicle::TIMING_BELT_TYPE_CHAIN),
         ], fn ($value) => $value !== null);
 
         $redirect = redirect()->to($targetRoute)
@@ -357,7 +359,6 @@ class VehicleController extends Controller
     {
 
         $data = $request->validated();
-        $data['has_timing_belt'] = $request->boolean('has_timing_belt');
 
         $pendingScanPath = $data['scanned_registration_card_path'] ?? null;
         unset($data['scanned_registration_card_path']);
@@ -379,23 +380,25 @@ class VehicleController extends Controller
             $data['registration_card_path'] = $promotedPath;
         }
 
-        $hadTimingBelt = (bool) $vehicle->has_timing_belt;
+        $hadTimingBelt = $vehicle->needsTimingBeltDeadline();
 
         $vehicle->update($data);
 
-        // Il flag cinghia da solo non crea/elimina nulla: se è appena
-        // cambiato, lo segnaliamo con un banner che chiede conferma prima
-        // di creare la scadenza (calcolata dalla data di immatricolazione)
-        // o di eliminare quella esistente, invece di farlo in automatico.
-        $this->flagTimingBeltMismatch($vehicle, $hadTimingBelt, (bool) $vehicle->has_timing_belt);
+        // Il tipo di distribuzione da solo non crea/elimina nulla: se è
+        // appena passato da/a "catena", lo segnaliamo con un banner che
+        // chiede conferma prima di creare la scadenza (calcolata dalla data
+        // di immatricolazione) o di eliminare quella esistente, invece di
+        // farlo in automatico.
+        $this->flagTimingBeltMismatch($vehicle, $hadTimingBelt, $vehicle->needsTimingBeltDeadline());
 
         return redirect()->route('admin.vehicles.show', $vehicle->id)->with('status', 'Veicolo aggiornato con successo.');
     }
 
     /**
-     * Se has_timing_belt è appena cambiato, verifica se il veicolo ha (o
-     * non ha) già una scadenza cinghia coerente con il nuovo valore, e
-     * imposta un banner di conferma per l'azione da compiere.
+     * Se il tipo di distribuzione è appena passato da/a "catena", verifica
+     * se il veicolo ha (o non ha) già una scadenza cinghia coerente con il
+     * nuovo valore, e imposta un banner di conferma per l'azione da
+     * compiere.
      */
     private function flagTimingBeltMismatch(Vehicle $vehicle, bool $before, bool $after): void
     {
@@ -430,7 +433,8 @@ class VehicleController extends Controller
 
     /**
      * Crea la scadenza cinghia iniziale per il veicolo, su conferma
-     * dell'utente dal banner mostrato dopo aver attivato has_timing_belt.
+     * dell'utente dal banner mostrato dopo aver impostato un tipo di
+     * distribuzione diverso da "catena".
      */
     public function createTimingBeltDeadline(Vehicle $vehicle)
     {

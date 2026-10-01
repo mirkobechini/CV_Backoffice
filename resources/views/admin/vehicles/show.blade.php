@@ -141,7 +141,7 @@
                 <div class="veh-kv"><span class="k">{{ __('Tipo') }}</span><span
                         class="v">{{ $vehicle->vehicleType->name ?? 'N/A' }}</span></div>
                 <div class="veh-kv"><span class="k">{{ __('Distribuzione') }}</span><span class="v">
-                        {{ $vehicle->has_timing_belt ? __('Cinghia') : __('Catena') }}
+                        {{ $vehicle->timing_belt_type_label }}
                     </span>
                 </div>
             </div>

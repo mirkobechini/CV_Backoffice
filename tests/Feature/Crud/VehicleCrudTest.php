@@ -334,7 +334,7 @@ class VehicleCrudTest extends TestCase
 
     public function test_turning_on_timing_belt_prompts_to_create_the_deadline(): void
     {
-        // has_timing_belt da solo non doveva creare/eliminare nulla: qui
+        // timing_belt_type da solo non doveva creare/eliminare nulla: qui
         // verifichiamo solo che compaia il banner di conferma, non che la
         // scadenza venga creata in automatico.
         $user = $this->createUser();
@@ -349,7 +349,7 @@ class VehicleCrudTest extends TestCase
             'car_model_id' => $data['carModel']->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => $vehicle->immatricolation_date->format('Y-m-d'),
-            'has_timing_belt' => '1',
+            'timing_belt_type' => 'dry_belt',
         ]);
 
         $response->assertSessionHas('timingBeltPrompt', fn($prompt) => $prompt['action'] === 'create');
@@ -361,7 +361,7 @@ class VehicleCrudTest extends TestCase
         $user = $this->createUser();
         $data = $this->createVehicle();
         $vehicle = $data['vehicle'];
-        $vehicle->update(['immatricolation_date' => '2020-01-15']);
+        $vehicle->update(['immatricolation_date' => '2020-01-15', 'timing_belt_type' => 'oil_bath_belt']);
         $expectedDueDate = \Carbon\Carbon::parse('2020-01-15')->addDays(\App\Models\Deadline::TIMING_BELT_INTERVAL_DAYS);
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.timing-belt-deadline.create', $vehicle));
@@ -374,12 +374,29 @@ class VehicleCrudTest extends TestCase
         ]);
     }
 
+    public function test_confirming_timing_belt_prompt_creates_km_only_deadline_for_dry_belt(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update(['immatricolation_date' => '2020-01-15', 'timing_belt_type' => 'dry_belt']);
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.timing-belt-deadline.create', $vehicle));
+
+        $response->assertRedirect(route('admin.vehicles.show', $vehicle));
+        $deadline = \App\Models\Deadline::where('vehicle_id', $vehicle->id)->where('type', \App\Models\Deadline::TYPE_CINGHIA)->first();
+        $this->assertNotNull($deadline);
+        $this->assertNull($deadline->due_date);
+        $this->assertNull($deadline->interval_days);
+        $this->assertSame(\App\Models\Deadline::TIMING_BELT_INTERVAL_KM, $deadline->interval_km);
+    }
+
     public function test_turning_off_timing_belt_prompts_to_delete_the_active_deadline(): void
     {
         $user = $this->createUser();
         $data = $this->createVehicle();
         $vehicle = $data['vehicle'];
-        $vehicle->update(['has_timing_belt' => true]);
+        $vehicle->update(['timing_belt_type' => 'oil_bath_belt']);
         $deadline = \App\Models\Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => \App\Models\Deadline::TYPE_CINGHIA,
@@ -395,26 +412,26 @@ class VehicleCrudTest extends TestCase
             'car_model_id' => $data['carModel']->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => $vehicle->immatricolation_date->format('Y-m-d'),
-            'has_timing_belt' => '0',
+            'timing_belt_type' => 'chain',
         ]);
 
         $response->assertSessionHas('timingBeltPrompt', fn($prompt) => $prompt['action'] === 'delete' && $prompt['deadline_id'] === $deadline->id);
         $this->assertDatabaseHas('deadlines', ['id' => $deadline->id, 'deleted_at' => null]);
     }
 
-    public function test_show_page_displays_cinghia_or_catena_instead_of_yes_no(): void
+    public function test_show_page_displays_timing_belt_type_instead_of_yes_no(): void
     {
         $user = $this->createUser();
         $data = $this->createVehicle();
-        $data['vehicle']->update(['has_timing_belt' => true]);
+        $data['vehicle']->update(['timing_belt_type' => 'oil_bath_belt']);
 
         $response = $this->actingAs($user)->get(route('admin.vehicles.show', $data['vehicle']));
 
         $response->assertOk();
-        $response->assertSee('Cinghia');
+        $response->assertSee("Cinghia a bagno d'olio");
         $response->assertDontSee('Catena');
 
-        $data['vehicle']->update(['has_timing_belt' => false]);
+        $data['vehicle']->update(['timing_belt_type' => 'chain']);
 
         $response = $this->actingAs($user)->get(route('admin.vehicles.show', $data['vehicle']));
 

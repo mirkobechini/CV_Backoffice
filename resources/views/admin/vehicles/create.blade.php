@@ -309,23 +309,31 @@
                         </span>
                     @endif
                 </h2>
-                <div class="row2">
+                <div class="row3">
                     <label class="check">
-                        <input type="radio" value="1" id="has_timing_belt_cinghia" name="has_timing_belt"
-                            {{ old('has_timing_belt', '0') == '1' ? 'checked' : '' }}>
+                        <input type="radio" value="chain" id="timing_belt_type_chain" name="timing_belt_type"
+                            {{ old('timing_belt_type', 'chain') == 'chain' ? 'checked' : '' }}>
                         <div>
-                            <div class="label">{{ __('Cinghia di distribuzione') }}</div>
-                            <div class="sub">
-                                {{ __('Genera una scadenza "Cinghia Distribuzione" dopo 100.000 km o 10 anni.') }}
-                            </div>
+                            <div class="label">{{ __('Catena') }}</div>
+                            <div class="sub">{{ __('Nessuna scadenza: la catena non richiede sostituzioni periodiche.') }}</div>
                         </div>
                     </label>
                     <label class="check">
-                        <input type="radio" value="0" id="has_timing_belt_catena" name="has_timing_belt"
-                            {{ old('has_timing_belt', '0') == '0' ? 'checked' : '' }}>
+                        <input type="radio" value="dry_belt" id="timing_belt_type_dry_belt" name="timing_belt_type"
+                            {{ old('timing_belt_type', 'chain') == 'dry_belt' ? 'checked' : '' }}>
                         <div>
-                            <div class="label">{{ __('Catena di distribuzione') }}</div>
-                            <div class="sub">{{ __('Nessuna scadenza: la catena non richiede sostituzioni periodiche.') }}</div>
+                            <div class="label">{{ __('Cinghia a secco') }}</div>
+                            <div class="sub">{{ __('Genera una scadenza "Cinghia Distribuzione" dopo 100.000 km, nessun limite di tempo.') }}</div>
+                        </div>
+                    </label>
+                    <label class="check">
+                        <input type="radio" value="oil_bath_belt" id="timing_belt_type_oil_bath_belt" name="timing_belt_type"
+                            {{ old('timing_belt_type', 'chain') == 'oil_bath_belt' ? 'checked' : '' }}>
+                        <div>
+                            <div class="label">{{ __("Cinghia a bagno d'olio") }}</div>
+                            <div class="sub">
+                                {{ __('Genera una scadenza "Cinghia Distribuzione" dopo 100.000 km o 10 anni.') }}
+                            </div>
                         </div>
                     </label>
                 </div>
