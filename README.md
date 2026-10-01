@@ -12,10 +12,10 @@
 
 - **Full fleet management**: vehicle records, brands, models, types and documents
 - **Fault and maintenance workflow**: from report to closed intervention, with a polymorphic link between faults, deadlines and workshop appointments
-- **Deadline and equipment tracking**: ministerial inspections, oxygen check, service, timing belt, insurance — with automatic status based on date and mileage
+- **Deadline and equipment tracking**: ministerial inspections, oxygen check, service, timing belt, insurance — with automatic status based on date and mileage; equipment with a separate inspection cycle (e.g. fire extinguisher collaudo) tracks both expiries independently, surfacing whichever is more urgent
 - **Automatic deadline generation**: timing belt (10 years or 100,000 km), service (1 year or configurable mileage), automatic renewal on intervention completion
 - **Mileage tracking**: bulk monthly entry, history, integration with mileage-based deadlines
-- **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set
+- **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set; a single fault report can also link several tires at once (e.g. all four punctured together)
 - **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle)
 - **Public fleet status page**: a secret, unguessable link, no account required, showing only vehicle availability (no sensitive data)
 - **Interactive dashboard**: stats, upcoming deadlines (with remaining time/mileage and status), open faults, incomplete equipment
@@ -163,7 +163,7 @@ erDiagram
     VEHICLES ||--o{ EQUIPMENT : "has"
     VEHICLES ||--o{ TIRES : "has"
     VEHICLES ||--o{ TIRE_CHANGES : "has"
-    TIRES ||--o| ISSUES : "linked to (optional)"
+    TIRES }o--o{ ISSUES : "linked to (optional, many-to-many)"
     VEHICLES }o--|| BRANDS : "brand"
     VEHICLES }o--|| CAR_MODELS : "model"
     VEHICLES }o--|| VEHICLE_TYPES : "type"
@@ -203,6 +203,7 @@ erDiagram
 | `mileage_logs`                        | Mileage history                                                            |
 | `tires`                               | Tires (one row per physical tire: season, position, status)                |
 | `tire_changes`                        | Tire mounting/change history                                              |
+| `issue_tire`                          | Faults ↔ tires pivot (a fault can cover several tires)                     |
 | `providers`                           | Providers (mechanic, body shop, tire shop, etc.)                          |
 | `equipment`                           | Onboard equipment (fire extinguishers, stretchers, etc.)                  |
 | `equipment_types`                     | Equipment types (with inspection frequency)                               |
