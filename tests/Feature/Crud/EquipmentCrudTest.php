@@ -52,6 +52,22 @@ class EquipmentCrudTest extends TestCase
     }
 
 
+    public function test_index_shows_expiration_date_not_last_revision_date_alongside_countdown(): void
+    {
+        // Prima di questo fix, la cella mostrava revision_date (l'ultima
+        // revisione fatta) come data principale ma calcolava il conto alla
+        // rovescia sotto su expiration_date (la prossima scadenza) — due
+        // date diverse mostrate insieme come se corrispondessero.
+        $user = $this->createUser();
+        ['equipment' => $equipment] = $this->createEquipment();
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee($equipment->expiration_date_formatted);
+        $response->assertDontSee($equipment->revision_date_formatted);
+    }
+
     public function test_equipment_create_page_is_reachable(): void
     {
         $user = $this->createUser();    //fake user
