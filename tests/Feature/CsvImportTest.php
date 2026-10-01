@@ -225,4 +225,68 @@ class CsvImportTest extends TestCase
         $this->assertDatabaseCount('issues', 1);
         $response->assertSessionHas('status_errors');
     }
+
+    public function test_confirm_issue_with_unresolved_provider_fails_row_without_crashing(): void
+    {
+        // Prima di questo fix: provider_id null andava contro il vincolo
+        // NOT NULL del DB, l'eccezione non gestita faceva fallire l'intera
+        // transazione di confirm() — perdendo anche le altre righe valide
+        // nello stesso batch, non solo quella col fornitore sconosciuto.
+        $vehicleA = $this->vehicle();
+
+        $response = $this->actingAs($this->admin())->post(route('admin.csv-import.confirm'), [
+            'entity' => 'issues',
+            'editable' => [
+                [
+                    '_valid' => '1',
+                    '_vehicle_id' => $vehicleA->id,
+                    '_description' => 'Guasto A (fornitore sconosciuto)',
+                    '_date' => '2025-01-15',
+                    '_status' => 'open',
+                    '_appointment_date' => '20/01/2025',
+                    '_provider_name' => 'Officina Mai Registrata',
+                ],
+                [
+                    '_valid' => '1',
+                    '_vehicle_id' => $vehicleA->id,
+                    '_description' => 'Guasto B (senza appuntamento)',
+                    '_date' => '2025-01-16',
+                    '_status' => 'open',
+                ],
+            ],
+        ]);
+
+        $response->assertSessionHas('status_errors');
+        $this->assertDatabaseMissing('issues', ['description' => 'Guasto A (fornitore sconosciuto)']);
+        $this->assertDatabaseCount('maintenance_records', 0);
+        // La riga B, valida e indipendente, non deve essere persa insieme alla A.
+        $this->assertDatabaseHas('issues', ['description' => 'Guasto B (senza appuntamento)']);
+    }
+
+    public function test_confirm_issue_with_resolved_provider_creates_maintenance_record(): void
+    {
+        $vehicle = $this->vehicle();
+        $provider = \App\Models\Provider::create(['name' => 'Officina Rossi', 'type' => 'Meccanico']);
+
+        $this->actingAs($this->admin())->post(route('admin.csv-import.confirm'), [
+            'entity' => 'issues',
+            'editable' => [
+                [
+                    '_valid' => '1',
+                    '_vehicle_id' => $vehicle->id,
+                    '_description' => 'Guasto motore',
+                    '_date' => '2025-01-15',
+                    '_status' => 'open',
+                    '_appointment_date' => '20/01/2025',
+                    '_provider_name' => 'Rossi',
+                ],
+            ],
+        ]);
+
+        $this->assertDatabaseHas('issues', ['description' => 'Guasto motore']);
+        $this->assertDatabaseHas('maintenance_records', [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+        ]);
+    }
 }
