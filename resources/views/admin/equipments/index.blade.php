@@ -75,7 +75,7 @@
                             </td>
                             <td class="code">{{ $equipment->serial_number ?: '—' }}</td>
                             <td>
-                                {{ $equipment->revision_date_formatted ?? '—' }}
+                                {{ $equipment->expiration_date_formatted ?? '—' }}
                                 @if ($equipment->expiration_date)
                                     <div class="cell-sub">
                                         @php($daysDiff = \Carbon\Carbon::today()->diffInDays($equipment->expiration_date, false))
