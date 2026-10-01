@@ -37,4 +37,26 @@ class PdfExportController extends Controller
             ->loadView('pdfs.scheda-veicolo', compact('vehicle'));
         return $pdf->download('scheda-' . $vehicle->internal_code . '.pdf');
     }
+
+    /**
+     * Tabella riassuntiva dell'intera flotta: un veicolo per riga, con le
+     * prossime scadenze (tagliando, revisioni, cinghia) e l'ultimo
+     * chilometraggio registrato — per avere tutto a colpo d'occhio senza
+     * aprire ogni scheda veicolo singolarmente.
+     */
+    public function fleetOverview(Request $request)
+    {
+        $vehicles = Vehicle::forCurrentUser()
+            ->with(['brand', 'carModel', 'latestMileageLog'])
+            ->with(['deadlines' => function ($query) {
+                $query->where('is_renewed', false)->orderByDesc('due_date');
+            }])
+            ->orderBy('internal_code')
+            ->get();
+
+        $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
+            ->loadView('pdfs.fleet-overview', compact('vehicles'));
+
+        return $pdf->download('flotta-' . now()->format('Y-m-d') . '.pdf');
+    }
 }

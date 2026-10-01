@@ -73,6 +73,9 @@
                 <a href="{{ route('admin.csv.export', 'vehicles') }}" class="btn" title="{{ __('Scarica CSV') }}">
                     <i class="fa-solid fa-download"></i> CSV
                 </a>
+                <a href="{{ route('admin.vehicles.pdf.fleet-overview') }}" class="btn" title="{{ __('Scarica PDF riepilogo flotta') }}">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </a>
                 <a href="{{ route('admin.vehicles.create') }}" class="btn primary">
                     <i class="fa-solid fa-plus"></i> {{ __('Nuovo') }}
                 </a>

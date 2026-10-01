@@ -131,6 +131,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
             ->name('vehicles.pdf');
+        Route::get('vehicles-pdf/fleet-overview', [PdfExportController::class, 'fleetOverview'])
+            ->name('vehicles.pdf.fleet-overview');
 
         Route::post('vehicles/scan-libretto', [VehicleController::class, 'scanRegistrationCard'])
             ->middleware('throttle:vehicle-scan')
