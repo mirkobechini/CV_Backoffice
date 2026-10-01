@@ -560,6 +560,34 @@ class CsvImportController extends Controller
         $appointmentDate = $row['_appointment_date'] ?? '';
         $providerName = $row['_provider_name'] ?? '';
 
+        // Se c'è una data appuntamento, risolviamo subito data/fornitore e
+        // falliamo l'intera riga PRIMA di creare il guasto se manca
+        // qualcosa di necessario — maintenance_records.provider_id è
+        // NOT NULL (come nel form manuale, dove è obbligatorio): provare a
+        // creare l'appuntamento con provider_id null dopo aver già creato
+        // il guasto lasciava un guasto orfano e, peggio, l'eccezione di
+        // vincolo DB non gestita faceva fallire l'intera transazione di
+        // confirm(), perdendo anche le altre righe del batch.
+        $parsedAppointmentDate = null;
+        $providerId = null;
+        if (!empty($appointmentDate)) {
+            $parsedAppointmentDate = $this->parseDate($appointmentDate);
+            if (!$parsedAppointmentDate) {
+                return ['error' => 'Data appuntamento "' . $appointmentDate . '" non valida.'];
+            }
+
+            if (!empty($providerName)) {
+                $provider = Provider::where('name', 'like', '%' . $providerName . '%')->first();
+                if ($provider) {
+                    $providerId = $provider->id;
+                }
+            }
+
+            if ($providerId === null) {
+                return ['error' => 'Fornitore "' . $providerName . '" non trovato: impossibile creare l\'appuntamento per "' . mb_substr($description, 0, 50) . '".'];
+            }
+        }
+
         // Controllo se esiste già un guasto simile. whereDate() invece di
         // where(): un confronto di uguaglianza esatta su stringa falliva
         // sempre se la colonna conteneva un suffisso orario, non rilevando
@@ -581,29 +609,12 @@ class CsvImportController extends Controller
             'event_date' => $eventDate,
         ]);
 
-        // Se c'è data appuntamento, crea anche l'appuntamento
-        if (!empty($appointmentDate)) {
-            $parsedDate = $this->parseDate($appointmentDate);
-            if (!$parsedDate) {
-                return ['error' => 'Data appuntamento "' . $appointmentDate . '" non valida.'];
-            }
-
-            $providerId = null;
-            if (!empty($providerName)) {
-                try {
-                    $provider = Provider::where('name', 'like', '%' . $providerName . '%')->first();
-                    if ($provider) {
-                        $providerId = $provider->id;
-                    }
-                } catch (\Exception $e) {
-                    // Se il fornitore non esiste, procedi senza
-                }
-            }
-
+        // Se c'è data appuntamento (già validata sopra), crea anche l'appuntamento
+        if ($parsedAppointmentDate) {
             $maintenanceRecord = MaintenanceRecord::create([
                 'vehicle_id' => $vehicleId,
                 'provider_id' => $providerId,
-                'appointment_date' => $parsedDate->toDateString(),
+                'appointment_date' => $parsedAppointmentDate->toDateString(),
                 'activity_type' => 'Riparazione',
             ]);
 
