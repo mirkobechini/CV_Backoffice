@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BulkRecordEquipmentRevisionRequest;
 use App\Http\Requests\StoreEquipmentRequest;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\DB;
 
 class EquipmentController extends Controller
 {
+    use SortableAndGroupable;
+
     public function __construct()
     {
         $this->authorizeResource(Equipment::class, 'equipment');
@@ -30,8 +33,14 @@ class EquipmentController extends Controller
     {
         $validated = $request->validate([
             'status_filter' => 'nullable|in:all,expired,pending,valid',
+            'group_by' => 'nullable|in:type,status,vehicle',
+            'sort_by' => 'nullable|in:name,type,status,vehicle,expiration',
+            'sort_dir' => 'nullable|in:asc,desc',
         ]);
         $statusFilter = $validated['status_filter'] ?? 'all';
+        $groupBy = $validated['group_by'] ?? null;
+        $sortBy = $validated['sort_by'] ?? null;
+        $sortDir = $validated['sort_dir'] ?? 'asc';
 
         // L'attrezzatura non assegnata a un veicolo (vehicle_id null) non ha
         // un gruppo proprio: resta visibile a tutti, come un veicolo senza
@@ -63,6 +72,43 @@ class EquipmentController extends Controller
             )->values();
         }
 
+        $sortMap = [
+            'name' => fn (Equipment $e) => mb_strtolower($e->name ?: ($e->equipmentType->name ?? '')),
+            'type' => fn (Equipment $e) => mb_strtolower($e->equipmentType->name ?? ''),
+            'status' => fn (Equipment $e) => $e->overall_status_label,
+            'vehicle' => fn (Equipment $e) => $e->vehicle?->internal_code ?? '',
+            'expiration' => fn (Equipment $e) => $e->expiration_date?->timestamp ?? PHP_INT_MAX,
+        ];
+
+        if ($sortBy) {
+            $allEquipments = $this->applySortingToCollection($allEquipments, $sortBy, $sortDir, $sortMap);
+        }
+
+        // Il raggruppamento mostra sempre l'elenco completo (come per gli
+        // appuntamenti): paginare spezzerebbe i gruppi a metà tra una
+        // pagina e la successiva.
+        if ($groupBy) {
+            $groupedEquipments = $this->applyGrouping($allEquipments, $groupBy, function (Equipment $e) use ($groupBy) {
+                return match ($groupBy) {
+                    'type' => $e->equipmentType->name ?? 'N/A',
+                    'status' => $e->overall_status_label,
+                    'vehicle' => $e->vehicle?->internal_code ?? __('Non assegnata'),
+                };
+            });
+
+            return view('admin.equipments.index', [
+                'equipments' => $allEquipments,
+                'groupedEquipments' => $groupedEquipments,
+                'statusFilter' => $statusFilter,
+                'groupBy' => $groupBy,
+                'sortBy' => $sortBy,
+                'sortDir' => $sortDir,
+                'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.equipments.index'),
+                'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.equipments.index'),
+                'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            ]);
+        }
+
         $perPage = 20;
         $page = (int) $request->get('page', 1);
         $equipments = new LengthAwarePaginator(
@@ -73,7 +119,17 @@ class EquipmentController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return view('admin.equipments.index', compact('equipments', 'statusFilter'));
+        return view('admin.equipments.index', [
+            'equipments' => $equipments,
+            'groupedEquipments' => null,
+            'statusFilter' => $statusFilter,
+            'groupBy' => $groupBy,
+            'sortBy' => $sortBy,
+            'sortDir' => $sortDir,
+            'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.equipments.index'),
+            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.equipments.index'),
+            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
+        ]);
     }
 
     /**
