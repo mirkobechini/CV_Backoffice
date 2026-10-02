@@ -77,6 +77,27 @@ class EquipmentCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_create_and_edit_pages_render_hint_apostrophes_without_double_escaping(): void
+    {
+        // hint="{{ __(...) }}" invece di :hint="__(...)" passava al
+        // componente month-input una stringa già con l'apostrofo escapato
+        // (&#039;), poi il componente la riescapava una seconda volta
+        // ({{ $hint }}) mostrando letteralmente "&#039;" nella pagina
+        // invece dell'apostrofo.
+        $user = $this->createUser();
+
+        $create = $this->actingAs($user)->get(route('admin.equipments.create'));
+        $create->assertStatus(200);
+        $create->assertDontSee('&amp;#039;', false);
+        $create->assertSee('dall&#039;ultima revisione', false);
+
+        $equipment = $this->createEquipment()['equipment'];
+        $edit = $this->actingAs($user)->get(route('admin.equipments.edit', $equipment));
+        $edit->assertStatus(200);
+        $edit->assertDontSee('&amp;#039;', false);
+        $edit->assertSee('dall&#039;ultima revisione', false);
+    }
+
 
 
     public function test_equipment_show_page_is_reachable(): void
