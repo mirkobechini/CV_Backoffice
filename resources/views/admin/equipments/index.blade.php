@@ -81,82 +81,81 @@
                 <thead>
                     <tr>
                         <th><input type="checkbox" id="equipment-select-all" title="{{ __('Seleziona tutte (pagina corrente)') }}"></th>
-                        <th>{{ __('Nome') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Nome') }}</span>
+                                <a href="{{ $sortToggleUrl('name') }}" class="mini {{ $sortBy === 'name' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per nome') }}">{{ $sortIcon('name') }}</a>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Tipo') }}</span>
+                                <a href="{{ $groupToggleUrl('type') }}" class="mini {{ $groupBy === 'type' ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per tipo') }}">Grp</a>
+                                <a href="{{ $sortToggleUrl('type') }}" class="mini {{ $sortBy === 'type' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per tipo') }}">{{ $sortIcon('type') }}</a>
+                            </div>
+                        </th>
                         <th>{{ __('Numero Seriale') }}</th>
-                        <th>{{ __('Data di revisione') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Data di revisione') }}</span>
+                                <a href="{{ $sortToggleUrl('expiration') }}"
+                                    class="mini {{ $sortBy === 'expiration' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per scadenza') }}">{{ $sortIcon('expiration') }}</a>
+                            </div>
+                        </th>
                         <th>{{ __('Prossimo collaudo') }}</th>
-                        <th>{{ __('Sigla') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Sigla') }}</span>
+                                <a href="{{ $groupToggleUrl('vehicle') }}"
+                                    class="mini {{ $groupBy === 'vehicle' ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per veicolo') }}">Grp</a>
+                                <a href="{{ $sortToggleUrl('vehicle') }}"
+                                    class="mini {{ $sortBy === 'vehicle' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per veicolo') }}">{{ $sortIcon('vehicle') }}</a>
+                            </div>
+                        </th>
                         <th>{{ __('Targa') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Stato') }}</span>
+                                <a href="{{ $groupToggleUrl('status') }}"
+                                    class="mini {{ $groupBy === 'status' ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per stato') }}">Grp</a>
+                                <a href="{{ $sortToggleUrl('status') }}"
+                                    class="mini {{ $sortBy === 'status' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per stato') }}">{{ $sortIcon('status') }}</a>
+                            </div>
+                        </th>
                         <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse ($equipments as $equipment)
-                        <tr>
-                            <td><input type="checkbox" class="equipment-select" value="{{ $equipment->id }}"></td>
-                            <td>
-                                <div class="vin">
-                                    <span class="thumb t{{ ($equipment->id % 5) + 1 }}"><i
-                                            class="fa-solid fa-fire-extinguisher"></i></span>
-                                    <div class="vin-name">{{ $equipment->name ?: ($equipment->equipmentType->name ?? 'N/A') }}
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="code">{{ $equipment->serial_number ?: '—' }}</td>
-                            <td>
-                                {{ $equipment->expiration_date_formatted ?? '—' }}
-                                @if ($equipment->expiration_date)
-                                    <div class="cell-sub">
-                                        @php($daysDiff = \Carbon\Carbon::today()->diffInDays($equipment->expiration_date, false))
-                                        @if ($daysDiff < 0)
-                                            {{ __('scaduta da :n gg', ['n' => abs($daysDiff)]) }}
-                                        @else
-                                            {{ __('scade tra :n gg', ['n' => $daysDiff]) }}
-                                        @endif
-                                    </div>
-                                @endif
-                            </td>
-                            <td>
-                                @if ($equipment->next_collaudo_date)
-                                    {{ $equipment->next_collaudo_date_formatted }}
-                                    <div class="cell-sub">
-                                        @php($collaudoDaysDiff = \Carbon\Carbon::today()->diffInDays($equipment->next_collaudo_date, false))
-                                        @if ($collaudoDaysDiff < 0)
-                                            {{ __('scaduto da :n gg', ['n' => abs($collaudoDaysDiff)]) }}
-                                        @else
-                                            {{ __('scade tra :n gg', ['n' => $collaudoDaysDiff]) }}
-                                        @endif
-                                    </div>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td class="code">{{ $equipment->vehicle?->internal_code ?? 'N/A' }}</td>
-                            <td class="code">{{ $equipment->vehicle?->license_plate ?? 'N/A' }}</td>
-                            <td>
-                                <div class="row-actions">
-                                    <a href="{{ route('admin.equipments.show', $equipment->id) }}" class="mini-btn"
-                                        title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                    <a href="{{ route('admin.equipments.edit', $equipment->id) }}" class="mini-btn"
-                                        title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}"
-                                        data-bs-toggle="modal" data-bs-target="#confirmDeleteModal-{{ $equipment->id }}">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <x-admin.delete-modal type="equipment" :object="$equipment" />
-                    @empty
-                        <tr>
-                            <td colspan="8" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
-                        </tr>
-                    @endforelse
+                    @if ($groupedEquipments !== null)
+                        @forelse ($groupedEquipments as $groupLabel => $groupEquipments)
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                                <td colspan="10"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupEquipments->count() }})</td>
+                            </tr>
+                            @foreach ($groupEquipments as $equipment)
+                                <x-admin.equipment-row :equipment="$equipment" :group-key="$loop->parent->index" />
+                            @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="10" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
+                            </tr>
+                        @endforelse
+                    @else
+                        @forelse ($equipments as $equipment)
+                            <x-admin.equipment-row :equipment="$equipment" />
+                        @empty
+                            <tr>
+                                <td colspan="10" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
+                            </tr>
+                        @endforelse
+                    @endif
                 </tbody>
             </table>
         </div>
 
-        @if ($equipments->hasPages())
+        @if ($groupedEquipments === null && $equipments->hasPages())
             <div class="pagination">
                 <span>{{ __('Pagina') }} {{ $equipments->currentPage() }} / {{ $equipments->lastPage() }} ·
                     {{ $equipments->total() }}</span>

@@ -100,6 +100,36 @@ class EquipmentCrudTest extends TestCase
     }
 
 
+    public function test_index_groups_by_equipment_type(): void
+    {
+        $user = $this->createUser();
+        $extinguisherType = EquipmentType::create(['name' => 'Estintore']);
+        $stretcherType = EquipmentType::create(['name' => 'Barella']);
+        Equipment::create(['equipment_type_id' => $extinguisherType->id, 'name' => 'Estintore A', 'serial_number' => 'SN-1']);
+        Equipment::create(['equipment_type_id' => $extinguisherType->id, 'name' => 'Estintore B', 'serial_number' => 'SN-2']);
+        Equipment::create(['equipment_type_id' => $stretcherType->id, 'name' => 'Barella A', 'serial_number' => 'SN-3']);
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index', ['group_by' => 'type']));
+
+        $response->assertStatus(200);
+        $response->assertSee('Estintore (2)');
+        $response->assertSee('Barella (1)');
+    }
+
+    public function test_index_sorts_by_name(): void
+    {
+        $user = $this->createUser();
+        $type = $this->createEquipmentType();
+        Equipment::create(['equipment_type_id' => $type->id, 'name' => 'Zeta', 'serial_number' => 'SN-Z']);
+        Equipment::create(['equipment_type_id' => $type->id, 'name' => 'Alfa', 'serial_number' => 'SN-A']);
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index', ['sort_by' => 'name', 'sort_dir' => 'asc']));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+        $this->assertLessThan(strpos($content, 'Zeta'), strpos($content, 'Alfa'));
+    }
+
     public function test_equipment_can_be_stored(): void
     {
         $user = $this->createUser();    //fake user
