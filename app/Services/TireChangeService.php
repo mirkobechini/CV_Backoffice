@@ -26,11 +26,7 @@ class TireChangeService
     ): TireChange {
         $vehicle = $tireToMount->vehicle;
 
-        $previousTire = $vehicle->tires()
-            ->where('status', Tire::STATUS_MOUNTED)
-            ->where('position', $tireToMount->position)
-            ->where('id', '!=', $tireToMount->id)
-            ->first();
+        $previousTire = $this->findPreviousMountedTire($tireToMount);
 
         $previousTire?->update(['status' => $previousDisposition]);
 
@@ -47,5 +43,19 @@ class TireChangeService
             'mileage_at_change' => $mileageAtChange,
             'notes' => $notes,
         ]);
+    }
+
+    /**
+     * Trova la gomma attualmente montata nella stessa posizione di
+     * $tireToMount sullo stesso veicolo (quella che verrebbe sostituita).
+     * Null se non c'è nulla montato lì (primo montaggio in quella posizione).
+     */
+    public function findPreviousMountedTire(Tire $tireToMount): ?Tire
+    {
+        return $tireToMount->vehicle->tires()
+            ->where('status', Tire::STATUS_MOUNTED)
+            ->where('position', $tireToMount->position)
+            ->where('id', '!=', $tireToMount->id)
+            ->first();
     }
 }

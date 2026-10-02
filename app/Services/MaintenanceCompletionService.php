@@ -70,6 +70,26 @@ class MaintenanceCompletionService
     }
 
     /**
+     * Item gomma di questo appuntamento per cui il completamento chiederà
+     * una disposizione (stored/retired): solo quelli non ancora completati
+     * e per cui c'è davvero una gomma montata nella stessa posizione da
+     * sostituire (altrimenti è un primo montaggio, nessuna scelta da fare).
+     * Usata sia per costruire le regole di validazione in complete() sia
+     * per il form del modale di completamento.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\MaintenanceRecordItem>
+     */
+    public function tireItemsRequiringDisposition(MaintenanceRecord $maintenanceRecord): \Illuminate\Support\Collection
+    {
+        $maintenanceRecord->loadMissing('items.itemable');
+
+        return $maintenanceRecord->items
+            ->where('itemable_type', Tire::class)
+            ->where('completed', false)
+            ->filter(fn ($item) => $item->itemable && $this->tireChangeService->findPreviousMountedTire($item->itemable));
+    }
+
+    /**
      * Completa un appuntamento: chiude/mantiene in lavorazione il guasto
      * collegato, rinnova le scadenze marcate come risolte (inclusa
      * l'eventuale cinghia di distribuzione) e monta le gomme collegate non
@@ -151,11 +171,19 @@ class MaintenanceCompletionService
                     continue;
                 }
 
+                // Disposizione scelta indipendentemente per ogni gomma
+                // sostituita (es. 1 dismessa e 3 in magazzino nello stesso
+                // cambio): 'stored' come default innocuo quando non c'è
+                // nulla da smontare in quella posizione (primo montaggio),
+                // perché in quel caso non viene comunque applicato (vedi
+                // TireChangeService::findPreviousMountedTire()).
+                $previousDisposition = $data['previous_disposition'][$tireItem->itemable_id] ?? Tire::STATUS_STORED;
+
                 $this->tireChangeService->recordChange(
                     $tireItem->itemable,
                     $maintenanceRecord->return_date,
                     $maintenanceRecord->mileage_at_service,
-                    $data['previous_disposition'],
+                    $previousDisposition,
                     "Appuntamento del {$maintenanceRecord->appointment_date_formatted}",
                 );
                 $tireItem->update(['completed' => true]);
