@@ -30,7 +30,7 @@
                             name="vehicle_id" required>
                             <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                             @foreach ($vehicles as $vehicle)
-                                <option value="{{ $vehicle->id }}"
+                                <option value="{{ $vehicle->id }}" data-tire-sizes="{{ json_encode($vehicle->allowed_tire_sizes ?? []) }}"
                                     {{ old('vehicle_id', $selectedVehicleId) == $vehicle->id ? 'selected' : '' }}>
                                     {{ $vehicle->internal_code }} · {{ $vehicle->brand->name ?? 'N/A' }}
                                     {{ $vehicle->carModel->name ?? 'N/A' }}
@@ -112,7 +112,7 @@
                         @enderror
                     </div>
                 </div>
-                <x-form.tire-size-input name="size" label="{{ __('Misura') }}" />
+                <x-form.tire-size-input name="size" label="{{ __('Misura') }}" vehicle-select="vehicle_id" />
                 <div class="row2">
                     <x-form.date-input name="mounted_date" label="{{ __('Data di montaggio') }}" />
                     <div class="field">

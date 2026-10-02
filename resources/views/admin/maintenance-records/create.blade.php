@@ -34,6 +34,7 @@
                             <option value="{{ $vehicle->id }}"
                                 data-mileage="{{ $vehicle->mileage }}"
                                 data-mileage-date="{{ $vehicle->latestMileageLog?->log_date_formatted }}"
+                                data-tire-sizes="{{ json_encode($vehicle->allowed_tire_sizes ?? []) }}"
                                 {{ (string) old('vehicle_id', $preselectedVehicleId ?? '') === (string) $vehicle->id ? 'selected' : '' }}>
                                 {{ $vehicle->internal_code }}</option>
                         @endforeach
@@ -257,7 +258,7 @@
                                     value="{{ old('new_tire_model_name') }}" placeholder="{{ __('es. Alpin 6') }}">
                             </div>
                         </div>
-                        <x-form.tire-size-input name="new_tire_size" label="{{ __('Misura') }}" />
+                        <x-form.tire-size-input name="new_tire_size" label="{{ __('Misura') }}" vehicle-select="vehicle_id" />
                     </div>
                 </div>
                 <div class="row2">
