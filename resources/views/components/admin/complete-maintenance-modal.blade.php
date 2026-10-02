@@ -3,8 +3,24 @@
 @php
     $routeParameterValue = $maintenanceRecord?->getRouteKey();
     $modalIdSuffix = $routeParameterValue ?? 'missing-maintenance';
-    $tireItems = $maintenanceRecord?->items
-        ?->where('itemable_type', \App\Models\Tire::class);
+    // Una domanda per ogni gomma che ha davvero qualcosa da sostituire
+    // (primo montaggio in una posizione = nessuna gomma precedente =
+    // nessuna scelta da fare per quella), con l'identità della gomma
+    // sostituita così l'utente sa a cosa si riferisce ogni scelta.
+    $tireDispositionChoices = $maintenanceRecord
+        ? app(\App\Services\MaintenanceCompletionService::class)
+            ->tireItemsRequiringDisposition($maintenanceRecord)
+            ->map(fn ($item) => [
+                'item' => $item,
+                'previousTire' => app(\App\Services\TireChangeService::class)->findPreviousMountedTire($item->itemable),
+            ])
+        : collect();
+    $tirePositionLabels = [
+        'front_left' => 'Anteriore sinistra',
+        'front_right' => 'Anteriore destra',
+        'rear_left' => 'Posteriore sinistra',
+        'rear_right' => 'Posteriore destra',
+    ];
 @endphp
 
 @if ($disabledReason)
@@ -51,23 +67,43 @@
                             </label>
                         </div>
 
-                        @if ($tireItems && $tireItems->isNotEmpty())
+                        @if ($tireDispositionChoices->isNotEmpty())
                             <p class="mb-2 mt-3"><strong>Le gomme sostituite:</strong></p>
 
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="previous_disposition"
-                                    id="previous_disposition_stored_{{ $modalIdSuffix }}" value="stored" required>
-                                <label class="form-check-label" for="previous_disposition_stored_{{ $modalIdSuffix }}">
-                                    Vanno in magazzino
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" name="previous_disposition"
-                                    id="previous_disposition_retired_{{ $modalIdSuffix }}" value="retired" required>
-                                <label class="form-check-label" for="previous_disposition_retired_{{ $modalIdSuffix }}">
-                                    Vengono dismesse
-                                </label>
-                            </div>
+                            @foreach ($tireDispositionChoices as $choice)
+                                @php
+                                    $tireKey = $choice['item']->itemable_id;
+                                    $previousTire = $choice['previousTire'];
+                                    $positionLabel = $tirePositionLabels[$previousTire->position] ?? $previousTire->position;
+                                    $previousTireLabel = trim(($previousTire->brand ?? '') . ' ' . ($previousTire->model_name ?? '')) ?: ($previousTire->size ?? '');
+                                @endphp
+                                <p class="mb-1 mt-2">
+                                    <strong>{{ $positionLabel }}</strong>
+                                    @if ($previousTireLabel)
+                                        — {{ $previousTireLabel }}
+                                    @endif
+                                </p>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio"
+                                        name="previous_disposition[{{ $tireKey }}]"
+                                        id="previous_disposition_{{ $tireKey }}_stored_{{ $modalIdSuffix }}"
+                                        value="stored" required>
+                                    <label class="form-check-label"
+                                        for="previous_disposition_{{ $tireKey }}_stored_{{ $modalIdSuffix }}">
+                                        Va in magazzino
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio"
+                                        name="previous_disposition[{{ $tireKey }}]"
+                                        id="previous_disposition_{{ $tireKey }}_retired_{{ $modalIdSuffix }}"
+                                        value="retired" required>
+                                    <label class="form-check-label"
+                                        for="previous_disposition_{{ $tireKey }}_retired_{{ $modalIdSuffix }}">
+                                        Viene dismessa
+                                    </label>
+                                </div>
+                            @endforeach
                         @endif
                     </div>
 

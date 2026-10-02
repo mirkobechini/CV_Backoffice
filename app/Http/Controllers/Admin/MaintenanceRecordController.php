@@ -494,7 +494,7 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
 
-        $tireItems = $maintenanceRecord->items->where('itemable_type', Tire::class);
+        $tireItemsNeedingDisposition = $this->completionService->tireItemsRequiringDisposition($maintenanceRecord);
 
         $rules = [
             'issue_resolved' => 'required|boolean',
@@ -504,10 +504,17 @@ class MaintenanceRecordController extends Controller
             'issue_resolved.boolean' => 'Il valore selezionato non è valido.',
         ];
 
-        if ($tireItems->isNotEmpty()) {
-            $rules['previous_disposition'] = 'required|in:stored,retired';
+        if ($tireItemsNeedingDisposition->isNotEmpty()) {
+            // Una scelta indipendente per ogni gomma sostituita (es. 1
+            // dismessa e 3 in magazzino nello stesso cambio), non più
+            // un'unica scelta per tutte: chiave = id della gomma montata.
+            $rules['previous_disposition'] = 'required|array';
             $messages['previous_disposition.required'] = 'Indica cosa fare delle gomme sostituite.';
-            $messages['previous_disposition.in'] = 'La scelta per le gomme sostituite non è valida.';
+            foreach ($tireItemsNeedingDisposition as $item) {
+                $rules["previous_disposition.{$item->itemable_id}"] = 'required|in:stored,retired';
+            }
+            $messages['previous_disposition.*.required'] = 'Indica cosa fare di ogni gomma sostituita.';
+            $messages['previous_disposition.*.in'] = 'La scelta per le gomme sostituite non è valida.';
         }
 
         $data = $request->validate($rules, $messages);
