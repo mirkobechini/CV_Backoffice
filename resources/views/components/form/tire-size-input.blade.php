@@ -1,4 +1,4 @@
-@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false, 'removable' => false])
+@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false, 'removable' => false, 'vehicleSelect' => null])
 
 @php
     $inputId = $id ?? $name;
@@ -7,8 +7,15 @@
     $rawValue = old($name, $fallbackValue);
 @endphp
 
-<div class="field tire-size-input" data-tire-size-for="{{ $inputId }}">
+<div class="field tire-size-input" data-tire-size-for="{{ $inputId }}"
+    @if ($vehicleSelect) data-tire-size-vehicle-select="{{ $vehicleSelect }}" @endif>
     <label for="{{ $inputId }}-width">{{ $label }} @if ($required)<span class="req">*</span>@endif</label>
+    @if ($vehicleSelect)
+        <select class="select tire-size-suggest" style="display:none" data-placeholder="{{ __('Misura suggerita dal veicolo...') }}"
+            aria-label="{{ __('Misura suggerita dal veicolo') }}">
+            <option value="">{{ __('Misura suggerita dal veicolo...') }}</option>
+        </select>
+    @endif
     <div class="tire-size-fields">
         <input type="text" inputmode="numeric" class="input tire-size-width" id="{{ $inputId }}-width"
             placeholder="{{ __('es. 225') }}" maxlength="3" aria-label="{{ __('Larghezza (mm)') }}">

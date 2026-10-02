@@ -50,6 +50,36 @@ const parseTireSize = (root, value) => {
     if (indexEl && index) indexEl.value = index;
 };
 
+// Popola il select "misura suggerita dal veicolo" con le misure consigliate
+// (allowed_tire_sizes) del veicolo attualmente selezionato nel form, lette
+// dagli attributi data-tire-sizes delle <option> del select veicolo (vedi
+// vehicle-select-tire-sizes.js). Nascosto se il veicolo non ne ha nessuna.
+const refreshTireSizeSuggestions = (root) => {
+    const vehicleSelectId = root.dataset.tireSizeVehicleSelect;
+    if (!vehicleSelectId) return;
+
+    const suggestSelect = root.querySelector('.tire-size-suggest');
+    const vehicleSelect = document.getElementById(vehicleSelectId);
+    if (!suggestSelect || !vehicleSelect) return;
+
+    const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+    let sizes = [];
+    try {
+        sizes = JSON.parse(selectedOption?.dataset.tireSizes || '[]');
+    } catch {
+        sizes = [];
+    }
+
+    suggestSelect.innerHTML = `<option value="">${suggestSelect.dataset.placeholder || ''}</option>`;
+    sizes.forEach((size) => {
+        const option = document.createElement('option');
+        option.value = size;
+        option.textContent = size;
+        suggestSelect.appendChild(option);
+    });
+    suggestSelect.style.display = sizes.length ? '' : 'none';
+};
+
 const initializeTireSizeInputs = () => {
     document.querySelectorAll('.tire-size-input:not([data-tire-size-ready])').forEach((root) => {
         root.dataset.tireSizeReady = '1';
@@ -63,6 +93,19 @@ const initializeTireSizeInputs = () => {
             input.addEventListener('input', () => composeTireSize(root));
             input.addEventListener('change', () => composeTireSize(root));
         });
+
+        const vehicleSelectId = root.dataset.tireSizeVehicleSelect;
+        if (vehicleSelectId) {
+            const suggestSelect = root.querySelector('.tire-size-suggest');
+            suggestSelect?.addEventListener('change', () => {
+                if (!suggestSelect.value) return;
+                parseTireSize(root, suggestSelect.value);
+                composeTireSize(root);
+            });
+
+            document.getElementById(vehicleSelectId)?.addEventListener('change', () => refreshTireSizeSuggestions(root));
+            refreshTireSizeSuggestions(root);
+        }
     });
 };
 
