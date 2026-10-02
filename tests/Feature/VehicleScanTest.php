@@ -90,8 +90,7 @@ class VehicleScanTest extends TestCase
         $this->fakeChatCompletion($this->extractedFieldsStub());
 
         $front = UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg');
-        $back = UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg');
-        $result = app(VehicleScanService::class)->scan([$front->getRealPath(), $back->getRealPath()]);
+        $result = app(VehicleScanService::class)->scan([$front->getRealPath()]);
 
         $this->assertSame('AB123CD', $result['license_plate']);
         $this->assertSame('Fiat', $result['brand']);
@@ -112,8 +111,7 @@ class VehicleScanTest extends TestCase
         $this->expectException(VehicleScanException::class);
 
         $front = UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg');
-        $back = UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg');
-        app(VehicleScanService::class)->scan([$front->getRealPath(), $back->getRealPath()]);
+        app(VehicleScanService::class)->scan([$front->getRealPath()]);
     }
 
     public function test_scan_service_throws_on_http_failure(): void
@@ -125,8 +123,7 @@ class VehicleScanTest extends TestCase
         $this->expectException(VehicleScanException::class);
 
         $front = UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg');
-        $back = UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg');
-        app(VehicleScanService::class)->scan([$front->getRealPath(), $back->getRealPath()]);
+        app(VehicleScanService::class)->scan([$front->getRealPath()]);
     }
 
     public function test_match_brand_and_model_exact_fuzzy_and_no_match(): void
@@ -159,7 +156,6 @@ class VehicleScanTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertRedirect(route('admin.vehicles.create'));
@@ -183,7 +179,6 @@ class VehicleScanTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertRedirect(route('admin.vehicles.create'));
@@ -203,7 +198,6 @@ class VehicleScanTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertRedirect(route('admin.vehicles.create'));
@@ -211,34 +205,14 @@ class VehicleScanTest extends TestCase
         $response->assertSessionHas('scanned_registration_card_path');
     }
 
-    public function test_scan_endpoint_requires_both_photos(): void
+    public function test_scan_endpoint_requires_photo(): void
     {
         Storage::fake('public');
         $user = $this->capo();
 
-        $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
-            'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-        ]);
+        $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), []);
 
-        $response->assertSessionHasErrors('photo_back');
-    }
-
-    public function test_scan_endpoint_deletes_back_photo_after_scanning(): void
-    {
-        Storage::fake('public');
-        $user = $this->capo();
-
-        $this->fakeChatCompletion($this->extractedFieldsStub());
-
-        $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
-            'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
-        ]);
-
-        // Solo il fronte resta (diventerà la carta di circolazione): il
-        // retro serve solo alla lettura, non ha un campo dove restare.
-        $pendingFiles = Storage::disk('public')->files('registration_cards/pending');
-        $this->assertCount(1, $pendingFiles);
+        $response->assertSessionHasErrors('photo_front');
     }
 
     public function test_scan_endpoint_redirects_to_edit_when_scanning_for_existing_vehicle(): void
@@ -261,7 +235,6 @@ class VehicleScanTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'vehicle_id' => $vehicle->id,
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertRedirect(route('admin.vehicles.edit', $vehicle));
@@ -291,7 +264,6 @@ class VehicleScanTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'vehicle_id' => $otherVehicle->id,
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertSessionHasErrors('vehicle_id');
@@ -304,7 +276,6 @@ class VehicleScanTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertForbidden();
@@ -410,7 +381,6 @@ class VehicleScanTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
-            'photo_back' => UploadedFile::fake()->create('retro.jpg', 100, 'image/jpeg'),
         ]);
 
         $response->assertRedirect(route('admin.vehicles.create'));
