@@ -132,26 +132,23 @@ class VehicleController extends Controller
     }
 
     /**
-     * Scansiona fronte e retro del libretto di circolazione tramite
-     * VehicleScanService e reindirizza al form di creazione (o, se
-     * scansionato dalla pagina di modifica di un veicolo esistente, al form
-     * di modifica di quel veicolo) già precompilato (withInput, lo stesso
-     * meccanismo usato da una validazione fallita) perché l'utente
-     * verifichi/corregga prima di salvare — nessun veicolo viene
-     * creato/modificato qui.
+     * Scansiona il fronte del libretto di circolazione (contiene tutti i
+     * dati anagrafici letti) tramite VehicleScanService e reindirizza al
+     * form di creazione (o, se scansionato dalla pagina di modifica di un
+     * veicolo esistente, al form di modifica di quel veicolo) già
+     * precompilato (withInput, lo stesso meccanismo usato da una
+     * validazione fallita) perché l'utente verifichi/corregga prima di
+     * salvare — nessun veicolo viene creato/modificato qui.
      *
-     * Il fronte viene salvato subito in una posizione "pending" prima ancora
-     * di chiamare l'LLM, così resta disponibile (e riutilizzabile come carta
+     * Viene salvato subito in una posizione "pending" prima ancora di
+     * chiamare l'LLM, così resta disponibile (e riutilizzabile come carta
      * di circolazione definitiva in store()/update()) anche se l'estrazione
      * fallisce. La lettura per la scansione vera e propria avviene invece
-     * dai file temporanei dell'upload (validi solo per la durata di questa
+     * dal file temporaneo dell'upload (valido solo per la durata di questa
      * richiesta): funziona indipendentemente dal disco di storage
      * configurato (locale in sviluppo, S3/R2 in produzione — vedi
      * config('filesystems.uploads_disk')), che per un disco remoto non
-     * espone un percorso locale leggibile direttamente. Il retro non viene
-     * salvato da nessuna parte: serve solo alla lettura dei timbri di
-     * revisione periodica, non ha un campo dove essere conservato sul
-     * veicolo.
+     * espone un percorso locale leggibile direttamente.
      */
     public function scanRegistrationCard(ScanVehicleRegistrationCardRequest $request, VehicleScanService $vehicleScanService)
     {
@@ -166,15 +163,13 @@ class VehicleController extends Controller
             : route('admin.vehicles.create');
 
         $frontPhoto = $request->file('photo_front');
-        $backPhoto = $request->file('photo_back');
         $frontTempPath = $frontPhoto->getRealPath();
-        $backTempPath = $backPhoto->getRealPath();
 
         $frontFileName = Str::random(40) . '.' . $frontPhoto->getClientOriginalExtension();
         $frontPendingPath = $frontPhoto->storeAs('registration_cards/pending', $frontFileName, $this->uploadsDisk());
 
         try {
-            $extracted = $vehicleScanService->scan([$frontTempPath, $backTempPath]);
+            $extracted = $vehicleScanService->scan([$frontTempPath]);
         } catch (VehicleScanException $e) {
             // Il messaggio mostrato all'utente resta generico (non è un
             // dettaglio su cui può agire), ma senza questo log la causa
