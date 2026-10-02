@@ -295,7 +295,10 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
             'issue_resolved' => '1',
-            'previous_disposition' => 'stored',
+            'previous_disposition' => [
+                $newFrontLeft->id => 'stored',
+                $newFrontRight->id => 'stored',
+            ],
         ]);
 
         $this->assertSame('mounted', $newFrontLeft->fresh()->status);
@@ -340,7 +343,7 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
             'issue_resolved' => '1',
-            'previous_disposition' => 'stored',
+            'previous_disposition' => [$newTire->id => 'stored'],
         ]);
 
         $response->assertRedirect();
@@ -383,14 +386,92 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
             'issue_resolved' => '1',
-            'previous_disposition' => 'retired',
+            'previous_disposition' => [$newTire->id => 'retired'],
         ]);
 
         $this->assertSame('retired', $oldTire->fresh()->status);
     }
 
+    public function test_completing_tire_change_appointment_allows_independent_disposition_per_tire(): void
+    {
+        // Cambio di 4 gomme nello stesso appuntamento: ognuna può avere una
+        // disposizione diversa (es. 1 dismessa, 3 in magazzino), non più
+        // un'unica scelta valida per tutte.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        $oldFrontLeft = $this->createTire($vehicle, ['position' => Tire::POSITION_FRONT_LEFT, 'status' => 'mounted']);
+        $oldFrontRight = $this->createTire($vehicle, ['position' => Tire::POSITION_FRONT_RIGHT, 'status' => 'mounted']);
+        $oldRearLeft = $this->createTire($vehicle, ['position' => Tire::POSITION_REAR_LEFT, 'status' => 'mounted']);
+        $oldRearRight = $this->createTire($vehicle, ['position' => Tire::POSITION_REAR_RIGHT, 'status' => 'mounted']);
+        $newFrontLeft = $this->createTire($vehicle, ['position' => Tire::POSITION_FRONT_LEFT, 'status' => 'stored']);
+        $newFrontRight = $this->createTire($vehicle, ['position' => Tire::POSITION_FRONT_RIGHT, 'status' => 'stored']);
+        $newRearLeft = $this->createTire($vehicle, ['position' => Tire::POSITION_REAR_LEFT, 'status' => 'stored']);
+        $newRearRight = $this->createTire($vehicle, ['position' => Tire::POSITION_REAR_RIGHT, 'status' => 'stored']);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+            'activity_type' => 'Cambio Gomme',
+        ]);
+        foreach ([$newFrontLeft, $newFrontRight, $newRearLeft, $newRearRight] as $tire) {
+            $maintenance->items()->create(['itemable_id' => $tire->id, 'itemable_type' => Tire::class]);
+        }
+
+        $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'issue_resolved' => '1',
+            'previous_disposition' => [
+                $newFrontLeft->id => 'retired',
+                $newFrontRight->id => 'stored',
+                $newRearLeft->id => 'stored',
+                $newRearRight->id => 'stored',
+            ],
+        ]);
+
+        $response->assertRedirect();
+        $this->assertSame('retired', $oldFrontLeft->fresh()->status);
+        $this->assertSame('stored', $oldFrontRight->fresh()->status);
+        $this->assertSame('stored', $oldRearLeft->fresh()->status);
+        $this->assertSame('stored', $oldRearRight->fresh()->status);
+    }
+
     public function test_completing_tire_change_appointment_requires_disposition_choice(): void
     {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        // Serve una gomma già montata nella stessa posizione: solo lì c'è
+        // davvero qualcosa da smontare/disporre, quindi la scelta diventa
+        // obbligatoria (un primo montaggio non la richiederebbe, vedi test
+        // sotto).
+        $oldTire = $this->createTire($vehicle, ['status' => 'mounted']);
+        $tire = $this->createTire($vehicle, ['status' => 'stored']);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+            'activity_type' => 'Cambio Gomme',
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $tire->id,
+            'itemable_type' => Tire::class,
+        ]);
+
+        $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'issue_resolved' => '1',
+        ]);
+
+        $response->assertSessionHasErrors(['previous_disposition']);
+        $this->assertSame('stored', $tire->fresh()->status);
+        $this->assertSame('mounted', $oldTire->fresh()->status);
+    }
+
+    public function test_completing_tire_change_appointment_does_not_require_disposition_on_first_mount(): void
+    {
+        // Nessuna gomma montata in quella posizione: è un primo montaggio,
+        // non c'è nulla da disporre, quindi nessuna scelta deve essere richiesta.
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
         $provider = $this->createProvider();
@@ -411,8 +492,8 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
             'issue_resolved' => '1',
         ]);
 
-        $response->assertSessionHasErrors(['previous_disposition']);
-        $this->assertSame('stored', $tire->fresh()->status);
+        $response->assertSessionDoesntHaveErrors(['previous_disposition']);
+        $this->assertSame('mounted', $tire->fresh()->status);
     }
 
     public function test_completing_appointment_without_tire_item_does_not_require_disposition(): void

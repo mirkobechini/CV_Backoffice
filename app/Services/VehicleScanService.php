@@ -46,7 +46,7 @@ class VehicleScanService
 
     private const SYSTEM_PROMPT = <<<'PROMPT'
 Sei un assistente che legge libretti di circolazione italiani (carta di
-circolazione) da due foto, fronte e retro, e ne estrae i dati in JSON.
+circolazione) dalla foto del fronte, e ne estrae i dati in JSON.
 Il documento usa codici standard: A=targa, B=data di immatricolazione, D.1=marca,
 D.3=denominazione commerciale (modello), E=numero di telaio (VIN),
 F.2=massa massima ammissibile in kg, P.1=cilindrata in cc,
@@ -97,9 +97,8 @@ PROMPT;
     }
 
     /**
-     * @param  string[]  $absoluteImagePaths  fronte e retro del libretto: i
-     *                                        dati anagrafici sono sul fronte,
-     *                                        i timbri di revisione sul retro.
+     * @param  string[]  $absoluteImagePaths  foto del fronte del libretto
+     *                                        (i dati anagrafici sono tutti lì).
      * @return array<string, mixed> campi come da EXPECTED_FIELDS, mancanti = null.
      *
      * @throws VehicleScanException
@@ -111,7 +110,7 @@ PROMPT;
         }
 
         $content = [
-            ['type' => 'text', 'text' => 'Estrai i dati da queste foto del libretto di circolazione (fronte e retro).'],
+            ['type' => 'text', 'text' => 'Estrai i dati da questa foto del libretto di circolazione.'],
         ];
 
         foreach ($absoluteImagePaths as $imagePath) {

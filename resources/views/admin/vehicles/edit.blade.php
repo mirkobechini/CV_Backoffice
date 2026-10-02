@@ -25,17 +25,16 @@
         <div class="alert danger">{{ session('error') }}</div>
     @endif
 
-    {{-- Form nascosto usato solo per inviare la scansione: i file caricati
-    sono quelli del fronte/retro libretto qui sotto (copiati via JS, vedi
-    script in fondo), così non ci sono selettori file duplicati. vehicle_id
-    indica al controller di reindirizzare qui (modifica) invece che alla
-    creazione di un nuovo veicolo. --}}
+    {{-- Form nascosto usato solo per inviare la scansione: il file caricato
+    è quello del libretto qui sotto (copiato via JS, vedi script in fondo),
+    così non c'è un selettore file duplicato. vehicle_id indica al
+    controller di reindirizzare qui (modifica) invece che alla creazione di
+    un nuovo veicolo. --}}
     <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
         enctype="multipart/form-data" style="display:none;">
         @csrf
         <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
         <input type="file" name="photo_front" id="scan_photo_front_hidden">
-        <input type="file" name="photo_back" id="scan_photo_back_hidden">
     </form>
 
     <div class="form-card">
@@ -53,7 +52,7 @@
                 <h2><span class="num">1</span> {{ __('Dettagli veicolo') }}</h2>
                 <div class="row2">
                     <div class="field">
-                        <label for="license_plate">{{ __('Targa') }} <span class="req">*</span></label>
+                        <label for="license_plate">{{ __('Targa') }} <span class="req">*</span> <span class="hint">({{ __('A.') }})</span></label>
                         <input type="text" class="input @error('license_plate') is-invalid @enderror"
                             id="license_plate" name="license_plate"
                             value="{{ old('license_plate', $vehicle->license_plate) }}"
@@ -126,7 +125,7 @@
                     <x-form.date-input name="immatricolation_date" label="{{ __('Data immatricolazione') }}"
                         :model="$vehicle" required />
                     <div class="field">
-                        <label for="registration_card">{{ __('Libretto — fronte (carta di circolazione)') }}</label>
+                        <label for="registration_card">{{ __('Libretto (carta di circolazione)') }}</label>
                         <label class="file-drop" for="registration_card" id="registration_card_label">
                             @if (session('scanned_registration_card_path'))
                                 <i class="fa-solid fa-file-circle-check"></i>
@@ -156,24 +155,13 @@
 
                 <div class="row2">
                     <div class="field">
-                        <label for="registration_card_back">{{ __('Libretto — retro') }}</label>
-                        <label class="file-drop" for="registration_card_back" id="registration_card_back_label">
-                            <i class="fa-solid fa-file-arrow-up"></i> {{ __('Clicca per caricare (JPG, PNG, HEIC)') }}
-                        </label>
-                        <input type="file" id="registration_card_back" accept=".jpg,.jpeg,.png,.heic,.heif" hidden>
-                        @error('photo_back')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                        <div class="hint">{{ __('Serve solo per la scansione (timbri di revisione): non viene salvata.') }}</div>
-                    </div>
-                    <div class="field">
                         <label>&nbsp;</label>
                         <button type="button" id="scan-libretto-btn" class="btn" disabled
                             data-loading-text="{{ __('Scansione in corso...') }}">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Compila automaticamente con AI') }}
                         </button>
                         <div class="hint">
-                            {{ __('Carica fronte e retro del libretto per abilitare la lettura automatica dei dati: verifica sempre prima di salvare.') }}
+                            {{ __('Carica il libretto per abilitare la lettura automatica dei dati: verifica sempre prima di salvare.') }}
                         </div>
                     </div>
                 </div>
@@ -184,7 +172,7 @@
                 <h2><span class="num">2</span> {{ __('Specifiche tecniche') }}</h2>
                 <div class="row2">
                     <div class="field">
-                        <label for="vin">{{ __('Numero di telaio (VIN)') }}</label>
+                        <label for="vin">{{ __('Numero di telaio (VIN)') }} <span class="hint">({{ __('E.') }})</span></label>
                         <input type="text" class="input @error('vin') is-invalid @enderror" id="vin" name="vin"
                             value="{{ old('vin', $vehicle->vin) }}">
                         @error('vin')
@@ -192,7 +180,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="color">{{ __('Colore') }}</label>
+                        <label for="color">{{ __('Colore') }} <span class="hint">({{ __('R.') }})</span></label>
                         <input type="text" class="input @error('color') is-invalid @enderror" id="color" name="color"
                             value="{{ old('color', $vehicle->color) }}">
                         @error('color')
@@ -202,7 +190,7 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="seats">{{ __('Numero posti') }}</label>
+                        <label for="seats">{{ __('Numero posti') }} <span class="hint">({{ __('S.1') }})</span></label>
                         <input type="number" class="input @error('seats') is-invalid @enderror" id="seats"
                             name="seats" value="{{ old('seats', $vehicle->seats) }}" min="1" max="99">
                         @error('seats')
@@ -210,7 +198,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="vehicle_category">{{ __('Categoria veicolo') }}</label>
+                        <label for="vehicle_category">{{ __('Categoria veicolo') }} <span class="hint">({{ __('J.') }})</span></label>
                         <input type="text" class="input @error('vehicle_category') is-invalid @enderror"
                             id="vehicle_category" name="vehicle_category"
                             value="{{ old('vehicle_category', $vehicle->vehicle_category) }}"
@@ -222,7 +210,7 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="environmental_class">{{ __('Classe ambientale') }}</label>
+                        <label for="environmental_class">{{ __('Classe ambientale') }} <span class="hint">({{ __('V.9') }})</span></label>
                         <input type="text" class="input @error('environmental_class') is-invalid @enderror"
                             id="environmental_class" name="environmental_class"
                             value="{{ old('environmental_class', $vehicle->environmental_class) }}"
@@ -232,7 +220,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="max_mass_kg">{{ __('Massa massima ammissibile (kg)') }}</label>
+                        <label for="max_mass_kg">{{ __('Massa massima ammissibile (kg)') }} <span class="hint">({{ __('F.2') }})</span></label>
                         <input type="number" class="input @error('max_mass_kg') is-invalid @enderror"
                             id="max_mass_kg" name="max_mass_kg" value="{{ old('max_mass_kg', $vehicle->max_mass_kg) }}"
                             min="0">
@@ -243,7 +231,7 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="engine_displacement_cc">{{ __('Cilindrata (cc)') }}</label>
+                        <label for="engine_displacement_cc">{{ __('Cilindrata (cc)') }} <span class="hint">({{ __('P.1') }})</span></label>
                         <input type="number" class="input @error('engine_displacement_cc') is-invalid @enderror"
                             id="engine_displacement_cc" name="engine_displacement_cc"
                             value="{{ old('engine_displacement_cc', $vehicle->engine_displacement_cc) }}" min="0">
@@ -252,7 +240,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="engine_power_kw">{{ __('Potenza (kW)') }}</label>
+                        <label for="engine_power_kw">{{ __('Potenza (kW)') }} <span class="hint">({{ __('P.2') }})</span></label>
                         <input type="number" class="input @error('engine_power_kw') is-invalid @enderror"
                             id="engine_power_kw" name="engine_power_kw"
                             value="{{ old('engine_power_kw', $vehicle->engine_power_kw) }}" min="0">
@@ -315,43 +303,7 @@
             </div>
 
             {{-- Sezione 4: Distribuzione --}}
-            <div class="form-section" style="margin-bottom:0;">
-                <h2><span class="num">4</span> {{ __('Distribuzione') }}
-                    @if (session('timing_belt_suggested'))
-                        <span class="badge b-amber" title="{{ __('Stima basata su marca/modello: verifica prima di salvare.') }}">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Suggerito dall\'AI — verifica') }}
-                        </span>
-                    @endif
-                </h2>
-                <div class="row3">
-                    <label class="check">
-                        <input type="radio" value="chain" id="timing_belt_type_chain" name="timing_belt_type"
-                            {{ old('timing_belt_type', $vehicle->timing_belt_type ?? 'chain') == 'chain' ? 'checked' : '' }}>
-                        <div>
-                            <div class="label">{{ __('Catena') }}</div>
-                            <div class="sub">{{ __('Nessuna scadenza: la catena non richiede sostituzioni periodiche.') }}</div>
-                        </div>
-                    </label>
-                    <label class="check">
-                        <input type="radio" value="dry_belt" id="timing_belt_type_dry_belt" name="timing_belt_type"
-                            {{ old('timing_belt_type', $vehicle->timing_belt_type ?? 'chain') == 'dry_belt' ? 'checked' : '' }}>
-                        <div>
-                            <div class="label">{{ __('Cinghia a secco') }}</div>
-                            <div class="sub">{{ __('Genera una scadenza "Cinghia Distribuzione" dopo 100.000 km, nessun limite di tempo.') }}</div>
-                        </div>
-                    </label>
-                    <label class="check">
-                        <input type="radio" value="oil_bath_belt" id="timing_belt_type_oil_bath_belt" name="timing_belt_type"
-                            {{ old('timing_belt_type', $vehicle->timing_belt_type ?? 'chain') == 'oil_bath_belt' ? 'checked' : '' }}>
-                        <div>
-                            <div class="label">{{ __("Cinghia a bagno d'olio") }}</div>
-                            <div class="sub">
-                                {{ __('Genera una scadenza "Cinghia Distribuzione" dopo 100.000 km o 10 anni.') }}
-                            </div>
-                        </div>
-                    </label>
-                </div>
-            </div>
+            <x-vehicles.timing-belt-fields :vehicle="$vehicle" :section-number="4" />
 
             <div class="form-actions">
                 <button id="vehicle-edit-submit-btn" type="submit" class="btn primary lg"
@@ -372,13 +324,9 @@
             const registrationCardInput = document.getElementById('registration_card');
             const registrationCardLabel = document.getElementById('registration_card_label');
             const registrationCardDefaultText = registrationCardLabel.innerHTML;
-            const registrationCardBackInput = document.getElementById('registration_card_back');
-            const registrationCardBackLabel = document.getElementById('registration_card_back_label');
-            const registrationCardBackDefaultText = registrationCardBackLabel.innerHTML;
             const scanBtn = document.getElementById('scan-libretto-btn');
             const scanForm = document.getElementById('scan-libretto-form');
             const scanPhotoFrontInput = document.getElementById('scan_photo_front_hidden');
-            const scanPhotoBackInput = document.getElementById('scan_photo_back_hidden');
 
             // Mantiene lato client il formato targa coerente con le regole server.
             function uppercaseLicensePlate() {
@@ -402,23 +350,13 @@
                 }
             }
 
-            function updateRegistrationCardBackLabel() {
-                if (registrationCardBackInput.files.length > 0) {
-                    registrationCardBackLabel.textContent = registrationCardBackInput.files[0].name;
-                } else {
-                    registrationCardBackLabel.innerHTML = registrationCardBackDefaultText;
-                }
-            }
-
-            // La scansione richiede fronte E retro (i dati anagrafici sono
-            // sul fronte, i timbri di revisione sul retro): il pulsante
-            // resta disabilitato finché non sono stati caricati entrambi.
+            // Il pulsante resta disabilitato finché il libretto non è stato caricato.
             function updateScanButtonState() {
-                scanBtn.disabled = !(registrationCardInput.files.length && registrationCardBackInput.files.length);
+                scanBtn.disabled = !registrationCardInput.files.length;
             }
 
-            // Invia allo scan gli stessi file scelti per fronte/retro, senza
-            // selettori duplicati: li copia nel form nascosto tramite
+            // Invia allo scan lo stesso file scelto per il libretto, senza
+            // selettore duplicato: lo copia nel form nascosto tramite
             // DataTransfer e lo invia.
             scanBtn.addEventListener('click', () => {
                 if (scanBtn.disabled) {
@@ -428,10 +366,6 @@
                 const frontTransfer = new DataTransfer();
                 frontTransfer.items.add(registrationCardInput.files[0]);
                 scanPhotoFrontInput.files = frontTransfer.files;
-
-                const backTransfer = new DataTransfer();
-                backTransfer.items.add(registrationCardBackInput.files[0]);
-                scanPhotoBackInput.files = backTransfer.files;
 
                 scanBtn.disabled = true;
                 scanBtn.innerHTML = scanBtn.dataset.loadingText;
@@ -444,10 +378,6 @@
             licensePlateInput.addEventListener('input', uppercaseLicensePlate);
             registrationCardInput.addEventListener('change', () => {
                 updateRegistrationCardLabel();
-                updateScanButtonState();
-            });
-            registrationCardBackInput.addEventListener('change', () => {
-                updateRegistrationCardBackLabel();
                 updateScanButtonState();
             });
         });

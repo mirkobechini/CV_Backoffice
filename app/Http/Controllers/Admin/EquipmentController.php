@@ -14,6 +14,7 @@ use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class EquipmentController extends Controller
 {
@@ -258,9 +259,14 @@ class EquipmentController extends Controller
 
         $equipments = Equipment::whereIn('id', $data['equipment_ids'])->get();
 
-        foreach ($equipments as $equipment) {
-            $this->applyRevision($equipment, $data);
-        }
+        // Transazione unica: un fallimento a metà lascerebbe altrimenti
+        // alcune attrezzature selezionate aggiornate e altre no, nella
+        // stessa richiesta.
+        DB::transaction(function () use ($equipments, $data) {
+            foreach ($equipments as $equipment) {
+                $this->applyRevision($equipment, $data);
+            }
+        });
 
         $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
             ? count($equipments) . ' collaudi registrati con successo.'

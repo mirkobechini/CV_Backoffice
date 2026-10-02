@@ -14,6 +14,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class MaintenanceRecordBusinessLogicTest extends TestCase
@@ -241,6 +242,45 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $maintenance->refresh();
         $this->assertNotNull($maintenance->return_date);
         $this->assertEquals(Carbon::today()->toDateString(), $maintenance->return_date->toDateString());
+    }
+
+    public function test_completing_appointment_logs_issue_closure_in_activity_log(): void
+    {
+        // Prima di questo fix: la chiusura del guasto a completamento
+        // avveniva con Issue::whereIn(...)->update(...), che bypassa gli
+        // Eloquent event e quindi LogsActivity — nessuna voce finiva nello
+        // storico, a differenza della modifica manuale di un guasto.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $issue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto da chiudere',
+            'status' => 'in_progress',
+            'event_date' => '2025-01-02',
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $issue->id,
+            'itemable_type' => Issue::class,
+        ]);
+
+        $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'issue_resolved' => '1',
+        ]);
+
+        $this->assertTrue(
+            Activity::where('subject_type', Issue::class)
+                ->where('subject_id', $issue->id)
+                ->where('event', 'updated')
+                ->exists()
+        );
     }
 
     public function test_complete_with_issue_not_resolved_leaves_issue_in_progress(): void
