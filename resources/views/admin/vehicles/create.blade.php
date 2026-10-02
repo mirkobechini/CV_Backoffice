@@ -47,7 +47,7 @@
                 <h2><span class="num">1</span> {{ __('Dettagli veicolo') }}</h2>
                 <div class="row2">
                     <div class="field">
-                        <label for="license_plate">{{ __('Targa') }} <span class="req">*</span> <span class="hint">({{ __('campo A libretto') }})</span></label>
+                        <label for="license_plate">{{ __('Targa') }} <span class="req">*</span> <span class="hint">({{ __('A.') }})</span></label>
                         <input type="text" class="input @error('license_plate') is-invalid @enderror"
                             id="license_plate" name="license_plate" value="{{ old('license_plate') }}"
                             placeholder="{{ __('es. AB123CD') }}" style="text-transform:uppercase;" required>
@@ -156,7 +156,7 @@
                 <h2><span class="num">2</span> {{ __('Specifiche tecniche') }}</h2>
                 <div class="row2">
                     <div class="field">
-                        <label for="vin">{{ __('Numero di telaio (VIN)') }} <span class="hint">({{ __('campo E libretto') }})</span></label>
+                        <label for="vin">{{ __('Numero di telaio (VIN)') }} <span class="hint">({{ __('E.') }})</span></label>
                         <input type="text" class="input @error('vin') is-invalid @enderror" id="vin" name="vin"
                             value="{{ old('vin') }}">
                         @error('vin')
@@ -164,7 +164,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="color">{{ __('Colore') }} <span class="hint">({{ __('campo R libretto') }})</span></label>
+                        <label for="color">{{ __('Colore') }} <span class="hint">({{ __('R.') }})</span></label>
                         <input type="text" class="input @error('color') is-invalid @enderror" id="color" name="color"
                             value="{{ old('color') }}">
                         @error('color')
@@ -174,7 +174,7 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="seats">{{ __('Numero posti') }} <span class="hint">({{ __('campo S.1 libretto') }})</span></label>
+                        <label for="seats">{{ __('Numero posti') }} <span class="hint">({{ __('S.1') }})</span></label>
                         <input type="number" class="input @error('seats') is-invalid @enderror" id="seats"
                             name="seats" value="{{ old('seats') }}" min="1" max="99">
                         @error('seats')
@@ -182,7 +182,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="vehicle_category">{{ __('Categoria veicolo') }} <span class="hint">({{ __('campo J libretto') }})</span></label>
+                        <label for="vehicle_category">{{ __('Categoria veicolo') }} <span class="hint">({{ __('J.') }})</span></label>
                         <input type="text" class="input @error('vehicle_category') is-invalid @enderror"
                             id="vehicle_category" name="vehicle_category" value="{{ old('vehicle_category') }}"
                             placeholder="{{ __('es. M1') }}">
@@ -193,7 +193,7 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="environmental_class">{{ __('Classe ambientale') }} <span class="hint">({{ __('campo V.9 libretto') }})</span></label>
+                        <label for="environmental_class">{{ __('Classe ambientale') }} <span class="hint">({{ __('V.9') }})</span></label>
                         <input type="text" class="input @error('environmental_class') is-invalid @enderror"
                             id="environmental_class" name="environmental_class"
                             value="{{ old('environmental_class') }}" placeholder="{{ __('es. Euro 6') }}">
@@ -202,7 +202,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="max_mass_kg">{{ __('Massa massima ammissibile (kg)') }} <span class="hint">({{ __('campo F.2 libretto') }})</span></label>
+                        <label for="max_mass_kg">{{ __('Massa massima ammissibile (kg)') }} <span class="hint">({{ __('F.2') }})</span></label>
                         <input type="number" class="input @error('max_mass_kg') is-invalid @enderror"
                             id="max_mass_kg" name="max_mass_kg" value="{{ old('max_mass_kg') }}" min="0">
                         @error('max_mass_kg')
@@ -212,7 +212,7 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="engine_displacement_cc">{{ __('Cilindrata (cc)') }} <span class="hint">({{ __('campo P.1 libretto') }})</span></label>
+                        <label for="engine_displacement_cc">{{ __('Cilindrata (cc)') }} <span class="hint">({{ __('P.1') }})</span></label>
                         <input type="number" class="input @error('engine_displacement_cc') is-invalid @enderror"
                             id="engine_displacement_cc" name="engine_displacement_cc"
                             value="{{ old('engine_displacement_cc') }}" min="0">
@@ -221,7 +221,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="engine_power_kw">{{ __('Potenza (kW)') }} <span class="hint">({{ __('campo P.2 libretto') }})</span></label>
+                        <label for="engine_power_kw">{{ __('Potenza (kW)') }} <span class="hint">({{ __('P.2') }})</span></label>
                         <input type="number" class="input @error('engine_power_kw') is-invalid @enderror"
                             id="engine_power_kw" name="engine_power_kw" value="{{ old('engine_power_kw') }}"
                             min="0">
