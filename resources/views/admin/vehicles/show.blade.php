@@ -217,7 +217,16 @@
                         <span class="dot-type leg-{{ $deadline->type_slug }}"></span>
                         <div style="min-width:0;">
                             <div class="name">{{ $deadline->type }}</div>
-                            <div class="date">{{ __('scad.') }} {{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</div>
+                            <div class="date">
+                                {{ __('scad.') }}
+                                @if ($deadline->due_date)
+                                    {{ $deadline->due_date->format('d/m/Y') }}
+                                @elseif ($deadline->km_remaining_label)
+                                    {{ $deadline->km_remaining_label }}
+                                @else
+                                    —
+                                @endif
+                            </div>
                         </div>
                         <div class="veh-dl-badges">
                             <span
