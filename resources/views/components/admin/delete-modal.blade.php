@@ -16,6 +16,11 @@
             'route' => 'admin.maintenance-records.destroy',
             'parameter' => 'maintenanceRecord',
         ],
+        'equipmentmaintenancerecord' => [
+            'label' => 'appuntamento attrezzatura',
+            'route' => 'admin.equipment-maintenance-records.destroy',
+            'parameter' => 'equipmentMaintenanceRecord',
+        ],
         'vehicletype' => [
             'label' => 'tipo veicolo',
             'route' => 'admin.vehicle-types.destroy',
@@ -51,7 +56,7 @@
     $displayValue = match ($normalizedType) {
         'vehicle' => $object->internal_code ?? ($object->license_plate ?? (string) $object->id),
         'issue', 'equipmentissue' => $object->description ?? (string) $object->id,
-        'maintenancerecord' => $object->activity_type ?? (string) $object->id,
+        'maintenancerecord', 'equipmentmaintenancerecord' => $object->activity_type ?? (string) $object->id,
         'tire' => trim(($object->season_label ?? '') . ' ' . ($object->brand ?? '')) ?: (string) $object->id,
         default => $object->name ?? ($object->title ?? (string) $object->id),
     };
