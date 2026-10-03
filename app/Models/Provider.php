@@ -23,4 +23,9 @@ class Provider extends Model
     {
         return $this->hasMany(MaintenanceRecord::class);
     }
+
+    public function equipmentMaintenanceRecords()
+    {
+        return $this->hasMany(EquipmentMaintenanceRecord::class);
+    }
 }

@@ -37,7 +37,7 @@ Separately, a fault can also cover more than one tire directly (e.g. several tir
 
 ### Decision
 
-We applied `SoftDeletes` (Laravel) to `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord` and `Provider`. Deleted records remain in the DB with `deleted_at` set.
+We applied `SoftDeletes` (Laravel) to `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord`, `Provider`, `EquipmentIssue` and `EquipmentMaintenanceRecord`. Deleted records remain in the DB with `deleted_at` set.
 
 ### Rationale
 
@@ -50,6 +50,7 @@ We applied `SoftDeletes` (Laravel) to `Vehicle`, `Issue`, `Deadline`, `Maintenan
 - All queries automatically use `WHERE deleted_at IS NULL`
 - `withTrashed()` is needed to include deleted records
 - Views and reports can also access deleted history
+- A soft-deleted record is easy to mistake for one that never existed, or for genuine data loss, when it simply isn't showing up where expected (found once investigating a deadline that turned out to not even exist — see §3's note on the sorting bug). `php artisan deadlines:inspect {vehicle}` is a read-only diagnostic for exactly this: lists every deadline of a vehicle including soft-deleted ones, with its activity log trail (who deleted it, when), and falls back to searching the activity log by model attributes for the rarer case of a row removed outside Eloquent (bypassing the soft delete entirely)
 
 ---
 
@@ -73,6 +74,7 @@ The status of a deadline (`pending`, `valid`, `expired`, `renewed`) is automatic
 - `loadMissing('vehicle.latestMileageLog')` is needed to avoid N+1 queries
 - `deadlines.warning_months` is configurable via `.env` (default: 3 months)
 - Not every deadline has both a date and a mileage component: the timing belt deadline, for example, depends on `Vehicle.timing_belt_type` — a chain has no deadline at all, a dry belt is mileage-only (`due_date` stays null), and a belt running in an oil bath has both (100,000 km or 10 years, whichever comes first). `interval_km`/`last_mileage` and `due_date`/`interval_days` are independently nullable on `Deadline` for exactly this reason.
+- Code that picks "the current deadline of this type for this vehicle" must not sort or deduplicate by `due_date`: a mileage-only deadline (dry belt) always has `due_date = null`, so when both the superseded and the renewed-from-it deadline share that same null value, a `due_date`-based ordering can't tell them apart and may silently pick the wrong one — this happened in production (`Vehicle::getDeadlinesGroupedAttribute()` and `DeadlineController::index()`'s default view both had this bug), making an active deadline appear to have vanished even though the row was never touched. `is_renewed` is the reliable signal for "superseded", independent of whether that deadline type has a time component at all.
 
 ---
 
@@ -151,7 +153,7 @@ We have an Artisan command `app:send-summary-report` scheduled in `routes/consol
 
 ### Decision
 
-We used the `spatie/laravel-activitylog` package on `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord`, `MileageLog`, `Equipment`. The activity log UI is at `admin/activity-log`.
+We used the `spatie/laravel-activitylog` package on `Vehicle`, `Issue`, `Deadline`, `MaintenanceRecord`, `MileageLog`, `Equipment`, `EquipmentIssue`, `EquipmentMaintenanceRecord`. The activity log UI is at `admin/activity-log`.
 
 ### Rationale
 
@@ -198,7 +200,8 @@ Every `Vehicle` belongs to a `Group` (an association/fleet owner), and every `Us
 
 - Unassigned resources (e.g. equipment not yet attached to a vehicle) have no group of their own and are deliberately treated as visible to everyone, which every related query has to account for explicitly (`whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($q) => $q->forGroup(...))`) — forgetting this clause excludes valid unassigned records instead of leaking others' data, a cheaper failure mode than the reverse
 - Bulk-selection endpoints (e.g. multi-tire edit, multi-equipment revision) validate every selected ID against the current group via the `BelongsToCurrentUserGroup` rule or an equivalent query-based check, not a per-item `authorize()` call
-- This has been the source of real bugs more than once (data isolation bugs are listed across several commits) — any new cross-group query needs to be scoped deliberately, it is not automatic
+- A record that can relate to *several* group-owned resources at once (an equipment appointment, which can involve more than one piece of equipment — see §12) doesn't have a single group in the general case. `EquipmentMaintenanceRecord`'s `vehicle` accessor (used by the same group-check Policies rely on everywhere else) returns the shared vehicle only when every linked equipment that has one points to the *same* vehicle, and `null` (permissive, same as an unassigned resource) only for the genuinely ambiguous case — spanning several groups, or none assigned at all. The first version of this accessor returned `null` unconditionally "because it can span groups", which silently disabled the group check even for the common single-vehicle case (a capo could open/edit/delete another group's equipment appointment directly by id, though list queries stayed correctly filtered) — found in a post-implementation audit, fixed before any release.
+- This has been the source of real bugs more than once (data isolation bugs are listed across several commits) — any new cross-group query, or any new accessor a Policy relies on, needs to be scoped deliberately, it is not automatic
 
 ---
 
@@ -206,19 +209,45 @@ Every `Vehicle` belongs to a `Group` (an association/fleet owner), and every `Us
 
 ### Decision
 
-A vehicle can be created (or an existing one updated) by uploading front/back photos of the Italian libretto di circolazione; an LLM vision model (configurable provider, OpenRouter by default — see `config/services.php`) extracts the structured fields (plate, dates, brand/model, VIN, tire size, likely timing belt type, etc.) via `VehicleScanService`, which are then pre-filled into the create/edit form for the user to review before saving. Nothing is written to the database directly from the scan.
+A vehicle can be created (or an existing one updated) by uploading a photo of the front of the Italian libretto di circolazione; an LLM vision model (configurable provider, OpenRouter by default — see `config/services.php`) extracts the structured fields (plate, dates, brand/model, VIN, tire size, likely timing belt type, etc.) via `VehicleScanService`, which are then pre-filled into the create/edit form for the user to review before saving. Nothing is written to the database directly from the scan.
 
 ### Rationale
 
 - Manually transcribing a dozen fields per vehicle from a photographed document is slow and error-prone; pre-filling and asking for confirmation is faster while keeping a human in the loop
 - Using a configurable LLM vision provider avoids a hard dependency on one vendor and keeps the feature degradable: a missing/invalid API key or a failed call fails gracefully (flash message, manual entry still works), it never blocks vehicle creation
-- The front photo is kept as the vehicle's registration card attachment if the scan or the subsequent save succeeds; the back photo (used only to read the periodic inspection stamps) is never stored
+- The front photo is kept as the vehicle's registration card attachment if the scan or the subsequent save succeeds. A back photo was originally also required (the Italian libretto's periodic inspection stamps live there), but every field the system prompt actually extracts (`EXPECTED_FIELDS`) comes from standard codes printed on the front only — the back was being uploaded and sent to the vision model for nothing. Dropped: only the front is requested now.
 
 ### Consequences
 
 - Scan failures are logged (`Log::warning`, since the PDF-report scheduler incident) with the real exception message, while the user only sees a generic "couldn't read it, enter manually" message
 - The model can only ever suggest whether the vehicle likely has a timing belt vs. a chain (`has_timing_belt_suggested`) — it cannot tell a dry belt from an oil-bath one, that distinction isn't visible on the document and must be set manually
 - Rate-limited separately (`throttle:vehicle-scan`) since each call costs an LLM API request
+- The create/edit vehicle form shows the libretto code next to each technical field it can pre-fill (e.g. "VIN (E.)"), so a user filling it in by hand knows where to look on the document even without running the scan
+
+---
+
+## 12. Equipment faults and appointments: a simpler, non-polymorphic design
+
+### Decision
+
+Equipment (fire extinguishers, stretchers, DAE, etc.) can have faults (`EquipmentIssue`) and workshop appointments (`EquipmentMaintenanceRecord`) reported against it, mirroring the vehicle workflow (§1) but in a separate section of the UI and with a deliberately different, simpler data model:
+
+- `EquipmentIssue` has a direct `equipment_id` FK (cascade) and an optional direct `equipment_maintenance_record_id` FK (nullable, `nullOnDelete`) to the appointment resolving it — no polymorphic `itemable` relation, because an equipment fault never needs to share a join table with other item types the way a vehicle appointment does with deadlines and tires.
+- `EquipmentMaintenanceRecord` has **no** `vehicle_id` at all: unlike a vehicle appointment, which is always about exactly one vehicle, one equipment appointment can cover several pieces of equipment together (e.g. the same provider checking every fire extinguisher on the same day). The link is a plain many-to-many pivot, `equipment_maintenance_record_equipment`.
+- Both models use `SoftDeletes` + `LogsActivity`, same as their vehicle counterparts (§2, §8).
+- Authorization reuses the same `HasGroupScopedAccess` Policy trait as everything else (§10); see that section's note on the `EquipmentMaintenanceRecord.vehicle` accessor for the one genuinely new wrinkle this model introduces (a record that can span more than one group-owned resource).
+
+### Rationale
+
+- Vehicle appointments need the polymorphic `maintenance_record_items` table because one appointment can mix faults, deadlines *and* tires. Equipment appointments only ever need to relate to faults — reusing the same polymorphic machinery for a single item type would have been complexity with no payoff.
+- A vehicle appointment's single-vehicle assumption doesn't hold for equipment: several items are routinely serviced together by the same provider on the same visit. Modeling that as a many-to-many from the start, instead of bolting it on later, avoids a second migration/refactor once the first multi-item appointment request came in (it came in during the same planning pass, before any code existed).
+- Equipment deadlines (revision/collaudo intervals, §3's `Deadline`-adjacent-but-separate tracking on `Equipment`/`EquipmentRevision`) were explicitly kept out of this feature's scope — they already work and weren't part of what was missing.
+
+### Consequences
+
+- `EquipmentIssueController`/`EquipmentMaintenanceRecordController` don't need `with('items.itemable')`-style eager loading; they load `equipment`/`equipments`/`issues` directly, which is simpler but means the two feature pairs (vehicle vs equipment) don't share a common base controller or trait beyond `DetectsDuplicates`/`SortableAndGroupable`.
+- Linking/unlinking an `EquipmentIssue` to an appointment, and reopening it when unlinked, is done with a per-model loop (not a mass `whereIn()->update()`) for the same reason already established for vehicle issues (§8): a bulk update bypasses `LogsActivity` entirely.
+- Completing an equipment appointment only asks "were the linked faults resolved?" when there actually are linked faults — a pure revision/collaudo appointment with no fault involved doesn't force an answer to a question that doesn't apply to it.
 
 ---
 

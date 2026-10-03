@@ -307,4 +307,14 @@ class Equipment extends Model
     {
         return $this->hasMany(EquipmentRevision::class);
     }
+
+    public function issues()
+    {
+        return $this->hasMany(EquipmentIssue::class);
+    }
+
+    public function maintenanceRecords()
+    {
+        return $this->belongsToMany(EquipmentMaintenanceRecord::class, 'equipment_maintenance_record_equipment');
+    }
 }

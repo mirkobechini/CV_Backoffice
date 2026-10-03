@@ -15,8 +15,9 @@
 - **Deadline and equipment tracking**: ministerial inspections, oxygen check, service, timing belt, insurance — with automatic status based on date and mileage; equipment with a separate inspection cycle (e.g. fire extinguisher collaudo) tracks both expiries independently, surfacing whichever is more urgent
 - **Automatic deadline generation**: timing belt (chain: none; dry belt: 100,000 km only; oil bath belt: 100,000 km or 10 years), service (1 year or configurable mileage), automatic renewal on intervention completion
 - **Mileage tracking**: bulk monthly entry, history, integration with mileage-based deadlines
-- **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set; a single fault report can also link several tires at once (e.g. all four punctured together); brand/model/size can be bulk-edited across several tires from the same batch in one go
-- **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle); record a revision or collaudo for several pieces of equipment at once with one shared date (e.g. all fire extinguishers checked the same day)
+- **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set; a single fault report can also link several tires at once (e.g. all four punctured together); brand/model/size can be bulk-edited across several tires from the same batch in one go; the tire size can be picked from the vehicle's recommended sizes instead of retyped; on completion of a multi-tire change, each replaced tire's disposition (storage/retired) is chosen independently, not one choice for all
+- **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle); record a revision or collaudo for several pieces of equipment at once with one shared date (e.g. all fire extinguishers checked the same day); list grouping/sorting by type, status and vehicle
+- **Equipment faults and appointments**: a separate workflow mirroring the vehicle one — equipment can have faults reported and workshop appointments with a provider, with the difference that one appointment can involve several pieces of equipment together (e.g. several fire extinguishers checked by the same provider on the same day)
 - **Public fleet status page**: a secret, unguessable link, no account required, showing only vehicle availability (no sensitive data)
 - **Interactive dashboard**: stats, upcoming deadlines (with remaining time/mileage and status), open faults, incomplete equipment
 - **Appointment calendar**: month/week view with color-coding by activity type
@@ -32,7 +33,7 @@
 - **Database backup**: Artisan command + button on the settings page
 - **Rate limiting**: protection on login, admin routes and API
 - **Light/dark theme**: persisted in localStorage
-- **Vehicle registration document scan**: create a vehicle by uploading the front/back of the registration document, with an LLM vision provider (configurable, OpenRouter by default) pre-filling license plate, brand/model, technical data and tire size — always reviewed by the user before saving
+- **Vehicle registration document scan**: create a vehicle by uploading a photo of the front of the registration document, with an LLM vision provider (configurable, OpenRouter by default) pre-filling license plate, brand/model, technical data and tire size — always reviewed by the user before saving; technical fields also show the corresponding registration document code as a hint (e.g. "VIN (E.)")
 
 ---
 
@@ -142,6 +143,7 @@ The app runs in production on [Laravel Cloud](https://cloud.laravel.com). Steps,
 The project's architectural choices are documented in a single [Architecture Decision Record](docs/ADR.md). It covers:
 
 - Polymorphic relations (faults/deadlines/tires ↔ maintenance), plus the separate faults↔tires many-to-many
+- Equipment faults/appointments: a deliberately simpler, non-polymorphic design (direct FK + many-to-many pivot) for the same workflow applied to equipment
 - SoftDeletes and automatic deadline status (date + mileage)
 - Sanctum authentication + roles (Policies)
 - Email notifications with the scheduler
@@ -177,6 +179,12 @@ erDiagram
     VEHICLE_TYPE_EQUIPMENT_REQUIREMENTS }o--|| VEHICLE_TYPES : ""
     VEHICLE_TYPE_EQUIPMENT_REQUIREMENTS }o--|| EQUIPMENT_TYPES : ""
 
+    %% Equipment faults and appointments (separate from the vehicle ones)
+    EQUIPMENT ||--o{ EQUIPMENT_ISSUES : "has"
+    EQUIPMENT_ISSUES }o--|| EQUIPMENT_MAINTENANCE_RECORDS : "resolved by (optional)"
+    EQUIPMENT }o--o{ EQUIPMENT_MAINTENANCE_RECORDS : "involved in"
+    EQUIPMENT_MAINTENANCE_RECORDS }o--|| PROVIDERS : "provider"
+
     %% Polymorphic maintenance
     MAINTENANCE_RECORDS ||--o{ MAINTENANCE_RECORD_ITEMS : "contains"
     MAINTENANCE_RECORD_ITEMS }o--|| ISSUES : "itemable"
@@ -210,6 +218,9 @@ erDiagram
 | `equipment`                           | Onboard equipment (fire extinguishers, stretchers, etc.)                  |
 | `equipment_types`                     | Equipment types (with inspection frequency)                               |
 | `vehicle_type_equipment_requirements` | Mandatory equipment per vehicle type                                       |
+| `equipment_issues`                    | Equipment faults (direct FK to equipment, not polymorphic)                |
+| `equipment_maintenance_records`       | Equipment workshop appointments (no single vehicle_id: can involve several equipment) |
+| `equipment_maintenance_record_equipment` | Equipment ↔ appointment pivot (many-to-many)                            |
 | `notification_settings`               | Email report configuration                                                |
 | `notifications`                       | Per-user in-app notifications                                             |
 | `groups`                              | Groups/associations (with invite code)                                    |

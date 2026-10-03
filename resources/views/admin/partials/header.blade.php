@@ -63,6 +63,14 @@
             href="{{ route('admin.equipment-types.index') }}" title="{{ __('Tipi di Attrezzature') }}">
             <i class="fa-solid fa-tag"></i><span>{{ __('Tipi Attrezzature') }}</span>
         </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.equipment-issues.*') ? 'active' : '' }}"
+            href="{{ route('admin.equipment-issues.index') }}" title="{{ __('Guasti Attrezzature') }}">
+            <i class="fa-solid fa-triangle-exclamation"></i><span>{{ __('Guasti Attrezzature') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.equipment-maintenance-records.*') ? 'active' : '' }}"
+            href="{{ route('admin.equipment-maintenance-records.index') }}" title="{{ __('Appuntamenti Attrezzature') }}">
+            <i class="fa-solid fa-calendar-check"></i><span>{{ __('Appuntamenti Attrezzature') }}</span>
+        </a>
     </nav>
 
     {{-- Sezione: Sistema --}}

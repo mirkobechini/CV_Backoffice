@@ -23,9 +23,25 @@ class ProviderController extends Controller
      */
     public function index(Request $request)
     {
-        $providers = Provider::search($request->get('q'))->orderBy('name')->paginate(20)->withQueryString();
+        $validated = $request->validate([
+            'usage_filter' => 'nullable|in:all,vehicles,equipment',
+        ]);
+        $usageFilter = $validated['usage_filter'] ?? 'all';
 
-        return view('admin.providers.index', compact('providers'));
+        $query = Provider::search($request->get('q'));
+
+        // Non è una categoria fissa sul fornitore: uno stesso fornitore può
+        // servire sia mezzi che attrezzature. Il filtro verifica l'uso
+        // reale (appuntamenti già registrati), non un campo statico.
+        if ($usageFilter === 'vehicles') {
+            $query->whereHas('maintenanceRecords');
+        } elseif ($usageFilter === 'equipment') {
+            $query->whereHas('equipmentMaintenanceRecords');
+        }
+
+        $providers = $query->orderBy('name')->paginate(20)->withQueryString();
+
+        return view('admin.providers.index', compact('providers', 'usageFilter'));
     }
 
     /**

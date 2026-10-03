@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Models\CarModel;
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\EquipmentIssue;
+use App\Models\EquipmentMaintenanceRecord;
 use App\Models\EquipmentType;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
@@ -16,6 +18,8 @@ use App\Models\VehicleType;
 use App\Observers\DashboardCacheObserver;
 use App\Observers\VehicleObserver;
 use App\Policies\DeadlinePolicy;
+use App\Policies\EquipmentIssuePolicy;
+use App\Policies\EquipmentMaintenanceRecordPolicy;
 use App\Policies\EquipmentPolicy;
 use App\Policies\EquipmentTypePolicy;
 use App\Policies\IssuePolicy;
@@ -89,6 +93,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(MileageLog::class, MileageLogPolicy::class);
         Gate::policy(Equipment::class, EquipmentPolicy::class);
         Gate::policy(EquipmentType::class, EquipmentTypePolicy::class);
+        Gate::policy(EquipmentIssue::class, EquipmentIssuePolicy::class);
+        Gate::policy(EquipmentMaintenanceRecord::class, EquipmentMaintenanceRecordPolicy::class);
         Gate::policy(VehicleType::class, VehicleTypePolicy::class);
 
         Vehicle::observe(VehicleObserver::class);
