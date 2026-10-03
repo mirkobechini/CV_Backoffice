@@ -92,10 +92,19 @@ class DeadlineController extends Controller
         // creando un nuovo record e accumula storico allo stesso modo.
         // Prima filtrava solo su ministeriale/ossigeno, nascondendo del
         // tutto tagliando/cinghia/assicurazione dalla vista di default.
+        //
+        // L'ordinamento non può basarsi solo su due_date: una cinghia a
+        // secco ha sempre due_date nullo (scade solo a km). Tra la
+        // scadenza già rinnovata e quella attiva nata dal rinnovo,
+        // entrambe con due_date nullo, ordinare per sola data non le
+        // distingue e unique() poteva tenere quella storica scartando
+        // quella attiva, facendola sparire del tutto dall'elenco.
+        // is_renewed è il segnale affidabile di "superata", indipendente
+        // dal tipo di scadenza avendo o meno una componente a tempo.
         if ($latestRevisionOnly) {
             $deadlines = $deadlinesQuery
                 ->get()
-                ->sortByDesc(fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '')
+                ->sortBy(fn(Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
                 ->unique(fn(Deadline $d) => ($d->vehicle_id ?? 'N/A') . '|' . ($d->type ?? 'N/A'))
                 ->values();
         } else {
