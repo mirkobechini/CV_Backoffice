@@ -362,7 +362,15 @@
                 @foreach ($vehicle->deadlines as $deadline)
                     <tr>
                         <td>{{ $deadline->type }}</td>
-                        <td><strong>{{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</strong></td>
+                        <td><strong>
+                                @if ($deadline->due_date)
+                                    {{ $deadline->due_date->format('d/m/Y') }}
+                                @elseif ($deadline->km_remaining_label)
+                                    {{ $deadline->km_remaining_label }}
+                                @else
+                                    —
+                                @endif
+                            </strong></td>
                         <td><span class="tag tag-{{ $deadline->status_color }}">{{ $deadline->status_label }}</span>
                         </td>
                     </tr>

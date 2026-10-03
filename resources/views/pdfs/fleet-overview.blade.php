@@ -96,15 +96,24 @@
                         return '<span class="empty-cell">&mdash;</span>';
                     }
 
-                    $parts = array_filter([$deadline->date_remaining_label, $deadline->km_remaining_label]);
-                    $sub = $parts ? implode(' · ', $parts) : null;
+                    // Una cinghia a secco non ha mai una data (scade solo a
+                    // km): mostrare sempre la data come riga principale
+                    // (con "—" quando assente) nascondeva del tutto
+                    // l'informazione utile per quelle scadenze.
+                    if ($deadline->due_date) {
+                        $out = e($deadline->due_date_formatted);
+                        if ($deadline->km_remaining_label) {
+                            $out .= '<span class="sub">' . e($deadline->km_remaining_label) . '</span>';
+                        }
 
-                    $out = e($deadline->due_date_formatted ?? '—');
-                    if ($sub) {
-                        $out .= '<span class="sub">' . e($sub) . '</span>';
+                        return $out;
                     }
 
-                    return $out;
+                    if ($deadline->km_remaining_label) {
+                        return e($deadline->km_remaining_label);
+                    }
+
+                    return '—';
                 };
             @endphp
             <tr>
