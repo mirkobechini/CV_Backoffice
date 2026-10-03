@@ -18,19 +18,41 @@ class InspectVehicleDeadlines extends Command
     {
         $identifier = $this->argument('vehicle');
 
-        // La sigla (internal_code) di questa flotta è numerica (es. "1744"),
-        // quindi non si può usare "è tutta cifre" per distinguerla da un id:
-        // si cerca sempre prima per sigla, e solo se non trovata per id.
-        $vehicle = Vehicle::where('internal_code', $identifier)->first()
-            ?? Vehicle::find($identifier);
+        // withTrashed(): un veicolo eliminato e "ricreato" con la stessa
+        // sigla (es. per correggere un errore) lascerebbe altrimenti le
+        // sue scadenze storiche del tutto invisibili a questo comando,
+        // perché agganciate al vecchio id ormai fuori dalla ricerca
+        // normale. La sigla (internal_code) di questa flotta è numerica
+        // (es. "1744"), quindi non si può usare "è tutta cifre" per
+        // distinguerla da un id: si cerca sempre prima per sigla, e solo
+        // se non trovata per id.
+        $vehicles = Vehicle::withTrashed()->where('internal_code', $identifier)->get();
+        if ($vehicles->isEmpty()) {
+            $vehicle = Vehicle::withTrashed()->find($identifier);
+            $vehicles = $vehicle ? collect([$vehicle]) : collect();
+        }
 
-        if (! $vehicle) {
-            $this->error("Veicolo \"{$identifier}\" non trovato.");
+        if ($vehicles->isEmpty()) {
+            $this->error("Veicolo \"{$identifier}\" non trovato (nemmeno tra quelli eliminati).");
 
             return self::FAILURE;
         }
 
-        $this->info("Veicolo #{$vehicle->id} — sigla {$vehicle->internal_code}, targa {$vehicle->license_plate}, timing_belt_type: " . ($vehicle->timing_belt_type ?? 'NULL'));
+        if ($vehicles->count() > 1) {
+            $this->warn("Trovati {$vehicles->count()} veicoli con sigla \"{$identifier}\" (es. un duplicato eliminato e ricreato): li mostro tutti.");
+            $this->newLine();
+        }
+
+        foreach ($vehicles as $vehicle) {
+            $this->inspectVehicle($vehicle);
+        }
+
+        return self::SUCCESS;
+    }
+
+    private function inspectVehicle(Vehicle $vehicle): void
+    {
+        $this->info("Veicolo #{$vehicle->id} — sigla {$vehicle->internal_code}, targa {$vehicle->license_plate}, timing_belt_type: " . ($vehicle->timing_belt_type ?? 'NULL') . ($vehicle->trashed() ? ' | VEICOLO ELIMINATO il ' . $vehicle->deleted_at : ''));
         $this->newLine();
 
         $query = Deadline::withTrashed()->where('vehicle_id', $vehicle->id);
@@ -40,9 +62,11 @@ class InspectVehicleDeadlines extends Command
         $deadlines = $query->orderBy('id')->get();
 
         if ($deadlines->isEmpty()) {
-            $this->warn('Nessuna scadenza trovata (nemmeno eliminata) per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . '.');
+            $this->warn('Nessuna scadenza trovata (nemmeno eliminata, via withTrashed) per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . '.');
+            $this->reportOrphanActivityTraces($vehicle, $type);
+            $this->newLine();
 
-            return self::SUCCESS;
+            return;
         }
 
         $this->info($deadlines->count() . ' scadenza/e trovate (incluse quelle eliminate):');
@@ -71,7 +95,37 @@ class InspectVehicleDeadlines extends Command
 
             $this->newLine();
         }
+    }
 
-        return self::SUCCESS;
+    /**
+     * Ultima spiaggia: se non c'è nessuna riga nemmeno con withTrashed(),
+     * la scadenza potrebbe essere stata eliminata "per davvero" (bypassando
+     * il soft delete, es. con un DELETE grezzo). In quel caso la riga non
+     * esiste più da nessuna parte, ma il registro attività (tabella
+     * separata) può comunque avere ancora traccia di quando esisteva,
+     * cercando nelle properties salvate invece che per subject_id (che qui
+     * non conosciamo più).
+     */
+    private function reportOrphanActivityTraces(Vehicle $vehicle, ?string $type): void
+    {
+        $activities = Activity::where('subject_type', Deadline::class)
+            ->where('properties', 'like', '%"vehicle_id":' . $vehicle->id . '%')
+            ->when($type, fn ($q) => $q->where('properties', 'like', '%"type":"' . $type . '"%'))
+            ->with('causer')
+            ->oldest()
+            ->get();
+
+        if ($activities->isEmpty()) {
+            $this->line('Nessuna traccia nemmeno nel registro attività per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . ': la scadenza non è mai esistita, oppure il registro non la copre.');
+
+            return;
+        }
+
+        $this->warn('Ma il registro attività ha tracce di scadenze per questo veicolo che non esistono più in nessuna forma (riga eliminata senza soft delete, es. DELETE grezzo):');
+        foreach ($activities as $a) {
+            $causer = $a->causer?->name ?? 'sistema/sconosciuto';
+            $this->line("  [{$a->created_at}] subject_id={$a->subject_id} {$a->description} — {$causer}");
+            $this->line('  properties: ' . $a->properties);
+        }
     }
 }
