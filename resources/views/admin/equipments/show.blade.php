@@ -30,6 +30,10 @@
         <a href="{{ request('back', route('admin.equipments.index')) }}" class="btn ghost">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}
         </a>
+        <a href="{{ route('admin.equipment-issues.create', ['equipment_id' => $equipment->id, 'back' => url()->full()]) }}"
+            class="btn">
+            <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Segnala guasto') }}
+        </a>
         <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
             class="btn primary">
             <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}

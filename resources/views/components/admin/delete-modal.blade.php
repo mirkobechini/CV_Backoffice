@@ -6,6 +6,11 @@
         'vehicle' => ['label' => 'veicolo', 'route' => 'admin.vehicles.destroy', 'parameter' => 'vehicle'],
         'provider' => ['label' => 'officina', 'route' => 'admin.providers.destroy', 'parameter' => 'provider'],
         'issue' => ['label' => 'guasto', 'route' => 'admin.issues.destroy', 'parameter' => 'issue'],
+        'equipmentissue' => [
+            'label' => 'guasto attrezzatura',
+            'route' => 'admin.equipment-issues.destroy',
+            'parameter' => 'equipmentIssue',
+        ],
         'maintenancerecord' => [
             'label' => 'manutenzione',
             'route' => 'admin.maintenance-records.destroy',
@@ -45,7 +50,7 @@
 
     $displayValue = match ($normalizedType) {
         'vehicle' => $object->internal_code ?? ($object->license_plate ?? (string) $object->id),
-        'issue' => $object->description ?? (string) $object->id,
+        'issue', 'equipmentissue' => $object->description ?? (string) $object->id,
         'maintenancerecord' => $object->activity_type ?? (string) $object->id,
         'tire' => trim(($object->season_label ?? '') . ' ' . ($object->brand ?? '')) ?: (string) $object->id,
         default => $object->name ?? ($object->title ?? (string) $object->id),
