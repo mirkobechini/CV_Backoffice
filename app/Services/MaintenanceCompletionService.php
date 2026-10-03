@@ -157,6 +157,18 @@ class MaintenanceCompletionService
 
                 if ($timingBeltDeadline) {
                     $this->renewDeadline($maintenanceRecord, $timingBeltDeadline);
+                } else {
+                    // Nessuna scadenza da rinnovare (es. il tipo di
+                    // distribuzione è stato impostato/corretto dopo la
+                    // creazione del veicolo, senza passare dal prompt
+                    // "crea scadenza cinghia"): prima il cambio veniva
+                    // registrato ma non nasceva mai nessuna scadenza,
+                    // lasciando il veicolo senza tracciamento cinghia.
+                    $this->deadlineService->createTimingBeltDeadlineFromChange(
+                        $maintenanceRecord->vehicle,
+                        $maintenanceRecord->return_date ?? Carbon::today(),
+                        $maintenanceRecord->mileage_at_service,
+                    );
                 }
             }
 
