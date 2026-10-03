@@ -63,14 +63,10 @@ class InspectVehicleDeadlines extends Command
 
         if ($deadlines->isEmpty()) {
             $this->warn('Nessuna scadenza trovata (nemmeno eliminata, via withTrashed) per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . '.');
-            $this->reportOrphanActivityTraces($vehicle, $type);
+        } else {
+            $this->info($deadlines->count() . ' scadenza/e trovate (incluse quelle eliminate):');
             $this->newLine();
-
-            return;
         }
-
-        $this->info($deadlines->count() . ' scadenza/e trovate (incluse quelle eliminate):');
-        $this->newLine();
 
         foreach ($deadlines as $d) {
             $this->line("— Scadenza #{$d->id} [{$d->type}]");
@@ -95,33 +91,43 @@ class InspectVehicleDeadlines extends Command
 
             $this->newLine();
         }
+
+        // Cercata sempre, non solo quando $deadlines è vuota: un veicolo
+        // può avere altre scadenze (tagliando, revisione...) ma mancare
+        // proprio del tipo cercato se quella riga è stata eliminata
+        // bypassando il soft delete (es. DELETE grezzo) — $deadlines non
+        // sarebbe vuota in quel caso, solo priva di quel tipo specifico.
+        $this->reportOrphanActivityTraces($vehicle, $type, $deadlines->pluck('id')->all());
     }
 
     /**
-     * Ultima spiaggia: se non c'è nessuna riga nemmeno con withTrashed(),
-     * la scadenza potrebbe essere stata eliminata "per davvero" (bypassando
-     * il soft delete, es. con un DELETE grezzo). In quel caso la riga non
-     * esiste più da nessuna parte, ma il registro attività (tabella
-     * separata) può comunque avere ancora traccia di quando esisteva,
-     * cercando nelle properties salvate invece che per subject_id (che qui
-     * non conosciamo più).
+     * Cerca nel registro attività tracce di scadenze (di questo veicolo, ed
+     * eventualmente di questo tipo) il cui subject_id non è tra quelli già
+     * trovati con withTrashed(): significa che quella riga non esiste più
+     * da nessuna parte (eliminata bypassando il soft delete, es. con un
+     * DELETE grezzo). Si cerca nelle properties salvate (vehicle_id/type),
+     * non per subject_id, perché per una riga sparita del tutto non lo
+     * conosciamo più.
      */
-    private function reportOrphanActivityTraces(Vehicle $vehicle, ?string $type): void
+    private function reportOrphanActivityTraces(Vehicle $vehicle, ?string $type, array $knownIds): void
     {
         $activities = Activity::where('subject_type', Deadline::class)
             ->where('properties', 'like', '%"vehicle_id":' . $vehicle->id . '%')
             ->when($type, fn ($q) => $q->where('properties', 'like', '%"type":"' . $type . '"%'))
+            ->whereNotIn('subject_id', $knownIds)
             ->with('causer')
             ->oldest()
             ->get();
 
         if ($activities->isEmpty()) {
-            $this->line('Nessuna traccia nemmeno nel registro attività per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . ': la scadenza non è mai esistita, oppure il registro non la copre.');
+            if (empty($knownIds)) {
+                $this->line('Nessuna traccia nemmeno nel registro attività per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . ': la scadenza non è mai esistita, oppure il registro non la copre.');
+            }
 
             return;
         }
 
-        $this->warn('Ma il registro attività ha tracce di scadenze per questo veicolo che non esistono più in nessuna forma (riga eliminata senza soft delete, es. DELETE grezzo):');
+        $this->warn('Il registro attività ha tracce di scadenze per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . ' che non esistono più in nessuna forma (riga eliminata senza soft delete, es. DELETE grezzo):');
         foreach ($activities as $a) {
             $causer = $a->causer?->name ?? 'sistema/sconosciuto';
             $this->line("  [{$a->created_at}] subject_id={$a->subject_id} {$a->description} — {$causer}");
