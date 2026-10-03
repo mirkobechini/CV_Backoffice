@@ -34,6 +34,10 @@
             class="btn">
             <i class="fa-solid fa-triangle-exclamation"></i> {{ __('Segnala guasto') }}
         </a>
+        <a href="{{ route('admin.equipment-maintenance-records.create', ['equipment_id' => $equipment->id, 'back' => url()->full()]) }}"
+            class="btn">
+            <i class="fa-solid fa-calendar-check"></i> {{ __('Nuovo appuntamento') }}
+        </a>
         <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
             class="btn primary">
             <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}

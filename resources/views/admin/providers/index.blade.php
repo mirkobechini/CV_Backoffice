@@ -26,9 +26,23 @@
         <div class="toolbar">
             <div class="toolbar-left">
                 <h2>{{ __('Elenco officine') }}</h2>
+                @php
+                    $usageFilterUrl = fn($usage) => route('admin.providers.index', array_merge(request()->except(['usage_filter', 'page']), $usage === 'all' ? [] : ['usage_filter' => $usage]));
+                @endphp
+                <div class="filters">
+                    <a href="{{ $usageFilterUrl('all') }}"
+                        class="chip {{ $usageFilter === 'all' ? 'on' : '' }}">{{ __('Tutte') }}</a>
+                    <a href="{{ $usageFilterUrl('vehicles') }}"
+                        class="chip {{ $usageFilter === 'vehicles' ? 'on' : '' }}">{{ __('Usate per veicoli') }}</a>
+                    <a href="{{ $usageFilterUrl('equipment') }}"
+                        class="chip {{ $usageFilter === 'equipment' ? 'on' : '' }}">{{ __('Usate per attrezzature') }}</a>
+                </div>
             </div>
             <div class="filters">
                 <form action="{{ route('admin.providers.index') }}" method="GET" class="search">
+                    @foreach (request()->except('q', 'page') as $key => $value)
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endforeach
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="q" placeholder="{{ __('cerca nome o indirizzo') }}"
                         value="{{ request('q') }}">

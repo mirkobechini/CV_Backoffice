@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\EquipmentIssueController;
+use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
 use App\Http\Controllers\Admin\TireController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
@@ -74,6 +75,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('equipments.bulk-record-revision');
         Route::resource('equipment-issues', EquipmentIssueController::class)
             ->parameters(['equipment-issues' => 'equipmentIssue']);
+        Route::resource('equipment-maintenance-records', EquipmentMaintenanceRecordController::class)
+            ->parameters(['equipment-maintenance-records' => 'equipmentMaintenanceRecord']);
+        Route::patch('equipment-maintenance-records/{equipmentMaintenanceRecord}/complete', [EquipmentMaintenanceRecordController::class, 'complete'])
+            ->name('equipment-maintenance-records.complete');
         // Prima della resource route: "tires/{tire}" (PATCH) altrimenti
         // intercetterebbe "tires/bulk-update" risolvendo {tire} come
         // "bulk-update" e fallendo il model binding.
