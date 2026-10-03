@@ -88,6 +88,48 @@ class DeadlineCrudTest extends TestCase
     }
 
 
+    public function test_index_default_view_shows_active_dry_belt_cinghia_not_the_renewed_one(): void
+    {
+        // La cinghia a secco ha sempre due_date nullo (scade solo a km).
+        // Tra la scadenza gia' rinnovata e quella attiva nata dal
+        // rinnovo, entrambe con due_date nullo, l'ordinamento/unique()
+        // della vista di default (latest_revision_only) poteva scartare
+        // quella attiva invece di quella storica, facendola sparire del
+        // tutto dall'elenco.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $vehicle->update(['timing_belt_type' => 'dry_belt']);
+
+        $old = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'renewed',
+            'is_renewed' => true,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 50000,
+        ]);
+
+        $active = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'is_renewed' => false,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 120000,
+            'renews_deadline_id' => $old->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.index'));
+
+        $response->assertStatus(200);
+        $response->assertViewHas('deadlines', function ($deadlines) use ($active, $old) {
+            $ids = $deadlines->pluck('id')->all();
+            return in_array($active->id, $ids, true) && ! in_array($old->id, $ids, true);
+        });
+    }
+
     public function test_deadline_create_page_is_reachable(): void
     {
         $user = $this->createUser();    //fake user

@@ -302,10 +302,20 @@ class Vehicle extends Model
             ->first();
     }
 
+    /**
+     * Una scadenza per tipo, quella attiva (non rinnovata). Prima ordinava
+     * per due_date decrescente, ma una cinghia a secco ha sempre due_date
+     * nullo (scade solo a km, non a tempo): tra una scadenza già rinnovata
+     * e quella attiva nata dal rinnovo, entrambe con due_date nullo,
+     * l'ordinamento non riusciva a distinguerle e poteva scegliere quella
+     * storica, facendo "sparire" la scadenza attiva dalla scheda veicolo.
+     * is_renewed è il segnale affidabile di "superata", indipendente dal
+     * tipo di scadenza avendo o meno una componente a tempo.
+     */
     public function getDeadlinesGroupedAttribute(): Collection
     {
         return $this->deadlines
-            ->sortByDesc('due_date')
+            ->sortBy(fn (Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
             ->groupBy('type')
             ->map(fn ($typeDeadlines) => $typeDeadlines->first());
     }
