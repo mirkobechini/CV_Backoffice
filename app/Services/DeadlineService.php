@@ -128,6 +128,33 @@ class DeadlineService
     }
 
     /**
+     * Crea la scadenza cinghia quando si completa un appuntamento "Cambio
+     * Cinghia" ma il veicolo non ne aveva già una da rinnovare (es. perché
+     * il tipo di distribuzione è stato impostato/corretto solo dopo la
+     * creazione del veicolo, senza passare dal prompt "crea scadenza
+     * cinghia"). Senza questo, il completamento non faceva nulla in
+     * silenzio: il cambio veniva registrato ma nessuna scadenza nasceva
+     * mai, lasciando il veicolo permanentemente senza tracciamento cinghia.
+     * Stessa logica di createInitialTimingBeltDeadline(), ma basata sulla
+     * data/km del cambio appena effettuato invece che sull'immatricolazione.
+     */
+    public function createTimingBeltDeadlineFromChange(Vehicle $vehicle, Carbon $changedDate, ?int $mileage): Deadline
+    {
+        $intervalDays = $vehicle->timingBeltIntervalDays();
+        $dueDate = $intervalDays ? $changedDate->copy()->addDays($intervalDays) : null;
+
+        return Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => Deadline::STATUS_PENDING,
+            'due_date' => $dueDate?->toDateString(),
+            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+            'last_mileage' => $mileage ?? 0,
+            'interval_days' => $intervalDays,
+        ]);
+    }
+
+    /**
      * Trova la scadenza "attuale" (non ancora rinnovata) dello stesso tipo
      * per il veicolo, quella che una nuova scadenza andrebbe a sostituire.
      */
