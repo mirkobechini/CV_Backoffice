@@ -16,10 +16,25 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // dropIfExists difensivo: il nome vincolo di default generato da
+        // Laravel per la prima FK ("..._equipment_maintenance_record_id_foreign")
+        // supera i 64 caratteri ammessi da MySQL per un identificatore,
+        // facendo fallire questa migrazione in produzione DOPO che la CREATE
+        // TABLE (comando DDL, autocommit in MySQL anche dentro una
+        // migrazione) era già stata eseguita — un nuovo tentativo ripartirebbe
+        // da una tabella già esistente ma priva del vincolo. Nomi vincolo
+        // espliciti e brevi qui sotto evitano il problema anche per il
+        // futuro (es. un rollback/replay della migrazione).
+        Schema::dropIfExists('equipment_maintenance_record_equipment');
+
         Schema::create('equipment_maintenance_record_equipment', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('equipment_maintenance_record_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('equipment_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('equipment_maintenance_record_id')
+                ->constrained(indexName: 'emr_equip_pivot_record_fk')
+                ->cascadeOnDelete();
+            $table->foreignId('equipment_id')
+                ->constrained(indexName: 'emr_equip_pivot_equipment_fk')
+                ->cascadeOnDelete();
             $table->timestamps();
 
             $table->unique(['equipment_maintenance_record_id', 'equipment_id'], 'emre_unique');
