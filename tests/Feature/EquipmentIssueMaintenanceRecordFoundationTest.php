@@ -140,11 +140,12 @@ class EquipmentIssueMaintenanceRecordFoundationTest extends TestCase
         $this->assertTrue($user->can('delete', $ownIssue));
     }
 
-    public function test_capo_can_manage_equipment_maintenance_record_regardless_of_group(): void
+    public function test_capo_can_manage_equipment_maintenance_record_with_no_equipment_attached(): void
     {
-        // getVehicleAttribute() torna sempre null per EquipmentMaintenanceRecord
-        // (può coinvolgere attrezzature di gruppi diversi): HasGroupScopedAccess
-        // lo tratta come permissivo, stesso comportamento dell'attrezzatura
+        // getVehicleAttribute() torna null quando non c'è un unico veicolo
+        // condiviso da verificare (qui: nessuna attrezzatura collegata
+        // affatto, caso genuinamente ambiguo): HasGroupScopedAccess lo
+        // tratta come permissivo, stesso comportamento dell'attrezzatura
         // senza veicolo assegnato.
         $ownGroup = $this->createGroup('Mio gruppo');
         $user = User::factory()->create();
@@ -155,6 +156,75 @@ class EquipmentIssueMaintenanceRecordFoundationTest extends TestCase
             'provider_id' => $provider->id,
             'appointment_date' => today(),
         ]);
+
+        $this->assertTrue($user->can('update', $record));
+        $this->assertTrue($user->can('delete', $record));
+    }
+
+    public function test_capo_cannot_manage_equipment_maintenance_record_of_another_group_when_equipment_shares_one_vehicle(): void
+    {
+        // Caso comune: tutte le attrezzature collegate appartengono allo
+        // stesso veicolo (spesso una sola). getVehicleAttribute() lo
+        // riconosce e HasGroupScopedAccess applica l'isolamento normale,
+        // invece di restare permissivo come prima di questo fix.
+        $ownGroup = $this->createGroup('Mio gruppo');
+        $otherGroup = $this->createGroup('Altro gruppo');
+        $user = User::factory()->create();
+        $ownGroup->addUser($user, Group::ROLE_CAPO);
+
+        $otherVehicle = $this->createVehicle($otherGroup);
+        $otherEquipment = $this->createEquipment($otherVehicle);
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+        $record->equipments()->attach($otherEquipment->id);
+
+        $this->assertFalse($user->can('update', $record));
+        $this->assertFalse($user->can('delete', $record));
+    }
+
+    public function test_capo_can_manage_equipment_maintenance_record_in_own_group(): void
+    {
+        $ownGroup = $this->createGroup('Mio gruppo');
+        $user = User::factory()->create();
+        $ownGroup->addUser($user, Group::ROLE_CAPO);
+
+        $ownVehicle = $this->createVehicle($ownGroup);
+        $ownEquipment = $this->createEquipment($ownVehicle);
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+        $record->equipments()->attach($ownEquipment->id);
+
+        $this->assertTrue($user->can('update', $record));
+        $this->assertTrue($user->can('delete', $record));
+    }
+
+    public function test_capo_can_manage_equipment_maintenance_record_spanning_multiple_groups(): void
+    {
+        // Caso genuinamente ambiguo (attrezzature di gruppi diversi nello
+        // stesso appuntamento): nessun singolo gruppo proprietario da
+        // verificare, resta permissivo di proposito.
+        $ownGroup = $this->createGroup('Mio gruppo');
+        $otherGroup = $this->createGroup('Altro gruppo');
+        $user = User::factory()->create();
+        $ownGroup->addUser($user, Group::ROLE_CAPO);
+
+        $ownVehicle = $this->createVehicle($ownGroup);
+        $ownEquipment = $this->createEquipment($ownVehicle);
+        $otherVehicle = $this->createVehicle($otherGroup);
+        $otherEquipment = $this->createEquipment($otherVehicle);
+
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+        $record->equipments()->attach([$ownEquipment->id, $otherEquipment->id]);
 
         $this->assertTrue($user->can('update', $record));
         $this->assertTrue($user->can('delete', $record));

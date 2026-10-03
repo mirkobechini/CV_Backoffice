@@ -69,18 +69,23 @@ class EquipmentMaintenanceRecord extends Model
     }
 
     /**
-     * Non è una colonna: un appuntamento può coinvolgere attrezzature di
-     * veicoli (e quindi gruppi) diversi, quindi non esiste "il" gruppo di
-     * un appuntamento in modo univoco. Torna sempre null, lo stesso
-     * comportamento già usato per l'attrezzatura senza veicolo assegnato
-     * (permissivo, visibile a tutti i gruppi): HasGroupScopedAccess lo
-     * tratta come "nessun gruppo da verificare". L'isolamento resta comunque
-     * garantito a livello di query nelle liste (forCurrentUser() sulle
-     * attrezzature collegate).
+     * Non è una colonna: un appuntamento può coinvolgere più attrezzature,
+     * ma nel caso comune (una sola, o più tutte dello stesso veicolo) c'è
+     * comunque "il" gruppo proprietario da verificare — tornare sempre
+     * null lascerebbe autorizzazione update/delete senza alcun controllo
+     * di gruppo anche in quel caso comune (le liste restano filtrate per
+     * query, ma l'accesso diretto per id no). Torna il veicolo condiviso
+     * solo se le attrezzature collegate (che ne hanno uno) appartengono
+     * TUTTE allo stesso veicolo; altrimenti null — stesso comportamento
+     * permissivo già usato per l'attrezzatura senza veicolo assegnato,
+     * riservato ai casi davvero ambigui (nessuna attrezzatura assegnata, o
+     * attrezzature di veicoli diversi).
      */
-    public function getVehicleAttribute(): null
+    public function getVehicleAttribute(): ?Vehicle
     {
-        return null;
+        $vehicles = $this->equipments->map(fn (Equipment $e) => $e->vehicle)->filter()->unique('id');
+
+        return $vehicles->count() === 1 ? $vehicles->first() : null;
     }
 
     public function getAppointmentDateFormattedAttribute(): ?string
