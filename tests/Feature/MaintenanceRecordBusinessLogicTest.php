@@ -1153,6 +1153,50 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
     }
 
+    public function test_completing_timing_belt_appointment_creates_deadline_when_none_exists(): void
+    {
+        // Caso reale: il tipo di distribuzione è stato impostato/corretto
+        // dopo la creazione del veicolo, senza passare dal prompt "crea
+        // scadenza cinghia" — il veicolo non ha mai avuto una scadenza
+        // cinghia. Prima di questo fix, completare l'appuntamento non
+        // trovava nulla da rinnovare e non faceva assolutamente nulla in
+        // silenzio: il cambio veniva registrato ma nessuna scadenza
+        // nasceva mai.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $vehicle->update(['timing_belt_type' => 'dry_belt']);
+        $provider = $this->createProvider();
+
+        $this->assertDatabaseMissing('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+            'activity_type' => MaintenanceRecord::ACTIVITY_TIMING_BELT,
+            'mileage_at_service' => 60000,
+        ]);
+
+        $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'issue_resolved' => '1',
+        ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'is_renewed' => false,
+            'last_mileage' => 60000,
+            'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
+            'due_date' => null,
+        ]);
+    }
+
     public function test_store_requires_mileage_when_cinghia_selected(): void
     {
         $user = $this->createUser();
