@@ -439,6 +439,46 @@ class VehicleCrudTest extends TestCase
         $response->assertSee('Catena');
     }
 
+    public function test_deadlines_grouped_shows_active_dry_belt_cinghia_not_the_renewed_one(): void
+    {
+        // Stesso bug del test analogo in DeadlineCrudTest, ma per
+        // l'accessor usato dalla scheda veicolo (e dal PDF flotta):
+        // sortByDesc('due_date') non distingue due scadenze cinghia a
+        // secco (due_date sempre nullo) e poteva scegliere quella
+        // rinnovata invece di quella attiva.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $vehicle->update(['timing_belt_type' => 'dry_belt']);
+
+        $old = \App\Models\Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'status' => 'renewed',
+            'is_renewed' => true,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 50000,
+        ]);
+
+        $active = \App\Models\Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'is_renewed' => false,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 120000,
+            'renews_deadline_id' => $old->id,
+        ]);
+
+        $vehicle->load('deadlines');
+        $grouped = $vehicle->deadlines_grouped;
+        $picked = $grouped->get(\App\Models\Deadline::TYPE_CINGHIA);
+
+        $this->assertNotNull($picked);
+        $this->assertSame($active->id, $picked->id);
+    }
+
     public function test_index_toolbar_stats_and_incomplete_filter(): void
     {
         $user = $this->createUser();

@@ -77,6 +77,27 @@ class EquipmentCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_create_and_edit_pages_render_hint_apostrophes_without_double_escaping(): void
+    {
+        // hint="{{ __(...) }}" invece di :hint="__(...)" passava al
+        // componente month-input una stringa già con l'apostrofo escapato
+        // (&#039;), poi il componente la riescapava una seconda volta
+        // ({{ $hint }}) mostrando letteralmente "&#039;" nella pagina
+        // invece dell'apostrofo.
+        $user = $this->createUser();
+
+        $create = $this->actingAs($user)->get(route('admin.equipments.create'));
+        $create->assertStatus(200);
+        $create->assertDontSee('&amp;#039;', false);
+        $create->assertSee('dall&#039;ultima revisione', false);
+
+        $equipment = $this->createEquipment()['equipment'];
+        $edit = $this->actingAs($user)->get(route('admin.equipments.edit', $equipment));
+        $edit->assertStatus(200);
+        $edit->assertDontSee('&amp;#039;', false);
+        $edit->assertSee('dall&#039;ultima revisione', false);
+    }
+
 
 
     public function test_equipment_show_page_is_reachable(): void
@@ -99,6 +120,36 @@ class EquipmentCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+
+    public function test_index_groups_by_equipment_type(): void
+    {
+        $user = $this->createUser();
+        $extinguisherType = EquipmentType::create(['name' => 'Estintore']);
+        $stretcherType = EquipmentType::create(['name' => 'Barella']);
+        Equipment::create(['equipment_type_id' => $extinguisherType->id, 'name' => 'Estintore A', 'serial_number' => 'SN-1']);
+        Equipment::create(['equipment_type_id' => $extinguisherType->id, 'name' => 'Estintore B', 'serial_number' => 'SN-2']);
+        Equipment::create(['equipment_type_id' => $stretcherType->id, 'name' => 'Barella A', 'serial_number' => 'SN-3']);
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index', ['group_by' => 'type']));
+
+        $response->assertStatus(200);
+        $response->assertSee('Estintore (2)');
+        $response->assertSee('Barella (1)');
+    }
+
+    public function test_index_sorts_by_name(): void
+    {
+        $user = $this->createUser();
+        $type = $this->createEquipmentType();
+        Equipment::create(['equipment_type_id' => $type->id, 'name' => 'Zeta', 'serial_number' => 'SN-Z']);
+        Equipment::create(['equipment_type_id' => $type->id, 'name' => 'Alfa', 'serial_number' => 'SN-A']);
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index', ['sort_by' => 'name', 'sort_dir' => 'asc']));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+        $this->assertLessThan(strpos($content, 'Zeta'), strpos($content, 'Alfa'));
+    }
 
     public function test_equipment_can_be_stored(): void
     {

@@ -98,7 +98,7 @@
                 </div>
                 <div class="row2">
                     <x-form.month-input name="expiration_date" label="{{ __('Prossima revisione') }}" :model="$equipment"
-                        hint="{{ __('Se lasciata vuota, calcolata automaticamente dall\'ultima revisione in base all\'intervallo del tipo di attrezzatura.') }}" />
+                        :hint="__('Se lasciata vuota, calcolata automaticamente dall\'ultima revisione in base all\'intervallo del tipo di attrezzatura.')" />
                 </div>
 
                 {{-- Campi specifici estintori --}}
@@ -135,7 +135,7 @@
                             :model="$equipment" />
                         <x-form.month-input name="next_collaudo_date" label="{{ __('Prossimo collaudo') }}"
                             :model="$equipment"
-                            hint="{{ __('Se lasciata vuota, calcolata automaticamente dall\'ultimo collaudo in base all\'intervallo del tipo di attrezzatura.') }}" />
+                            :hint="__('Se lasciata vuota, calcolata automaticamente dall\'ultimo collaudo in base all\'intervallo del tipo di attrezzatura.')" />
                     </div>
                 </div>
 
