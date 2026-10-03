@@ -108,12 +108,26 @@ class UpdateMaintenanceRecordRequest extends FormRequest
 
             // Controllo conflitto: lo stesso veicolo non può avere appuntamenti
             // sovrapposti (date che si intersecano), escludendo quello corrente.
+            // Scatta solo se le date stanno davvero cambiando rispetto a
+            // quelle già salvate: due appuntamenti già esistenti possono
+            // essersi sovrapposti prima che questo controllo esistesse (o
+            // per un'eccezione accettata manualmente), e bloccare un
+            // salvataggio che non tocca affatto le date — es. correggere
+            // solo le note o il chilometraggio — per un conflitto
+            // preesistente e indipendente dalla modifica è solo scomodo,
+            // non previene nulla di nuovo.
+            $currentRecord = $this->route('maintenanceRecord');
             $vehicleId = $this->input('vehicle_id');
             $startDate = $this->input('appointment_date');
             $endDate = $this->input('return_date') ?? $startDate;
-            $currentId = $this->route('maintenanceRecord')?->id;
+            $currentId = $currentRecord?->id;
 
-            if ($vehicleId && $startDate) {
+            $datesUnchanged = $currentRecord
+                && (string) $currentRecord->vehicle_id === (string) $vehicleId
+                && $currentRecord->appointment_date?->toDateString() === $startDate
+                && ($currentRecord->return_date?->toDateString() ?? $currentRecord->appointment_date?->toDateString()) === $endDate;
+
+            if ($vehicleId && $startDate && ! $datesUnchanged) {
                 $conflict = \App\Models\MaintenanceRecord::where('vehicle_id', $vehicleId)
                     ->where('id', '!=', $currentId)
                     ->where(function ($q) use ($startDate, $endDate) {

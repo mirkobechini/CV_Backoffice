@@ -991,6 +991,72 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $response->assertRedirect();
     }
 
+    public function test_update_without_changing_dates_ignores_preexisting_overlap_with_another_appointment(): void
+    {
+        // Due appuntamenti già esistenti e sovrapposti (es. creati prima
+        // che questo controllo esistesse): modificare uno dei due senza
+        // toccare le date (es. solo le note) non deve essere bloccato dal
+        // conflitto preesistente, che la modifica non introduce né aggrava.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-07-31',
+            'return_date' => '2026-07-31',
+        ]);
+
+        $editing = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-07-31',
+            'return_date' => '2026-07-31',
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.maintenance-records.update', $editing), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-07-31',
+            'return_date' => '2026-07-31',
+            'notes' => 'Nota aggiornata',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('appointment_date');
+        $response->assertRedirect(route('admin.maintenance-records.show', $editing->id));
+        $this->assertSame('Nota aggiornata', $editing->fresh()->notes);
+    }
+
+    public function test_update_still_rejects_overlap_when_dates_actually_change(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-09-26',
+            'return_date' => '2025-10-02',
+        ]);
+
+        $editing = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-10-05',
+        ]);
+
+        // Sposta la data dell'appuntamento dentro quella dell'altro, già esistente.
+        $response = $this->actingAs($user)->put(route('admin.maintenance-records.update', $editing), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-09-28',
+        ]);
+
+        $response->assertSessionHasErrors('appointment_date');
+    }
+
     public function test_store_with_completed_cinghia_creates_next_deadline(): void
     {
         $user = $this->createUser();
