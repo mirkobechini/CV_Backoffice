@@ -79,4 +79,38 @@ class InspectVehicleDeadlinesCommandTest extends TestCase
 
         $this->assertStringContainsString('registro attività ha tracce', $output);
     }
+
+    public function test_reports_activity_trace_for_hard_deleted_type_even_when_other_types_exist(): void
+    {
+        // Caso reale: il veicolo ha altre scadenze (tagliando, revisione)
+        // ma proprio quella cinghia e' sparita del tutto — prima la
+        // ricerca nel registro attivita' scattava solo se $deadlines era
+        // VUOTA, quindi non veniva mai eseguita quando esistevano altre
+        // scadenze di altro tipo.
+        $vehicle = $this->createVehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'status' => 'valid',
+            'interval_km' => 20000,
+            'last_mileage' => 0,
+        ]);
+        $cinghia = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'renewed',
+            'is_renewed' => true,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 50000,
+        ]);
+        $cinghia->forceDelete();
+
+        Artisan::call('deadlines:inspect', ['vehicle' => '1744']);
+        $output = Artisan::output();
+
+        $this->assertStringContainsString('Tagliando', $output);
+        $this->assertStringContainsString('registro attività ha tracce', $output);
+        $this->assertStringContainsString('Cinghia Distribuzione', $output);
+    }
 }
