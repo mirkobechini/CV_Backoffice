@@ -479,6 +479,36 @@ class VehicleCrudTest extends TestCase
         $this->assertSame($active->id, $picked->id);
     }
 
+    public function test_show_page_displays_km_remaining_for_dry_belt_cinghia_instead_of_dash(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $vehicle->update(['timing_belt_type' => 'dry_belt']);
+
+        // Km vicini alla soglia (entro il 90%), così la scadenza risulta
+        // "pending" ed entra nell'elenco delle scadenze attive mostrate
+        // nella scheda (non solo "valid", che non vi compare).
+        \App\Models\Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'is_renewed' => false,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 0,
+        ]);
+        \App\Models\MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => now(),
+            'mileage' => 95000,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('5.000 km');
+    }
+
     public function test_index_toolbar_stats_and_incomplete_filter(): void
     {
         $user = $this->createUser();
