@@ -4,6 +4,32 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.4.0] - 2026-10-03
+
+### Added
+
+- Nuova sezione "Guasti e Appuntamenti Attrezzature", separata da quella dei veicoli: le attrezzature (estintori, barelle, DAE, ecc.) possono ora avere guasti segnalati e appuntamenti con un fornitore come i veicoli, con la differenza che un appuntamento attrezzature può coinvolgere più attrezzature insieme (es. collaudo di più estintori dallo stesso fornitore nello stesso giorno). Le scadenze di revisione/collaudo restano quelle già esistenti, invariate.
+- Nell'elenco fornitori, filtro per "usate per veicoli" / "usate per attrezzature" / tutte, basato sull'uso reale (non una categoria fissa: lo stesso fornitore può servire entrambi).
+- Nei form gomme e cambio gomme, un select "misura suggerita dal veicolo" popolato dalle misure consigliate del veicolo selezionato, per non doverle ritrascrivere a mano.
+- Al completamento di un cambio gomme con più gomme sostituite nello stesso appuntamento, la disposizione (magazzino/dismessa) si sceglie ora indipendentemente per ciascuna, non più un'unica scelta per tutte.
+- Elenco attrezzature: raggruppamento e ordinamento per tipo, stato e veicolo, come già per veicoli/appuntamenti/gomme.
+- Comando diagnostico `deadlines:inspect {veicolo}` (sola lettura): mostra tutte le scadenze di un veicolo, comprese quelle eliminate, con il relativo registro attività.
+- Nei form veicolo, un hint col codice del libretto corrispondente a ciascun campo tecnico (es. "Numero di telaio (VIN) (E.)"), per trovare più facilmente il dato sul documento.
+
+### Fixed
+
+- **Bug di produzione**: una scadenza cinghia a secco già rinnovata poteva nascondere quella attiva nata dal rinnovo, sia nella scheda veicolo che nell'elenco scadenze — entrambe avevano `due_date` nullo (le cinghie a secco scadono solo a km) e l'ordinamento non riusciva a distinguerle. Nessun dato era stato perso, solo nascosto da un bug di visualizzazione.
+- Completare un appuntamento "Cambio Cinghia" quando il veicolo non aveva ancora una scadenza cinghia da rinnovare non faceva assolutamente nulla, in silenzio: il cambio veniva registrato ma nessuna scadenza nasceva mai. Ora la crea.
+- Modificare un appuntamento senza cambiare le date poteva essere bloccato da un conflitto di sovrapposizione preesistente con un altro appuntamento, anche quando la modifica non toccava affatto le date.
+- Negli hint di due campi del form attrezzature, gli apostrofi venivano mostrati letteralmente come "&#039;" invece che come apostrofo, per una doppia escape HTML.
+- La scansione AI del libretto richiedeva sempre fronte e retro, ma nessun dato veniva letto dal retro: ora basta il fronte.
+- Isolamento per gruppo mancante sugli appuntamenti attrezzature: un capo poteva vedere/modificare/eliminare per id diretto un appuntamento di un gruppo diverso quando coinvolgeva una sola attrezzatura (o più attrezzature dello stesso veicolo) — le liste restavano filtrate correttamente, solo l'accesso diretto non lo era.
+
+### Changed
+
+- `MaintenanceRecordController` (il file più grande del progetto, 911 righe) ridotto a 627: la logica di completamento appuntamento (chiusura guasti, rinnovo scadenze, montaggio gomme) è stata estratta in `MaintenanceCompletionService`.
+- `CsvImportController` (678 righe) ridotto a 140: la logica di validazione/importazione per guasti e chilometraggi è stata estratta in classi dedicate (pattern Strategy: `IssueCsvImporter`, `MileageLogCsvImporter`), più facili da testare ed estendere a nuovi tipi di entità in futuro.
+
 ## [v1.3.0] - 2026-10-01
 
 ### Added
