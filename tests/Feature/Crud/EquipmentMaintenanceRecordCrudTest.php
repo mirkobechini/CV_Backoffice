@@ -113,6 +113,33 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
         $this->assertTrue($record->equipments->pluck('id')->contains($equipmentB->id));
     }
 
+    public function test_cost_is_optional_and_saved_when_provided(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $equipment = $this->createEquipment('Estintore A');
+
+        // Senza costo: non deve bloccare il salvataggio (campo opzionale).
+        $this->actingAs($user)->post(route('admin.equipment-maintenance-records.store'), [
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-01-15',
+            'equipment_ids' => [$equipment->id],
+        ])->assertSessionDoesntHaveErrors('cost');
+
+        $record = EquipmentMaintenanceRecord::first();
+        $this->assertNull($record->cost);
+
+        $response = $this->actingAs($user)->put(route('admin.equipment-maintenance-records.update', $record), [
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-01-15',
+            'equipment_ids' => [$equipment->id],
+            'cost' => '45.50',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('cost');
+        $this->assertSame('45.50', $record->fresh()->cost);
+    }
+
     public function test_store_requires_at_least_one_equipment(): void
     {
         $user = $this->createUser();

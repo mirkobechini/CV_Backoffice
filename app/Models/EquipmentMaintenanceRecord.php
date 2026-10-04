@@ -39,12 +39,14 @@ class EquipmentMaintenanceRecord extends Model
         'appointment_date',
         'return_date',
         'activity_type',
+        'cost',
         'notes',
     ];
 
     protected $casts = [
         'appointment_date' => 'date',
         'return_date' => 'date',
+        'cost' => 'decimal:2',
     ];
 
     public function provider()

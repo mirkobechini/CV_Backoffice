@@ -97,6 +97,7 @@ class EquipmentMaintenanceRecordController extends Controller
                 'appointment_date' => $data['appointment_date'],
                 'return_date' => $data['return_date'] ?? null,
                 'activity_type' => $data['activity_type'] ?? null,
+                'cost' => $data['cost'] ?? null,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -168,10 +169,11 @@ class EquipmentMaintenanceRecordController extends Controller
                 'appointment_date' => $data['appointment_date'],
                 'return_date' => $data['return_date'] ?? null,
                 'activity_type' => $data['activity_type'] ?? null,
+                'cost' => $data['cost'] ?? null,
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            $equipmentMaintenanceRecord->equipments()->sync($data['equipment_ids']);
+    $equipmentMaintenanceRecord->equipments()->sync($data['equipment_ids']);
 
             // I guasti rimossi dalla selezione tornano scollegati (e in
             // lavorazione->aperto se non risolti altrove): loop su modelli

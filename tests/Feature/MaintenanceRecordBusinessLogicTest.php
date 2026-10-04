@@ -991,6 +991,34 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $response->assertRedirect();
     }
 
+    public function test_cost_is_optional_and_saved_when_provided(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        // Senza costo: non deve bloccare il salvataggio (campo opzionale).
+        $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-02-01',
+        ])->assertSessionDoesntHaveErrors('cost');
+
+        $withoutCost = MaintenanceRecord::first();
+        $this->assertNull($withoutCost->cost);
+
+        // Con costo: viene salvato e aggiornabile.
+        $response = $this->actingAs($user)->put(route('admin.maintenance-records.update', $withoutCost), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-02-01',
+            'cost' => '123.45',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors('cost');
+        $this->assertSame('123.45', $withoutCost->fresh()->cost);
+    }
+
     public function test_update_without_changing_dates_ignores_preexisting_overlap_with_another_appointment(): void
     {
         // Due appuntamenti già esistenti e sovrapposti (es. creati prima

@@ -43,6 +43,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'issue_resolved' => 'nullable|boolean',
             'mileage_at_service' => 'nullable|integer|min:0',
+            'cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:2000',
             'target_tire_ids' => 'nullable|array',
             'target_tire_ids.*' => new BelongsToCurrentUserGroup(Tire::class, message: 'Uno o più pneumatici selezionati non esistono o non appartengono al tuo gruppo.'),

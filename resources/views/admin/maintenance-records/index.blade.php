@@ -189,6 +189,9 @@
                                             <span
                                                 class="date-sub">{{ $relativeDate($record->appointment_date) }}</span>
                                         @endif
+                                        @if ($record->cost !== null)
+                                            <span class="date-sub">€ {{ number_format((float) $record->cost, 2, ',', '.') }}</span>
+                                        @endif
                                     </div>
                                 </td>
                                 <td>

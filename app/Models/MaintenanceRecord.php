@@ -41,6 +41,7 @@ class MaintenanceRecord extends Model
         'return_date',
         'activity_type',
         'mileage_at_service',
+        'cost',
         'notes',
     ];
 
@@ -48,6 +49,7 @@ class MaintenanceRecord extends Model
         'appointment_date' => 'date',
         'return_date' => 'date',
         'mileage_at_service' => 'integer',
+        'cost' => 'decimal:2',
     ];
 
     public function vehicle()
