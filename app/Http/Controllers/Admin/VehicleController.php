@@ -13,16 +13,19 @@ use App\Models\Issue;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Services\DeadlineService;
+use App\Services\VehicleRegistrationCardService;
 use App\Services\VehicleScanService;
+use App\Services\VehicleShowDataService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class VehicleController extends Controller
 {
     public function __construct(
         private readonly DeadlineService $deadlineService,
+        private readonly VehicleRegistrationCardService $registrationCardService,
+        private readonly VehicleShowDataService $showDataService,
     ) {
         $this->authorizeResource(Vehicle::class, 'vehicle');
     }
@@ -115,16 +118,7 @@ class VehicleController extends Controller
         // Assegna il veicolo al gruppo dell'utente autenticato.
         $data['group_id'] = $request->user()->activeGroup()?->id;
 
-        $pendingScanPath = $data['scanned_registration_card_path'] ?? null;
-        unset($data['scanned_registration_card_path']);
-
-        if ($request->hasFile('registration_card')) {
-            $registrationCardFile = $request->file('registration_card');
-            $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
-            $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, $this->uploadsDisk());
-        } elseif ($pendingScanPath && ($promotedPath = $this->promoteScannedRegistrationCard($pendingScanPath))) {
-            $data['registration_card_path'] = $promotedPath;
-        }
+        $this->registrationCardService->resolvePath($request, $data);
 
         $newVehicle = Vehicle::create($data);
 
@@ -166,7 +160,7 @@ class VehicleController extends Controller
         $frontTempPath = $frontPhoto->getRealPath();
 
         $frontFileName = Str::random(40) . '.' . $frontPhoto->getClientOriginalExtension();
-        $frontPendingPath = $frontPhoto->storeAs('registration_cards/pending', $frontFileName, $this->uploadsDisk());
+        $frontPendingPath = $frontPhoto->storeAs('registration_cards/pending', $frontFileName, $this->registrationCardService->disk());
 
         try {
             $extracted = $vehicleScanService->scan([$frontTempPath]);
@@ -231,84 +225,11 @@ class VehicleController extends Controller
     }
 
     /**
-     * Sposta la foto scansionata (posizione "pending", non ancora legata a
-     * nessun veicolo) nella posizione definitiva delle carte di
-     * circolazione, così l'utente non deve ricaricarla dopo averla già
-     * fornita per la scansione. Verifica che il percorso sia davvero uno
-     * "pending" esistente, per non fidarsi ciecamente di un valore POST.
-     */
-    private function promoteScannedRegistrationCard(string $pendingPath): ?string
-    {
-        if (! Str::startsWith($pendingPath, 'registration_cards/pending/')) {
-            return null;
-        }
-
-        if (! Storage::disk($this->uploadsDisk())->exists($pendingPath)) {
-            return null;
-        }
-
-        $finalPath = 'registration_cards/' . Str::random(40) . '.' . pathinfo($pendingPath, PATHINFO_EXTENSION);
-        Storage::disk($this->uploadsDisk())->move($pendingPath, $finalPath);
-
-        return $finalPath;
-    }
-
-    /**
-     * Disco per i file caricati dagli utenti: locale in sviluppo, S3/R2 in
-     * produzione (vedi config/filesystems.php e la variabile UPLOADS_DISK).
-     */
-    private function uploadsDisk(): string
-    {
-        return config('filesystems.uploads_disk');
-    }
-
-    /**
      * Display the specified resource.
      */
     public function show(Vehicle $vehicle)
     {
-        $vehicle->load(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment.equipmentType', 'issues', 'deadlines', 'mileageLogs', 'tires']);
-
-        $vehicleAppointments = $vehicle->maintenanceRecords()
-            ->with('items.itemable', 'provider')
-            ->orderByDesc('appointment_date')
-            ->get();
-
-        $deadlines = $vehicle->deadlines_grouped;
-        $deadlinesTypes = Vehicle::DEADLINE_TYPES;
-
-        // Officina collegata a ciascun guasto tramite l'appuntamento che lo referenzia,
-        // usata nella card "Guasti" del dettaglio veicolo.
-        $issueProviders = $vehicleAppointments
-            ->filter(fn ($record) => $record->provider_id)
-            ->flatMap(fn ($record) => $record->items
-                ->where('itemable_type', 'App\Models\Issue')
-                ->pluck('itemable_id')
-                ->mapWithKeys(fn ($issueId) => [$issueId => $record->provider]))
-        ;
-
-        // Attrezzatura assegnabile a questo veicolo: quella non assegnata a
-        // nessun veicolo, o già assegnata a un altro veicolo del gruppo
-        // (selezionarla la sposta qui, vedi assignEquipment()). Esclude
-        // quella già su questo stesso veicolo.
-        $assignableEquipment = Equipment::with('vehicle', 'equipmentType')
-            ->where(function ($q) use ($vehicle) {
-                $q->whereNull('vehicle_id')->orWhere('vehicle_id', '!=', $vehicle->id);
-            })
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
-            ->orderBy('name')
-            ->get();
-
-        return view('admin.vehicles.show', compact(
-            'vehicle',
-            'vehicleAppointments',
-            'deadlines',
-            'deadlinesTypes',
-            'issueProviders',
-            'assignableEquipment'
-        ));
+        return view('admin.vehicles.show', $this->showDataService->build($vehicle));
     }
 
     /**
@@ -355,25 +276,7 @@ class VehicleController extends Controller
 
         $data = $request->validated();
 
-        $pendingScanPath = $data['scanned_registration_card_path'] ?? null;
-        unset($data['scanned_registration_card_path']);
-
-        if ($request->hasFile('registration_card')) {
-            // Elimina il file precedente per evitare leak di storage
-            if ($vehicle->registration_card_path) {
-                Storage::disk($this->uploadsDisk())->delete($vehicle->registration_card_path);
-            }
-
-            $registrationCardFile = $request->file('registration_card');
-            $randomFileName = Str::random(40) . '.' . $registrationCardFile->getClientOriginalExtension();
-            $data['registration_card_path'] = $registrationCardFile->storeAs('registration_cards', $randomFileName, $this->uploadsDisk());
-        } elseif ($pendingScanPath && ($promotedPath = $this->promoteScannedRegistrationCard($pendingScanPath))) {
-            if ($vehicle->registration_card_path) {
-                Storage::disk($this->uploadsDisk())->delete($vehicle->registration_card_path);
-            }
-
-            $data['registration_card_path'] = $promotedPath;
-        }
+        $this->registrationCardService->resolvePath($request, $data, $vehicle);
 
         $hadTimingBelt = $vehicle->needsTimingBeltDeadline();
 
