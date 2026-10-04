@@ -10,6 +10,7 @@ class DeadlineService
 {
     public function __construct(
         private readonly MileageLogService $mileageLogService,
+        private readonly DeadlineManualRenewalService $manualRenewalService,
     ) {
     }
 
@@ -45,9 +46,9 @@ class DeadlineService
      */
     public function createDeadline(array $data, Vehicle $vehicle): Deadline
     {
-        $this->validateOxygenForVehicle($data, $vehicle);
+        DeadlineDueDateResolver::validateOxygenForVehicle($data, $vehicle);
 
-        $dueDate = $this->resolveDueDate($data, $vehicle);
+        $dueDate = DeadlineDueDateResolver::resolve($data, $vehicle);
 
         if (! $dueDate) {
             throw new \RuntimeException('Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.');
@@ -177,7 +178,7 @@ class DeadlineService
      */
     public function updateDeadline(Deadline $deadline, array $data, Vehicle $vehicle): Deadline
     {
-        $this->validateOxygenForVehicle($data, $vehicle);
+        DeadlineDueDateResolver::validateOxygenForVehicle($data, $vehicle);
 
         $isRenewed = (bool) ($data['is_renewed'] ?? false);
         // La scadenza successiva va creata solo al passaggio effettivo a
@@ -187,10 +188,10 @@ class DeadlineService
         // creazione della "prossima" scadenza, duplicandola.
         $wasRenewed = $deadline->is_renewed;
 
-        // resolveDueDate() dà sempre la precedenza a una data esplicita,
-        // sia in caso di rinnovo che di semplice correzione manuale;
-        // altrimenti calcola la data in automatico per i tipi periodici.
-        $dueDate = $this->resolveDueDate($data, $vehicle, $deadline->id);
+        // DeadlineDueDateResolver::resolve() dà sempre la precedenza a una
+        // data esplicita, sia in caso di rinnovo che di semplice correzione
+        // manuale; altrimenti calcola la data in automatico per i tipi periodici.
+        $dueDate = DeadlineDueDateResolver::resolve($data, $vehicle, $deadline->id);
 
         if (! $dueDate) {
             throw new \RuntimeException('Impossibile calcolare automaticamente la data di scadenza: controlla immatricolazione e configurazione tipo veicolo.');
@@ -297,36 +298,7 @@ class DeadlineService
      */
     public function createNextOccurrence(Deadline $renewedDeadline, Vehicle $vehicle, ?Carbon $nextDueDate, array $extra = []): ?Deadline
     {
-        // Se una scadenza dello stesso tipo rinnova già questa
-        // (renews_deadline_id), non ne creiamo un'altra: evita duplicati
-        // anche quando il ricalcolo della data differisce leggermente da
-        // quella già creata, aggirando il matching per data esatta di
-        // firstOrCreate() più sotto.
-        $alreadyHasNext = Deadline::where('renews_deadline_id', $renewedDeadline->id)
-            ->where('type', $renewedDeadline->type)
-            ->exists();
-
-        if ($alreadyHasNext) {
-            return null;
-        }
-
-        // renews_deadline_id nel match: senza, due occorrenze consecutive di
-        // una scadenza SOLO a km (due_date sempre null, es. cinghia a secco)
-        // avrebbero lo stesso vehicle_id+type+due_date e firstOrCreate
-        // ritornerebbe semplicemente quella vecchia invece di crearne una
-        // nuova.
-        return Deadline::firstOrCreate(
-            [
-                'vehicle_id' => $vehicle->id,
-                'type' => $renewedDeadline->type,
-                'due_date' => $nextDueDate?->toDateString(),
-                'renews_deadline_id' => $renewedDeadline->id,
-            ],
-            array_merge([
-                'status' => Deadline::STATUS_PENDING,
-                'renews_deadline_id' => $renewedDeadline->id,
-            ], $extra)
-        );
+        return DeadlineOccurrenceCreator::create($renewedDeadline, $vehicle, $nextDueDate, $extra);
     }
 
     /**
@@ -360,130 +332,6 @@ class DeadlineService
      */
     public function renewWithoutAppointment(Deadline $deadline, Vehicle $vehicle, Carbon $renewedDate, ?int $mileage = null): Deadline
     {
-        $deadline->status = Deadline::STATUS_RENEWED;
-        $deadline->is_renewed = true;
-        if ($mileage !== null) {
-            $deadline->last_mileage = $mileage;
-        }
-        $deadline->save();
-
-        if ($mileage !== null) {
-            $this->mileageLogService->recordReading($vehicle, $renewedDate, $mileage);
-        }
-
-        if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
-            $dueDate = $renewedDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
-            $intervalKm = (int) ($vehicle->vehicleType?->regular_tagliando_km ?? 20000);
-
-            $this->createNextOccurrence($deadline, $vehicle, $dueDate, [
-                'last_mileage' => $mileage,
-                'interval_km' => $intervalKm,
-                'interval_days' => Deadline::TAGLIANDO_INTERVAL_MONTHS * 30,
-            ]);
-
-            return $deadline;
-        }
-
-        if ($deadline->type === Deadline::TYPE_CINGHIA) {
-            $intervalDays = $vehicle->timingBeltIntervalDays();
-            $nextDueDate = $intervalDays ? $renewedDate->copy()->addDays($intervalDays) : null;
-
-            $this->createNextOccurrence($deadline, $vehicle, $nextDueDate, [
-                'last_mileage' => $mileage ?? 0,
-                'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
-                'interval_days' => $intervalDays,
-            ]);
-
-            return $deadline;
-        }
-
-        if ($deadline->type === Deadline::TYPE_ASSICURAZIONE) {
-            // I dati della polizza (compagnia, numero, premio...) restano
-            // gli stessi sulla prossima scadenza finché non viene aggiornata
-            // al rinnovo successivo: evita di doverli reinserire da zero.
-            $this->createNextOccurrence($deadline, $vehicle, $renewedDate->copy()->addMonthsNoOverflow(Deadline::INSURANCE_INTERVAL_MONTHS), [
-                'insurance_company' => $deadline->insurance_company,
-                'insurance_policy_number' => $deadline->insurance_policy_number,
-                'insurance_premium' => $deadline->insurance_premium,
-                'insurance_coverage_type' => $deadline->insurance_coverage_type,
-                'insurance_coverage_limit' => $deadline->insurance_coverage_limit,
-                'insurance_broker_contact' => $deadline->insurance_broker_contact,
-            ]);
-
-            return $deadline;
-        }
-
-        $nextDueDate = null;
-        if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
-            $nextDueDate = $renewedDate->copy()->addMonthsNoOverflow((int) $vehicle->vehicleType->regular_inspection_months);
-        } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($vehicle)) {
-            $nextDueDate = $renewedDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
-        }
-
-        if ($nextDueDate) {
-            $this->createNextOccurrence($deadline, $vehicle, $nextDueDate);
-        }
-
-        return $deadline;
-    }
-
-    /**
-     * Verifica che il tipo ossigeno sia valido per il veicolo.
-     *
-     * @throws \RuntimeException
-     */
-    private function validateOxygenForVehicle(array $data, Vehicle $vehicle): void
-    {
-        if (($data['type'] ?? null) === Deadline::TYPE_OXYGEN && ! Deadline::supportsOxygenCheckForVehicle($vehicle)) {
-            throw new \RuntimeException('La revisione impianto ossigeno è disponibile solo per le ambulanze.');
-        }
-    }
-
-    /**
-     * Calcola la data di scadenza in base al tipo.
-     *
-     * Per i tipi a calcolo automatico (ministeriale/ossigeno), una data
-     * inserita esplicitamente in due_date ha sempre la precedenza sul
-     * calcolo automatico: permette di correggere manualmente la data di
-     * rinnovo (es. revisione fatta con anticipo/ritardo, dati storici),
-     * lasciando il campo vuoto quando si preferisce il calcolo automatico.
-     */
-    private function resolveDueDate(array $data, Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
-    {
-        if (in_array($data['type'] ?? '', [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
-            return $this->resolveManualDueDate($data['due_date'] ?? null);
-        }
-
-        if (! empty($data['due_date'])) {
-            return $this->resolveManualDueDate($data['due_date']);
-        }
-
-        if (($data['type'] ?? null) === Deadline::TYPE_MINISTERIAL) {
-            return Deadline::calculateMinisterialDueDateForVehicle($vehicle, $excludeDeadlineId);
-        }
-
-        if (($data['type'] ?? null) === Deadline::TYPE_OXYGEN) {
-            return Deadline::calculateOxygenDueDateForVehicle($vehicle, $excludeDeadlineId);
-        }
-
-        return $this->resolveManualDueDate($data['due_date'] ?? null);
-    }
-
-    /**
-     * Converte una stringa "Y-m" in data Carbon (fine mese).
-     */
-    private function resolveManualDueDate(?string $dueDate): ?Carbon
-    {
-        if (! $dueDate) {
-            return null;
-        }
-
-        $parsedDate = Carbon::createFromFormat('Y-m', $dueDate);
-
-        if (! $parsedDate) {
-            return null;
-        }
-
-        return $parsedDate->endOfMonth();
+        return $this->manualRenewalService->renew($deadline, $vehicle, $renewedDate, $mileage);
     }
 }
