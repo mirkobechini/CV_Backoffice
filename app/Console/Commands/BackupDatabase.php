@@ -4,42 +4,43 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class BackupDatabase extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'app:backup-database';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
     protected $description = 'Esporta un backup del database in formato JSON';
 
-    /**
-     * Execute the console command.
-     */
     public function handle(): int
     {
-        $tables = DB::select('SELECT name FROM sqlite_master WHERE type="table" AND name NOT LIKE "sqlite_%"');
+        // Schema::getTableListing() funziona sia su MySQL (produzione) che
+        // su SQLite (sviluppo/test): la query precedente ('SELECT name FROM
+        // sqlite_master') era specifica di SQLite e falliva sempre su MySQL
+        // — il backup non ha mai funzionato in produzione, senza che
+        // nessuno se ne accorgesse (nessun test lo copriva).
+        // schemaQualified: false — altrimenti su un server con più schema
+        // visibili i nomi tornano come "nome_database.tabella", e
+        // DB::table() su quel nome composito fallisce.
+        $tables = Schema::getTableListing(schemaQualified: false);
 
         $data = [];
 
-        foreach ($tables as $table) {
-            $tableName = $table->name;
+        foreach ($tables as $tableName) {
             $data[$tableName] = DB::table($tableName)->get()->toArray();
         }
 
         $filename = 'backup-'.now()->format('Y-m-d-H-i-s').'.json';
         $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
-        Storage::disk('local')->put('backups/'.$filename, $json);
+        // Stesso disco configurato per gli upload utente (UPLOADS_DISK,
+        // R2 in produzione): il disco "local" su cui veniva scritto prima
+        // non è persistente sul compute di Laravel Cloud, esattamente come
+        // già documentato per le carte di circolazione (vedi DEPLOY.md) —
+        // anche un backup riuscito sarebbe sparito al riavvio/redeploy
+        // successivo.
+        Storage::disk(config('filesystems.uploads_disk'))->put('backups/'.$filename, $json);
 
         $this->info("Backup creato: {$filename}");
 
