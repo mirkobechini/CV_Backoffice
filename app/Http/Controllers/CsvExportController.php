@@ -107,7 +107,7 @@ class CsvExportController extends Controller
     {
         $records = MaintenanceRecord::with(['vehicle', 'provider'])->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
 
-        $headers = ['Veicolo', 'Fornitore', 'Data Appuntamento', 'Data Rientro', 'Tipo Attività', 'Km al Servizio'];
+        $headers = ['Veicolo', 'Fornitore', 'Data Appuntamento', 'Data Rientro', 'Tipo Attività', 'Km al Servizio', 'Costo'];
         $rows = $records->map(fn ($r) => [
             $r->vehicle?->internal_code ?? '',
             $r->provider?->name ?? '',
@@ -115,6 +115,7 @@ class CsvExportController extends Controller
             $r->return_date_formatted ?? '',
             $r->activity_type ?? '',
             $r->mileage_at_service ?? '',
+            $r->cost !== null ? number_format((float) $r->cost, 2, ',', '') : '',
         ]);
 
         return $this->downloadCsv('appuntamenti.csv', $headers, $rows);

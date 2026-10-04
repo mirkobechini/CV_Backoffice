@@ -73,6 +73,12 @@
                 <span class="k">{{ __('Data restituzione') }}</span>
                 <span class="v">{{ $equipmentMaintenanceRecord->return_date_formatted ?? '—' }}</span>
             </div>
+            @if ($equipmentMaintenanceRecord->cost !== null)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Costo') }}</span>
+                    <span class="v">€ {{ number_format((float) $equipmentMaintenanceRecord->cost, 2, ',', '.') }}</span>
+                </div>
+            @endif
             @if ($equipmentMaintenanceRecord->notes)
                 <div class="dl-kv">
                     <span class="k">{{ __('Note') }}</span>

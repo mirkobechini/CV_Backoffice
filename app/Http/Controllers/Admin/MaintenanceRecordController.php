@@ -196,6 +196,7 @@ class MaintenanceRecordController extends Controller
                 'return_date' => $data['return_date'] ?? null,
                 'activity_type' => $data['activity_type'] ?? null,
                 'mileage_at_service' => $data['mileage_at_service'] ?? null,
+                'cost' => $data['cost'] ?? null,
                 'notes' => $data['notes'] ?? null,
             ]);
 
@@ -247,6 +248,7 @@ class MaintenanceRecordController extends Controller
                 'return_date' => $data['return_date'] ?? null,
                 'activity_type' => $data['activity_type'] ?? null,
                 'mileage_at_service' => $data['mileage_at_service'] ?? null,
+                'cost' => $data['cost'] ?? null,
                 'notes' => $data['notes'] ?? null,
             ]);
 

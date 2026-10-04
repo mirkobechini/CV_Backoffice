@@ -21,6 +21,7 @@ class StoreEquipmentMaintenanceRecordRequest extends FormRequest
             'appointment_date' => 'required|date',
             'return_date' => 'nullable|date|after_or_equal:appointment_date',
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(EquipmentMaintenanceRecord::ACTIVITY_TYPES)],
+            'cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:2000',
             // A differenza di un appuntamento veicolo (sempre un solo
             // veicolo), un appuntamento attrezzature può coinvolgerne più

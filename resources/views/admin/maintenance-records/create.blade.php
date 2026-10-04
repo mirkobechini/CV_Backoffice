@@ -115,6 +115,14 @@
                         </div>
                     </div>
                 </div>
+                <div class="field">
+                    <label for="cost">{{ __('Costo (€)') }}</label>
+                    <input type="number" step="0.01" class="input @error('cost') is-invalid @enderror"
+                        id="cost" name="cost" value="{{ old('cost') }}" min="0" placeholder="es. 120.00">
+                    @error('cost')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
                 <div class="field" style="margin-bottom:0;">
                     <label for="notes">{{ __('Note') }}</label>
                     <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes"

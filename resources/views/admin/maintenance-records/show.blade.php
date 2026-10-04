@@ -128,6 +128,12 @@
                     <span class="v">{{ number_format($maintenanceRecord->mileage_at_service, 0, ',', '.') }} km</span>
                 </div>
             @endif
+            @if ($maintenanceRecord->cost !== null)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Costo') }}</span>
+                    <span class="v">€ {{ number_format((float) $maintenanceRecord->cost, 2, ',', '.') }}</span>
+                </div>
+            @endif
         </div>
     </div>
 

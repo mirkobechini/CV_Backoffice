@@ -10,6 +10,7 @@
                     <th>Data</th>
                     <th>Officina</th>
                     <th>Intervento</th>
+                    <th>Costo</th>
                 </tr>
             </thead>
             <tbody>
@@ -19,6 +20,7 @@
                         <td>{{ $record->provider?->name ?? '—' }}</td>
                         <td>{{ $record->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $record->activity_type }}
                         </td>
+                        <td>{{ $record->cost !== null ? '€ ' . number_format((float) $record->cost, 2, ',', '.') : '—' }}</td>
                     </tr>
                 @endforeach
             </tbody>
