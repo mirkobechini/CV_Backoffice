@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
 
@@ -22,12 +23,14 @@ class SettingsController extends Controller
 
         // L'elenco dei backup è un dettaglio della sezione backup, visibile
         // solo a chi può effettivamente gestirli.
+        $backupsDisk = Storage::disk(config('filesystems.uploads_disk'));
+
         $backups = $canManageBackups
-            ? collect(Storage::disk('local')->files('backups'))
+            ? collect($backupsDisk->files('backups'))
                 ->map(fn ($file) => [
                     'name' => basename($file),
-                    'size' => Storage::disk('local')->size($file),
-                    'modified' => Storage::disk('local')->lastModified($file),
+                    'size' => $backupsDisk->size($file),
+                    'modified' => $backupsDisk->lastModified($file),
                 ])
                 ->sortByDesc('modified')
                 ->take(10)
@@ -49,7 +52,16 @@ class SettingsController extends Controller
             abort(403);
         }
 
-        Artisan::call('app:backup-database');
+        // Artisan::call() non lancia un'eccezione se il comando fallisce:
+        // senza controllare il codice di uscita, questa azione mostrava
+        // "Backup creato con successo" anche quando il comando era andato
+        // in errore (es. il bug sqlite_master su MySQL, mai notato per
+        // questo stesso motivo).
+        $exitCode = Artisan::call('app:backup-database');
+
+        if ($exitCode !== Command::SUCCESS) {
+            return back()->with('error', 'Backup non riuscito: controlla i log per i dettagli.');
+        }
 
         return back()->with('status', 'Backup creato con successo.');
     }

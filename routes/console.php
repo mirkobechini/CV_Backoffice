@@ -27,3 +27,14 @@ Schedule::command('app:send-summary-report')
 Schedule::command('app:generate-notifications --email')
     ->dailyAt('8:15')
     ->onFailure(fn () => Log::error('Scheduler: app:generate-notifications è terminato con un errore.'));
+
+// Backup automatico giornaliero (oltre al bottone manuale nelle
+// impostazioni) + verifica che l'ultimo backup sia valido e non troncato
+// (vedi VerifyBackup), con un breve margine di tempo tra i due.
+Schedule::command('app:backup-database')
+    ->dailyAt('3:00')
+    ->onFailure(fn () => Log::error('Scheduler: app:backup-database è terminato con un errore.'));
+
+Schedule::command('app:verify-backup')
+    ->dailyAt('3:15')
+    ->onFailure(fn () => Log::error('Scheduler: app:verify-backup è terminato con un errore.'));
