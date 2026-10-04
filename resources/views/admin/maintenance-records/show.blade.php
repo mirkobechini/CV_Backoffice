@@ -11,8 +11,7 @@
         ->filter();
     $linkedTireItems = $maintenanceRecord->items
         ->where('itemable_type', \App\Models\Tire::class);
-    $issueDescriptions = $linkedIssues->pluck('description')->implode(', ');
-    $title = $issueDescriptions !== '' ? $issueDescriptions : $maintenanceRecord->activity_type ?? __('Intervento');
+    $title = $maintenanceRecord->issue_descriptions !== '' ? $maintenanceRecord->issue_descriptions : $maintenanceRecord->activity_type ?? __('Intervento');
     $badgeClass = fn($color) => match ($color) {
         'red' => 'b-red',
         'yellow' => 'b-amber',

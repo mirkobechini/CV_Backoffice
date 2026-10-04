@@ -80,4 +80,39 @@ class MaintenanceRecord extends Model
     {
         return $this->return_date?->format('d/m/Y');
     }
+
+    /**
+     * Descrizioni di tutti i guasti collegati, separate da virgola.
+     */
+    public function getIssueDescriptionsAttribute(): string
+    {
+        return $this->items
+            ->where('itemable_type', Issue::class)
+            ->map(fn ($item) => $item->itemable?->description)
+            ->filter()
+            ->implode(', ');
+    }
+
+    /**
+     * Tipologie delle scadenze collegate (Tagliando, Revisione Ministeriale, ecc.), una sola volta ciascuna.
+     */
+    public function getDeadlineTypesAttribute(): string
+    {
+        return $this->items
+            ->where('itemable_type', Deadline::class)
+            ->map(fn ($item) => $item->itemable?->type)
+            ->filter()
+            ->unique()
+            ->implode(', ');
+    }
+
+    /**
+     * Descrizione combinata di guasti e scadenze collegate insieme.
+     */
+    public function getItemDescriptionsAttribute(): string
+    {
+        return collect([$this->issue_descriptions, $this->deadline_types])
+            ->filter(fn ($part) => $part !== '')
+            ->implode(' · ');
+    }
 }
