@@ -7,6 +7,7 @@ use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class IssueCsvImporter extends AbstractCsvImporter
 {
@@ -211,6 +212,7 @@ class IssueCsvImporter extends AbstractCsvImporter
             try {
                 return Carbon::parse($date);
             } catch (\Exception $e) {
+                Log::warning("CSV import: data \"{$date}\" nel formato AAAA-MM-GG non valida: {$e->getMessage()}");
                 return null;
             }
         }
@@ -220,6 +222,7 @@ class IssueCsvImporter extends AbstractCsvImporter
             try {
                 return Carbon::createFromFormat('d/m/Y', $date);
             } catch (\Exception $e) {
+                Log::warning("CSV import: data \"{$date}\" nel formato GG/MM/AAAA non valida: {$e->getMessage()}");
                 return null;
             }
         }
@@ -233,6 +236,7 @@ class IssueCsvImporter extends AbstractCsvImporter
                 $year = $parsed->month <= $today->month ? $today->year : $today->year - 1;
                 return $parsed->setYear($year);
             } catch (\Exception $e) {
+                Log::warning("CSV import: data \"{$date}\" nel formato GG/MM non valida: {$e->getMessage()}");
                 return null;
             }
         }
@@ -242,6 +246,7 @@ class IssueCsvImporter extends AbstractCsvImporter
             try {
                 return Carbon::createFromFormat('d/m/y', $date);
             } catch (\Exception $e) {
+                Log::warning("CSV import: data \"{$date}\" nel formato GG/MM/AA non valida: {$e->getMessage()}");
                 return null;
             }
         }

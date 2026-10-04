@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ActivityLogController extends Controller
 {
@@ -132,7 +133,8 @@ class ActivityLogController extends Controller
             try {
                 $date = \Illuminate\Support\Carbon::parse($value);
                 return $date->format($date->format('H:i:s') === '00:00:00' ? 'd/m/Y' : 'd/m/Y H:i');
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
+                Log::warning("Activity log: valore \"{$value}\" simile a una data ma non parsabile: {$e->getMessage()}");
                 return (string) $value;
             }
         }
