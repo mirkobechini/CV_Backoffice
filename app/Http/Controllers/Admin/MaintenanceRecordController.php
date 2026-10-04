@@ -10,10 +10,10 @@ use App\Http\Requests\UpdateMaintenanceRecordRequest;
 use App\Models\Deadline;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
-use App\Models\Provider;
-use App\Models\Tire;
 use App\Models\Vehicle;
 use App\Services\MaintenanceCompletionService;
+use App\Services\MaintenanceRecordFormDataService;
+use App\Services\MaintenanceRecordItemSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +25,8 @@ class MaintenanceRecordController extends Controller
 
     public function __construct(
         private readonly MaintenanceCompletionService $completionService,
+        private readonly MaintenanceRecordFormDataService $formDataService,
+        private readonly MaintenanceRecordItemSyncService $itemSyncService,
     ) {
         $this->authorizeResource(MaintenanceRecord::class, 'maintenanceRecord');
     }
@@ -84,14 +86,14 @@ class MaintenanceRecordController extends Controller
 
         $maintenanceRecords = $this->applySorting($query, $sortBy, $sortDir, [
             'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn(MaintenanceRecord $r) => $this->itemDescriptions($r) !== '' ? $this->itemDescriptions($r) : ($r->activity_type ?? ''),
+            'description' => fn(MaintenanceRecord $r) => $r->item_descriptions !== '' ? $r->item_descriptions : ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
         $groupedMaintenanceRecords = $this->applyGrouping($maintenanceRecords, $groupBy, function (MaintenanceRecord $record) use ($groupBy) {
             return match ($groupBy) {
                 'vehicle' => $record->vehicle?->internal_code ?? 'N/A',
-                'description' => $this->itemDescriptions($record) !== '' ? $this->itemDescriptions($record) : ($record->activity_type ?? 'N/A'),
+                'description' => $record->item_descriptions !== '' ? $record->item_descriptions : ($record->activity_type ?? 'N/A'),
                 'date' => $record->appointment_date
                     ? ucfirst($record->appointment_date->locale('it')->translatedFormat('F Y'))
                     : 'N/A',
@@ -153,41 +155,12 @@ class MaintenanceRecordController extends Controller
             $preselectedActivityType = $rawActivityType;
         }
 
-        // latestMileageLog eager-caricato: serve per mostrare l'ultimo km noto
-        // come placeholder/suggerimento nel campo "Chilometraggio all'appuntamento".
-        $vehicles = Vehicle::with('latestMileageLog')->forCurrentUser()->get();
-        $providers = Provider::all();
-        // Guasti aperti o in lavorazione: selezionabili per nuovi appuntamenti.
-        // Includiamo anche 'in_progress' così un guasto non risolto in un appuntamento
-        // precedente resta selezionabile per un nuovo appuntamento.
-        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])->get(['id', 'vehicle_id', 'description', 'event_date']);
-        // Guasti risolti: per registrare riparazioni/appuntamenti già avvenuti.
-        // Escludiamo quelli già collegati a un appuntamento.
-        $closedIssues = Issue::where('status', 'closed')
-            ->whereDoesntHave('maintenanceRecordItems')
-            ->get(['id', 'vehicle_id', 'description', 'event_date']);
-
-        // Una sola deadline per tipo per veicolo: prendiamo l'ultima non rinnovata.
-        // Eager load di vehicle.latestMileageLog: days_label/status_label (mostrati
-        // nel picker) lo caricherebbero altrimenti una scadenza alla volta.
-        $pendingDeadlines = Deadline::with('vehicle.latestMileageLog')
-            ->whereIn('status', ['pending', 'expired', 'valid'])
-            ->orderByDesc('due_date')
-            ->get()
-            ->unique(function ($item) {
-                return $item->vehicle_id . '-' . $item->type;
-            })
-            ->values();
-
-        // Set di gomme "in magazzino" proponibili per un appuntamento di tipo
-        // "Cambio Gomme": filtrati per veicolo lato client, come guasti/scadenze.
-        $storedTires = Tire::where('status', Tire::STATUS_STORED)
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
-            ->get(['id', 'vehicle_id', 'season', 'position', 'brand', 'model_name', 'size']);
-
         // La view usa old(..., $preselected...) così old() ha priorità
         // dopo un errore validazione, altrimenti usa le preselezioni.
-        return view('admin.maintenance-records.create', compact('vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'storedTires', 'preselectedIssueId', 'preselectedVehicleId', 'preselectedActivityType'));
+        return view(
+            'admin.maintenance-records.create',
+            $this->formDataService->forCreate() + compact('preselectedIssueId', 'preselectedVehicleId', 'preselectedActivityType')
+        );
     }
 
     /**
@@ -211,11 +184,10 @@ class MaintenanceRecordController extends Controller
                 ->with('status', 'Intervento già registrato: creazione duplicata bloccata.');
         }
 
-        // Transazione unica: creazione del record, collegamento di
-        // guasti/scadenze/gomme e l'eventuale completamento immediato (se
-        // return_date è già compilata) devono riuscire o fallire insieme —
-        // senza, un errore a metà (es. su linkTireItems) lasciava il record
-        // creato ma con item/stati guasto incoerenti.
+        // Transazione unica: creazione del record e collegamento di
+        // guasti/scadenze/gomme (+ eventuale completamento immediato) devono
+        // riuscire o fallire insieme — senza, un errore a metà lasciava il
+        // record creato ma con item/stati guasto incoerenti.
         $newRecord = DB::transaction(function () use ($data) {
             $newRecord = MaintenanceRecord::create([
                 'vehicle_id' => $data['vehicle_id'],
@@ -227,38 +199,7 @@ class MaintenanceRecordController extends Controller
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            $completedIssueIds = $data['completed_issue_ids'] ?? [];
-            $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
-
-            if (! empty($data['issue_ids'])) {
-                foreach ($data['issue_ids'] as $issueId) {
-                    $newRecord->items()->create([
-                        'itemable_id' => $issueId,
-                        'itemable_type' => Issue::class,
-                        'completed' => in_array((string) $issueId, $completedIssueIds, true),
-                    ]);
-                    // Il guasto passa automaticamente in lavorazione
-                    Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
-                }
-            }
-            if (! empty($data['deadline_ids'])) {
-                foreach ($data['deadline_ids'] as $deadlineId) {
-                    $newRecord->items()->create([
-                        'itemable_id' => $deadlineId,
-                        'itemable_type' => Deadline::class,
-                        'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
-                    ]);
-                }
-            }
-
-            $this->completionService->linkTireItems($newRecord, $data);
-
-            // Se la data di rientro è compilata, l'appuntamento è considerato
-            // completato: aggiorna i guasti e rinnova le scadenze marcate come
-            // completate, partendo dalla data di rientro.
-            if ($newRecord->return_date) {
-                $this->completionService->processCompletedItems($newRecord, $completedIssueIds, $completedDeadlineIds);
-            }
+            $this->itemSyncService->createForNewRecord($newRecord, $data);
 
             return $newRecord;
         });
@@ -283,57 +224,10 @@ class MaintenanceRecordController extends Controller
     {
         $maintenanceRecord->load(['vehicle', 'provider', 'items.itemable']);
 
-        // latestMileageLog eager-caricato: serve per mostrare l'ultimo km noto
-        // come placeholder/suggerimento nel campo "Chilometraggio all'appuntamento".
-        $vehicles = Vehicle::with('latestMileageLog')->forCurrentUser()->get();
-        $providers = Provider::all();
-        // In edit rendiamo selezionabili i guasti attivi + quelli già collegati al record.
-        $linkedIssueIds = $maintenanceRecord->items
-            ->where('itemable_type', Issue::class)
-            ->pluck('itemable_id');
-        $openIssues = Issue::whereIn('status', ['open'])
-            ->orWhereIn('id', $linkedIssueIds)
-            ->get(['id', 'vehicle_id', 'description', 'status', 'event_date']);
-
-        // Guasti risolti non ancora collegati: selezionabili per registrare
-        // riparazioni già avvenute anche in modifica.
-        $closedIssues = Issue::where('status', 'closed')
-            ->whereDoesntHave('maintenanceRecordItems')
-            ->get(['id', 'vehicle_id', 'description', 'event_date']);
-
-        $linkedDeadlineIds = $maintenanceRecord->items
-            ->where('itemable_type', Deadline::class)
-            ->pluck('itemable_id');
-        // vehicle.latestMileageLog eager-caricato: days_label/status_label
-        // (mostrati nel picker) lo caricherebbero altrimenti una alla volta.
-        // Non si può più limitare le colonne selezionate: quegli accessor
-        // leggono anche interval_km/last_mileage/status.
-        $pendingDeadlines = Deadline::with('vehicle.latestMileageLog')
-            ->whereIn('status', ['pending', 'expired', 'valid'])
-            ->orWhereIn('id', $linkedDeadlineIds)
-            ->orderByDesc('due_date')
-            ->get()
-            // Una sola per veicolo+tipo (mantenendo quelle già collegate)
-            ->unique(function ($item) {
-                return $item->vehicle_id . '-' . $item->type;
-            })
-            ->values();
-
-        // Set collegati (se presenti) + gli altri set in magazzino del
-        // veicolo, per poterli mantenere selezionati in modifica.
-        $linkedTireIds = $maintenanceRecord->items
-            ->where('itemable_type', Tire::class)
-            ->pluck('itemable_id');
-        $storedTires = Tire::where(function ($q) use ($linkedTireIds) {
-            $q->where('status', Tire::STATUS_STORED);
-            if ($linkedTireIds->isNotEmpty()) {
-                $q->orWhereIn('id', $linkedTireIds);
-            }
-        })
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
-            ->get(['id', 'vehicle_id', 'season', 'position', 'brand', 'model_name', 'size']);
-
-        return view('admin.maintenance-records.edit', compact('maintenanceRecord', 'vehicles', 'providers', 'openIssues', 'closedIssues', 'pendingDeadlines', 'storedTires', 'linkedTireIds'));
+        return view(
+            'admin.maintenance-records.edit',
+            ['maintenanceRecord' => $maintenanceRecord] + $this->formDataService->forEdit($maintenanceRecord)
+        );
     }
 
     /**
@@ -344,8 +238,7 @@ class MaintenanceRecordController extends Controller
         $data = $request->validated();
 
         // Transazione unica, stesso motivo di store(): sincronizzare gli
-        // item (cancella e ricrea), gli stati guasto e l'eventuale
-        // completamento devono riuscire o fallire insieme.
+        // item e l'eventuale completamento devono riuscire o fallire insieme.
         DB::transaction(function () use ($data, $maintenanceRecord) {
             $maintenanceRecord->update([
                 'vehicle_id' => $data['vehicle_id'],
@@ -357,60 +250,7 @@ class MaintenanceRecordController extends Controller
                 'notes' => $data['notes'] ?? null,
             ]);
 
-            // Sincronizza gli item: cancella e ricrea
-            // Prima di cancellare, registra i guasti attualmente collegati
-            $oldIssueIds = $maintenanceRecord->items()
-                ->where('itemable_type', Issue::class)
-                ->pluck('itemable_id')
-                ->toArray();
-
-            $maintenanceRecord->items()->delete();
-
-            $completedIssueIds = $data['completed_issue_ids'] ?? [];
-            $completedDeadlineIds = $data['completed_deadline_ids'] ?? [];
-
-            $newIssueIds = [];
-            if (! empty($data['issue_ids'])) {
-                foreach ($data['issue_ids'] as $issueId) {
-                    $maintenanceRecord->items()->create([
-                        'itemable_id' => $issueId,
-                        'itemable_type' => Issue::class,
-                        'completed' => in_array((string) $issueId, $completedIssueIds, true),
-                    ]);
-                    // Il guasto nuovo passa in lavorazione
-                    Issue::where('id', $issueId)->where('status', 'open')->update(['status' => 'in_progress']);
-                }
-                $newIssueIds = $data['issue_ids'];
-            }
-
-            // I guasti rimossi tornano in open. Loop su modelli singoli (non
-            // una query di massa): whereIn()->update() bypassa gli Eloquent
-            // event, quindi LogsActivity non registrava questi cambi di
-            // stato nello storico, a differenza della modifica manuale di
-            // un guasto dalla sua pagina.
-            $removedIssueIds = array_diff($oldIssueIds, $newIssueIds);
-            if (! empty($removedIssueIds)) {
-                Issue::whereIn('id', $removedIssueIds)
-                    ->where('status', 'in_progress')
-                    ->get()
-                    ->each(fn (Issue $issue) => $issue->update(['status' => 'open']));
-            }
-            if (! empty($data['deadline_ids'])) {
-                foreach ($data['deadline_ids'] as $deadlineId) {
-                    $maintenanceRecord->items()->create([
-                        'itemable_id' => $deadlineId,
-                        'itemable_type' => Deadline::class,
-                        'completed' => in_array((string) $deadlineId, $completedDeadlineIds, true),
-                    ]);
-                }
-            }
-
-            $this->completionService->linkTireItems($maintenanceRecord, $data);
-
-            // Se la data di rientro è compilata, processa gli item completati
-            if ($maintenanceRecord->return_date) {
-                $this->completionService->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds);
-            }
+            $this->itemSyncService->syncForExistingRecord($maintenanceRecord, $data);
         });
 
         return redirect()->route('admin.maintenance-records.show', $maintenanceRecord->id)->with('status', 'Intervento aggiornato con successo.');
@@ -427,47 +267,7 @@ class MaintenanceRecordController extends Controller
         // dell'appuntamento appena eliminato, il redirect darebbe 404.
         $showUrl = route('admin.maintenance-records.show', $maintenanceRecord);
 
-        $maintenanceRecord->loadMissing('items.itemable');
-
-        // I guasti in lavorazione tornano in open (loop su modelli singoli,
-        // non query di massa — vedi commento in update() sullo stesso tema).
-        $issueIds = $maintenanceRecord->items
-            ->where('itemable_type', Issue::class)
-            ->pluck('itemable_id');
-        if ($issueIds->isNotEmpty()) {
-            Issue::whereIn('id', $issueIds)
-                ->where('status', 'in_progress')
-                ->get()
-                ->each(fn (Issue $issue) => $issue->update(['status' => 'open']));
-        }
-
-        // Ripristina lo stato precedente delle scadenze rinnovate da questo
-        // appuntamento: elimina la scadenza successiva creata dal rinnovo e
-        // riporta quella originale a pending.
-        $restoredDeadlines = [];
-        $renewedDeadlines = $maintenanceRecord->items
-            ->where('itemable_type', Deadline::class)
-            ->map(fn($item) => $item->itemable)
-            ->filter()
-            ->filter(fn($d) => $d->is_renewed);
-
-        foreach ($renewedDeadlines as $deadline) {
-            // La scadenza successiva creata dal rinnovo è quella collegata
-            // tramite renews_deadline_id (impostato uniformemente da
-            // DeadlineService::createNextOccurrence per tutti i tipi,
-            // cinghia inclusa). Prima veniva ricercata ricalcolando la data
-            // attesa e cercando una corrispondenza esatta: fragile, non
-            // copriva la cinghia, e poteva non trovare/cancellare nulla se
-            // il ricalcolo non tornava esattamente la stessa data.
-            Deadline::where('renews_deadline_id', $deadline->id)->delete();
-
-            // Riporta la scadenza originale a pending
-            $deadline->status = Deadline::STATUS_PENDING;
-            $deadline->is_renewed = false;
-            $deadline->save();
-
-            $restoredDeadlines[] = $deadline->type;
-        }
+        $restoredDeadlines = $this->itemSyncService->restoreOnDelete($maintenanceRecord);
 
         // Elimina gli item della pivot prima del soft-delete
         $maintenanceRecord->items()->delete();
@@ -475,7 +275,7 @@ class MaintenanceRecordController extends Controller
 
         $message = 'Intervento eliminato con successo.';
         if (! empty($restoredDeadlines)) {
-            $message .= ' Ripristinate le scadenze: ' . implode(', ', array_unique($restoredDeadlines)) . '.';
+            $message .= ' Ripristinate le scadenze: ' . implode(', ', $restoredDeadlines) . '.';
         }
 
         $back = $request->input('back');
@@ -533,102 +333,5 @@ class MaintenanceRecordController extends Controller
         return redirect()
             ->route('admin.maintenance-records.show', $maintenanceRecord->id)
             ->with('status', 'Intervento completato con successo.');
-    }
-
-    /**
-     * Restituisce le descrizioni di tutti i guasti collegati, separate da virgola.
-     * Se non ci sono guasti, restituisce una stringa vuota.
-     */
-    private function issueDescriptions(MaintenanceRecord $maintenanceRecord): string
-    {
-        return $maintenanceRecord->items
-            ->where('itemable_type', Issue::class)
-            ->map(fn($item) => $item->itemable?->description)
-            ->filter()
-            ->implode(', ');
-    }
-
-    /**
-     * Tipologie delle scadenze collegate all'appuntamento (Tagliando,
-     * Revisione Ministeriale, ecc.), una sola volta ciascuna.
-     */
-    private function deadlineTypes(MaintenanceRecord $maintenanceRecord): string
-    {
-        return $maintenanceRecord->items
-            ->where('itemable_type', Deadline::class)
-            ->map(fn($item) => $item->itemable?->type)
-            ->filter()
-            ->unique()
-            ->implode(', ');
-    }
-
-    /**
-     * Descrizione combinata di tutto ciò che l'appuntamento riguarda: guasti
-     * e scadenze collegate insieme, non solo i guasti. Un appuntamento con
-     * più elementi resta comunque una sola riga nell'elenco — qui si
-     * costruisce solo il testo che ci va dentro.
-     */
-    private function itemDescriptions(MaintenanceRecord $maintenanceRecord): string
-    {
-        return collect([$this->issueDescriptions($maintenanceRecord), $this->deadlineTypes($maintenanceRecord)])
-            ->filter(fn($part) => $part !== '')
-            ->implode(' · ');
-    }
-
-    /**
-     * Mostra la vista calendario degli appuntamenti.
-     */
-    public function calendar()
-    {
-        return view('admin.maintenance-records.calendar');
-    }
-
-    /**
-     * Endpoint JSON per FullCalendar.
-     */
-    public function events(Request $request)
-    {
-        $request->validate([
-            'start' => 'required|date',
-            'end' => 'required|date',
-        ]);
-
-        $records = MaintenanceRecord::with(['vehicle', 'provider'])
-            ->whereBetween('appointment_date', [$request->start, $request->end])
-            ->get();
-
-        return response()->json(
-            $records->map(function ($record) {
-                $color = match ($record->activity_type) {
-                    'Riparazione' => '#dc3545',
-                    'Revisione Ministeriale' => '#0d6efd',
-                    'Revisione Impianto Ossigeno' => '#6610f2',
-                    'Tagliando' => '#198754',
-                    'Cambio Gomme' => '#fd7e14',
-                    'Lavaggio' => '#0dcaf0',
-                    default => '#6c757d',
-                };
-
-                $title = $record->vehicle?->internal_code ?? 'N/A';
-                if ($record->activity_type) {
-                    $title .= ' - ' . $record->activity_type;
-                }
-
-                return [
-                    'id' => $record->id,
-                    'title' => $title,
-                    'start' => $record->appointment_date?->toDateString(),
-                    'end' => $record->return_date?->toDateString(),
-                    'color' => $color,
-                    'textColor' => '#fff',
-                    'url' => route('admin.maintenance-records.show', $record->id),
-                    'extendedProps' => [
-                        'vehicle' => $record->vehicle?->internal_code,
-                        'provider' => $record->provider?->name,
-                        'activity_type' => $record->activity_type,
-                    ],
-                ];
-            })
-        );
     }
 }

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PdfExportController;
+use App\Http\Controllers\Admin\MaintenanceCalendarController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -118,9 +119,9 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         // Route statiche PRIMA del resource: altrimenti {maintenanceRecord}
         // catturerebbe /calendar e /events come parametro (404).
-        Route::get('maintenance-records/calendar', [MaintenanceRecordController::class, 'calendar'])
+        Route::get('maintenance-records/calendar', [MaintenanceCalendarController::class, 'index'])
             ->name('maintenance-records.calendar');
-        Route::get('maintenance-records/events', [MaintenanceRecordController::class, 'events'])
+        Route::get('maintenance-records/events', [MaintenanceCalendarController::class, 'events'])
             ->name('maintenance-records.events');
 
         Route::resource("maintenance-records", MaintenanceRecordController::class)

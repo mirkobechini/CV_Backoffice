@@ -153,12 +153,7 @@
                                     ->where('itemable_type', \App\Models\Deadline::class)
                                     ->map(fn($item) => $item->itemable)
                                     ->filter();
-                                $issueDescriptions = $linkedIssues->pluck('description')->implode(', ');
-                                $deadlineTypes = $linkedDeadlines->pluck('type')->unique()->implode(', ');
-                                $description = collect([$issueDescriptions, $deadlineTypes])
-                                    ->filter(fn($part) => $part !== '')
-                                    ->implode(' · ');
-                                $description = $description !== '' ? $description : $record->activity_type ?? __('N/D');
+                                $description = $record->item_descriptions !== '' ? $record->item_descriptions : $record->activity_type ?? __('N/D');
                             @endphp
                             <tr @if ($groupBy !== null) data-groups="g{{ $loop->parent->index }}" @endif>
                                 <td>
