@@ -74,6 +74,66 @@ class GenerateNotificationsCommandTest extends TestCase
         ]);
     }
 
+    public function test_generates_escalation_notification_for_overdue_unresolved_deadline(): void
+    {
+        $this->admin();
+        $vehicle = $this->vehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => Carbon::today()->subDays(10),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseCount('notifications', 1);
+        $this->assertStringContainsString('scaduta da', Notification::first()->title);
+    }
+
+    public function test_does_not_escalate_deadline_overdue_less_than_threshold(): void
+    {
+        $this->admin();
+        $vehicle = $this->vehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => Carbon::today()->subDays(3),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseCount('notifications', 0);
+    }
+
+    public function test_escalation_notification_repeats_each_week_while_unresolved(): void
+    {
+        // Stessa settimana di ritardo: nessun duplicato (alreadyNotified()).
+        $this->travelTo(Carbon::parse('2026-01-01'));
+        $this->admin();
+        $vehicle = $this->vehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => Carbon::parse('2025-12-22'), // 10 giorni di ritardo al 01/01
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        $this->artisan('app:generate-notifications');
+        $this->artisan('app:generate-notifications');
+        $this->assertDatabaseCount('notifications', 1);
+
+        // Settimana successiva di ritardo (17 giorni): nuovo bucket, nuova notifica.
+        $this->travelTo(Carbon::parse('2026-01-08'));
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseCount('notifications', 2);
+    }
+
     public function test_does_not_generate_duplicate_notifications(): void
     {
         $this->admin();

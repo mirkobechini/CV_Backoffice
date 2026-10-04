@@ -24,6 +24,15 @@ class GenerateNotifications extends Command
     protected $description = 'Genera notifiche in-app per scadenze, guasti, attrezzature e appuntamenti in scadenza';
 
     /**
+     * Giorni dopo la data di scadenza (non rinnovata) dopo i quali scatta
+     * l'escalation: email/notifica ripetuta ogni ESCALATION_THRESHOLD_DAYS
+     * giorni finché il problema non viene risolto, a differenza
+     * dell'avviso "in arrivo" (notifyUpcomingDeadlines), inviato una sola
+     * volta per scadenza.
+     */
+    private const ESCALATION_THRESHOLD_DAYS = 7;
+
+    /**
      * Le impostazioni di notifica (frequenza, promemoria, tipi di evento) sono
      * personali per account: ogni utente admin/sottocapo viene valutato con
      * le proprie preferenze, non con un'unica configurazione globale.
@@ -48,6 +57,7 @@ class GenerateNotifications extends Command
 
             if ($user->notificationSetting('notify_on_deadline', true)) {
                 $this->notifyUpcomingDeadlines($user, $groupId, $reminderDays, $notifications, $emailsByUser, $created);
+                $this->notifyEscalatedDeadlines($user, $groupId, $notifications, $emailsByUser, $created);
             }
 
             if ($user->notificationSetting('notify_on_issue', true)) {
@@ -104,6 +114,44 @@ class GenerateNotifications extends Command
             $message = "Il veicolo {$vehicleCode} ha una scadenza ({$deadline->type}) il {$deadline->due_date?->format('d/m/Y')}.";
             $url = $deadline->vehicle_id ? route('admin.vehicles.show', $deadline->vehicle_id) : null;
             $marker = "#deadline-{$deadline->id}";
+
+            if ($this->alreadyNotified($user->id, Notification::TYPE_DEADLINE, $marker)) {
+                continue;
+            }
+
+            $notifications->notifyUser($user, Notification::TYPE_DEADLINE, $title, "{$message} {$marker}", $url);
+            $emailsByUser[$user->id][] = new EventNotificationMail(Notification::TYPE_DEADLINE, $title, $message, $url);
+            $created++;
+        }
+    }
+
+    /**
+     * Scadenze scadute da almeno ESCALATION_THRESHOLD_DAYS giorni e ancora
+     * non rinnovate: a differenza dell'avviso "in arrivo" sopra (una sola
+     * notifica per scadenza, mai ripetuta), qui il marker include un
+     * "bucket" di ESCALATION_THRESHOLD_DAYS giorni calcolato dal ritardo
+     * attuale — cambia ogni settimana di ritardo, quindi alreadyNotified()
+     * lascia passare una nuova notifica/email a ogni nuova settimana invece
+     * di bloccarla per sempre dopo la prima.
+     */
+    private function notifyEscalatedDeadlines(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, int &$created): void
+    {
+        $overdueDeadlines = Deadline::with('vehicle')
+            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+            ->where('is_renewed', false)
+            ->whereNotNull('due_date')
+            ->where('due_date', '<=', today()->subDays(self::ESCALATION_THRESHOLD_DAYS))
+            ->get();
+
+        foreach ($overdueDeadlines as $deadline) {
+            $daysOverdue = (int) abs(floor(today()->diffInDays($deadline->due_date, false)));
+            $bucket = intdiv($daysOverdue, self::ESCALATION_THRESHOLD_DAYS) * self::ESCALATION_THRESHOLD_DAYS;
+
+            $vehicleCode = $deadline->vehicle?->internal_code ?? 'N/A';
+            $title = "⚠ Scadenza scaduta da {$daysOverdue} giorni: {$deadline->type}";
+            $message = "Il veicolo {$vehicleCode} ha una scadenza ({$deadline->type}) scaduta il {$deadline->due_date?->format('d/m/Y')} e non ancora rinnovata.";
+            $url = $deadline->vehicle_id ? route('admin.vehicles.show', $deadline->vehicle_id) : null;
+            $marker = "#deadline-escalation-{$deadline->id}-{$bucket}";
 
             if ($this->alreadyNotified($user->id, Notification::TYPE_DEADLINE, $marker)) {
                 continue;
