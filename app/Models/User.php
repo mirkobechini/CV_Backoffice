@@ -7,6 +7,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -33,6 +35,8 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -45,7 +49,72 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_confirmed_at' => 'datetime',
+            // Cifrati: il segreto TOTP e i codici di recupero sono
+            // equivalenti a credenziali, non devono essere leggibili in
+            // chiaro da un dump del database (vedi anche VerifyBackup).
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
         ];
+    }
+
+    /**
+     * True se l'utente ha confermato l'attivazione del 2FA (un segreto
+     * generato ma non ancora confermato con un codice non conta).
+     */
+    public function hasTwoFactorEnabled(): bool
+    {
+        return ! is_null($this->two_factor_confirmed_at);
+    }
+
+    /**
+     * Genera un nuovo set di codici di recupero (8, uso singolo ciascuno),
+     * sostituendo quelli esistenti. Usata sia alla prima conferma del 2FA
+     * sia per una rigenerazione manuale.
+     *
+     * @return array<int, string> i codici in chiaro, da mostrare una sola
+     *                            volta all'utente
+     */
+    public function generateRecoveryCodes(): array
+    {
+        $codes = Collection::times(8, fn () => Str::random(10) . '-' . Str::random(10))->all();
+
+        $this->two_factor_recovery_codes = $codes;
+        $this->save();
+
+        return $codes;
+    }
+
+    /**
+     * Verifica e consuma un codice di recupero (uso singolo): se valido,
+     * lo rimuove dalla lista e salva, per non poterlo riusare.
+     */
+    public function redeemRecoveryCode(string $code): bool
+    {
+        $codes = $this->two_factor_recovery_codes ?? [];
+        $index = array_search($code, $codes, true);
+
+        if ($index === false) {
+            return false;
+        }
+
+        unset($codes[$index]);
+        $this->two_factor_recovery_codes = array_values($codes);
+        $this->save();
+
+        return true;
+    }
+
+    /**
+     * Disattiva il 2FA e rimuove tutti i dati collegati.
+     */
+    public function disableTwoFactor(): void
+    {
+        $this->forceFill([
+            'two_factor_secret' => null,
+            'two_factor_recovery_codes' => null,
+            'two_factor_confirmed_at' => null,
+        ])->save();
     }
 
     public function notifications()

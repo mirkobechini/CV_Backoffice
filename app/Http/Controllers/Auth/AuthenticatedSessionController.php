@@ -28,6 +28,12 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Credenziali corrette ma 2FA attivo: l'accesso non è ancora
+        // completo, serve il codice (vedi TwoFactorChallengeController).
+        if ($request->requiresTwoFactorChallenge()) {
+            return redirect()->route('two-factor.challenge');
+        }
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
