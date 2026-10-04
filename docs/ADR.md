@@ -100,6 +100,7 @@ Roles (`capo`/lead, `sottocapo`/deputy, `member`) are managed via **Laravel Poli
 - No public registration route: accounts are only created by invitation (group code/email) or by a lead directly from the group page
 - The first user automatically becomes `capo`/lead of a new default group (`php artisan make:admin` command — named after the command's purpose, not the role)
 - Rate limiting: 30 req/min for admin routes, 5 req/min for login
+- Optional TOTP two-factor authentication (added later, see §13) builds on top of this Sanctum session login, not a separate auth system
 
 ---
 
@@ -248,6 +249,28 @@ Equipment (fire extinguishers, stretchers, DAE, etc.) can have faults (`Equipmen
 - `EquipmentIssueController`/`EquipmentMaintenanceRecordController` don't need `with('items.itemable')`-style eager loading; they load `equipment`/`equipments`/`issues` directly, which is simpler but means the two feature pairs (vehicle vs equipment) don't share a common base controller or trait beyond `DetectsDuplicates`/`SortableAndGroupable`.
 - Linking/unlinking an `EquipmentIssue` to an appointment, and reopening it when unlinked, is done with a per-model loop (not a mass `whereIn()->update()`) for the same reason already established for vehicle issues (§8): a bulk update bypasses `LogsActivity` entirely.
 - Completing an equipment appointment only asks "were the linked faults resolved?" when there actually are linked faults — a pure revision/collaudo appointment with no fault involved doesn't force an answer to a question that doesn't apply to it.
+
+---
+
+## 13. Optional TOTP two-factor authentication
+
+### Decision
+
+Any user can enable TOTP-based two-factor authentication from their profile, built on **pragmarx/google2fa** (secret generation/verification) + **bacon/bacon-qr-code** (renders the activation QR as inline SVG), not Laravel Fortify. Fortify replaces the entire auth scaffolding with its own actions/routes; this project uses Breeze's own controllers, so adding 2FA as a thin layer on top of the existing `LoginRequest`/`AuthenticatedSessionController` was less invasive than migrating off Breeze.
+
+Flow: enabling generates an unconfirmed secret (`two_factor_secret`, `encrypted` cast) shown as a QR + manual key; confirming a code sets `two_factor_confirmed_at` (the only "is 2FA on" signal — `User::hasTwoFactorEnabled()`) and generates 8 single-use recovery codes (`two_factor_recovery_codes`, `encrypted:array`, shown once). At login, `LoginRequest::authenticate()` validates credentials via `Auth::getProvider()` directly (not `Auth::attempt()`, which would log the user in immediately) and, if 2FA is enabled, stores the pending user id in session instead of calling `Auth::login()`; a separate `TwoFactorChallengeController` (code or recovery code) completes it.
+
+### Rationale
+
+- TOTP's HMAC-based algorithm (RFC 6238) is easy to get subtly wrong by hand; pragmarx/google2fa is the de facto standard for this on Laravel, with no external service/SMS cost
+- Optional for every user (not just capo/sottocapo) rather than mandatory: capo/sottocapo instead get a dashboard banner recommending it, since forcing it on existing accounts at release time would lock people out without warning
+- Recovery codes ratchet per-code consumption (`User::redeemRecoveryCode()`), not a single "used" flag, so a lost-device scenario has 8 independent fallbacks rather than one
+
+### Consequences
+
+- The 2FA challenge route sits under `guest` middleware (the user isn't logged in yet) with its own rate limiter (`two-factor`, 5/min keyed by pending user id + IP) — a TOTP code only has 10^6 combinations, worth throttling specifically rather than relying on the generic login limiter
+- `two_factor_secret`/`two_factor_recovery_codes` are `encrypted`-cast: a raw DB dump (or the JSON backup from §2) never exposes them in plaintext
+- No recovery path if a user loses both their authenticator app and all recovery codes — account recovery in that case is a manual DB intervention (disable via `php artisan tinker` or direct update), same as any self-hosted TOTP setup without a support team behind it
 
 ---
 

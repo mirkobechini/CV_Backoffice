@@ -20,6 +20,10 @@
         @include('profile.partials.update-password-form')
     </div>
 
+    <div class="admin-card" style="margin-bottom:16px;">
+        @include('profile.partials.two-factor-form')
+    </div>
+
     {{-- Gestione token API personali (Sanctum): nascosta perché al momento
     nessun client usa token creati manualmente da qui — l'app mobile ottiene
     il proprio token tramite POST /api/login. Riattivare includendo di nuovo

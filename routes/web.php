@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\MileageLogController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TwoFactorAuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CsvExportController;
 use App\Http\Controllers\CsvImportController;
@@ -52,6 +53,12 @@ Route::middleware('auth')->group(function () {
 
     // Export dati personali (GDPR)
     Route::get('/profile/export', [ProfileController::class, 'exportData'])->name('profile.export');
+
+    // Autenticazione a due fattori (opzionale, vedi TwoFactorAuthenticationController)
+    Route::post('/profile/two-factor', [TwoFactorAuthenticationController::class, 'store'])->name('two-factor.store');
+    Route::post('/profile/two-factor/confirm', [TwoFactorAuthenticationController::class, 'confirm'])->name('two-factor.confirm');
+    Route::delete('/profile/two-factor', [TwoFactorAuthenticationController::class, 'destroy'])->name('two-factor.destroy');
+    Route::post('/profile/two-factor/recovery-codes', [TwoFactorAuthenticationController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
 
     // Notifiche in-app (ogni utente vede le proprie)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');

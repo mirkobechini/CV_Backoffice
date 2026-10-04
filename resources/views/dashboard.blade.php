@@ -8,6 +8,20 @@
         <div class="date">{{ __('Oggi,') }} {{ now()->translatedFormat('l j F Y') }}</div>
     </div>
 
+    @if (auth()->user()->isManager() && ! auth()->user()->hasTwoFactorEnabled())
+        <div class="alert warning" style="margin-bottom:16px;">
+            <div style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div>
+                    <strong>{{ __('Consigliato: attiva il 2FA') }}</strong>
+                    <p style="margin:4px 0 0;">
+                        {{ __('Il tuo ruolo ha accesso ampio ai dati della flotta: proteggi il tuo account con un secondo fattore.') }}
+                    </p>
+                </div>
+                <a href="{{ route('profile.edit') }}" class="btn outline">{{ __('Vai alle impostazioni') }}</a>
+            </div>
+        </div>
+    @endif
+
     {{-- 6 KPI --}}
     <div class="dash-kpis">
         <a href="{{ route('admin.vehicles.index') }}" class="dash-kpi">
