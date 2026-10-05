@@ -94,6 +94,7 @@
         <x-admin.vehicle-show.equipment-card :vehicle="$vehicle" :assignable-equipment="$assignableEquipment"
             :missing-equipment="$missingEquipment" />
         <x-admin.vehicle-show.tires-card :vehicle="$vehicle" />
+        <x-admin.vehicle-show.reliability-trend-card :reliability-trend="$reliabilityTrend" />
     </div>
 
     <x-admin.vehicle-show.deadlines-history-card :vehicle="$vehicle" />
