@@ -4,6 +4,32 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.5.0] - 2026-10-05
+
+### Added
+
+- Campo costo opzionale (non obbligatorio) sugli appuntamenti, sia veicolo che attrezzatura: visibile in create/edit/show/index, incluso nell'export PDF scheda veicolo e nel CSV appuntamenti.
+- Escalation per le scadenze scadute e non rinnovate: oltre all'avviso "in arrivo" già esistente, ora un'email/notifica ripetuta ogni 7 giorni finché il problema non viene risolto, e una badge più evidente ("in peggioramento") in dashboard dopo 7+ giorni di ritardo.
+- Backup del database ora anche automatico (giornaliero, oltre al bottone manuale esistente), con una verifica automatica successiva che controlla che l'ultimo backup sia recente, in formato valido e non troncato — avvisa capo/sottocapo in caso di problema.
+- Autenticazione a due fattori (TOTP) opzionale per qualsiasi utente, dalle impostazioni del profilo: QR/chiave manuale, codici di recupero monouso, disattivazione protetta da password. Un banner in dashboard la consiglia a capo/sottocapo che non l'hanno ancora attivata.
+- Notifiche anche via bot Telegram, in aggiunta all'email esistente: ogni utente può collegare il proprio account Telegram dalle impostazioni notifiche e riceve lì gli stessi eventi.
+- Etichetta QR stampabile per ogni veicolo e attrezzatura (bottone "QR" nella relativa scheda): un PDF pronto da stampare e attaccare sul mezzo/sull'attrezzatura, che apre la scheda direttamente da smartphone.
+- Indicatore di "tendenza riparazioni" sulla scheda veicolo: per le riparazioni non programmate, confronta l'intervallo più recente con la media storica del veicolo e segnala se sta peggiorando. Non è una previsione di quando avverrà il prossimo guasto (impossibile per definizione per un guasto non programmato), solo un segnale di attenzione basato sui dati di quel veicolo.
+
+### Fixed
+
+- **Bug di produzione**: il comando/bottone di backup del database non ha mai funzionato in produzione (MySQL) — usava una query specifica di SQLite, mai testata contro MySQL. Ora funziona su entrambi i motori ed è stato spostato sul disco persistente (R2) invece che su quello locale non persistente.
+- **Bug di produzione**: il report email settimanale/mensile andava in errore ("Call to a member function format() on null") quando tra le scadenze scadute ce n'era una "a km" (es. cinghia a secco), che per definizione non ha una data di scadenza — mancava da sempre il controllo già presente altrove (dashboard, scheda veicolo) su questo stesso campo.
+- `ANALISI_PROGETTO.md` (documento di analisi superato, datato e non più aggiornato) e un file di output di test dimenticato nel repository sono stati rimossi.
+- 9 vulnerabilità di sicurezza segnalate su `axios` (dipendenza frontend) risolte con l'aggiornamento alla versione patchata.
+- 5 blocchi `catch` che mascheravano silenziosamente un errore (import CSV, log attività) ora loggano l'eccezione reale invece di fallire in silenzio.
+
+### Changed
+
+- Frazionati tutti gli 8 file del progetto che superavano le 400 righe (il limite dichiarato dalle linee guida interne), nessun cambio di comportamento: `MaintenanceRecordController` (634→337), le view create/edit degli appuntamenti veicolo (598/618→142/166), `vehicles/show.blade.php` (616→118), l'export PDF scheda veicolo (542→22), il model `Deadline` (527→389), `DeadlineService` (489→337), `VehicleController` (457→360) — ciascuno frazionato in servizi/componenti/partial dedicati, con copertura test invariata o estesa.
+
+---
+
 ## [v1.4.0] - 2026-10-03
 
 ### Added

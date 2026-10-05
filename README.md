@@ -11,7 +11,7 @@
 ## 🌟 Key Features
 
 - **Full fleet management**: vehicle records, brands, models, types and documents
-- **Fault and maintenance workflow**: from report to closed intervention, with a polymorphic link between faults, deadlines and workshop appointments
+- **Fault and maintenance workflow**: from report to closed intervention, with a polymorphic link between faults, deadlines and workshop appointments; an optional cost field on every appointment (vehicle and equipment); a "reliability trend" indicator on the vehicle page flags when unscheduled repairs are happening markedly more often than that vehicle's own history
 - **Deadline and equipment tracking**: ministerial inspections, oxygen check, service, timing belt, insurance — with automatic status based on date and mileage; equipment with a separate inspection cycle (e.g. fire extinguisher collaudo) tracks both expiries independently, surfacing whichever is more urgent
 - **Automatic deadline generation**: timing belt (chain: none; dry belt: 100,000 km only; oil bath belt: 100,000 km or 10 years), service (1 year or configurable mileage), automatic renewal on intervention completion
 - **Mileage tracking**: bulk monthly entry, history, integration with mileage-based deadlines
@@ -25,12 +25,15 @@
 - **REST API**: 12 token-protected endpoints (Sanctum), built for a future mobile app
 - **Audit log**: full tracking of every change
 - **In-app notifications**: bell icon with badge, notification list, mark as read
-- **Email notifications**: configurable daily/weekly/monthly report with PDF attachment + automatic emails on events (deadlines, faults, equipment)
+- **Email notifications**: configurable daily/weekly/monthly report with PDF attachment + automatic emails on events (deadlines, faults, equipment); deadlines overdue by 7+ days without a renewal escalate with a repeated weekly alert and a more severe dashboard badge
+- **Telegram notifications**: optional, link a Telegram account from the notification settings to receive the same events there alongside email
+- **Two-factor authentication**: optional TOTP (Google Authenticator/Authy/1Password-compatible), with recovery codes; recommended via a dashboard banner for lead/deputy roles
+- **Printable QR labels**: a QR code sticker for any vehicle or piece of equipment, opening its detail page directly from a phone browser
 - **Group-based multi-tenancy**: every user belongs to a group (lead/deputy/member), invite via code; data isolation between groups is applied consistently across every surface — admin pages, Policies, mobile API, CSV/PDF export, cache, notifications and scheduled emails
 - **User management**: create and manage roles from the backoffice (lead role only)
 - **API tokens**: create and revoke from the profile page
 - **Privacy/GDPR**: privacy page, cookie banner, personal data export, lead-role transfer on account deletion
-- **Database backup**: Artisan command + button on the settings page
+- **Database backup**: automatic daily backup + restorability verification (alerts lead/deputy if the latest backup is missing, invalid or truncated), plus a manual button on the settings page
 - **Rate limiting**: protection on login, admin routes and API
 - **Light/dark theme**: persisted in localStorage
 - **Vehicle registration document scan**: create a vehicle by uploading a photo of the front of the registration document, with an LLM vision provider (configurable, OpenRouter by default) pre-filling license plate, brand/model, technical data and tire size — always reviewed by the user before saving; technical fields also show the corresponding registration document code as a hint (e.g. "VIN (E.)")
@@ -50,6 +53,8 @@
 | **DomPDF**                       | PDF export                          |
 | **FullCalendar**                 | Appointment calendar                |
 | **OpenRouter (LLM vision)**      | Vehicle registration document scan  |
+| **pragmarx/google2fa + bacon/bacon-qr-code** | Two-factor authentication + QR rendering |
+| **Telegram Bot API**             | Optional notification channel       |
 
 ---
 
@@ -151,6 +156,9 @@ The project's architectural choices are documented in a single [Architecture Dec
 - Audit logging and FULLTEXT search
 - Group-based multi-tenancy (lead/deputy/member) with per-group data scoping
 - AI vision scan for vehicle registration documents
+- Optional TOTP two-factor authentication, built directly on Breeze (not Fortify)
+- Telegram as a second notification channel, alongside email
+- Vehicle reliability trend: a deliberately scoped-down version of "predictive maintenance" for unscheduled repairs only
 
 ---
 
