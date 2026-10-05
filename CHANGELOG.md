@@ -4,6 +4,20 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.5.1] - 2026-10-05
+
+### Fixed
+
+- La schermata di collegamento Telegram mostrava letteralmente il testo `@{{ $telegramBotUsername }}` invece del nome reale del bot, per un errore di sintassi Blade (`@{{ ... }}` è l'escape che mostra il testo senza valutarlo, non "chiocciola letterale + variabile").
+- La card "Guasti aperti" in dashboard non aveva alcun limite di altezza: con molti guasti la pagina diventava eccessivamente lunga. Ora scorre internamente.
+- Lo scrollbar della card "Guasti" nella scheda veicolo esisteva già ma era praticamente invisibile (colore troppo simile allo sfondo).
+
+### Changed
+
+- I codici di recupero del 2FA (mostrati una sola volta) ora hanno anche i bottoni "Copia negli appunti" e "Scarica file", non solo il testo semplice.
+
+---
+
 ## [v1.5.0] - 2026-10-05
 
 ### Added
