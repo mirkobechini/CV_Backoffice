@@ -3,19 +3,59 @@
 </div>
 <div class="body">
     @if (session('status') === 'two-factor-confirmed' || session('status') === 'recovery-codes-regenerated')
+        @php($recoveryCodes = session('recoveryCodes', []))
         <div class="alert warning" style="margin-bottom:14px;">
             <div style="width:100%;">
                 <strong>{{ __('Salva questi codici di recupero in un posto sicuro.') }}</strong>
                 <p style="margin:4px 0 10px;">
                     {{ __('Ogni codice può essere usato una sola volta per accedere se perdi il dispositivo con l\'app authenticator. Non verranno mostrati di nuovo.') }}
                 </p>
-                <div style="font-family:monospace; display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-                    @foreach (session('recoveryCodes', []) as $code)
+                <div id="recovery-codes-list" style="font-family:monospace; display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:10px;">
+                    @foreach ($recoveryCodes as $code)
                         <span>{{ $code }}</span>
                     @endforeach
                 </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <button type="button" class="btn outline" id="recovery-codes-copy">
+                        <i class="fa-solid fa-copy"></i> {{ __('Copia negli appunti') }}
+                    </button>
+                    <button type="button" class="btn outline" id="recovery-codes-download">
+                        <i class="fa-solid fa-download"></i> {{ __('Scarica file') }}
+                    </button>
+                </div>
             </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const codes = @json($recoveryCodes);
+                const text = codes.join('\n');
+
+                const copyBtn = document.getElementById('recovery-codes-copy');
+                copyBtn?.addEventListener('click', function() {
+                    navigator.clipboard.writeText(text).then(function() {
+                        const original = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> {{ __('Copiato!') }}';
+                        setTimeout(() => copyBtn.innerHTML = original, 2000);
+                    });
+                });
+
+                const downloadBtn = document.getElementById('recovery-codes-download');
+                downloadBtn?.addEventListener('click', function() {
+                    const blob = new Blob([text], {
+                        type: 'text/plain'
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'cv-backoffice-codici-recupero.txt';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                });
+            });
+        </script>
     @endif
 
     @if ($user->hasTwoFactorEnabled())
