@@ -25,6 +25,9 @@
     | `R2_BUCKET`             | your R2 bucket name                      |                                                            |
     | `R2_ENDPOINT`           | `https://<account_id>.r2.cloudflarestorage.com` | Cloudflare account-specific S3 API endpoint         |
     | `R2_URL`                | your bucket's public URL or custom domain | Used to build the links shown to users (e.g. "Apri file") |
+    | `TELEGRAM_BOT_TOKEN`    | token from @BotFather                    | Optional, for Telegram notifications (see step 6); without it the "Collega Telegram" section stays hidden, nothing else is affected |
+    | `TELEGRAM_BOT_USERNAME` | your bot's @username                     | Shown to the user as the instruction to open in Telegram     |
+    | `TELEGRAM_WEBHOOK_SECRET` | any random string                      | Must match the `secret_token` passed to Telegram's `setWebhook` call in step 6 |
 
 3. **After deploying**, open the Laravel Cloud terminal and run:
 
@@ -48,6 +51,17 @@
     - This is free and distinct from "Background processes" (a separate, always-on, paid resource) — don't create one just for this
     - Without this toggle, `app:send-summary-report` and `app:generate-notifications` never run automatically; running them manually from the Commands tab works regardless, which can make the toggle being off easy to miss
     - The "Scheduled tasks" panel in the same settings area lists the registered commands with their cron expressions as confirmation
+
+6. **Telegram bot** (optional, for notifications alongside email):
+    - Create a bot with [@BotFather](https://t.me/botfather) (`/newbot`), get the token and the bot's `@username`
+    - Set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` and a random `TELEGRAM_WEBHOOK_SECRET` (step 2 above)
+    - Register the webhook once (replace the placeholders), from any machine with internet access:
+        ```bash
+        curl -F "url=https://your-domain.laravel.cloud/telegram/webhook" \
+             -F "secret_token=<same value as TELEGRAM_WEBHOOK_SECRET>" \
+             "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook"
+        ```
+    - Each user can then link their own Telegram account from **Impostazioni → Notifiche** in the app
 
 ## Useful commands
 

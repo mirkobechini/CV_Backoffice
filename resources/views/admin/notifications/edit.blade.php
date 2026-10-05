@@ -13,6 +13,47 @@
         <h1>{{ __('Impostazioni notifiche') }}</h1>
     </div>
 
+    @if ($telegramConfigured)
+        <div class="admin-card" style="margin-bottom:16px;">
+            <div class="head">
+                <h3>{{ __('Notifiche Telegram') }}</h3>
+            </div>
+            <div class="body">
+                @if (session('status') === 'telegram-link-generated' && session('telegramLinkToken'))
+                    <div class="alert warning" style="margin-bottom:14px;">
+                        <div style="width:100%;">
+                            <strong>{{ __('Apri Telegram, cerca') }} @@{{ $telegramBotUsername }} {{ __('e invia:') }}</strong>
+                            <p style="margin:6px 0 0; font-family:monospace; font-size:14px;">
+                                /start {{ session('telegramLinkToken') }}
+                            </p>
+                            <p style="margin:6px 0 0;">{{ __('Il codice scade dopo 15 minuti.') }}</p>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($telegramLinked)
+                    <p class="hint" style="margin-bottom:14px;">
+                        <span class="badge b-green">{{ __('Collegato') }}</span>
+                        {{ __('Riceverai le notifiche anche su Telegram, oltre all\'email.') }}
+                    </p>
+                    <form method="POST" action="{{ route('admin.notifications.telegram-unlink') }}" data-single-submit="true">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn outline">{{ __('Scollega Telegram') }}</button>
+                    </form>
+                @else
+                    <p class="hint" style="margin-bottom:14px;">
+                        {{ __('Collega il tuo account Telegram per ricevere qui le stesse notifiche dell\'email.') }}
+                    </p>
+                    <form method="POST" action="{{ route('admin.notifications.telegram-link') }}" data-single-submit="true">
+                        @csrf
+                        <button type="submit" class="btn primary">{{ __('Collega Telegram') }}</button>
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <div class="form-card">
         <form method="POST" action="{{ route('admin.notifications.update') }}" data-single-submit="true">
             @csrf

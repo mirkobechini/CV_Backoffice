@@ -274,6 +274,28 @@ Flow: enabling generates an unconfirmed secret (`two_factor_secret`, `encrypted`
 
 ---
 
+## 14. Telegram bot as a second notification channel
+
+### Decision
+
+Any user can link a Telegram account from **Impostazioni → Notifiche**, and from then on receives the same events `app:generate-notifications` already emails (gated by the same `notify_on_*` toggles) over Telegram too. No SDK: `TelegramNotifier` calls the Bot API directly over HTTP (`Http::post(".../sendMessage", ...)`) — the API surface used here (`sendMessage`, webhook updates) is small enough that a library would add a dependency without saving meaningful code.
+
+Linking works via a one-time code rather than, say, asking for a phone number: the user generates a code from the profile, sends `/start CODE` to the bot in Telegram, and a webhook (`POST /telegram/webhook`, no session — verified via Telegram's `secret_token` header) matches the code to the pending `NotificationSetting` row and stores the resulting `chat_id` against that user. `/stop` unlinks. The webhook has no other commands; it isn't a conversational bot.
+
+### Rationale
+
+- Volunteer associations coordinate more over Telegram/WhatsApp groups than email day-to-day; Telegram was chosen over WhatsApp Business API specifically because it's free, has no per-message cost, and setup is a single bot token from @BotFather instead of Meta business verification
+- A linking code (not a phone number or email match) is the only way for the bot to learn *whose* Telegram chat is writing to it — Telegram's API gives the bot a `chat_id` per conversation, with no inherent link to an app account
+- Reusing `NotificationSetting` (already the per-user key/value store for `report_email`, `reminder_days_before`, etc.) for `telegram_chat_id`/`telegram_link_token` avoided a new table for two rows per user
+
+### Consequences
+
+- The webhook route carries no CSRF/session, same category as the public fleet status page (§ public routes) — security is the `secret_token` header check plus its own rate limiter (`telegram-webhook`, 60/min by IP)
+- Telegram sending is gated by the same `--email` flag as email (effectively "send external notifications"), not a separate flag — the two channels are dispatched from the same per-user event list collected during the command's single pass over users
+- No message queue: `sendMessage` calls happen synchronously inside the scheduled command, same as the existing `Mail::send()` calls right next to them — acceptable at this fleet's notification volume, would need revisiting if it ever grew enough to matter
+
+---
+
 ## References
 
 - [Laravel SoftDeletes documentation](https://laravel.com/docs/11/eloquent#soft-deleting)
