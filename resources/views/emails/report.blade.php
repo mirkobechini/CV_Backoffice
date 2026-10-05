@@ -238,7 +238,7 @@
                         <div>
                             <div class="label">{{ $deadline->type }}</div>
                             <div class="meta">{{ $deadline->vehicle->internal_code }} — Scadeva il
-                                {{ $deadline->due_date->format('d/m/Y') }}</div>
+                                {{ $deadline->due_date?->format('d/m/Y') ?? $deadline->km_remaining_label ?? '—' }}</div>
                         </div>
                         <span class="badge badge-red">Scaduta</span>
                     </div>
@@ -276,7 +276,7 @@
                         <div>
                             <div class="label">{{ $issue->description }}</div>
                             <div class="meta">{{ $issue->vehicle->internal_code }} —
-                                {{ $issue->event_date->format('d/m/Y') }}</div>
+                                {{ $issue->event_date_formatted }}</div>
                         </div>
                         <span class="badge badge-{{ $issue->status_color }}">{{ $issue->status_label }}</span>
                     </div>
@@ -316,10 +316,10 @@
                         <div>
                             <div class="label">{{ $equipment->name }} ({{ $equipment->next_due_label }})</div>
                             <div class="meta">{{ $equipment->vehicle->internal_code }} —
-                                {{ $equipment->next_due_date->format('d/m/Y') }}</div>
+                                {{ $equipment->next_due_date?->format('d/m/Y') ?? 'N/A' }}</div>
                         </div>
-                        <span class="badge {{ $equipment->next_due_date->isPast() ? 'badge-red' : 'badge-yellow' }}">
-                            {{ $equipment->next_due_date->isPast() ? 'Scaduta' : 'In scadenza' }}
+                        <span class="badge {{ $equipment->next_due_date?->isPast() ? 'badge-red' : 'badge-yellow' }}">
+                            {{ $equipment->next_due_date?->isPast() ? 'Scaduta' : 'In scadenza' }}
                         </span>
                     </div>
                 @endforeach
