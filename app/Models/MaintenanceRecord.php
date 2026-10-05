@@ -18,6 +18,7 @@ class MaintenanceRecord extends Model
     }
 
     public const ACTIVITY_TAGLIANDO = 'Tagliando';
+    public const ACTIVITY_REPAIR = 'Riparazione';
     public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';
     public const ACTIVITY_REVISION_OXYGEN = 'Revisione Impianto Ossigeno';
     public const ACTIVITY_TIMING_BELT = 'Cinghia Distribuzione';
@@ -25,7 +26,7 @@ class MaintenanceRecord extends Model
 
     public const ACTIVITY_TYPES = [
         self::ACTIVITY_TAGLIANDO,
-        'Riparazione',
+        self::ACTIVITY_REPAIR,
         self::ACTIVITY_REVISION_MINISTERIAL,
         self::ACTIVITY_REVISION_OXYGEN,
         self::ACTIVITY_TIMING_BELT,

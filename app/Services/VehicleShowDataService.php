@@ -11,6 +11,11 @@ use App\Models\Vehicle;
  */
 class VehicleShowDataService
 {
+    public function __construct(
+        private readonly VehicleReliabilityTrendService $reliabilityTrendService,
+    ) {
+    }
+
     public function build(Vehicle $vehicle): array
     {
         $vehicle->load(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment.equipmentType', 'issues', 'deadlines', 'mileageLogs', 'tires']);
@@ -47,13 +52,16 @@ class VehicleShowDataService
             ->orderBy('name')
             ->get();
 
+        $reliabilityTrend = $this->reliabilityTrendService->analyze($vehicle);
+
         return compact(
             'vehicle',
             'vehicleAppointments',
             'deadlines',
             'deadlinesTypes',
             'issueProviders',
-            'assignableEquipment'
+            'assignableEquipment',
+            'reliabilityTrend'
         );
     }
 }

@@ -296,6 +296,27 @@ Linking works via a one-time code rather than, say, asking for a phone number: t
 
 ---
 
+## 15. Vehicle reliability trend, not a failure prediction
+
+### Decision
+
+The vehicle show page shows a "Tendenza riparazioni" card for unscheduled repairs (`MaintenanceRecord::ACTIVITY_REPAIR`) only: the average interval between a vehicle's past repairs, and whether the most recent interval is markedly shorter than its own prior average (`VehicleReliabilityTrendService`). Hidden entirely below 3 historical repairs; the worsening comparison needs a 4th.
+
+This directly replaces the original roadmap idea of a per-component failure prediction (docs/ROADMAP_IDEE.md §6), dropped after discussion: `Issue.description` is free text, not categorized by component, so grouping "engine faults" vs "brake faults" isn't reliably possible without a new structured field that doesn't exist yet.
+
+### Rationale
+
+- Scheduled maintenance (Tagliando, Revisione, Cinghia) already has an exact next-due-date from `Deadline`'s fixed intervals — a statistical estimate there would be redundant, not predictive
+- An unscheduled repair has no fixed interval by definition, so "predicting the next failure date" overclaims precision the data can't support; a trend signal ("repairs happening faster than this vehicle's own history") is the honest version of the same idea
+- The worsening threshold (last interval ≤ 60% of the prior average) is a deliberately blunt cutoff, chosen to avoid flagging normal month-to-month noise on a small fleet's sparse repair history as a mandate; the comment on `WORSENING_RATIO_THRESHOLD` carries this rationale for whoever retunes it later
+
+### Consequences
+
+- A low-effort path back toward the original per-component idea is noted in docs/ROADMAP_IDEE.md §6: an optional `category` field on `Issue`, filled in gradually going forward, no backfill of existing free-text descriptions needed
+- Scoped to the vehicle's own page only, not the dashboard — a fleet-wide "vehicles getting worse" view was considered but deferred, since the per-vehicle signal needed validating first
+
+---
+
 ## References
 
 - [Laravel SoftDeletes documentation](https://laravel.com/docs/11/eloquent#soft-deleting)

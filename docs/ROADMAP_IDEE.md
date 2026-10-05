@@ -40,11 +40,15 @@
 
 **Da decidere**: Telegram (bot API semplice, gratuita) vs WhatsApp (Business API, più complesso/costoso da configurare) — probabilmente Telegram è la scelta più pragmatica per partire.
 
-## 6. Manutenzione predittiva — DA DELINEARE
+## 6. Manutenzione predittiva — RIVISTA (2026-10-05)
 
-**Idea originale**: statistica sul km/tempo medio tra guasti per tipo di componente, mostrata in dashboard, per anticipare un probabile guasto futuro.
+**Idea originale**: statistica sul km/tempo medio tra guasti **per tipo di componente**, mostrata in dashboard, per anticipare un probabile guasto futuro.
 
-**Stato**: Mirko aveva già pensato a questa feature in precedenza, ma ritiene che vada rivista — probabilmente per com'è definito il "funzionamento" (es. quali dati usare, come calcolare la soglia predittiva, cosa mostrare esattamente). **Da discutere insieme prima di iniziare**: non procedere senza una sessione di chiarimento su requisiti e UX.
+**Problema trovato discutendone**: `Issue.description` è testo libero, non categorizzato — nessun modo affidabile di raggruppare "guasti motore" vs "guasti freni" senza un campo strutturato nuovo o un parsing NLP poco affidabile. Confermato essere esattamente la perplessità originale di Mirko.
+
+**Versione implementata ora** (vedi issue/PR collegata): non una previsione per componente, ma un indicatore di tendenza affidabilità sulle riparazioni non programmate (`activity_type = 'Riparazione'`) di un singolo veicolo — intervallo medio storico vs intervallo più recente, badge "in peggioramento" solo con dati sufficienti. Solo sulla scheda veicolo.
+
+**Nota per il futuro — categorizzazione per componente a basso sforzo**: se in futuro si vuole davvero l'analisi "per componente" dell'idea originale, il modo più economico per arrivarci senza perdere tempo ora né dover rielaborare lo storico: aggiungere un campo **categoria opzionale** su `Issue` (es. select: Motore, Freni, Elettrico, Carrozzeria, Pneumatici, Altro), nullable, compilato gradualmente da chi segnala un nuovo guasto — nessuna migrazione dei guasti già esistenti necessaria, un solo campo in più nel form. Quando ce ne sarà accumulato abbastanza, l'analisi per componente diventa possibile sui dati da quel momento in avanti.
 
 ## 7. QR code su veicoli/attrezzature
 
