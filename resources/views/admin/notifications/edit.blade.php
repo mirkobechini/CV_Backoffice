@@ -22,7 +22,7 @@
                 @if (session('status') === 'telegram-link-generated' && session('telegramLinkToken'))
                     <div class="alert warning" style="margin-bottom:14px;">
                         <div style="width:100%;">
-                            <strong>{{ __('Apri Telegram, cerca') }} @@{{ $telegramBotUsername }} {{ __('e invia:') }}</strong>
+                            <strong>{{ __('Apri Telegram, cerca') }} {{ '@' . $telegramBotUsername }} {{ __('e invia:') }}</strong>
                             <p style="margin:6px 0 0; font-family:monospace; font-size:14px;">
                                 /start {{ session('telegramLinkToken') }}
                             </p>

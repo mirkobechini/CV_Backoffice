@@ -151,7 +151,7 @@
                 <h3><span class="ic" style="background:var(--red-soft);color:var(--red)"><i
                             class="fa-solid fa-triangle-exclamation"></i></span>{{ __('Guasti aperti') }}</h3>
             </div>
-            <div class="body">
+            <div class="body scrollable">
                 @forelse ($openIssues as $issue)
                     <a href="{{ route('admin.issues.show', $issue->id) }}" class="dash-list-item">
                         <div>

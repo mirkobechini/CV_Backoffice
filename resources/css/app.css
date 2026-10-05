@@ -557,6 +557,30 @@ body {
     padding: 12px 16px;
 }
 
+/* Liste che possono crescere molto (es. Guasti aperti, non limitati lato
+   query come le altre card): scroll interno invece di allungare
+   indefinitamente la pagina. Scrollbar esplicitamente colorata (non
+   var(--border), troppo simile allo sfondo per essere notata). */
+.dash-card .body.scrollable {
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.dash-card .body.scrollable::-webkit-scrollbar {
+    width: 8px;
+}
+
+.dash-card .body.scrollable::-webkit-scrollbar-thumb {
+    background: var(--text-muted);
+    border-radius: 4px;
+}
+
+.dash-card .body.scrollable::-webkit-scrollbar-track {
+    background: var(--surface-2);
+    border-radius: 4px;
+}
+
 .dash-list-item {
     display: flex;
     align-items: center;
@@ -1699,12 +1723,15 @@ body {
 }
 
 .veh-grid-capped .veh-card .body::-webkit-scrollbar-thumb {
-    background: var(--border);
+    /* var(--border) era troppo simile allo sfondo per essere notata come
+       scrollbar invece che come un dettaglio grafico. */
+    background: var(--text-muted);
     border-radius: 4px;
 }
 
 .veh-grid-capped .veh-card .body::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--surface-2);
+    border-radius: 4px;
 }
 
 .veh-hist-table {

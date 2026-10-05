@@ -23,6 +23,26 @@ class NotificationSettingControllerTest extends TestCase
             ->assertOk();
     }
 
+    public function test_telegram_link_instructions_show_bot_username_rendered(): void
+    {
+        // Bug reale: "@@{{ $telegramBotUsername }}" era scritto pensando
+        // producesse "@" letterale + variabile, ma in Blade "@{{ ... }}"
+        // è l'escape che mostra "{{ ... }}" SENZA valutarlo — la pagina
+        // mostrava quel testo letterale invece del nome del bot.
+        config(['services.telegram.bot_token' => 'fake-token', 'services.telegram.bot_username' => 'CVBackofficeBot']);
+        $user = $this->admin();
+        $this->actingAs($user);
+
+        $this->post(route('admin.notifications.telegram-link'))
+            ->assertSessionHas('telegramLinkToken');
+
+        $html = $this->get(route('admin.notifications.edit'))->getContent();
+
+        $this->assertStringNotContainsString('{{ $telegramBotUsername }}', $html);
+        $this->assertStringNotContainsString('@{{', $html);
+        $this->assertStringContainsString('@CVBackofficeBot', $html);
+    }
+
     public function test_update_saves_settings(): void
     {
         $this->actingAs($this->admin())
