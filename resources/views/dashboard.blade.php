@@ -8,6 +8,20 @@
         <div class="date">{{ __('Oggi,') }} {{ now()->translatedFormat('l j F Y') }}</div>
     </div>
 
+    @if (auth()->user()->isManager() && ! auth()->user()->hasTwoFactorEnabled())
+        <div class="alert warning" style="margin-bottom:16px;">
+            <div style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                <div>
+                    <strong>{{ __('Consigliato: attiva il 2FA') }}</strong>
+                    <p style="margin:4px 0 0;">
+                        {{ __('Il tuo ruolo ha accesso ampio ai dati della flotta: proteggi il tuo account con un secondo fattore.') }}
+                    </p>
+                </div>
+                <a href="{{ route('profile.edit') }}" class="btn outline">{{ __('Vai alle impostazioni') }}</a>
+            </div>
+        </div>
+    @endif
+
     {{-- 6 KPI --}}
     <div class="dash-kpis">
         <a href="{{ route('admin.vehicles.index') }}" class="dash-kpi">
@@ -95,15 +109,24 @@
             </div>
             <div class="body">
                 @forelse ($expiredDeadlines as $deadline)
+                    @php
+                        $daysOverdue = $deadline->due_date
+                            ? abs(floor(\Carbon\Carbon::today()->diffInDays($deadline->due_date, false)))
+                            : 0;
+                        // Stessa soglia di GenerateNotifications::ESCALATION_THRESHOLD_DAYS:
+                        // oltre i 7 giorni di ritardo la badge diventa più
+                        // evidente (vedi .b-red.critical in app.css).
+                        $isEscalated = $daysOverdue >= 7;
+                    @endphp
                     <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="dash-list-item">
                         <span class="dot leg-{{ $deadline->type_slug }}"></span>
                         <div>
                             <div class="name">{{ $deadline->type }}</div>
                             <div class="meta">{{ $deadline->vehicle->internal_code }} ·
-                                {{ __('scaduta da :days giorni', ['days' => abs(floor(\Carbon\Carbon::today()->diffInDays($deadline->due_date, false)))]) }}
+                                {{ __('scaduta da :days giorni', ['days' => $daysOverdue]) }}
                             </div>
                         </div>
-                        <span class="badge b-red">{{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</span>
+                        <span class="badge b-red {{ $isEscalated ? 'critical' : '' }}">{{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</span>
                     </a>
                 @empty
                     <div class="dash-empty">

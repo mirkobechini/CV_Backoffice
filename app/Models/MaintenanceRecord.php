@@ -18,6 +18,7 @@ class MaintenanceRecord extends Model
     }
 
     public const ACTIVITY_TAGLIANDO = 'Tagliando';
+    public const ACTIVITY_REPAIR = 'Riparazione';
     public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';
     public const ACTIVITY_REVISION_OXYGEN = 'Revisione Impianto Ossigeno';
     public const ACTIVITY_TIMING_BELT = 'Cinghia Distribuzione';
@@ -25,7 +26,7 @@ class MaintenanceRecord extends Model
 
     public const ACTIVITY_TYPES = [
         self::ACTIVITY_TAGLIANDO,
-        'Riparazione',
+        self::ACTIVITY_REPAIR,
         self::ACTIVITY_REVISION_MINISTERIAL,
         self::ACTIVITY_REVISION_OXYGEN,
         self::ACTIVITY_TIMING_BELT,
@@ -41,6 +42,7 @@ class MaintenanceRecord extends Model
         'return_date',
         'activity_type',
         'mileage_at_service',
+        'cost',
         'notes',
     ];
 
@@ -48,6 +50,7 @@ class MaintenanceRecord extends Model
         'appointment_date' => 'date',
         'return_date' => 'date',
         'mileage_at_service' => 'integer',
+        'cost' => 'decimal:2',
     ];
 
     public function vehicle()
@@ -79,5 +82,40 @@ class MaintenanceRecord extends Model
     public function getReturnDateFormattedAttribute(): ?string
     {
         return $this->return_date?->format('d/m/Y');
+    }
+
+    /**
+     * Descrizioni di tutti i guasti collegati, separate da virgola.
+     */
+    public function getIssueDescriptionsAttribute(): string
+    {
+        return $this->items
+            ->where('itemable_type', Issue::class)
+            ->map(fn ($item) => $item->itemable?->description)
+            ->filter()
+            ->implode(', ');
+    }
+
+    /**
+     * Tipologie delle scadenze collegate (Tagliando, Revisione Ministeriale, ecc.), una sola volta ciascuna.
+     */
+    public function getDeadlineTypesAttribute(): string
+    {
+        return $this->items
+            ->where('itemable_type', Deadline::class)
+            ->map(fn ($item) => $item->itemable?->type)
+            ->filter()
+            ->unique()
+            ->implode(', ');
+    }
+
+    /**
+     * Descrizione combinata di guasti e scadenze collegate insieme.
+     */
+    public function getItemDescriptionsAttribute(): string
+    {
+        return collect([$this->issue_descriptions, $this->deadline_types])
+            ->filter(fn ($part) => $part !== '')
+            ->implode(' · ');
     }
 }

@@ -168,7 +168,7 @@
                     <tr>
                         <td>{{ $deadline->type }}</td>
                         <td>{{ $deadline->vehicle->internal_code }}</td>
-                        <td>{{ $deadline->due_date->format('d/m/Y') }}</td>
+                        <td>{{ $deadline->due_date?->format('d/m/Y') ?? $deadline->km_remaining_label ?? '—' }}</td>
                         <td>Scaduta</td>
                     </tr>
                 @endforeach
@@ -176,7 +176,7 @@
                     <tr>
                         <td>{{ $deadline->type }}</td>
                         <td>{{ $deadline->vehicle->internal_code }}</td>
-                        <td>{{ $deadline->due_date->format('d/m/Y') }}</td>
+                        <td>{{ $deadline->due_date?->format('d/m/Y') ?? $deadline->km_remaining_label ?? '—' }}</td>
                         <td>Imminente</td>
                     </tr>
                 @endforeach
@@ -204,7 +204,7 @@
                     <tr>
                         <td>{{ $issue->description }}</td>
                         <td>{{ $issue->vehicle->internal_code }}</td>
-                        <td>{{ $issue->event_date->format('d/m/Y') }}</td>
+                        <td>{{ $issue->event_date_formatted }}</td>
                         <td>{{ $issue->status_label }}</td>
                     </tr>
                 @endforeach
@@ -234,8 +234,8 @@
                         <td>{{ $equipment->name }}</td>
                         <td>{{ $equipment->next_due_label }}</td>
                         <td>{{ $equipment->vehicle->internal_code }}</td>
-                        <td>{{ $equipment->next_due_date->format('d/m/Y') }}</td>
-                        <td>{{ $equipment->next_due_date->isPast() ? 'Scaduta' : 'In scadenza' }}</td>
+                        <td>{{ $equipment->next_due_date?->format('d/m/Y') ?? 'N/A' }}</td>
+                        <td>{{ $equipment->next_due_date?->isPast() ? 'Scaduta' : 'In scadenza' }}</td>
                     </tr>
                 @endforeach
             </tbody>

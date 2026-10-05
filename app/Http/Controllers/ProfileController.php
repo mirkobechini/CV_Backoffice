@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\Group;
 use App\Models\User;
+use App\Services\TwoFactorQrCodeGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,11 +17,20 @@ class ProfileController extends Controller
     /**
      * Display the user's profile form.
      */
-    public function edit(Request $request): View
+    public function edit(Request $request, TwoFactorQrCodeGenerator $qrCodeGenerator): View
     {
+        $user = $request->user();
+
+        // QR solo per un'attivazione in corso (segreto generato, non
+        // ancora confermato): dopo la conferma non serve più mostrarlo.
+        $twoFactorQrCode = ($user->two_factor_secret && ! $user->hasTwoFactorEnabled())
+            ? $qrCodeGenerator->svg($user)
+            : null;
+
         return view('profile.edit', [
-            'user' => $request->user(),
-            'tokens' => $request->user()->tokens()->orderByDesc('created_at')->get(),
+            'user' => $user,
+            'tokens' => $user->tokens()->orderByDesc('created_at')->get(),
+            'twoFactorQrCode' => $twoFactorQrCode,
         ]);
     }
 

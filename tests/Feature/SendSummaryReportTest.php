@@ -220,6 +220,47 @@ class SendSummaryReportTest extends TestCase
         });
     }
 
+    public function test_report_renders_without_error_for_km_only_expired_deadline(): void
+    {
+        // Una scadenza "a km" (es. cinghia a secco) ha due_date sempre
+        // null: email/PDF chiamavano ->format() direttamente su di esso
+        // senza controllare il null, facendo fallire l'intero invio
+        // ("Call to a member function format() on null") appena una di
+        // queste finiva tra le scadenze scadute.
+        Mail::fake();
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+        $vehicle = $this->vehicle();
+        \App\Models\MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => now(),
+            'mileage' => 150000,
+        ]);
+        \App\Models\Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 0,
+            'status' => \App\Models\Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+
+        $this->artisan('app:send-summary-report');
+
+        Mail::assertSent(ReportMail::class, function (ReportMail $mail) {
+            // render() costruisce l'HTML, attachments() genera il PDF:
+            // entrambi lanciavano l'eccezione prima del fix.
+            $html = $mail->render();
+            $attachments = $mail->attachments();
+
+            $this->assertStringContainsString('Cinghia Distribuzione', $html);
+            $this->assertNotEmpty($attachments);
+
+            return true;
+        });
+    }
+
     public function test_report_includes_deadline_expired_by_date_even_if_status_column_is_stale(): void
     {
         // Stesso bug già corretto sulla dashboard (v1.2.37): la colonna

@@ -100,6 +100,7 @@ Roles (`capo`/lead, `sottocapo`/deputy, `member`) are managed via **Laravel Poli
 - No public registration route: accounts are only created by invitation (group code/email) or by a lead directly from the group page
 - The first user automatically becomes `capo`/lead of a new default group (`php artisan make:admin` command — named after the command's purpose, not the role)
 - Rate limiting: 30 req/min for admin routes, 5 req/min for login
+- Optional TOTP two-factor authentication (added later, see §13) builds on top of this Sanctum session login, not a separate auth system
 
 ---
 
@@ -248,6 +249,71 @@ Equipment (fire extinguishers, stretchers, DAE, etc.) can have faults (`Equipmen
 - `EquipmentIssueController`/`EquipmentMaintenanceRecordController` don't need `with('items.itemable')`-style eager loading; they load `equipment`/`equipments`/`issues` directly, which is simpler but means the two feature pairs (vehicle vs equipment) don't share a common base controller or trait beyond `DetectsDuplicates`/`SortableAndGroupable`.
 - Linking/unlinking an `EquipmentIssue` to an appointment, and reopening it when unlinked, is done with a per-model loop (not a mass `whereIn()->update()`) for the same reason already established for vehicle issues (§8): a bulk update bypasses `LogsActivity` entirely.
 - Completing an equipment appointment only asks "were the linked faults resolved?" when there actually are linked faults — a pure revision/collaudo appointment with no fault involved doesn't force an answer to a question that doesn't apply to it.
+
+---
+
+## 13. Optional TOTP two-factor authentication
+
+### Decision
+
+Any user can enable TOTP-based two-factor authentication from their profile, built on **pragmarx/google2fa** (secret generation/verification) + **bacon/bacon-qr-code** (renders the activation QR as inline SVG), not Laravel Fortify. Fortify replaces the entire auth scaffolding with its own actions/routes; this project uses Breeze's own controllers, so adding 2FA as a thin layer on top of the existing `LoginRequest`/`AuthenticatedSessionController` was less invasive than migrating off Breeze.
+
+Flow: enabling generates an unconfirmed secret (`two_factor_secret`, `encrypted` cast) shown as a QR + manual key; confirming a code sets `two_factor_confirmed_at` (the only "is 2FA on" signal — `User::hasTwoFactorEnabled()`) and generates 8 single-use recovery codes (`two_factor_recovery_codes`, `encrypted:array`, shown once). At login, `LoginRequest::authenticate()` validates credentials via `Auth::getProvider()` directly (not `Auth::attempt()`, which would log the user in immediately) and, if 2FA is enabled, stores the pending user id in session instead of calling `Auth::login()`; a separate `TwoFactorChallengeController` (code or recovery code) completes it.
+
+### Rationale
+
+- TOTP's HMAC-based algorithm (RFC 6238) is easy to get subtly wrong by hand; pragmarx/google2fa is the de facto standard for this on Laravel, with no external service/SMS cost
+- Optional for every user (not just capo/sottocapo) rather than mandatory: capo/sottocapo instead get a dashboard banner recommending it, since forcing it on existing accounts at release time would lock people out without warning
+- Recovery codes ratchet per-code consumption (`User::redeemRecoveryCode()`), not a single "used" flag, so a lost-device scenario has 8 independent fallbacks rather than one
+
+### Consequences
+
+- The 2FA challenge route sits under `guest` middleware (the user isn't logged in yet) with its own rate limiter (`two-factor`, 5/min keyed by pending user id + IP) — a TOTP code only has 10^6 combinations, worth throttling specifically rather than relying on the generic login limiter
+- `two_factor_secret`/`two_factor_recovery_codes` are `encrypted`-cast: a raw DB dump (or the JSON backup from §2) never exposes them in plaintext
+- No recovery path if a user loses both their authenticator app and all recovery codes — account recovery in that case is a manual DB intervention (disable via `php artisan tinker` or direct update), same as any self-hosted TOTP setup without a support team behind it
+
+---
+
+## 14. Telegram bot as a second notification channel
+
+### Decision
+
+Any user can link a Telegram account from **Impostazioni → Notifiche**, and from then on receives the same events `app:generate-notifications` already emails (gated by the same `notify_on_*` toggles) over Telegram too. No SDK: `TelegramNotifier` calls the Bot API directly over HTTP (`Http::post(".../sendMessage", ...)`) — the API surface used here (`sendMessage`, webhook updates) is small enough that a library would add a dependency without saving meaningful code.
+
+Linking works via a one-time code rather than, say, asking for a phone number: the user generates a code from the profile, sends `/start CODE` to the bot in Telegram, and a webhook (`POST /telegram/webhook`, no session — verified via Telegram's `secret_token` header) matches the code to the pending `NotificationSetting` row and stores the resulting `chat_id` against that user. `/stop` unlinks. The webhook has no other commands; it isn't a conversational bot.
+
+### Rationale
+
+- Volunteer associations coordinate more over Telegram/WhatsApp groups than email day-to-day; Telegram was chosen over WhatsApp Business API specifically because it's free, has no per-message cost, and setup is a single bot token from @BotFather instead of Meta business verification
+- A linking code (not a phone number or email match) is the only way for the bot to learn *whose* Telegram chat is writing to it — Telegram's API gives the bot a `chat_id` per conversation, with no inherent link to an app account
+- Reusing `NotificationSetting` (already the per-user key/value store for `report_email`, `reminder_days_before`, etc.) for `telegram_chat_id`/`telegram_link_token` avoided a new table for two rows per user
+
+### Consequences
+
+- The webhook route carries no CSRF/session, same category as the public fleet status page (§ public routes) — security is the `secret_token` header check plus its own rate limiter (`telegram-webhook`, 60/min by IP)
+- Telegram sending is gated by the same `--email` flag as email (effectively "send external notifications"), not a separate flag — the two channels are dispatched from the same per-user event list collected during the command's single pass over users
+- No message queue: `sendMessage` calls happen synchronously inside the scheduled command, same as the existing `Mail::send()` calls right next to them — acceptable at this fleet's notification volume, would need revisiting if it ever grew enough to matter
+
+---
+
+## 15. Vehicle reliability trend, not a failure prediction
+
+### Decision
+
+The vehicle show page shows a "Tendenza riparazioni" card for unscheduled repairs (`MaintenanceRecord::ACTIVITY_REPAIR`) only: the average interval between a vehicle's past repairs, and whether the most recent interval is markedly shorter than its own prior average (`VehicleReliabilityTrendService`). Hidden entirely below 3 historical repairs; the worsening comparison needs a 4th.
+
+This directly replaces the original roadmap idea of a per-component failure prediction (docs/ROADMAP_IDEE.md §6), dropped after discussion: `Issue.description` is free text, not categorized by component, so grouping "engine faults" vs "brake faults" isn't reliably possible without a new structured field that doesn't exist yet.
+
+### Rationale
+
+- Scheduled maintenance (Tagliando, Revisione, Cinghia) already has an exact next-due-date from `Deadline`'s fixed intervals — a statistical estimate there would be redundant, not predictive
+- An unscheduled repair has no fixed interval by definition, so "predicting the next failure date" overclaims precision the data can't support; a trend signal ("repairs happening faster than this vehicle's own history") is the honest version of the same idea
+- The worsening threshold (last interval ≤ 60% of the prior average) is a deliberately blunt cutoff, chosen to avoid flagging normal month-to-month noise on a small fleet's sparse repair history as a mandate; the comment on `WORSENING_RATIO_THRESHOLD` carries this rationale for whoever retunes it later
+
+### Consequences
+
+- A low-effort path back toward the original per-component idea is noted in docs/ROADMAP_IDEE.md §6: an optional `category` field on `Issue`, filled in gradually going forward, no backfill of existing free-text descriptions needed
+- Scoped to the vehicle's own page only, not the dashboard — a fleet-wide "vehicles getting worse" view was considered but deferred, since the per-vehicle signal needed validating first
 
 ---
 

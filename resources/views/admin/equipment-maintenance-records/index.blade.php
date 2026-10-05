@@ -59,6 +59,7 @@
                         <th>{{ __('Fornitore') }}</th>
                         <th>{{ __('Tipologia') }}</th>
                         <th>{{ __('Data') }}</th>
+                        <th>{{ __('Costo') }}</th>
                         <th>{{ __('Stato') }}</th>
                         <th></th>
                     </tr>
@@ -72,6 +73,7 @@
                             <td>{{ $record->provider->name ?? 'N/A' }}</td>
                             <td>{{ $record->activity_type ?? '—' }}</td>
                             <td>{{ $record->appointment_date_formatted }}</td>
+                            <td>{{ $record->cost !== null ? '€ ' . number_format((float) $record->cost, 2, ',', '.') : '—' }}</td>
                             <td>
                                 @if ($record->return_date)
                                     <span class="badge {{ $badgeClass('green') }}">{{ __('Completato') }}</span>
@@ -95,7 +97,7 @@
                         <x-admin.delete-modal type="equipmentmaintenancerecord" :object="$record" />
                     @empty
                         <tr>
-                            <td colspan="6" class="empty">{{ __('Nessun appuntamento trovato.') }}</td>
+                            <td colspan="7" class="empty">{{ __('Nessun appuntamento trovato.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -12,6 +12,8 @@ use App\Models\Equipment;
 use App\Models\EquipmentRevision;
 use App\Models\EquipmentType;
 use App\Models\Vehicle;
+use App\Services\QrCodeGenerator;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
@@ -170,6 +172,27 @@ class EquipmentController extends Controller
         $equipment->load('vehicle.brand', 'vehicle.carModel', 'equipmentType', 'revisions');
 
         return view('admin.equipments.show', compact('equipment'));
+    }
+
+    /**
+     * Etichetta PDF stampabile con QR verso la scheda di questa
+     * attrezzatura — stesso scopo di VehicleController::qrLabel().
+     */
+    public function qrLabel(Equipment $equipment, QrCodeGenerator $qrCodeGenerator)
+    {
+        $this->authorize('view', $equipment);
+
+        $qrSvg = $qrCodeGenerator->svg(route('admin.equipments.show', $equipment));
+
+        $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
+            ->setPaper([0, 0, 170.08, 170.08]) // 60mm x 60mm (1mm = 2.8346pt)
+            ->loadView('pdfs.qr-label', [
+                'title' => $equipment->equipmentType?->name ?? $equipment->name,
+                'subtitle' => $equipment->serial_number,
+                'qrSvg' => $qrSvg,
+            ]);
+
+        return $pdf->download('qr-equipment-' . $equipment->id . '.pdf');
     }
 
     /**

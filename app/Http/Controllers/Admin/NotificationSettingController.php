@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateNotificationSettingRequest;
 use App\Models\NotificationSetting;
+use App\Services\TelegramNotifier;
+use Illuminate\Http\RedirectResponse;
 
 class NotificationSettingController extends Controller
 {
@@ -23,11 +25,37 @@ class NotificationSettingController extends Controller
      *
      * Le impostazioni sono personali per account, non condivise dal gruppo.
      */
-    public function edit()
+    public function edit(TelegramNotifier $telegram)
     {
         $settings = auth()->user()->notificationSettings()->pluck('value', 'key');
 
-        return view('admin.notifications.edit', compact('settings'));
+        return view('admin.notifications.edit', compact('settings') + [
+            'telegramConfigured' => $telegram->isConfigured(),
+            'telegramLinked' => $telegram->isLinked(auth()->user()),
+            'telegramBotUsername' => $telegram->botUsername(),
+        ]);
+    }
+
+    /**
+     * Genera un nuovo codice di collegamento Telegram (vedi
+     * TelegramNotifier::generateLinkToken()) e lo mostra una volta sola:
+     * l'utente lo invia al bot con /start CODICE per collegare l'account.
+     */
+    public function telegramLink(TelegramNotifier $telegram): RedirectResponse
+    {
+        $token = $telegram->generateLinkToken(auth()->user());
+
+        return redirect()->route('admin.notifications.edit')
+            ->with('status', 'telegram-link-generated')
+            ->with('telegramLinkToken', $token);
+    }
+
+    public function telegramUnlink(TelegramNotifier $telegram): RedirectResponse
+    {
+        $telegram->unlink(auth()->user());
+
+        return redirect()->route('admin.notifications.edit')
+            ->with('status', 'telegram-unlinked');
     }
 
     public function update(UpdateNotificationSettingRequest $request)

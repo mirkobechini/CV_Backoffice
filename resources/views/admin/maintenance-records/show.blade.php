@@ -11,8 +11,7 @@
         ->filter();
     $linkedTireItems = $maintenanceRecord->items
         ->where('itemable_type', \App\Models\Tire::class);
-    $issueDescriptions = $linkedIssues->pluck('description')->implode(', ');
-    $title = $issueDescriptions !== '' ? $issueDescriptions : $maintenanceRecord->activity_type ?? __('Intervento');
+    $title = $maintenanceRecord->issue_descriptions !== '' ? $maintenanceRecord->issue_descriptions : $maintenanceRecord->activity_type ?? __('Intervento');
     $badgeClass = fn($color) => match ($color) {
         'red' => 'b-red',
         'yellow' => 'b-amber',
@@ -127,6 +126,12 @@
                 <div class="dl-kv">
                     <span class="k">{{ __("Km all'appuntamento") }}</span>
                     <span class="v">{{ number_format($maintenanceRecord->mileage_at_service, 0, ',', '.') }} km</span>
+                </div>
+            @endif
+            @if ($maintenanceRecord->cost !== null)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Costo') }}</span>
+                    <span class="v">€ {{ number_format((float) $maintenanceRecord->cost, 2, ',', '.') }}</span>
                 </div>
             @endif
         </div>

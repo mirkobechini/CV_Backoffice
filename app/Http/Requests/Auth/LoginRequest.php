@@ -33,7 +33,10 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
+     * Verifica le credenziali e completa l'accesso, oppure — se l'utente
+     * ha il 2FA attivo — sospende l'accesso in attesa del codice (vedi
+     * TwoFactorChallengeController), senza stabilire ancora una sessione
+     * autenticata.
      *
      * @throws \Illuminate\Validation\ValidationException
      */
@@ -41,7 +44,10 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $provider = Auth::getProvider();
+        $user = $provider->retrieveByCredentials($this->only('email', 'password'));
+
+        if (! $user || ! $provider->validateCredentials($user, $this->only('email', 'password'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -50,6 +56,24 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+
+        if ($user->hasTwoFactorEnabled()) {
+            $this->session()->put('login.2fa_user_id', $user->getKey());
+            $this->session()->put('login.2fa_remember', $this->boolean('remember'));
+
+            return;
+        }
+
+        Auth::login($user, $this->boolean('remember'));
+    }
+
+    /**
+     * True se le credenziali erano valide ma l'accesso è in attesa del
+     * codice 2FA (vedi authenticate()).
+     */
+    public function requiresTwoFactorChallenge(): bool
+    {
+        return $this->session()->has('login.2fa_user_id');
     }
 
     /**

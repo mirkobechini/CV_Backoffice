@@ -38,6 +38,10 @@
             class="btn">
             <i class="fa-solid fa-calendar-check"></i> {{ __('Nuovo appuntamento') }}
         </a>
+        <a href="{{ route('admin.equipments.qr-label', $equipment->id) }}" class="btn" target="_blank"
+            title="{{ __('Etichetta QR da stampare e attaccare sull\'attrezzatura') }}">
+            <i class="fa-solid fa-qrcode"></i> QR
+        </a>
         <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
             class="btn primary">
             <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}

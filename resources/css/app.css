@@ -973,6 +973,24 @@ body {
     color: var(--red);
 }
 
+/* Escalation: scadenza scaduta da troppo tempo senza essere rinnovata
+   (vedi GenerateNotifications::ESCALATION_THRESHOLD_DAYS) — più evidente
+   del rosso "scaduta" normale, per farla risaltare nella dashboard. */
+.b-red.critical {
+    background: var(--red);
+    color: #fff;
+    animation: critical-pulse 2s ease-in-out infinite;
+}
+
+@keyframes critical-pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.65;
+    }
+}
+
 .b-amber {
     background: var(--amber-soft);
     color: var(--amber);

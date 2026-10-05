@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\PdfExportController;
+use App\Http\Controllers\Admin\MaintenanceCalendarController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -19,6 +20,8 @@ use App\Http\Controllers\Admin\MileageLogController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TelegramWebhookController;
+use App\Http\Controllers\TwoFactorAuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CsvExportController;
 use App\Http\Controllers\CsvImportController;
@@ -36,6 +39,12 @@ Route::get('/status/{token}', [PublicFleetStatusController::class, 'show'])
     ->middleware('throttle:public-fleet-status')
     ->name('public.fleet-status');
 
+// Webhook del bot Telegram (vedi TelegramWebhookController): nessuna auth,
+// l'identità della richiesta è verificata internamente via header segreto.
+Route::post('/telegram/webhook', TelegramWebhookController::class)
+    ->middleware('throttle:telegram-webhook')
+    ->name('telegram.webhook');
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
@@ -51,6 +60,12 @@ Route::middleware('auth')->group(function () {
 
     // Export dati personali (GDPR)
     Route::get('/profile/export', [ProfileController::class, 'exportData'])->name('profile.export');
+
+    // Autenticazione a due fattori (opzionale, vedi TwoFactorAuthenticationController)
+    Route::post('/profile/two-factor', [TwoFactorAuthenticationController::class, 'store'])->name('two-factor.store');
+    Route::post('/profile/two-factor/confirm', [TwoFactorAuthenticationController::class, 'confirm'])->name('two-factor.confirm');
+    Route::delete('/profile/two-factor', [TwoFactorAuthenticationController::class, 'destroy'])->name('two-factor.destroy');
+    Route::post('/profile/two-factor/recovery-codes', [TwoFactorAuthenticationController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
 
     // Notifiche in-app (ogni utente vede le proprie)
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
@@ -118,9 +133,9 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         // Route statiche PRIMA del resource: altrimenti {maintenanceRecord}
         // catturerebbe /calendar e /events come parametro (404).
-        Route::get('maintenance-records/calendar', [MaintenanceRecordController::class, 'calendar'])
+        Route::get('maintenance-records/calendar', [MaintenanceCalendarController::class, 'index'])
             ->name('maintenance-records.calendar');
-        Route::get('maintenance-records/events', [MaintenanceRecordController::class, 'events'])
+        Route::get('maintenance-records/events', [MaintenanceCalendarController::class, 'events'])
             ->name('maintenance-records.events');
 
         Route::resource("maintenance-records", MaintenanceRecordController::class)
@@ -136,9 +151,17 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('notifications.edit');
         Route::patch('/notifications', [NotificationSettingController::class, 'update'])
             ->name('notifications.update');
+        Route::post('/notifications/telegram-link', [NotificationSettingController::class, 'telegramLink'])
+            ->name('notifications.telegram-link');
+        Route::delete('/notifications/telegram-link', [NotificationSettingController::class, 'telegramUnlink'])
+            ->name('notifications.telegram-unlink');
 
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
             ->name('vehicles.pdf');
+        Route::get('vehicles/{vehicle}/qr-label', [VehicleController::class, 'qrLabel'])
+            ->name('vehicles.qr-label');
+        Route::get('equipments/{equipment}/qr-label', [EquipmentController::class, 'qrLabel'])
+            ->name('equipments.qr-label');
         Route::get('vehicles-pdf/fleet-overview', [PdfExportController::class, 'fleetOverview'])
             ->name('vehicles.pdf.fleet-overview');
 

@@ -42,6 +42,7 @@ class StoreMaintenanceRecordRequest extends FormRequest
             'return_date' => 'nullable|date|after_or_equal:appointment_date',
             'activity_type' => ['nullable', 'string', 'max:255', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
             'mileage_at_service' => 'nullable|integer|min:0',
+            'cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:2000',
             // "Cambio Gomme": si possono scegliere più gomme esistenti insieme
             // (1, 2 o 4, es. solo l'anteriore sinistra, o l'intero asse) e/o

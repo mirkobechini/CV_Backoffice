@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\Searchable;
+use App\Services\DeadlineDueDateCalculator;
+use App\Services\DeadlineStatusCalculator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -246,59 +248,24 @@ class Deadline extends Model
             return $this->automaticStatusCache;
         }
 
-        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
-
         // Se marcata manualmente come rinnovata, preserviamo quel valore.
         if ($this->is_renewed) {
             return $this->automaticStatusCache = self::STATUS_RENEWED;
         }
 
-        $today = Carbon::today();
-        $isKmExpired = false;
-        $isKmPending = false;
-
-        // Check km-based conditions (carica veicolo e ultimo km on-demand se necessario)
+        $currentMileage = null;
         if ($this->interval_km !== null && $this->last_mileage !== null) {
             $this->loadMissing('vehicle.latestMileageLog');
-            if ($this->vehicle) {
-                $currentMileage = $this->vehicle->mileage;
-                if ($currentMileage !== null) {
-                    $thresholdKm = $this->last_mileage + $this->interval_km;
-                    if ($currentMileage >= $thresholdKm) {
-                        $isKmExpired = true;
-                    }
-                    $warningKm = $this->last_mileage + (int) ($this->interval_km * 0.9);
-                    if ($currentMileage >= $warningKm) {
-                        $isKmPending = true;
-                    }
-                }
-            }
+            $currentMileage = $this->vehicle?->mileage;
         }
 
-        // Se non c'è né data né km, pending
-        if (! $this->due_date && ! $this->interval_km) {
-            return $this->automaticStatusCache = self::STATUS_PENDING;
-        }
-
-        // Check date-based expiry
-        $isDateExpired = $this->due_date && $this->due_date->isBefore($today);
-        $isDatePending = false;
-        if ($this->due_date && ! $isDateExpired) {
-            $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
-            $isDatePending = $today->gte($warningStartDate);
-        }
-
-        // Expired se UNA delle condizioni è scaduta (km O data — il primo che arriva)
-        if ($isKmExpired || $isDateExpired) {
-            return $this->automaticStatusCache = self::STATUS_EXPIRED;
-        }
-
-        // Pending se UNA delle condizioni è in warning
-        if ($isKmPending || $isDatePending) {
-            return $this->automaticStatusCache = self::STATUS_PENDING;
-        }
-
-        return $this->automaticStatusCache = self::STATUS_VALID;
+        return $this->automaticStatusCache = DeadlineStatusCalculator::calculateDisplayStatus(
+            $this->due_date,
+            $this->interval_km,
+            $this->last_mileage,
+            $currentMileage,
+            max(0, (int) config('deadlines.warning_months', 3)),
+        );
     }
 
     /**
@@ -326,7 +293,6 @@ class Deadline extends Model
         // Pre-carica veicolo + ultimo km per tutte le scadenze in una sola query.
         $deadlines->loadMissing('vehicle.latestMileageLog');
 
-        $today = Carbon::today();
         $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
 
         $updates = [];
@@ -337,35 +303,13 @@ class Deadline extends Model
                 continue;
             }
 
-            $newStatus = null;
-
-            // KM-based check
-            if ($deadline->interval_km !== null && $deadline->last_mileage !== null) {
-                $currentMileage = $deadline->vehicle?->mileage;
-                if ($currentMileage !== null && $currentMileage >= ($deadline->last_mileage + $deadline->interval_km)) {
-                    $newStatus = self::STATUS_EXPIRED;
-                }
-            }
-
-            // Date-based check (solo se non è già expired per km)
-            if ($newStatus === null && $deadline->due_date) {
-                $warningStartDate = $deadline->due_date->copy()->subMonthsNoOverflow($warningMonths);
-
-                if ($deadline->due_date->isBefore($today)) {
-                    $newStatus = self::STATUS_EXPIRED;
-                } elseif ($deadline->due_date->isAfter($today) && $deadline->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
-                    $newStatus = self::STATUS_VALID;
-                } elseif ($today->gte($warningStartDate)) {
-                    $newStatus = self::STATUS_PENDING;
-                } else {
-                    $newStatus = self::STATUS_VALID;
-                }
-            }
-
-            // Se non c'è né data né km, pending
-            if ($newStatus === null) {
-                $newStatus = self::STATUS_PENDING;
-            }
+            $newStatus = DeadlineStatusCalculator::calculateSyncedStatus(
+                $deadline->due_date,
+                $deadline->interval_km,
+                $deadline->last_mileage,
+                $deadline->vehicle?->mileage,
+                $warningMonths,
+            );
 
             if ($deadline->status !== $newStatus) {
                 $updates[$deadline->id] = $newStatus;
@@ -395,38 +339,19 @@ class Deadline extends Model
             return;
         }
 
-        $today = Carbon::today();
-        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
-        $newStatus = null;
-
-        // KM-based check
+        $currentMileage = null;
         if ($this->interval_km !== null && $this->last_mileage !== null) {
             $this->loadMissing('vehicle.latestMileageLog');
             $currentMileage = $this->vehicle?->mileage;
-            if ($currentMileage !== null && $currentMileage >= ($this->last_mileage + $this->interval_km)) {
-                $newStatus = self::STATUS_EXPIRED;
-            }
         }
 
-        // Date-based check (solo se non è già expired per km)
-        if ($newStatus === null && $this->due_date) {
-            $warningStartDate = $this->due_date->copy()->subMonthsNoOverflow($warningMonths);
-
-            if ($this->due_date->isBefore($today)) {
-                $newStatus = self::STATUS_EXPIRED;
-            } elseif ($this->due_date->isAfter($today) && $this->due_date->isAfter($today->copy()->addMonthsNoOverflow($warningMonths))) {
-                $newStatus = self::STATUS_VALID;
-            } elseif ($today->gte($warningStartDate)) {
-                $newStatus = self::STATUS_PENDING;
-            } else {
-                $newStatus = self::STATUS_VALID;
-            }
-        }
-
-        // Se non c'è né data né km, pending
-        if ($newStatus === null) {
-            $newStatus = self::STATUS_PENDING;
-        }
+        $newStatus = DeadlineStatusCalculator::calculateSyncedStatus(
+            $this->due_date,
+            $this->interval_km,
+            $this->last_mileage,
+            $currentMileage,
+            max(0, (int) config('deadlines.warning_months', 3)),
+        );
 
         if ($this->status !== $newStatus) {
             $this->status = $newStatus;
@@ -434,65 +359,23 @@ class Deadline extends Model
         }
     }
 
+    // Wrapper statici: logica in DeadlineDueDateCalculator (estratta per
+    // tenere questo model sotto le 400 righe), nome/firma invariati per non
+    // toccare i chiamanti esistenti (DeadlineService, VehicleObserver, ...).
+
     public static function calculateMinisterialDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
-        if (! $vehicle->immatricolation_date || ! $vehicle->vehicleType) {
-            return null;
-        }
-
-        $query = $vehicle->deadlines()
-            ->where('type', self::TYPE_MINISTERIAL)
-            ->where('status', self::STATUS_RENEWED)
-            ->orderByDesc('due_date');
-
-        if ($excludeDeadlineId !== null) {
-            $query->where('id', '!=', $excludeDeadlineId);
-        }
-
-        $lastRenewedDeadline = $query->first();
-
-        // Se c'è una revisione rinnovata precedente, calcoliamo la successiva da quella;
-        // altrimenti partiamo dalla data di immatricolazione con intervallo iniziale.
-        if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
-            $monthsToAdd = (int) $vehicle->vehicleType->regular_inspection_months;
-
-            return Carbon::parse($lastRenewedDeadline->due_date)->addMonthsNoOverflow($monthsToAdd);
-        }
-
-        $monthsToAdd = (int) $vehicle->vehicleType->first_inspection_months;
-
-        return Carbon::parse($vehicle->immatricolation_date)->addMonthsNoOverflow($monthsToAdd);
+        return DeadlineDueDateCalculator::calculateMinisterialDueDateForVehicle($vehicle, $excludeDeadlineId);
     }
 
     public static function calculateOxygenDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
-        if (! $vehicle->immatricolation_date || ! self::supportsOxygenCheckForVehicle($vehicle)) {
-            return null;
-        }
-
-        $query = $vehicle->deadlines()
-            ->where('type', self::TYPE_OXYGEN)
-            ->where('status', self::STATUS_RENEWED)
-            ->orderByDesc('due_date');
-
-        if ($excludeDeadlineId !== null) {
-            $query->where('id', '!=', $excludeDeadlineId);
-        }
-
-        $lastRenewedDeadline = $query->first();
-
-        if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
-            return Carbon::parse($lastRenewedDeadline->due_date)
-                ->addMonthsNoOverflow(self::OXYGEN_CHECK_INTERVAL_MONTHS);
-        }
-
-        return Carbon::parse($vehicle->immatricolation_date)
-            ->addMonthsNoOverflow(self::OXYGEN_CHECK_INTERVAL_MONTHS);
+        return DeadlineDueDateCalculator::calculateOxygenDueDateForVehicle($vehicle, $excludeDeadlineId);
     }
 
     public static function supportsOxygenCheckForVehicle(Vehicle $vehicle): bool
     {
-        return (bool) optional($vehicle->vehicleType)->needs_oxygen_check;
+        return DeadlineDueDateCalculator::supportsOxygenCheckForVehicle($vehicle);
     }
 
     /**
@@ -501,27 +384,6 @@ class Deadline extends Model
      */
     public static function calculateTagliandoDueDateForVehicle(Vehicle $vehicle, ?int $excludeDeadlineId = null): ?Carbon
     {
-        if (! $vehicle->immatricolation_date) {
-            return null;
-        }
-
-        $query = $vehicle->deadlines()
-            ->where('type', self::TYPE_TAGLIANDO)
-            ->where('status', self::STATUS_RENEWED)
-            ->orderByDesc('due_date');
-
-        if ($excludeDeadlineId !== null) {
-            $query->where('id', '!=', $excludeDeadlineId);
-        }
-
-        $lastRenewedDeadline = $query->first();
-
-        if ($lastRenewedDeadline && $lastRenewedDeadline->due_date) {
-            return Carbon::parse($lastRenewedDeadline->due_date)
-                ->addMonthsNoOverflow(self::TAGLIANDO_INTERVAL_MONTHS);
-        }
-
-        return Carbon::parse($vehicle->immatricolation_date)
-            ->addMonthsNoOverflow(self::TAGLIANDO_INTERVAL_MONTHS);
+        return DeadlineDueDateCalculator::calculateTagliandoDueDateForVehicle($vehicle, $excludeDeadlineId);
     }
 }

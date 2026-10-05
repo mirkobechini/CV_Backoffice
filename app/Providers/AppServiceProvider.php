@@ -65,10 +65,26 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->input('email').'|'.$request->ip());
         });
 
+        // Rate limiting per la verifica del codice 2FA al login: un
+        // codice TOTP ha solo 10^6 combinazioni, senza un limite stretto
+        // sarebbe forzabile a forza bruta nella finestra di validità.
+        RateLimiter::for('two-factor', function (Request $request) {
+            return Limit::perMinute(5)
+                ->by($request->session()->get('login.2fa_user_id') . '|' . $request->ip());
+        });
+
         // Rate limiting per le route API protette
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)
                 ->by($request->user()?->id ?: $request->ip());
+        });
+
+        // Rate limiting per il webhook del bot Telegram (nessuna auth,
+        // protetto dal secret header -- vedi TelegramWebhookController):
+        // un budget largo ma non illimitato, per lo stesso motivo di
+        // public-fleet-status qui sotto.
+        RateLimiter::for('telegram-webhook', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
         });
 
         // Rate limiting per la pagina pubblica di stato flotta (nessuna auth,
