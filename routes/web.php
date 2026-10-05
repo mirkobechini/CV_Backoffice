@@ -147,6 +147,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
             ->name('vehicles.pdf');
+        Route::get('vehicles/{vehicle}/qr-label', [VehicleController::class, 'qrLabel'])
+            ->name('vehicles.qr-label');
+        Route::get('equipments/{equipment}/qr-label', [EquipmentController::class, 'qrLabel'])
+            ->name('equipments.qr-label');
         Route::get('vehicles-pdf/fleet-overview', [PdfExportController::class, 'fleetOverview'])
             ->name('vehicles.pdf.fleet-overview');
 

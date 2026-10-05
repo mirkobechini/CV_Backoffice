@@ -17,6 +17,10 @@
         <a href="{{ route('admin.vehicles.pdf', $vehicle->id) }}" class="btn outline" target="_blank">
             <i class="fa-solid fa-file-pdf"></i> PDF
         </a>
+        <a href="{{ route('admin.vehicles.qr-label', $vehicle->id) }}" class="btn outline" target="_blank"
+            title="{{ __('Etichetta QR da stampare e attaccare sul mezzo') }}">
+            <i class="fa-solid fa-qrcode"></i> QR
+        </a>
         <a href="{{ route('admin.vehicles.edit', $vehicle->id) }}" class="btn primary">
             <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}
         </a>

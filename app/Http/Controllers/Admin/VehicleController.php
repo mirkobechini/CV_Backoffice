@@ -13,9 +13,11 @@ use App\Models\Issue;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Services\DeadlineService;
+use App\Services\QrCodeGenerator;
 use App\Services\VehicleRegistrationCardService;
 use App\Services\VehicleScanService;
 use App\Services\VehicleShowDataService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -230,6 +232,29 @@ class VehicleController extends Controller
     public function show(Vehicle $vehicle)
     {
         return view('admin.vehicles.show', $this->showDataService->build($vehicle));
+    }
+
+    /**
+     * Etichetta PDF stampabile con QR verso la scheda di questo veicolo:
+     * da attaccare sul mezzo per aprirla direttamente da smartphone
+     * (browser, nessuna app) — se chi scansiona non ha già una sessione
+     * attiva, il login normale la riporta qui (redirect()->intended()).
+     */
+    public function qrLabel(Vehicle $vehicle, QrCodeGenerator $qrCodeGenerator)
+    {
+        $this->authorize('view', $vehicle);
+
+        $qrSvg = $qrCodeGenerator->svg(route('admin.vehicles.show', $vehicle));
+
+        $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
+            ->setPaper([0, 0, 170.08, 170.08]) // 60mm x 60mm (1mm = 2.8346pt)
+            ->loadView('pdfs.qr-label', [
+                'title' => $vehicle->internal_code,
+                'subtitle' => $vehicle->license_plate,
+                'qrSvg' => $qrSvg,
+            ]);
+
+        return $pdf->download('qr-' . $vehicle->internal_code . '.pdf');
     }
 
     /**
