@@ -35,6 +35,16 @@ return [
         ],
     ],
 
+    // Bot Telegram per le notifiche (alternativa/aggiunta all'email, vedi
+    // TelegramNotifier): webhook_secret verifica che le richieste al
+    // webhook arrivino davvero da Telegram (header
+    // X-Telegram-Bot-Api-Secret-Token, impostato con setWebhook).
+    'telegram' => [
+        'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'bot_username' => env('TELEGRAM_BOT_USERNAME'),
+        'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+    ],
+
     // Vision LLM usato per la scansione del libretto di circolazione
     // (VehicleScanService). Formato chat-completions compatibile OpenAI:
     // vale per OpenRouter (default) e per la maggior parte dei provider,

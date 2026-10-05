@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\MileageLogController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TwoFactorAuthenticationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CsvExportController;
@@ -37,6 +38,12 @@ Route::view('/privacy', 'privacy')->name('privacy');
 Route::get('/status/{token}', [PublicFleetStatusController::class, 'show'])
     ->middleware('throttle:public-fleet-status')
     ->name('public.fleet-status');
+
+// Webhook del bot Telegram (vedi TelegramWebhookController): nessuna auth,
+// l'identità della richiesta è verificata internamente via header segreto.
+Route::post('/telegram/webhook', TelegramWebhookController::class)
+    ->middleware('throttle:telegram-webhook')
+    ->name('telegram.webhook');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -144,6 +151,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('notifications.edit');
         Route::patch('/notifications', [NotificationSettingController::class, 'update'])
             ->name('notifications.update');
+        Route::post('/notifications/telegram-link', [NotificationSettingController::class, 'telegramLink'])
+            ->name('notifications.telegram-link');
+        Route::delete('/notifications/telegram-link', [NotificationSettingController::class, 'telegramUnlink'])
+            ->name('notifications.telegram-unlink');
 
         Route::get('vehicles/{vehicle}/pdf', [PdfExportController::class, 'vehiclePdf'])
             ->name('vehicles.pdf');
