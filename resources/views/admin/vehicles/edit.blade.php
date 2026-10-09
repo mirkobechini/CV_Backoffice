@@ -147,7 +147,7 @@
                         @enderror
                         @if ($vehicle->registration_card_path)
                             <div class="hint"><a
-                                    href="{{ Storage::disk(config('filesystems.uploads_disk'))->url($vehicle->registration_card_path) }}"
+                                    href="{{ \App\Support\UploadedFileUrl::for($vehicle->registration_card_path) }}"
                                     target="_blank" rel="noopener noreferrer">{{ __('Apri file attuale') }}</a></div>
                         @endif
                     </div>
