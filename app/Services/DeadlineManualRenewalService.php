@@ -75,13 +75,16 @@ class DeadlineManualRenewalService
             // I dati della polizza (compagnia, numero, premio...) restano
             // gli stessi sulla prossima scadenza finché non viene aggiornata
             // al rinnovo successivo: evita di doverli reinserire da zero.
-            DeadlineOccurrenceCreator::create($deadline, $vehicle, $renewedDate->copy()->addMonthsNoOverflow(Deadline::INSURANCE_INTERVAL_MONTHS), [
+            $renewalMonths = $deadline->insurance_renewal_months ?? Deadline::INSURANCE_INTERVAL_MONTHS;
+
+            DeadlineOccurrenceCreator::create($deadline, $vehicle, $renewedDate->copy()->addMonthsNoOverflow($renewalMonths), [
                 'insurance_company' => $deadline->insurance_company,
                 'insurance_policy_number' => $deadline->insurance_policy_number,
                 'insurance_premium' => $deadline->insurance_premium,
                 'insurance_coverage_type' => $deadline->insurance_coverage_type,
                 'insurance_coverage_limit' => $deadline->insurance_coverage_limit,
                 'insurance_broker_contact' => $deadline->insurance_broker_contact,
+                'insurance_renewal_months' => $deadline->insurance_renewal_months,
             ]);
 
             return $deadline;

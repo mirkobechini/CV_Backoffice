@@ -131,7 +131,7 @@
                 <h2><span class="num">2</span> {{ __('Dettagli polizza') }}</h2>
                 <div class="row2">
                     <div class="field">
-                        <label for="insurance_company">{{ __('Compagnia') }}</label>
+                        <label for="insurance_company">{{ __('Compagnia') }} <span class="req">*</span></label>
                         <input type="text" class="input @error('insurance_company') is-invalid @enderror"
                             id="insurance_company" name="insurance_company"
                             value="{{ old('insurance_company', $deadline->insurance_company) }}">
@@ -140,7 +140,7 @@
                         @enderror
                     </div>
                     <div class="field">
-                        <label for="insurance_policy_number">{{ __('Numero polizza') }}</label>
+                        <label for="insurance_policy_number">{{ __('Numero polizza') }} <span class="req">*</span></label>
                         <input type="text" class="input @error('insurance_policy_number') is-invalid @enderror"
                             id="insurance_policy_number" name="insurance_policy_number"
                             value="{{ old('insurance_policy_number', $deadline->insurance_policy_number) }}">
@@ -151,7 +151,7 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="insurance_premium">{{ __('Premio annuo (€)') }}</label>
+                        <label for="insurance_premium">{{ __('Premio annuo (€)') }} <span class="req">*</span></label>
                         <input type="number" step="0.01" class="input @error('insurance_premium') is-invalid @enderror"
                             id="insurance_premium" name="insurance_premium"
                             value="{{ old('insurance_premium', $deadline->insurance_premium) }}" min="0">
@@ -173,11 +173,15 @@
                 </div>
                 <div class="row2">
                     <div class="field">
-                        <label for="insurance_coverage_type">{{ __('Tipo di copertura') }}</label>
-                        <input type="text" class="input @error('insurance_coverage_type') is-invalid @enderror"
-                            id="insurance_coverage_type" name="insurance_coverage_type"
-                            value="{{ old('insurance_coverage_type', $deadline->insurance_coverage_type) }}"
-                            placeholder="{{ __('es. RCA, Kasko, Furto e incendio') }}">
+                        <label for="insurance_coverage_type">{{ __('Tipo di copertura') }} <span class="req">*</span></label>
+                        <select class="input @error('insurance_coverage_type') is-invalid @enderror"
+                            id="insurance_coverage_type" name="insurance_coverage_type">
+                            <option value="">{{ __('Seleziona...') }}</option>
+                            @php($currentCoverageType = old('insurance_coverage_type', $deadline->insurance_coverage_type))
+                            @foreach (\App\Models\Deadline::INSURANCE_COVERAGE_TYPES as $coverageType)
+                                <option value="{{ $coverageType }}" {{ $currentCoverageType === $coverageType ? 'selected' : '' }}>{{ $coverageType }}</option>
+                            @endforeach
+                        </select>
                         @error('insurance_coverage_type')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
@@ -190,6 +194,20 @@
                         @error('insurance_broker_contact')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
+                    </div>
+                </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="insurance_renewal_months">{{ __('Durata rinnovo (mesi)') }}</label>
+                        <input type="number" step="1" min="1" max="120"
+                            class="input @error('insurance_renewal_months') is-invalid @enderror"
+                            id="insurance_renewal_months" name="insurance_renewal_months"
+                            value="{{ old('insurance_renewal_months', $deadline->insurance_renewal_months) }}"
+                            placeholder="{{ __('Default: 12') }}">
+                        @error('insurance_renewal_months')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                        <div class="hint">{{ __('Usato dal rinnovo "senza appuntamento". Lascia vuoto per 12 mesi.') }}</div>
                     </div>
                 </div>
                 <div class="field" style="margin-bottom:0;">

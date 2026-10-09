@@ -274,6 +274,10 @@
                     <span class="k">{{ __('Contatto broker/agenzia') }}</span>
                     <span class="v">{{ $deadline->insurance_broker_contact ?? 'N/A' }}</span>
                 </div>
+                <div class="dl-kv">
+                    <span class="k">{{ __('Durata rinnovo') }}</span>
+                    <span class="v">{{ $deadline->insurance_renewal_months ?? \App\Models\Deadline::INSURANCE_INTERVAL_MONTHS }} {{ __('mesi') }}{{ $deadline->insurance_renewal_months === null ? ' (' . __('default') . ')' : '' }}</span>
+                </div>
                 @if ($deadline->notes)
                     <div class="dl-kv">
                         <span class="k">{{ __('Note') }}</span>
