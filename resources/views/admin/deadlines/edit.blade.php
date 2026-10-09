@@ -196,19 +196,17 @@
                         @enderror
                     </div>
                 </div>
-                <div class="row2">
-                    <div class="field">
-                        <label for="insurance_renewal_months">{{ __('Durata rinnovo (mesi)') }}</label>
-                        <input type="number" step="1" min="1" max="120"
-                            class="input @error('insurance_renewal_months') is-invalid @enderror"
-                            id="insurance_renewal_months" name="insurance_renewal_months"
-                            value="{{ old('insurance_renewal_months', $deadline->insurance_renewal_months) }}"
-                            placeholder="{{ __('Default: 12') }}">
-                        @error('insurance_renewal_months')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                        <div class="hint">{{ __('Usato dal rinnovo "senza appuntamento". Lascia vuoto per 12 mesi.') }}</div>
-                    </div>
+                <div class="field">
+                    <label for="insurance_renewal_months">{{ __('Durata rinnovo (mesi)') }}</label>
+                    <input type="number" step="1" min="1" max="120"
+                        class="input @error('insurance_renewal_months') is-invalid @enderror"
+                        id="insurance_renewal_months" name="insurance_renewal_months"
+                        value="{{ old('insurance_renewal_months', $deadline->insurance_renewal_months) }}"
+                        placeholder="{{ __('Default: 12') }}">
+                    @error('insurance_renewal_months')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                    <div class="hint">{{ __('Usato dal rinnovo "senza appuntamento". Lascia vuoto per 12 mesi.') }}</div>
                 </div>
                 <div class="field" style="margin-bottom:0;">
                     <label for="notes">{{ __('Note') }}</label>

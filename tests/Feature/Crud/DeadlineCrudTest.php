@@ -236,6 +236,28 @@ class DeadlineCrudTest extends TestCase
         ]);
     }
 
+    public function test_insurance_deadline_stores_renewal_months_field(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_premium' => '850.50',
+            'insurance_coverage_type' => 'RCA',
+            'insurance_renewal_months' => '6',
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+
+        $response->assertRedirect(route('admin.deadlines.show', $deadline));
+        $this->assertSame(6, $deadline->insurance_renewal_months);
+    }
+
     public function test_insurance_deadline_requires_essential_policy_fields(): void
     {
         $user = $this->createUser();
