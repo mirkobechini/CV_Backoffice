@@ -33,6 +33,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
@@ -52,16 +53,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Fail-fast se UPLOADS_DISK è assente/"public" in produzione (audit
-        // sicurezza 2026-10-09): vedi UploadsDiskGuard. Solo per richieste
-        // HTTP, non per comandi da console: "composer install" lancia
-        // "artisan package:discover" nella sua fase post-autoload-dump,
-        // PRIMA che il file .env esista persino in CI/un deploy fresco,
-        // facendo risultare l'ambiente "production" col disco non
-        // configurato — un falso positivo che bloccava l'installazione
-        // stessa, non una vera richiesta servita in produzione.
+        // Segnala (non blocca) se UPLOADS_DISK è assente/"public" in
+        // produzione (audit sicurezza 2026-10-09): vedi UploadsDiskGuard.
+        // Prima lanciava un'eccezione che faceva fallire OGNI richiesta
+        // (500 su tutto il sito) appena scoperto che questa env var non
+        // era mai stata impostata su Laravel Cloud — un'interruzione totale
+        // è peggio della falla che doveva prevenire. Un log critico resta
+        // visibile (non silenzioso come l'assenza di controllo originaria)
+        // senza bloccare il servizio mentre si configura R2.
         if (! app()->runningInConsole()) {
-            UploadsDiskGuard::assertSafeForEnvironment(app()->environment(), config('filesystems.uploads_disk'));
+            try {
+                UploadsDiskGuard::assertSafeForEnvironment(app()->environment(), config('filesystems.uploads_disk'));
+            } catch (\RuntimeException $e) {
+                Log::critical($e->getMessage());
+            }
         }
 
         // Usa template Bootstrap 5 per la paginazione (invece di Tailwind)
