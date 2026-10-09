@@ -130,7 +130,7 @@
                     @enderror
                     @if ($issue->photo)
                         <div class="hint"><a
-                                href="{{ Storage::disk(config('filesystems.uploads_disk'))->url($issue->photo) }}"
+                                href="{{ \App\Support\UploadedFileUrl::for($issue->photo) }}"
                                 target="_blank" rel="noopener noreferrer">{{ __('Apri immagine attuale') }}</a></div>
                     @endif
                 </div>

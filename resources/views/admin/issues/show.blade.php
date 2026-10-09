@@ -111,7 +111,7 @@
     @if ($issue->photo)
         <div class="photo-card">
             <h4>{{ __('Immagine') }}</h4>
-            <img src="{{ Storage::disk(config('filesystems.uploads_disk'))->url($issue->photo) }}"
+            <img src="{{ \App\Support\UploadedFileUrl::for($issue->photo) }}"
                 alt="{{ __('Immagine del guasto') }}">
         </div>
     @endif
