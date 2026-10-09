@@ -53,8 +53,16 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Fail-fast se UPLOADS_DISK è assente/"public" in produzione (audit
-        // sicurezza 2026-10-09): vedi UploadsDiskGuard.
-        UploadsDiskGuard::assertSafeForEnvironment(app()->environment(), config('filesystems.uploads_disk'));
+        // sicurezza 2026-10-09): vedi UploadsDiskGuard. Solo per richieste
+        // HTTP, non per comandi da console: "composer install" lancia
+        // "artisan package:discover" nella sua fase post-autoload-dump,
+        // PRIMA che il file .env esista persino in CI/un deploy fresco,
+        // facendo risultare l'ambiente "production" col disco non
+        // configurato — un falso positivo che bloccava l'installazione
+        // stessa, non una vera richiesta servita in produzione.
+        if (! app()->runningInConsole()) {
+            UploadsDiskGuard::assertSafeForEnvironment(app()->environment(), config('filesystems.uploads_disk'));
+        }
 
         // Usa template Bootstrap 5 per la paginazione (invece di Tailwind)
         Paginator::useBootstrapFive();
