@@ -59,7 +59,22 @@ class Deadline extends Model
 
     public const TAGLIANDO_INTERVAL_MONTHS = 12; // 1 anno
 
-    public const INSURANCE_INTERVAL_MONTHS = 12; // 1 anno (rinnovo polizza)
+    public const INSURANCE_INTERVAL_MONTHS = 12; // 1 anno (default se insurance_renewal_months non impostato)
+
+    /**
+     * Vocabolario fisso per insurance_coverage_type: prima era testo
+     * libero (es. "RCA" vs "rca" vs "Responsabilità Civile"), che rendeva
+     * impossibile raggruppare/filtrare per tipo di copertura in modo
+     * affidabile.
+     */
+    public const INSURANCE_COVERAGE_TYPES = [
+        'RCA',
+        'Kasko',
+        'Furto e incendio',
+        'Cristalli',
+        'Assistenza stradale',
+        'Altro',
+    ];
 
     protected $fillable = [
         'vehicle_id',
@@ -77,6 +92,7 @@ class Deadline extends Model
         'insurance_coverage_type',
         'insurance_coverage_limit',
         'insurance_broker_contact',
+        'insurance_renewal_months',
         'notes',
     ];
 
@@ -88,6 +104,7 @@ class Deadline extends Model
         'interval_days' => 'integer',
         'insurance_premium' => 'decimal:2',
         'insurance_coverage_limit' => 'decimal:2',
+        'insurance_renewal_months' => 'integer',
     ];
 
     protected $searchable = ['type', 'status'];

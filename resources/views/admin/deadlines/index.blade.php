@@ -59,6 +59,9 @@
                         @endif
                     </div>
                 </form>
+                <a href="{{ route('admin.deadlines.insurances') }}" class="btn" title="{{ __('Vista dedicata assicurazioni') }}">
+                    <i class="fa-solid fa-shield-halved"></i> {{ __('Assicurazioni') }}
+                </a>
                 <a href="{{ route('admin.csv.export', 'deadlines') }}" class="btn" title="{{ __('Scarica CSV') }}">
                     <i class="fa-solid fa-download"></i> CSV
                 </a>
