@@ -173,6 +173,35 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
         $this->assertSame('agenzia@example.com', $next->insurance_broker_contact);
     }
 
+    public function test_renewing_insurance_uses_configured_renewal_months_when_set(): void
+    {
+        $group = $this->group();
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group);
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_ASSICURAZIONE,
+            'due_date' => now()->subDays(5),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_premium' => 850.50,
+            'insurance_coverage_type' => 'RCA',
+            'insurance_renewal_months' => 6,
+        ]);
+
+        $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
+            'renewed_date' => '2026-06',
+        ])->assertRedirect();
+
+        $next = Deadline::where('renews_deadline_id', $deadline->id)->first();
+        $this->assertNotNull($next);
+        $this->assertSame('2026-12-30', $next->due_date->toDateString());
+        $this->assertSame(6, $next->insurance_renewal_months);
+    }
+
     public function test_member_cannot_renew_deadline(): void
     {
         $group = $this->group();

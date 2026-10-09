@@ -2,15 +2,27 @@
 
 > Raccolta di feature proposte durante l'audit del 2026-10-04, non ancora implementate. Ordine di priorità deciso da Mirko il 2026-10-04 (vedi sezione "Ordine di lavoro concordato").
 
-## Ordine di lavoro concordato (2026-10-04)
+## Ordine di lavoro concordato (2026-10-04) — TUTTE COMPLETATE (rilasciate in v1.5.0/v1.5.1)
 
-1. Costo manutenzioni (campo opzionale, non obbligatorio)
-2. Escalation scadenze non risolte
-3. Verifica automatica del backup
-4. 2FA per capo/sottocapo
-5. Bot Telegram o WhatsApp per le notifiche
-6. Manutenzione predittiva — **da delineare meglio con Mirko prima di iniziare**, idea già pensata in passato ma probabilmente da rivedere
-7. QR code su veicoli/attrezzature
+1. ✅ Costo manutenzioni (campo opzionale, non obbligatorio)
+2. ✅ Escalation scadenze non risolte
+3. ✅ Verifica automatica del backup
+4. ✅ 2FA per capo/sottocapo (opzionale per tutti, consigliato in dashboard per capo/sottocapo)
+5. ✅ Bot Telegram per le notifiche (WhatsApp scartato, troppo costoso/complesso da configurare)
+6. ✅ Manutenzione predittiva — rivista, vedi nota nella sezione 6 sotto
+7. ✅ QR code su veicoli/attrezzature
+
+## 8. Miglioramento gestione assicurazioni (2026-10-09) — ✅ COMPLETATA (issue-176)
+
+Richiesta di Mirko, dopo audit del codice esistente (assicurazione modellata come tipo di `Deadline`, non un modello proprio). Da fare tutte e 5, poi compattare in un'unica revisione se possibile:
+
+1. **Campi obbligatori**: oggi compagnia/numero polizza/premio/copertura/massimale/broker sono tutti `nullable` anche quando `type = Assicurazione` — si può salvare una polizza vuota. Rendere almeno i campi essenziali obbligatori quando il tipo è Assicurazione (`required_if`).
+2. **"Tipo di copertura" da testo libero a select**: oggi è un campo di testo libero (placeholder "es. RCA, Kasko..."), impossibile raggruppare/filtrare in modo affidabile. Convertire in select con vocabolario fisso (RCA, Kasko, Furto e incendio, Cristalli, Assistenza stradale, Altro).
+3. **Export CSV**: `CsvExportController::exportDeadlines()` oggi esporta solo Veicolo/Tipo/Data Scadenza/Stato/Rinnovata per tutti i tipi di scadenza — nessun campo assicurativo (compagnia, numero polizza, premio, massimale, broker) finisce nel CSV. Aggiungerli (almeno per le righe di tipo Assicurazione).
+4. **Vista dedicata assicurazioni**: oggi si vedono solo filtrando l'elenco generico scadenze (`type_filter=Assicurazione`), con le colonne generiche tipo/data/stato. Una vista con colonne specifiche (compagnia, numero polizza, premio, scadenza, giorni rimanenti) sarebbe più utile a chi gestisce il budget.
+5. **Rinnovo configurabile**: il flusso "rinnova senza appuntamento" (`DeadlineManualRenewalService`) aggiunge sempre 12 mesi fissi per le assicurazioni, non configurabile (polizze semestrali/pluriennali non gestibili lì). La creazione/modifica normale permette già di impostare qualsiasi data a mano.
+
+**Deliberatamente escluso**: rimodellare l'assicurazione come modello proprio invece di un tipo di `Deadline` — refactor grosso, beneficio incerto, l'ADR giustifica bene il design attuale.
 
 ---
 

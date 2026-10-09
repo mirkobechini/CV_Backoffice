@@ -51,21 +51,67 @@ class GroupScopingTest extends TestCase
         $this->assertFalse($visible->contains('id', $vehicleB->id));
     }
 
-    public function test_user_without_group_sees_all_vehicles(): void
+    /**
+     * Prima del fix (audit sicurezza 2026-10-09), un utente senza gruppo
+     * attivo (stato raggiungibile da GroupController::removeMember, vedi
+     * sotto) vedeva TUTTI i veicoli di TUTTI i gruppi: Vehicle::scopeForGroup()
+     * non applicava alcun filtro quando $groupId era null, trattando "nessun
+     * gruppo" come "nessuna restrizione" invece che "nessun accesso". Ogni
+     * utente reale nasce già agganciato a un gruppo (UserController::store,
+     * inviti): null è uno stato anomalo, non una modalità "vede tutto".
+     */
+    public function test_user_without_group_sees_no_vehicles(): void
     {
         $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
         $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
 
         $user = User::factory()->create(); // nessun gruppo
 
-        $vehicleA = $this->vehicle('AB123CD', '0001', $groupA);
-        $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
+        $this->vehicle('AB123CD', '0001', $groupA);
+        $this->vehicle('EF456GH', '0002', $groupB);
 
         $this->actingAs($user);
 
         $visible = Vehicle::forCurrentUser()->get();
 
-        $this->assertCount(2, $visible);
+        $this->assertCount(0, $visible);
+    }
+
+    /**
+     * Stessa falla a livello di policy (non solo di query scoping):
+     * HasGroupScopedAccess::belongsToUserGroup() restituiva true quando
+     * l'utente non aveva un gruppo attivo, concedendo view/update/delete su
+     * QUALSIASI veicolo di QUALSIASI gruppo.
+     */
+    public function test_user_without_group_cannot_view_any_vehicle(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create(); // nessun gruppo
+        $vehicle = $this->vehicle('AB123CD', '0001', $group);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertForbidden();
+    }
+
+    /**
+     * Il percorso concreto che produceva lo stato "nessun gruppo" per un
+     * utente reale: un capo che rimuove un membro dal suo UNICO gruppo.
+     * Ora bloccato esplicitamente invece di lasciare l'app in uno stato
+     * anomalo.
+     */
+    public function test_cannot_remove_member_from_their_only_group(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $capo = User::factory()->create();
+        $member = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($capo)->delete(route('admin.groups.remove-member', [$group, $member]));
+
+        $response->assertForbidden();
+        $this->assertTrue($member->fresh()->groups()->where('groups.id', $group->id)->exists());
     }
 
     public function test_vehicle_creation_assigns_current_user_group(): void

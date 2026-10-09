@@ -31,7 +31,7 @@ class MaintenanceRecordController extends Controller
         // Vedi commento in Api\IssueController::show().
         $groupId = $request->user()->activeGroup()?->id;
 
-        if ($groupId && $maintenanceRecord->vehicle?->group_id !== $groupId) {
+        if (! $groupId || $maintenanceRecord->vehicle?->group_id !== $groupId) {
             abort(404);
         }
 

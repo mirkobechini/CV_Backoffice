@@ -80,6 +80,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("vehicles", VehicleController::class);
         Route::resource("providers", ProviderController::class);
         Route::resource("issues", IssueController::class);
+        Route::get('deadlines/insurances', [DeadlineController::class, 'insurances'])
+            ->name('deadlines.insurances');
         Route::resource("deadlines", DeadlineController::class);
         Route::patch('deadlines/{deadline}/renew', [DeadlineController::class, 'renew'])
             ->name('deadlines.renew');

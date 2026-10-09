@@ -3,9 +3,11 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreDeadlineRequest extends FormRequest
 {
@@ -27,12 +29,13 @@ class StoreDeadlineRequest extends FormRequest
             'interval_km' => 'nullable|integer|min:0',
             'last_mileage' => 'nullable|integer|min:0',
             'interval_days' => 'nullable|integer|min:0',
-            'insurance_company' => 'nullable|string|max:255',
-            'insurance_policy_number' => 'nullable|string|max:255',
-            'insurance_premium' => 'nullable|numeric|min:0',
-            'insurance_coverage_type' => 'nullable|string|max:255',
+            'insurance_company' => 'nullable|string|max:255|required_if:type,Assicurazione',
+            'insurance_policy_number' => 'nullable|string|max:255|required_if:type,Assicurazione',
+            'insurance_premium' => 'nullable|numeric|min:0|required_if:type,Assicurazione',
+            'insurance_coverage_type' => ['nullable', 'string', Rule::in(Deadline::INSURANCE_COVERAGE_TYPES), 'required_if:type,Assicurazione'],
             'insurance_coverage_limit' => 'nullable|numeric|min:0',
             'insurance_broker_contact' => 'nullable|string|max:255',
+            'insurance_renewal_months' => 'nullable|integer|min:1|max:120',
             'notes' => 'nullable|string|max:2000',
         ];
     }
@@ -55,13 +58,20 @@ class StoreDeadlineRequest extends FormRequest
             'interval_days.integer' => "L'intervallo giorni deve essere un numero.",
             'interval_days.min' => "L'intervallo giorni non può essere negativo.",
             'insurance_company.max' => 'Il nome della compagnia non può superare 255 caratteri.',
+            'insurance_company.required_if' => 'La compagnia è obbligatoria per le assicurazioni.',
             'insurance_policy_number.max' => 'Il numero di polizza non può superare 255 caratteri.',
+            'insurance_policy_number.required_if' => 'Il numero di polizza è obbligatorio per le assicurazioni.',
             'insurance_premium.numeric' => 'Il premio annuo deve essere un numero.',
             'insurance_premium.min' => 'Il premio annuo non può essere negativo.',
-            'insurance_coverage_type.max' => 'Il tipo di copertura non può superare 255 caratteri.',
+            'insurance_premium.required_if' => 'Il premio annuo è obbligatorio per le assicurazioni.',
+            'insurance_coverage_type.in' => 'Il tipo di copertura selezionato non è valido.',
+            'insurance_coverage_type.required_if' => 'Il tipo di copertura è obbligatorio per le assicurazioni.',
             'insurance_coverage_limit.numeric' => 'Il massimale deve essere un numero.',
             'insurance_coverage_limit.min' => 'Il massimale non può essere negativo.',
             'insurance_broker_contact.max' => 'Il contatto broker/agenzia non può superare 255 caratteri.',
+            'insurance_renewal_months.integer' => 'La durata del rinnovo deve essere un numero di mesi.',
+            'insurance_renewal_months.min' => 'La durata del rinnovo deve essere di almeno 1 mese.',
+            'insurance_renewal_months.max' => 'La durata del rinnovo non può superare 120 mesi.',
             'notes.max' => 'Le note non possono superare 2000 caratteri.',
         ];
     }

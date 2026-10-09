@@ -23,12 +23,12 @@ class VehicleController extends Controller
         // di gruppo: senza questo controllo, un token valido di un gruppo
         // qualsiasi poteva leggere i dati di un veicolo (e i suoi guasti,
         // scadenze, attrezzature) di un altro gruppo semplicemente
-        // indovinandone/incrementandone l'id. Stessa regola di
-        // Vehicle::scopeForCurrentUser(): un utente senza gruppo attivo non
-        // viene ristretto.
+        // indovinandone/incrementandone l'id. Un utente senza gruppo attivo
+        // viene negato (non ristretto a nulla di preciso, ma nemmeno
+        // lasciato libero): vedi audit sicurezza 2026-10-09.
         $groupId = $request->user()->activeGroup()?->id;
 
-        if ($groupId && $vehicle->group_id !== $groupId) {
+        if (! $groupId || $vehicle->group_id !== $groupId) {
             abort(404);
         }
 

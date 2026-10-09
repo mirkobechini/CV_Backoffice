@@ -93,6 +93,24 @@ class ApiGroupScopingTest extends TestCase
         $response->assertNotFound();
     }
 
+    /**
+     * Prima del fix (audit sicurezza 2026-10-09), un token di un utente
+     * senza gruppo attivo poteva leggere QUALSIASI veicolo (il controllo
+     * era `if ($groupId && ...)`, saltato del tutto quando $groupId era
+     * null invece di negare l'accesso).
+     */
+    public function test_api_show_returns_404_for_user_without_active_group(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create(); // nessun gruppo
+        $vehicle = $this->vehicle('AB123CD', '0001', $group);
+
+        $token = $user->createToken('test')->plainTextToken;
+        $response = $this->withToken($token)->getJson("/api/vehicles/{$vehicle->id}");
+
+        $response->assertNotFound();
+    }
+
     public function test_api_issue_show_returns_404_for_another_groups_vehicle(): void
     {
         $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);

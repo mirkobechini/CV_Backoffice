@@ -67,13 +67,18 @@ class CsvExportController extends Controller
     {
         $deadlines = Deadline::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
 
-        $headers = ['Veicolo', 'Tipo', 'Data Scadenza', 'Stato', 'Rinnovata'];
+        $headers = ['Veicolo', 'Tipo', 'Data Scadenza', 'Stato', 'Rinnovata', 'Compagnia', 'Numero Polizza', 'Premio', 'Massimale', 'Broker'];
         $rows = $deadlines->map(fn ($d) => [
             $d->vehicle?->internal_code ?? '',
             $d->type,
             $d->due_date_formatted ?? '',
             $d->status_label ?? $d->automatic_status,
             $d->is_renewed ? 'Sì' : 'No',
+            $d->insurance_company ?? '',
+            $d->insurance_policy_number ?? '',
+            $d->insurance_premium !== null ? number_format((float) $d->insurance_premium, 2, ',', '') : '',
+            $d->insurance_coverage_limit !== null ? number_format((float) $d->insurance_coverage_limit, 2, ',', '') : '',
+            $d->insurance_broker_contact ?? '',
         ]);
 
         return $this->downloadCsv('scadenze.csv', $headers, $rows);

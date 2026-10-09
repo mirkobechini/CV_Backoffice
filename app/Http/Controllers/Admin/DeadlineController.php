@@ -159,6 +159,44 @@ class DeadlineController extends Controller
     }
 
     /**
+     * Vista dedicata alle sole scadenze di tipo Assicurazione, con colonne
+     * specifiche (compagnia, numero polizza, premio) utili a chi gestisce
+     * il budget, invece delle colonne generiche tipo/data/stato
+     * dell'elenco scadenze filtrato.
+     */
+    public function insurances(Request $request)
+    {
+        $this->authorize('viewAny', Deadline::class);
+
+        $sortBy = $request->get('sort_by', 'date');
+        $sortDir = $request->get('sort_dir', $request->get('sort_by') ? 'asc' : 'desc');
+
+        $deadlines = Deadline::with('vehicle')
+            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->where('type', 'Assicurazione')
+            ->get()
+            ->sortBy(fn(Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
+            ->unique(fn(Deadline $d) => $d->vehicle_id ?? 'N/A')
+            ->values();
+
+        Deadline::syncStatusesFromRules($deadlines);
+
+        $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
+            'vehicle' => fn(Deadline $d) => $d->vehicle?->internal_code ?? '',
+            'company' => fn(Deadline $d) => $d->insurance_company ?? '',
+            'premium' => fn(Deadline $d) => $d->insurance_premium ?? 0,
+            'date' => fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
+        ]);
+
+        $totalPremium = $deadlines->sum('insurance_premium');
+
+        return view('admin.deadlines.insurances', compact('deadlines', 'sortBy', 'sortDir', 'totalPremium') + [
+            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.insurances'),
+            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
+        ]);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()

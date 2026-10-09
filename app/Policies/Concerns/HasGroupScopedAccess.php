@@ -91,8 +91,15 @@ trait HasGroupScopedAccess
 
         $groupId = $user->activeGroup()?->id;
 
+        // Nessun gruppo attivo = nessun accesso, non accesso illimitato:
+        // ogni utente reale appartiene sempre ad almeno un gruppo (creato
+        // già agganciato); null qui è uno stato anomalo (es. rimosso dal
+        // suo unico gruppo), non un segnale di "utente senza restrizioni".
+        // Prima del fix (audit sicurezza 2026-10-09) restituiva true,
+        // concedendo a quell'utente accesso a qualunque record di
+        // qualunque gruppo.
         if (! $groupId) {
-            return true;
+            return false;
         }
 
         if ($model instanceof Vehicle) {

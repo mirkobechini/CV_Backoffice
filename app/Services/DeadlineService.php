@@ -78,6 +78,7 @@ class DeadlineService
             'insurance_coverage_type' => $data['insurance_coverage_type'] ?? null,
             'insurance_coverage_limit' => $data['insurance_coverage_limit'] ?? null,
             'insurance_broker_contact' => $data['insurance_broker_contact'] ?? null,
+            'insurance_renewal_months' => $data['insurance_renewal_months'] ?? null,
             'notes' => $data['notes'] ?? null,
         ]);
 
@@ -211,6 +212,7 @@ class DeadlineService
             'insurance_coverage_type' => $data['insurance_coverage_type'] ?? null,
             'insurance_coverage_limit' => $data['insurance_coverage_limit'] ?? null,
             'insurance_broker_contact' => $data['insurance_broker_contact'] ?? null,
+            'insurance_renewal_months' => $data['insurance_renewal_months'] ?? null,
             'notes' => $data['notes'] ?? null,
         ];
 

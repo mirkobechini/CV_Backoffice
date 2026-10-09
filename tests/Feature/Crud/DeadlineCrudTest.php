@@ -87,6 +87,34 @@ class DeadlineCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_insurances_page_shows_only_insurance_deadlines(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_premium' => 850.50,
+            'insurance_coverage_type' => 'RCA',
+        ]);
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'due_date' => '2026-06',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.insurances'));
+
+        $response->assertStatus(200);
+        $response->assertSee('Generali');
+        $response->assertSee('POL-123');
+        $response->assertViewHas('deadlines', fn ($deadlines) => $deadlines->count() === 1);
+    }
+
 
     public function test_index_default_view_shows_active_dry_belt_cinghia_not_the_renewed_one(): void
     {
@@ -170,7 +198,7 @@ class DeadlineCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
-            'type' => 'Assicurazione',
+            'type' => 'Tagliando',
             'status' => 'renewed',
             'due_date' => "2025-01",
         ]);
@@ -181,7 +209,7 @@ class DeadlineCrudTest extends TestCase
         $this->assertDatabaseHas('deadlines', [
             'id' => $deadline->id,
             'vehicle_id' => $vehicle->id,
-            'type' => 'Assicurazione',
+            'type' => 'Tagliando',
         ]);
     }
 
@@ -195,7 +223,7 @@ class DeadlineCrudTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('admin.deadlines.update', $deadline), [
             'vehicle_id' => $vehicle->id,
-            'type' => 'Assicurazione',
+            'type' => 'Tagliando',
             'status' => 'pending',
             'due_date' => '2025-01',
         ]);
@@ -204,8 +232,67 @@ class DeadlineCrudTest extends TestCase
         $this->assertDatabaseHas('deadlines', [
             'id' => $deadline->id,
             'vehicle_id' => $vehicle->id,
-            'type' => 'Assicurazione',
+            'type' => 'Tagliando',
         ]);
+    }
+
+    public function test_insurance_deadline_stores_renewal_months_field(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_premium' => '850.50',
+            'insurance_coverage_type' => 'RCA',
+            'insurance_renewal_months' => '6',
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+
+        $response->assertRedirect(route('admin.deadlines.show', $deadline));
+        $this->assertSame(6, $deadline->insurance_renewal_months);
+    }
+
+    public function test_insurance_deadline_requires_essential_policy_fields(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+        ]);
+
+        $response->assertSessionHasErrors([
+            'insurance_company',
+            'insurance_policy_number',
+            'insurance_premium',
+            'insurance_coverage_type',
+        ]);
+    }
+
+    public function test_insurance_deadline_rejects_invalid_coverage_type(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_premium' => '850.50',
+            'insurance_coverage_type' => 'Responsabilità Civile',
+        ]);
+
+        $response->assertSessionHasErrors(['insurance_coverage_type']);
     }
 
     public function test_insurance_deadline_stores_policy_fields(): void
@@ -254,6 +341,8 @@ class DeadlineCrudTest extends TestCase
             'due_date' => '2025-01',
             'insurance_company' => 'Allianz',
             'insurance_policy_number' => 'POL-999',
+            'insurance_premium' => '920.00',
+            'insurance_coverage_type' => 'RCA',
         ]);
 
         $response->assertRedirect(route('admin.deadlines.show', $deadline));

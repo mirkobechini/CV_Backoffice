@@ -18,7 +18,7 @@ class SendSummaryReportTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function vehicle(): Vehicle
+    private function vehicle(?Group $group = null): Vehicle
     {
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
         $brand = Brand::create(['name' => 'Fiat']);
@@ -31,7 +31,24 @@ class SendSummaryReportTest extends TestCase
             'car_model_id' => $model->id,
             'fuel_type' => 'diesel',
             'immatricolation_date' => '2024-01-01',
+            'group_id' => $group?->id,
         ]);
+    }
+
+    /**
+     * Ogni utente reale appartiene sempre ad almeno un gruppo (vedi ADR §10,
+     * nessuna registrazione pubblica: gli account nascono già agganciati a
+     * un gruppo); un utente "senza gruppo" non è uno stato legittimo da
+     * replicare nei test (vedi audit sicurezza 2026-10-09, Vehicle::forGroup()
+     * ora nega l'accesso invece di ignorare il filtro in quel caso).
+     */
+    private function userWithGroup(): User
+    {
+        $group = Group::create(['name' => 'Gruppo ' . Group::generateInviteCode(), 'invite_code' => Group::generateInviteCode()]);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+
+        return $user;
     }
 
     public function test_report_sends_email_when_recipient_configured(): void
@@ -198,9 +215,9 @@ class SendSummaryReportTest extends TestCase
         // today->diffInDays(due_date)) dava "-5 giorni" per una scadenza
         // fra 5 giorni invece di "5 giorni".
         Mail::fake();
-        $user = User::factory()->create();
+        $user = $this->userWithGroup();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
-        $vehicle = $this->vehicle();
+        $vehicle = $this->vehicle($user->activeGroup());
         \App\Models\Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => \App\Models\Deadline::TYPE_TAGLIANDO,
@@ -228,9 +245,9 @@ class SendSummaryReportTest extends TestCase
         // ("Call to a member function format() on null") appena una di
         // queste finiva tra le scadenze scadute.
         Mail::fake();
-        $user = User::factory()->create();
+        $user = $this->userWithGroup();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
-        $vehicle = $this->vehicle();
+        $vehicle = $this->vehicle($user->activeGroup());
         \App\Models\MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => now(),
@@ -269,9 +286,9 @@ class SendSummaryReportTest extends TestCase
         // scadenza il cui due_date passa senza che nessuno la tocchi resta
         // "pending" in DB anche se ormai scaduta.
         Mail::fake();
-        $user = User::factory()->create();
+        $user = $this->userWithGroup();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
-        $vehicle = $this->vehicle();
+        $vehicle = $this->vehicle($user->activeGroup());
         \App\Models\Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => \App\Models\Deadline::TYPE_TAGLIANDO,

@@ -277,6 +277,10 @@ class GroupControllerTest extends TestCase
         $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
         $group->addUser($capo, Group::ROLE_CAPO);
         $group->addUser($member, Group::ROLE_MEMBER);
+        // Il membro deve appartenere ad almeno un altro gruppo: non si può
+        // rimuoverlo dal suo unico gruppo (vedi audit sicurezza 2026-10-09).
+        $otherGroup = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $otherGroup->addUser($member, Group::ROLE_MEMBER);
 
         $response = $this->actingAs($capo)->delete(route('admin.groups.remove-member', [$group, $member]));
 
