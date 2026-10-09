@@ -169,8 +169,16 @@ class Vehicle extends Model
      * dall'utente autenticato. Serve ai comandi da console (notifiche/report
      * schedulati) che iterano su più utenti senza un guard HTTP: lì
      * Auth::user() è sempre null, quindi scopeForCurrentUser() non
-     * applicherebbe alcun filtro. Nessun gruppo (null) = nessun filtro,
-     * stessa semantica di scopeForCurrentUser().
+     * applicherebbe alcun filtro in quel caso (diverso da qui).
+     *
+     * Nessun gruppo (null) = nessun risultato, non "tutti i veicoli di
+     * tutti i gruppi": ogni utente reale appartiene sempre ad almeno un
+     * gruppo (creato già agganciato), quindi $groupId null qui significa
+     * uno stato anomalo (es. rimosso dal suo unico gruppo), non un utente
+     * "senza restrizioni". Prima del fix (audit sicurezza 2026-10-09),
+     * un capo che rimuoveva un membro dal suo unico gruppo
+     * (GroupController::removeMember) lasciava quel membro con accesso
+     * illimitato a tutti i gruppi, invece che bloccato.
      */
     public function scopeForGroup(Builder $query, ?int $groupId): Builder
     {
@@ -178,7 +186,7 @@ class Vehicle extends Model
             return $query->where('vehicles.group_id', $groupId);
         }
 
-        return $query;
+        return $query->whereRaw('1 = 0');
     }
 
     public function brand()

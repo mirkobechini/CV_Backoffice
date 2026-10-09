@@ -16,12 +16,16 @@ class TelegramWebhookController extends Controller
 {
     public function __invoke(Request $request, TelegramNotifier $notifier): Response
     {
-        // Senza questo controllo, chiunque conoscesse l'URL del webhook
-        // potrebbe inviare aggiornamenti falsi (es. collegare un chat_id
-        // a un codice rubato più facilmente, dato che il token da solo è
-        // già una protezione debole essendo visibile nei log del bot).
+        // Fail-closed, non fail-open (audit sicurezza 2026-10-09): la rotta
+        // è pubblica (nessun middleware auth), quindi senza un secret
+        // configurato chiunque conoscesse l'URL potrebbe inviare
+        // aggiornamenti falsi (es. forzare uno /stop su un chat_id
+        // indovinato, o tentare /start su un token rubato). Se
+        // TELEGRAM_WEBHOOK_SECRET non è impostato, la richiesta viene
+        // sempre rifiutata invece di essere elaborata senza verifica.
+        // hash_equals() invece di !== per un confronto a tempo costante.
         $secret = config('services.telegram.webhook_secret');
-        if ($secret && $request->header('X-Telegram-Bot-Api-Secret-Token') !== $secret) {
+        if (! $secret || ! hash_equals($secret, (string) $request->header('X-Telegram-Bot-Api-Secret-Token', ''))) {
             abort(403);
         }
 
