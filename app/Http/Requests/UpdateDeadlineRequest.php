@@ -7,7 +7,7 @@ use App\Models\Deadline;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateDeadlineRequest extends FormRequest
 {
@@ -31,8 +31,8 @@ class UpdateDeadlineRequest extends FormRequest
             'interval_days' => 'nullable|integer|min:0',
             'insurance_company' => 'nullable|string|max:255|required_if:type,Assicurazione',
             'insurance_policy_number' => 'nullable|string|max:255|required_if:type,Assicurazione',
-            'insurance_premium' => 'nullable|numeric|min:0|required_if:type,Assicurazione',
-            'insurance_coverage_type' => ['nullable', 'string', Rule::in(Deadline::INSURANCE_COVERAGE_TYPES), 'required_if:type,Assicurazione'],
+            'coverages' => ['required_if:type,Assicurazione', 'array'],
+            'coverages.*.cost' => 'required|numeric|min:0',
             'insurance_coverage_limit' => 'nullable|numeric|min:0',
             'insurance_broker_contact' => 'nullable|string|max:255',
             'insurance_renewal_months' => 'nullable|integer|min:1|max:120',
@@ -61,11 +61,10 @@ class UpdateDeadlineRequest extends FormRequest
             'insurance_company.required_if' => 'La compagnia è obbligatoria per le assicurazioni.',
             'insurance_policy_number.max' => 'Il numero di polizza non può superare 255 caratteri.',
             'insurance_policy_number.required_if' => 'Il numero di polizza è obbligatorio per le assicurazioni.',
-            'insurance_premium.numeric' => 'Il premio annuo deve essere un numero.',
-            'insurance_premium.min' => 'Il premio annuo non può essere negativo.',
-            'insurance_premium.required_if' => 'Il premio annuo è obbligatorio per le assicurazioni.',
-            'insurance_coverage_type.in' => 'Il tipo di copertura selezionato non è valido.',
-            'insurance_coverage_type.required_if' => 'Il tipo di copertura è obbligatorio per le assicurazioni.',
+            'coverages.required_if' => 'Seleziona almeno una copertura per le assicurazioni.',
+            'coverages.*.cost.required' => 'Indica il costo per ogni copertura selezionata.',
+            'coverages.*.cost.numeric' => 'Il costo della copertura deve essere un numero.',
+            'coverages.*.cost.min' => 'Il costo della copertura non può essere negativo.',
             'insurance_coverage_limit.numeric' => 'Il massimale deve essere un numero.',
             'insurance_coverage_limit.min' => 'Il massimale non può essere negativo.',
             'insurance_broker_contact.max' => 'Il contatto broker/agenzia non può superare 255 caratteri.',
@@ -74,5 +73,23 @@ class UpdateDeadlineRequest extends FormRequest
             'insurance_renewal_months.max' => 'La durata del rinnovo non può superare 120 mesi.',
             'notes.max' => 'Le note non possono superare 2000 caratteri.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $coverages = $this->input('coverages', []);
+
+            if (! is_array($coverages)) {
+                return;
+            }
+
+            foreach (array_keys($coverages) as $type) {
+                if (! in_array($type, Deadline::INSURANCE_COVERAGE_TYPES, true)) {
+                    $validator->errors()->add('coverages', 'Una o più coperture selezionate non sono valide.');
+                    break;
+                }
+            }
+        });
     }
 }
