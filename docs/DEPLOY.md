@@ -24,7 +24,9 @@
     | `R2_SECRET_ACCESS_KEY`  | from your Cloudflare R2 API token        |                                                            |
     | `R2_BUCKET`             | your R2 bucket name                      |                                                            |
     | `R2_ENDPOINT`           | `https://<account_id>.r2.cloudflarestorage.com` | Cloudflare account-specific S3 API endpoint         |
-    | `R2_URL`                | your bucket's public URL or custom domain | Used to build the links shown to users (e.g. "Apri file") |
+    | `R2_URL`                | leave empty, or any placeholder          | Not used for serving files anymore (see note below) — only the S3 driver's own config (key/secret/bucket/endpoint) matters |
+
+    **Keep the R2 bucket private** (don't enable "Public Development URL" or attach a public custom domain). Links to uploaded files (`App\Support\UploadedFileUrl`) are generated as time-limited signed URLs (`Storage::disk('s3')->temporaryUrl()`), not permanent public links — a private bucket is what makes that meaningful. A public bucket would defeat the point: anyone with a guessed/leaked path could fetch the file directly, same exposure the signed-URL approach exists to avoid. This also applies to the database backups the backup command writes to this same disk — their filenames are predictable (`backups/backup-<timestamp>.json`), so they must never be reachable via a public bucket URL.
     | `TELEGRAM_BOT_TOKEN`    | token from @BotFather                    | Optional, for Telegram notifications (see step 6); without it the "Collega Telegram" section stays hidden, nothing else is affected |
     | `TELEGRAM_BOT_USERNAME` | your bot's @username                     | Shown to the user as the instruction to open in Telegram     |
     | `TELEGRAM_WEBHOOK_SECRET` | any random string                      | Must match the `secret_token` passed to Telegram's `setWebhook` call in step 6 |
