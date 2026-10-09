@@ -39,7 +39,7 @@ class TelegramNotificationTest extends TestCase
 
     public function test_start_with_valid_token_links_the_chat(): void
     {
-        config(['services.telegram.bot_token' => 'fake-token']);
+        config(['services.telegram.bot_token' => 'fake-token', 'services.telegram.webhook_secret' => 'my-secret']);
         Http::fake();
 
         $user = $this->admin();
@@ -47,7 +47,7 @@ class TelegramNotificationTest extends TestCase
 
         $response = $this->postJson(route('telegram.webhook'), [
             'message' => ['chat' => ['id' => 999], 'text' => "/start {$token}"],
-        ]);
+        ], ['X-Telegram-Bot-Api-Secret-Token' => 'my-secret']);
 
         $response->assertNoContent();
         $this->assertSame('999', $user->notificationSetting('telegram_chat_id'));
@@ -56,19 +56,19 @@ class TelegramNotificationTest extends TestCase
 
     public function test_start_with_invalid_token_does_not_link_anything(): void
     {
-        config(['services.telegram.bot_token' => 'fake-token']);
+        config(['services.telegram.bot_token' => 'fake-token', 'services.telegram.webhook_secret' => 'my-secret']);
         Http::fake();
 
         $this->postJson(route('telegram.webhook'), [
             'message' => ['chat' => ['id' => 999], 'text' => '/start WRONGCODE'],
-        ]);
+        ], ['X-Telegram-Bot-Api-Secret-Token' => 'my-secret']);
 
         $this->assertDatabaseMissing('notification_settings', ['key' => 'telegram_chat_id']);
     }
 
     public function test_start_with_expired_token_does_not_link(): void
     {
-        config(['services.telegram.bot_token' => 'fake-token']);
+        config(['services.telegram.bot_token' => 'fake-token', 'services.telegram.webhook_secret' => 'my-secret']);
         Http::fake();
 
         $user = $this->admin();
@@ -80,14 +80,14 @@ class TelegramNotificationTest extends TestCase
 
         $this->postJson(route('telegram.webhook'), [
             'message' => ['chat' => ['id' => 999], 'text' => '/start EXPIRED1'],
-        ]);
+        ], ['X-Telegram-Bot-Api-Secret-Token' => 'my-secret']);
 
         $this->assertDatabaseMissing('notification_settings', ['key' => 'telegram_chat_id']);
     }
 
     public function test_stop_unlinks_the_chat(): void
     {
-        config(['services.telegram.bot_token' => 'fake-token']);
+        config(['services.telegram.bot_token' => 'fake-token', 'services.telegram.webhook_secret' => 'my-secret']);
         Http::fake();
 
         $user = $this->admin();
@@ -95,7 +95,7 @@ class TelegramNotificationTest extends TestCase
 
         $this->postJson(route('telegram.webhook'), [
             'message' => ['chat' => ['id' => 999], 'text' => '/stop'],
-        ]);
+        ], ['X-Telegram-Bot-Api-Secret-Token' => 'my-secret']);
 
         $this->assertFalse(app(TelegramNotifier::class)->isLinked($user->fresh()));
     }
@@ -107,6 +107,23 @@ class TelegramNotificationTest extends TestCase
         $response = $this->postJson(route('telegram.webhook'), [
             'message' => ['chat' => ['id' => 999], 'text' => '/stop'],
         ], ['X-Telegram-Bot-Api-Secret-Token' => 'wrong']);
+
+        $response->assertForbidden();
+    }
+
+    /**
+     * Prima del fix (audit sicurezza 2026-10-09) il controllo era fail-open:
+     * se TELEGRAM_WEBHOOK_SECRET non era configurato, veniva saltato del
+     * tutto invece di rifiutare la richiesta — chiunque conoscesse l'URL
+     * pubblico del webhook poteva inviare aggiornamenti falsi.
+     */
+    public function test_webhook_rejects_request_when_secret_is_not_configured(): void
+    {
+        config(['services.telegram.webhook_secret' => null]);
+
+        $response = $this->postJson(route('telegram.webhook'), [
+            'message' => ['chat' => ['id' => 999], 'text' => '/stop'],
+        ]);
 
         $response->assertForbidden();
     }

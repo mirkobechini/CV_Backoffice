@@ -294,6 +294,15 @@ class GroupController extends Controller
             abort(403, 'Non puoi rimuovere il capo del gruppo.');
         }
 
+        // Non si può lasciare un membro senza nessun gruppo: tutta
+        // l'autorizzazione dell'app (query scoping + policy) assume che un
+        // utente reale appartenga sempre ad almeno un gruppo. Un utente
+        // senza gruppo attivo non deve restare loggato in questo stato
+        // (vedi audit sicurezza 2026-10-09).
+        if ($user->groups()->count() <= 1) {
+            abort(403, 'Non puoi rimuovere questo membro: è il suo unico gruppo. Eliminane l\'account invece, se necessario.');
+        }
+
         $group->removeUser($user);
 
         return back()->with('status', 'Membro rimosso dal gruppo.');

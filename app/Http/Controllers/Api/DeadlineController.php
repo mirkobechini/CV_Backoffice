@@ -26,7 +26,7 @@ class DeadlineController extends Controller
         // Vedi commento in Api\IssueController::show().
         $groupId = $request->user()->activeGroup()?->id;
 
-        if ($groupId && $deadline->vehicle?->group_id !== $groupId) {
+        if (! $groupId || $deadline->vehicle?->group_id !== $groupId) {
             abort(404);
         }
 

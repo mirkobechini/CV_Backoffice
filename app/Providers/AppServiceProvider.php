@@ -17,6 +17,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Observers\DashboardCacheObserver;
 use App\Observers\VehicleObserver;
+use App\Support\UploadsDiskGuard;
 use App\Policies\DeadlinePolicy;
 use App\Policies\EquipmentIssuePolicy;
 use App\Policies\EquipmentMaintenanceRecordPolicy;
@@ -51,6 +52,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Fail-fast se UPLOADS_DISK è assente/"public" in produzione (audit
+        // sicurezza 2026-10-09): vedi UploadsDiskGuard.
+        UploadsDiskGuard::assertSafeForEnvironment(app()->environment(), config('filesystems.uploads_disk'));
+
         // Usa template Bootstrap 5 per la paginazione (invece di Tailwind)
         Paginator::useBootstrapFive();
         // Rate limiting per le route admin (mutazioni)

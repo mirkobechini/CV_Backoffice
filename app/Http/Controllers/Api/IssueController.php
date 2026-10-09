@@ -28,7 +28,7 @@ class IssueController extends Controller
         // Vehicle::scopeForCurrentUser()).
         $groupId = $request->user()->activeGroup()?->id;
 
-        if ($groupId && $issue->vehicle?->group_id !== $groupId) {
+        if (! $groupId || $issue->vehicle?->group_id !== $groupId) {
             abort(404);
         }
 
