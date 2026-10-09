@@ -12,7 +12,7 @@
 6. ✅ Manutenzione predittiva — rivista, vedi nota nella sezione 6 sotto
 7. ✅ QR code su veicoli/attrezzature
 
-## 8. Miglioramento gestione assicurazioni (2026-10-09) — IN LAVORAZIONE
+## 8. Miglioramento gestione assicurazioni (2026-10-09) — ✅ COMPLETATA (issue-176)
 
 Richiesta di Mirko, dopo audit del codice esistente (assicurazione modellata come tipo di `Deadline`, non un modello proprio). Da fare tutte e 5, poi compattare in un'unica revisione se possibile:
 
