@@ -65,9 +65,9 @@ class CsvExportController extends Controller
 
     private function exportDeadlines()
     {
-        $deadlines = Deadline::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
+        $deadlines = Deadline::with('vehicle', 'insuranceCoverages')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
 
-        $headers = ['Veicolo', 'Tipo', 'Data Scadenza', 'Stato', 'Rinnovata', 'Compagnia', 'Numero Polizza', 'Premio', 'Massimale', 'Broker'];
+        $headers = ['Veicolo', 'Tipo', 'Data Scadenza', 'Stato', 'Rinnovata', 'Compagnia', 'Numero Polizza', 'Coperture', 'Premio', 'Massimale', 'Broker'];
         $rows = $deadlines->map(fn ($d) => [
             $d->vehicle?->internal_code ?? '',
             $d->type,
@@ -76,7 +76,8 @@ class CsvExportController extends Controller
             $d->is_renewed ? 'Sì' : 'No',
             $d->insurance_company ?? '',
             $d->insurance_policy_number ?? '',
-            $d->insurance_premium !== null ? number_format((float) $d->insurance_premium, 2, ',', '') : '',
+            $d->insuranceCoverages->map(fn ($c) => $c->coverage_type . ' (€' . number_format((float) $c->cost, 2, ',', '.') . ')')->implode('; '),
+            $d->type === Deadline::TYPE_ASSICURAZIONE ? number_format($d->insurance_premium_total, 2, ',', '') : '',
             $d->insurance_coverage_limit !== null ? number_format((float) $d->insurance_coverage_limit, 2, ',', '') : '',
             $d->insurance_broker_contact ?? '',
         ]);

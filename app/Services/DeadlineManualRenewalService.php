@@ -72,20 +72,30 @@ class DeadlineManualRenewalService
         }
 
         if ($deadline->type === Deadline::TYPE_ASSICURAZIONE) {
-            // I dati della polizza (compagnia, numero, premio...) restano
+            // I dati della polizza (compagnia, numero, coperture...) restano
             // gli stessi sulla prossima scadenza finché non viene aggiornata
             // al rinnovo successivo: evita di doverli reinserire da zero.
             $renewalMonths = $deadline->insurance_renewal_months ?? Deadline::INSURANCE_INTERVAL_MONTHS;
 
-            DeadlineOccurrenceCreator::create($deadline, $vehicle, $renewedDate->copy()->addMonthsNoOverflow($renewalMonths), [
+            $next = DeadlineOccurrenceCreator::create($deadline, $vehicle, $renewedDate->copy()->addMonthsNoOverflow($renewalMonths), [
                 'insurance_company' => $deadline->insurance_company,
                 'insurance_policy_number' => $deadline->insurance_policy_number,
-                'insurance_premium' => $deadline->insurance_premium,
-                'insurance_coverage_type' => $deadline->insurance_coverage_type,
                 'insurance_coverage_limit' => $deadline->insurance_coverage_limit,
                 'insurance_broker_contact' => $deadline->insurance_broker_contact,
                 'insurance_renewal_months' => $deadline->insurance_renewal_months,
             ]);
+
+            // null se esiste già una prossima occorrenza (guardia anti-
+            // duplicati di DeadlineOccurrenceCreator): in quel caso le
+            // coperture non vanno copiate di nuovo, sono già lì.
+            if ($next) {
+                foreach ($deadline->insuranceCoverages as $coverage) {
+                    $next->insuranceCoverages()->create([
+                        'coverage_type' => $coverage->coverage_type,
+                        'cost' => $coverage->cost,
+                    ]);
+                }
+            }
 
             return $deadline;
         }

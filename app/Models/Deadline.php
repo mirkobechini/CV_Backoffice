@@ -88,8 +88,6 @@ class Deadline extends Model
         'interval_days',
         'insurance_company',
         'insurance_policy_number',
-        'insurance_premium',
-        'insurance_coverage_type',
         'insurance_coverage_limit',
         'insurance_broker_contact',
         'insurance_renewal_months',
@@ -102,7 +100,6 @@ class Deadline extends Model
         'interval_km' => 'integer',
         'last_mileage' => 'integer',
         'interval_days' => 'integer',
-        'insurance_premium' => 'decimal:2',
         'insurance_coverage_limit' => 'decimal:2',
         'insurance_renewal_months' => 'integer',
     ];
@@ -120,6 +117,21 @@ class Deadline extends Model
     public function maintenanceRecordItems()
     {
         return $this->morphMany(MaintenanceRecordItem::class, 'itemable');
+    }
+
+    public function insuranceCoverages()
+    {
+        return $this->hasMany(DeadlineInsuranceCoverage::class);
+    }
+
+    /**
+     * Somma dei costi delle coperture collegate (0 se nessuna): sostituisce
+     * la vecchia colonna singola insurance_premium, ora che una polizza può
+     * avere più coperture insieme, ciascuna con il proprio costo.
+     */
+    public function getInsurancePremiumTotalAttribute(): float
+    {
+        return (float) $this->insuranceCoverages->sum('cost');
     }
 
     public function vehicle()

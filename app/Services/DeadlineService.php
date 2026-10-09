@@ -74,13 +74,13 @@ class DeadlineService
             'interval_days' => $data['interval_days'] ?? null,
             'insurance_company' => $data['insurance_company'] ?? null,
             'insurance_policy_number' => $data['insurance_policy_number'] ?? null,
-            'insurance_premium' => $data['insurance_premium'] ?? null,
-            'insurance_coverage_type' => $data['insurance_coverage_type'] ?? null,
             'insurance_coverage_limit' => $data['insurance_coverage_limit'] ?? null,
             'insurance_broker_contact' => $data['insurance_broker_contact'] ?? null,
             'insurance_renewal_months' => $data['insurance_renewal_months'] ?? null,
             'notes' => $data['notes'] ?? null,
         ]);
+
+        $this->syncInsuranceCoverages($deadline, $data);
 
         $deadline->syncStatusFromRules();
 
@@ -170,6 +170,28 @@ class DeadlineService
     }
 
     /**
+     * Sostituisce l'intero set di coperture della polizza con quello
+     * appena inviato dal form: una polizza può avere più coperture
+     * insieme (es. RCA + Kasko), ciascuna col proprio costo, al posto del
+     * vecchio tipo+premio singoli.
+     */
+    private function syncInsuranceCoverages(Deadline $deadline, array $data): void
+    {
+        if ($deadline->type !== Deadline::TYPE_ASSICURAZIONE) {
+            return;
+        }
+
+        $deadline->insuranceCoverages()->delete();
+
+        foreach ($data['coverages'] ?? [] as $type => $row) {
+            $deadline->insuranceCoverages()->create([
+                'coverage_type' => $type,
+                'cost' => $row['cost'],
+            ]);
+        }
+    }
+
+    /**
      * Aggiorna una scadenza esistente con ricalcolo della data.
      *
      * Se la scadenza viene marcata come rinnovata (is_renewed) e appartiene a
@@ -208,8 +230,6 @@ class DeadlineService
             'interval_days' => $data['interval_days'] ?? null,
             'insurance_company' => $data['insurance_company'] ?? null,
             'insurance_policy_number' => $data['insurance_policy_number'] ?? null,
-            'insurance_premium' => $data['insurance_premium'] ?? null,
-            'insurance_coverage_type' => $data['insurance_coverage_type'] ?? null,
             'insurance_coverage_limit' => $data['insurance_coverage_limit'] ?? null,
             'insurance_broker_contact' => $data['insurance_broker_contact'] ?? null,
             'insurance_renewal_months' => $data['insurance_renewal_months'] ?? null,
@@ -227,6 +247,8 @@ class DeadlineService
         }
 
         $deadline->update($updateData);
+
+        $this->syncInsuranceCoverages($deadline, $data);
 
         $deadline->syncStatusFromRules();
 

@@ -149,16 +149,39 @@
                         @enderror
                     </div>
                 </div>
-                <div class="row2">
-                    <div class="field">
-                        <label for="insurance_premium">{{ __('Premio annuo (€)') }} <span class="req">*</span></label>
-                        <input type="number" step="0.01" class="input @error('insurance_premium') is-invalid @enderror"
-                            id="insurance_premium" name="insurance_premium"
-                            value="{{ old('insurance_premium', $deadline->insurance_premium) }}" min="0">
-                        @error('insurance_premium')
+                <div class="field">
+                    <label>{{ __('Coperture') }} <span class="req">*</span></label>
+                    <div class="hint" style="margin-bottom:8px;">{{ __('Seleziona una o più coperture e indica il costo annuo di ciascuna.') }}</div>
+                    @php
+                        $existingCoverages = $deadline->insuranceCoverages->pluck('cost', 'coverage_type');
+                    @endphp
+                    @foreach (\App\Models\Deadline::INSURANCE_COVERAGE_TYPES as $coverageType)
+                        @php
+                            $slug = \Illuminate\Support\Str::slug($coverageType);
+                            $coverageCost = old('coverages.' . $coverageType . '.cost', $existingCoverages[$coverageType] ?? null);
+                            $coverageChecked = $coverageCost !== null;
+                        @endphp
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                            <label style="display:flex; align-items:center; gap:6px; min-width:200px; margin-bottom:0;">
+                                <input type="checkbox" class="coverage-checkbox" id="coverage-check-{{ $slug }}"
+                                    data-cost-target="coverage-cost-{{ $slug }}" {{ $coverageChecked ? 'checked' : '' }}>
+                                {{ $coverageType }}
+                            </label>
+                            <input type="number" step="0.01" min="0" style="max-width:160px;"
+                                class="input @error('coverages.' . $coverageType . '.cost') is-invalid @enderror"
+                                id="coverage-cost-{{ $slug }}" name="coverages[{{ $coverageType }}][cost]"
+                                placeholder="{{ __('Costo (€)') }}" value="{{ $coverageCost }}"
+                                {{ $coverageChecked ? '' : 'disabled' }}>
+                        </div>
+                        @error('coverages.' . $coverageType . '.cost')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
-                    </div>
+                    @endforeach
+                    @error('coverages')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="row2">
                     <div class="field">
                         <label for="insurance_coverage_limit">{{ __('Massimale (€)') }}</label>
                         <input type="number" step="0.01"
@@ -167,22 +190,6 @@
                             value="{{ old('insurance_coverage_limit', $deadline->insurance_coverage_limit) }}"
                             min="0">
                         @error('insurance_coverage_limit')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="row2">
-                    <div class="field">
-                        <label for="insurance_coverage_type">{{ __('Tipo di copertura') }} <span class="req">*</span></label>
-                        <select class="input @error('insurance_coverage_type') is-invalid @enderror"
-                            id="insurance_coverage_type" name="insurance_coverage_type">
-                            <option value="">{{ __('Seleziona...') }}</option>
-                            @php($currentCoverageType = old('insurance_coverage_type', $deadline->insurance_coverage_type))
-                            @foreach (\App\Models\Deadline::INSURANCE_COVERAGE_TYPES as $coverageType)
-                                <option value="{{ $coverageType }}" {{ $currentCoverageType === $coverageType ? 'selected' : '' }}>{{ $coverageType }}</option>
-                            @endforeach
-                        </select>
-                        @error('insurance_coverage_type')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
@@ -345,6 +352,19 @@
             typeSelect.addEventListener('change', () => {
                 clearDueDate();
                 toggleVisibility();
+            });
+
+            // Il campo costo di ogni copertura resta disabled (quindi non
+            // inviato nel submit) finché il checkbox gemello non viene
+            // spuntato: evita di dover gestire un campo "selezionata" separato.
+            document.querySelectorAll('.coverage-checkbox').forEach((checkbox) => {
+                const costInput = document.getElementById(checkbox.dataset.costTarget);
+                checkbox.addEventListener('change', () => {
+                    costInput.disabled = !checkbox.checked;
+                    if (!checkbox.checked) {
+                        costInput.value = '';
+                    }
+                });
             });
         });
     </script>

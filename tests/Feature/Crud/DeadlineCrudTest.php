@@ -92,15 +92,14 @@ class DeadlineCrudTest extends TestCase
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
 
-        Deadline::create([
+        $insuranceDeadline = Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => 'Assicurazione',
             'due_date' => '2026-06',
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
-            'insurance_premium' => 850.50,
-            'insurance_coverage_type' => 'RCA',
         ]);
+        $insuranceDeadline->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 850.50]);
         Deadline::create([
             'vehicle_id' => $vehicle->id,
             'type' => 'Tagliando',
@@ -247,8 +246,7 @@ class DeadlineCrudTest extends TestCase
             'due_date' => '2026-06',
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
-            'insurance_premium' => '850.50',
-            'insurance_coverage_type' => 'RCA',
+            'coverages' => ['RCA' => ['cost' => '850.50']],
             'insurance_renewal_months' => '6',
         ]);
 
@@ -272,8 +270,7 @@ class DeadlineCrudTest extends TestCase
         $response->assertSessionHasErrors([
             'insurance_company',
             'insurance_policy_number',
-            'insurance_premium',
-            'insurance_coverage_type',
+            'coverages',
         ]);
     }
 
@@ -288,14 +285,13 @@ class DeadlineCrudTest extends TestCase
             'due_date' => '2026-06',
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
-            'insurance_premium' => '850.50',
-            'insurance_coverage_type' => 'Responsabilità Civile',
+            'coverages' => ['Responsabilità Civile' => ['cost' => '850.50']],
         ]);
 
-        $response->assertSessionHasErrors(['insurance_coverage_type']);
+        $response->assertSessionHasErrors(['coverages']);
     }
 
-    public function test_insurance_deadline_stores_policy_fields(): void
+    public function test_insurance_deadline_stores_multiple_coverages_with_separate_costs(): void
     {
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
@@ -306,8 +302,10 @@ class DeadlineCrudTest extends TestCase
             'due_date' => '2026-06',
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
-            'insurance_premium' => '850.50',
-            'insurance_coverage_type' => 'RCA',
+            'coverages' => [
+                'RCA' => ['cost' => '300.00'],
+                'Kasko' => ['cost' => '550.50'],
+            ],
             'insurance_coverage_limit' => '5000000',
             'insurance_broker_contact' => 'agenzia@example.com',
             'notes' => 'Rinnovo automatico disattivato dal broker',
@@ -320,20 +318,30 @@ class DeadlineCrudTest extends TestCase
             'id' => $deadline->id,
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
-            'insurance_premium' => 850.50,
-            'insurance_coverage_type' => 'RCA',
             'insurance_coverage_limit' => 5000000,
             'insurance_broker_contact' => 'agenzia@example.com',
             'notes' => 'Rinnovo automatico disattivato dal broker',
         ]);
+        $this->assertDatabaseHas('deadline_insurance_coverages', [
+            'deadline_id' => $deadline->id,
+            'coverage_type' => 'RCA',
+            'cost' => 300.00,
+        ]);
+        $this->assertDatabaseHas('deadline_insurance_coverages', [
+            'deadline_id' => $deadline->id,
+            'coverage_type' => 'Kasko',
+            'cost' => 550.50,
+        ]);
+        $this->assertSame(850.50, $deadline->insurance_premium_total);
     }
 
-    public function test_insurance_deadline_updates_policy_fields(): void
+    public function test_insurance_deadline_updates_policy_fields_and_replaces_coverages(): void
     {
         $user = $this->createUser();
         $data = $this->createDeadline();
         $deadline = $data['deadline'];
         $vehicle = $data['vehicle'];
+        $deadline->insuranceCoverages()->create(['coverage_type' => 'Altro', 'cost' => 100]);
 
         $response = $this->actingAs($user)->put(route('admin.deadlines.update', $deadline), [
             'vehicle_id' => $vehicle->id,
@@ -341,8 +349,7 @@ class DeadlineCrudTest extends TestCase
             'due_date' => '2025-01',
             'insurance_company' => 'Allianz',
             'insurance_policy_number' => 'POL-999',
-            'insurance_premium' => '920.00',
-            'insurance_coverage_type' => 'RCA',
+            'coverages' => ['RCA' => ['cost' => '920.00']],
         ]);
 
         $response->assertRedirect(route('admin.deadlines.show', $deadline));
@@ -350,6 +357,16 @@ class DeadlineCrudTest extends TestCase
             'id' => $deadline->id,
             'insurance_company' => 'Allianz',
             'insurance_policy_number' => 'POL-999',
+        ]);
+        // La vecchia copertura "Altro" è stata sostituita, non accumulata.
+        $this->assertDatabaseMissing('deadline_insurance_coverages', [
+            'deadline_id' => $deadline->id,
+            'coverage_type' => 'Altro',
+        ]);
+        $this->assertDatabaseHas('deadline_insurance_coverages', [
+            'deadline_id' => $deadline->id,
+            'coverage_type' => 'RCA',
+            'cost' => 920.00,
         ]);
     }
 

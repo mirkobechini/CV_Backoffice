@@ -171,7 +171,7 @@ class DeadlineController extends Controller
         $sortBy = $request->get('sort_by', 'date');
         $sortDir = $request->get('sort_dir', $request->get('sort_by') ? 'asc' : 'desc');
 
-        $deadlines = Deadline::with('vehicle')
+        $deadlines = Deadline::with('vehicle', 'insuranceCoverages')
             ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
             ->where('type', 'Assicurazione')
             ->get()
@@ -184,11 +184,11 @@ class DeadlineController extends Controller
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
             'vehicle' => fn(Deadline $d) => $d->vehicle?->internal_code ?? '',
             'company' => fn(Deadline $d) => $d->insurance_company ?? '',
-            'premium' => fn(Deadline $d) => $d->insurance_premium ?? 0,
+            'premium' => fn(Deadline $d) => $d->insurance_premium_total,
             'date' => fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
         ]);
 
-        $totalPremium = $deadlines->sum('insurance_premium');
+        $totalPremium = $deadlines->sum('insurance_premium_total');
 
         return view('admin.deadlines.insurances', compact('deadlines', 'sortBy', 'sortDir', 'totalPremium') + [
             'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.insurances'),
@@ -230,6 +230,7 @@ class DeadlineController extends Controller
      */
     public function show(Deadline $deadline)
     {
+        $deadline->load('insuranceCoverages');
         $deadline->syncStatusFromRules();
 
         return view('admin.deadlines.show', compact('deadline'));
