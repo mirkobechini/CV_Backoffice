@@ -259,12 +259,18 @@
                     <span class="v">{{ $deadline->insurance_policy_number ?? 'N/A' }}</span>
                 </div>
                 <div class="dl-kv">
-                    <span class="k">{{ __('Premio annuo') }}</span>
-                    <span class="v">{{ $deadline->insurance_premium !== null ? '€ ' . number_format((float) $deadline->insurance_premium, 2, ',', '.') : 'N/A' }}</span>
+                    <span class="k">{{ __('Coperture') }}</span>
+                    <span class="v">
+                        @forelse ($deadline->insuranceCoverages as $coverage)
+                            {{ $coverage->coverage_type }} (€ {{ number_format((float) $coverage->cost, 2, ',', '.') }}){{ ! $loop->last ? ', ' : '' }}
+                        @empty
+                            N/A
+                        @endforelse
+                    </span>
                 </div>
                 <div class="dl-kv">
-                    <span class="k">{{ __('Tipo di copertura') }}</span>
-                    <span class="v">{{ $deadline->insurance_coverage_type ?? 'N/A' }}</span>
+                    <span class="k">{{ __('Premio totale annuo') }}</span>
+                    <span class="v">€ {{ number_format($deadline->insurance_premium_total, 2, ',', '.') }}</span>
                 </div>
                 <div class="dl-kv">
                     <span class="k">{{ __('Massimale') }}</span>

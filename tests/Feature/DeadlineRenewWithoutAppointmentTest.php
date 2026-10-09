@@ -148,11 +148,11 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
             'is_renewed' => false,
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
-            'insurance_premium' => 850.50,
-            'insurance_coverage_type' => 'RCA',
             'insurance_coverage_limit' => 5000000,
             'insurance_broker_contact' => 'agenzia@example.com',
         ]);
+        $deadline->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 850.50]);
+        $deadline->insuranceCoverages()->create(['coverage_type' => 'Kasko', 'cost' => 200]);
 
         $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
             'renewed_date' => '2026-06',
@@ -167,10 +167,20 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
         $this->assertSame('2027-06-30', $next->due_date->toDateString());
         $this->assertSame('Generali', $next->insurance_company);
         $this->assertSame('POL-123', $next->insurance_policy_number);
-        $this->assertSame('850.50', $next->insurance_premium);
-        $this->assertSame('RCA', $next->insurance_coverage_type);
         $this->assertSame('5000000.00', $next->insurance_coverage_limit);
         $this->assertSame('agenzia@example.com', $next->insurance_broker_contact);
+        // Tutte le coperture (non solo una) vengono copiate sulla nuova occorrenza.
+        $this->assertSame(1050.50, $next->insurance_premium_total);
+        $this->assertDatabaseHas('deadline_insurance_coverages', [
+            'deadline_id' => $next->id,
+            'coverage_type' => 'RCA',
+            'cost' => 850.50,
+        ]);
+        $this->assertDatabaseHas('deadline_insurance_coverages', [
+            'deadline_id' => $next->id,
+            'coverage_type' => 'Kasko',
+            'cost' => 200.00,
+        ]);
     }
 
     public function test_renewing_insurance_uses_configured_renewal_months_when_set(): void
@@ -187,10 +197,9 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
             'is_renewed' => false,
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
-            'insurance_premium' => 850.50,
-            'insurance_coverage_type' => 'RCA',
             'insurance_renewal_months' => 6,
         ]);
+        $deadline->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 850.50]);
 
         $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
             'renewed_date' => '2026-06',

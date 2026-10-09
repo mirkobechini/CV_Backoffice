@@ -57,6 +57,7 @@
                             </div>
                         </th>
                         <th>{{ __('Numero polizza') }}</th>
+                        <th>{{ __('Coperture') }}</th>
                         <th>
                             <div class="th-wrap"><span>{{ __('Premio annuo') }}</span>
                                 <a href="{{ $sortToggleUrl('premium') }}" class="mini {{ $sortBy === 'premium' ? 'on' : '' }}"
@@ -76,7 +77,7 @@
                 <tbody>
                     @if ($deadlines->isEmpty())
                         <tr>
-                            <td colspan="7" class="empty">{{ __('Nessuna polizza trovata.') }}</td>
+                            <td colspan="8" class="empty">{{ __('Nessuna polizza trovata.') }}</td>
                         </tr>
                     @else
                         @foreach ($deadlines as $deadline)
@@ -84,7 +85,14 @@
                                 <td class="code">{{ $deadline->vehicle->internal_code ?? 'N/A' }}</td>
                                 <td>{{ $deadline->insurance_company ?? 'N/A' }}</td>
                                 <td>{{ $deadline->insurance_policy_number ?? 'N/A' }}</td>
-                                <td>{{ $deadline->insurance_premium !== null ? '€ ' . number_format((float) $deadline->insurance_premium, 2, ',', '.') : 'N/A' }}</td>
+                                <td>
+                                    @forelse ($deadline->insuranceCoverages as $coverage)
+                                        {{ $coverage->coverage_type }}{{ ! $loop->last ? ', ' : '' }}
+                                    @empty
+                                        N/A
+                                    @endforelse
+                                </td>
+                                <td>€ {{ number_format($deadline->insurance_premium_total, 2, ',', '.') }}</td>
                                 <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
                                 <td><span class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->status_label }}</span></td>
                                 <td>
