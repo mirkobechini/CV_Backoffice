@@ -63,4 +63,22 @@ class SearchableTest extends TestCase
         $this->assertCount(1, $results);
         $this->assertEquals('closed', $results->first()->status);
     }
+
+    /**
+     * $fulltextable finisce direttamente in una whereRaw() (MATCH (colonna)
+     * AGAINST (...)): oggi è sempre una proprietà statica scritta nel
+     * modello, mai derivata dalla richiesta, ma la whitelist del formato
+     * blocca comunque qualunque valore non sia un identificatore di colonna
+     * sicuro, nel caso diventasse mai dinamico (audit sicurezza 2026-10-09).
+     */
+    public function test_search_rejects_unsafe_fulltext_column_name(): void
+    {
+        $model = new class extends Issue {
+            protected $fulltextable = ['description) OR 1=1 -- '];
+        };
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $model::search('qualcosa')->get();
+    }
 }
