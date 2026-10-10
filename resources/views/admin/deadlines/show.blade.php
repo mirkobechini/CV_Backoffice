@@ -217,32 +217,44 @@
                 <span class="k">{{ __('Stato') }}</span>
                 <span class="v"><span class="badge {{ $badgeClass }}">{{ $deadline->status_label }}</span></span>
             </div>
-            @if ($deadline->renewsDeadline)
-                <div class="dl-kv">
-                    <span class="k">{{ __('Rinnova') }}</span>
-                    <span class="v">
-                        <a class="dl-veh-link"
-                            href="{{ route('admin.deadlines.show', $deadline->renewsDeadline) }}">
-                            {{ __('Scadenza del :d', ['d' => $deadline->renewsDeadline->due_date_formatted ?? 'N/A']) }}
-                            <span class="arrow">›</span>
-                        </a>
-                    </span>
-                </div>
-            @endif
-            @if ($deadline->renewedByDeadline)
-                <div class="dl-kv">
-                    <span class="k">{{ __('Rinnovata da') }}</span>
-                    <span class="v">
-                        <a class="dl-veh-link"
-                            href="{{ route('admin.deadlines.show', $deadline->renewedByDeadline) }}">
-                            {{ __('Scadenza del :d', ['d' => $deadline->renewedByDeadline->due_date_formatted ?? 'N/A']) }}
-                            <span class="arrow">›</span>
-                        </a>
-                    </span>
-                </div>
-            @endif
         </div>
     </div>
+
+    @php
+        $renewalChain = $deadline->renewal_chain;
+    @endphp
+    @if ($renewalChain->count() > 1)
+        <div class="dl-info-card">
+            <div class="head">
+                <h3>{{ __('Storico rinnovi') }}</h3>
+            </div>
+            <div class="body">
+                @foreach ($renewalChain as $occurrence)
+                    @php
+                        $occBadgeClass = match ($occurrence->status_color) {
+                            'red' => 'b-red',
+                            'yellow' => 'b-amber',
+                            'green' => 'b-green',
+                            default => 'b-gray',
+                        };
+                    @endphp
+                    <div class="dl-kv">
+                        <span class="k">{{ $occurrence->due_date_formatted ?? __('Senza data') }}</span>
+                        <span class="v">
+                            <span class="badge {{ $occBadgeClass }}">{{ $occurrence->status_label }}</span>
+                            @if ($occurrence->id === $deadline->id)
+                                {{ __('(questa)') }}
+                            @else
+                                <a class="dl-veh-link" href="{{ route('admin.deadlines.show', $occurrence) }}">
+                                    {{ __('Apri') }} <span class="arrow">›</span>
+                                </a>
+                            @endif
+                        </span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     @if ($deadline->type === \App\Models\Deadline::TYPE_ASSICURAZIONE)
         <div class="dl-info-card">
@@ -258,11 +270,15 @@
                     <span class="k">{{ __('Numero polizza') }}</span>
                     <span class="v">{{ $deadline->insurance_policy_number ?? 'N/A' }}</span>
                 </div>
-                <div class="dl-kv">
+                <div class="dl-kv" style="align-items:flex-start;">
                     <span class="k">{{ __('Coperture') }}</span>
                     <span class="v">
                         @forelse ($deadline->insuranceCoverages as $coverage)
-                            {{ $coverage->coverage_type }} (€ {{ number_format((float) $coverage->cost, 2, ',', '.') }}){{ ! $loop->last ? ', ' : '' }}
+                            <div
+                                style="display:flex; justify-content:space-between; gap:12px; max-width:280px; {{ ! $loop->last ? 'margin-bottom:4px;' : '' }}">
+                                <span>{{ $coverage->coverage_type }}</span>
+                                <span>€ {{ number_format((float) $coverage->cost, 2, ',', '.') }}</span>
+                            </div>
                         @empty
                             N/A
                         @endforelse
@@ -270,7 +286,7 @@
                 </div>
                 <div class="dl-kv">
                     <span class="k">{{ __('Premio totale annuo') }}</span>
-                    <span class="v">€ {{ number_format($deadline->insurance_premium_total, 2, ',', '.') }}</span>
+                    <span class="v"><strong>€ {{ number_format($deadline->insurance_premium_total, 2, ',', '.') }}</strong></span>
                 </div>
                 <div class="dl-kv">
                     <span class="k">{{ __('Massimale') }}</span>

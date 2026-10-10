@@ -162,6 +162,33 @@ class Deadline extends Model
         return $this->hasOne(Deadline::class, 'renews_deadline_id');
     }
 
+    /**
+     * L'intera catena di rinnovi di questa scadenza, dalla più vecchia alla
+     * più recente: percorre renewsDeadline all'indietro e renewedByDeadline
+     * in avanti, non solo il vicino immediato (quello già mostrato dai link
+     * "Rinnova"/"Rinnovata da"). Include questa stessa scadenza.
+     *
+     * @return Collection<int, Deadline>
+     */
+    public function getRenewalChainAttribute(): Collection
+    {
+        $chain = collect([$this]);
+
+        $current = $this;
+        while ($current->renewsDeadline) {
+            $current = $current->renewsDeadline;
+            $chain->prepend($current);
+        }
+
+        $current = $this;
+        while ($current->renewedByDeadline) {
+            $current = $current->renewedByDeadline;
+            $chain->push($current);
+        }
+
+        return $chain;
+    }
+
     public function getStatusColorAttribute(): string
     {
         return match ($this->automatic_status) {
