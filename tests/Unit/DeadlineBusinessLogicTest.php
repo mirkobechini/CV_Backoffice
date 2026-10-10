@@ -343,4 +343,57 @@ class DeadlineBusinessLogicTest extends TestCase
         $this->assertEquals(Deadline::STATUS_VALID, $valid->fresh()->status);
         $this->assertEquals(Deadline::STATUS_RENEWED, $renewed->fresh()->status);
     }
+
+    /**
+     * renewal_chain deve percorrere l'intera catena (non solo il vicino
+     * immediato già mostrato da renewsDeadline/renewedByDeadline), in
+     * entrambe le direzioni, qualunque anello della catena si interroghi.
+     */
+    public function test_renewal_chain_walks_the_full_chain_in_both_directions(): void
+    {
+        $brand = Brand::create(['name' => 'Fiat']);
+        $carModel = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $vehicleType = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => '1234',
+            'brand_id' => $brand->id,
+            'car_model_id' => $carModel->id,
+            'immatricolation_date' => '2020-01-01',
+        ]);
+
+        $first = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'due_date' => '2022-06-30',
+            'is_renewed' => true,
+            'status' => Deadline::STATUS_RENEWED,
+        ]);
+        $second = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'due_date' => '2024-06-30',
+            'is_renewed' => true,
+            'status' => Deadline::STATUS_RENEWED,
+            'renews_deadline_id' => $first->id,
+        ]);
+        $third = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'due_date' => '2026-06-30',
+            'is_renewed' => false,
+            'status' => Deadline::STATUS_PENDING,
+            'renews_deadline_id' => $second->id,
+        ]);
+
+        // Interrogata dall'anello più vecchio, dal centro o dal più
+        // recente, la catena deve sempre risultare completa e nello
+        // stesso ordine cronologico.
+        foreach ([$first, $second, $third] as $anyLink) {
+            $chain = $anyLink->fresh()->renewal_chain;
+            $this->assertCount(3, $chain);
+            $this->assertSame([$first->id, $second->id, $third->id], $chain->pluck('id')->all());
+        }
+    }
 }
