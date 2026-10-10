@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\Vehicle;
+use Illuminate\Http\Request;
 
 class DocumentStatusController extends Controller
 {
+    use SortableAndGroupable;
+
     /**
      * Tipologie di scadenza mostrate come colonna per ogni veicolo, nello
      * stesso ordine della tabella/form scadenze.
@@ -29,9 +33,16 @@ class DocumentStatusController extends Controller
      * separata (in previsione di un upload certificati dedicato, non
      * ancora implementato).
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Vehicle::class);
+
+        $validated = $request->validate([
+            'equipment_status_filter' => 'nullable|in:all,expired,pending,valid',
+            'equipment_group_by' => 'nullable|in:type,vehicle',
+        ]);
+        $equipmentStatusFilter = $validated['equipment_status_filter'] ?? 'all';
+        $equipmentGroupBy = $validated['equipment_group_by'] ?? null;
 
         $vehicles = Vehicle::with('brand', 'carModel')->forCurrentUser()->get();
 
@@ -62,11 +73,31 @@ class DocumentStatusController extends Controller
             })
             ->get();
 
+        // Stato complessivo (revisione+collaudo insieme), stesso filtro
+        // già usato in EquipmentController::index(): l'etichetta è un
+        // accessor calcolato, non una colonna, va filtrato in memoria.
+        if ($equipmentStatusFilter !== 'all') {
+            $labelMap = ['expired' => 'Scaduta', 'pending' => 'In scadenza', 'valid' => 'Valida'];
+            $equipment = $equipment->filter(
+                fn (Equipment $e) => $e->overall_status_label === $labelMap[$equipmentStatusFilter]
+            )->values();
+        }
+
+        $groupedEquipment = $this->applyGrouping($equipment, $equipmentGroupBy, function (Equipment $e) use ($equipmentGroupBy) {
+            return match ($equipmentGroupBy) {
+                'type' => $e->equipmentType->name ?? 'N/A',
+                'vehicle' => $e->vehicle?->internal_code ?? 'N/A',
+            };
+        });
+
         return view('admin.documents.index', [
             'vehicles' => $vehicles,
             'deadlinesByVehicle' => $deadlinesByVehicle,
             'equipment' => $equipment,
+            'groupedEquipment' => $groupedEquipment,
             'deadlineTypes' => self::DEADLINE_TYPES,
+            'equipmentStatusFilter' => $equipmentStatusFilter,
+            'equipmentGroupBy' => $equipmentGroupBy,
         ]);
     }
 }

@@ -95,10 +95,25 @@
         </div>
     </div>
 
+    @php
+        $equipmentStatusFilterUrl = fn ($status) => route('admin.documents.index', array_merge(request()->except('equipment_status_filter'), $status === 'all' ? [] : ['equipment_status_filter' => $status]));
+        $equipmentGroupToggleUrl = fn ($field) => route('admin.documents.index', array_merge(request()->except('equipment_group_by'), $equipmentGroupBy === $field ? [] : ['equipment_group_by' => $field]));
+    @endphp
+
     <div class="table-card" style="margin-top:20px;">
         <div class="toolbar">
             <div class="toolbar-left">
                 <h2>{{ __('Stato documenti — Attrezzature') }}</h2>
+                <div class="filters">
+                    <a href="{{ $equipmentStatusFilterUrl('all') }}"
+                        class="chip {{ $equipmentStatusFilter === 'all' ? 'on' : '' }}">{{ __('Tutte') }}</a>
+                    <a href="{{ $equipmentStatusFilterUrl('pending') }}"
+                        class="chip {{ $equipmentStatusFilter === 'pending' ? 'on' : '' }}">{{ __('In scadenza') }}</a>
+                    <a href="{{ $equipmentStatusFilterUrl('expired') }}"
+                        class="chip {{ $equipmentStatusFilter === 'expired' ? 'on' : '' }}">{{ __('Scadute') }}</a>
+                    <a href="{{ $equipmentStatusFilterUrl('valid') }}"
+                        class="chip {{ $equipmentStatusFilter === 'valid' ? 'on' : '' }}">{{ __('Valide') }}</a>
+                </div>
             </div>
         </div>
 
@@ -106,8 +121,20 @@
             <table>
                 <thead>
                     <tr>
-                        <th>{{ __('Attrezzatura') }}</th>
-                        <th>{{ __('Veicolo') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Attrezzatura') }}</span>
+                                <a href="{{ $equipmentGroupToggleUrl('type') }}"
+                                    class="mini {{ $equipmentGroupBy === 'type' ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per tipo') }}">Grp</a>
+                            </div>
+                        </th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Veicolo') }}</span>
+                                <a href="{{ $equipmentGroupToggleUrl('vehicle') }}"
+                                    class="mini {{ $equipmentGroupBy === 'vehicle' ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per veicolo') }}">Grp</a>
+                            </div>
+                        </th>
                         <th>{{ __('Revisione') }}</th>
                         <th>{{ __('Collaudo') }}</th>
                     </tr>
@@ -117,18 +144,18 @@
                         <tr>
                             <td colspan="4" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
                         </tr>
+                    @elseif ($groupedEquipment !== null)
+                        @foreach ($groupedEquipment as $groupLabel => $groupItems)
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                                <td colspan="4"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupItems->count() }})</td>
+                            </tr>
+                            @foreach ($groupItems as $item)
+                                @include('admin.documents._equipment-row', ['item' => $item, 'groupKey' => $loop->parent->index])
+                            @endforeach
+                        @endforeach
                     @else
                         @foreach ($equipment as $item)
-                            <tr>
-                                <td>
-                                    <a href="{{ route('admin.equipments.show', $item) }}">
-                                        {{ $item->name ?? $item->equipmentType?->name ?? 'N/A' }}
-                                    </a>
-                                </td>
-                                <td class="code">{{ $item->vehicle?->internal_code ?? 'N/A' }}</td>
-                                <td><span class="badge {{ $badgeClass($item->status_color) }}">{{ $item->status_label }}</span></td>
-                                <td><span class="badge {{ $badgeClass($item->collaudo_status_color) }}">{{ $item->collaudo_status_label }}</span></td>
-                            </tr>
+                            @include('admin.documents._equipment-row', ['item' => $item, 'groupKey' => null])
                         @endforeach
                     @endif
                 </tbody>
