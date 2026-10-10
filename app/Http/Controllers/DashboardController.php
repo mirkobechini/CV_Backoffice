@@ -101,6 +101,20 @@ class DashboardController extends Controller
             $tireSeasonPending = $tireSeasonService->pendingVehicles($groupId);
             $tireSeasonCompliantCount = $tireSeasonService->compliantVehicles($groupId)->count();
 
+            // Premio totale delle polizze attive (una per veicolo, quella
+            // non ancora rinnovata): stesso raggruppamento "ultima
+            // occorrenza per veicolo" già usato per la vista dedicata
+            // assicurazioni, qui limitato al solo totale per il riepilogo
+            // in dashboard.
+            $activeInsurancePremiumTotal = Deadline::with('insuranceCoverages')
+                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->where('type', Deadline::TYPE_ASSICURAZIONE)
+                ->where('is_renewed', false)
+                ->get()
+                ->sortByDesc('id')
+                ->unique('vehicle_id')
+                ->sum('insurance_premium_total');
+
             return compact(
                 'totalVehicles',
                 'openIssues',
@@ -112,7 +126,8 @@ class DashboardController extends Controller
                 'inWorkshopCount',
                 'tireSeasonExpected',
                 'tireSeasonPending',
-                'tireSeasonCompliantCount'
+                'tireSeasonCompliantCount',
+                'activeInsurancePremiumTotal'
             );
         });
 

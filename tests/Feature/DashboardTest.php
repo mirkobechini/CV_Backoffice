@@ -234,4 +234,40 @@ class DashboardTest extends TestCase
         $response->assertOk();
         $response->assertDontSee('Cambio gomme stagionale');
     }
+
+    public function test_dashboard_shows_total_premium_of_active_insurance_policies_only(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+
+        $active = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_ASSICURAZIONE,
+            'due_date' => now()->addMonths(3),
+            'is_renewed' => false,
+        ]);
+        $active->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 300]);
+        $active->insuranceCoverages()->create(['coverage_type' => 'Kasko', 'cost' => 200]);
+
+        // Già rinnovata: non deve entrare nel totale, altrimenti la stessa
+        // polizza verrebbe contata due volte (quella vecchia + la nuova).
+        $renewed = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_ASSICURAZIONE,
+            'due_date' => now()->subMonths(10),
+            'is_renewed' => true,
+        ]);
+        $renewed->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 999]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('500,00');
+        $response->assertDontSee('999,00');
+    }
 }

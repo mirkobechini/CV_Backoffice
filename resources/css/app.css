@@ -445,6 +445,11 @@ body {
     color: var(--blue);
 }
 
+.k7 {
+    background: var(--purple-soft);
+    color: var(--purple);
+}
+
 /* =============================================
    Dashboard (home)
    ============================================= */
@@ -470,7 +475,7 @@ body {
 
 .dash-kpis {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 10px;
     margin-bottom: 18px;
 }
