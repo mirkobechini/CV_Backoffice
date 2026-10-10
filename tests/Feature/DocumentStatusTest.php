@@ -130,4 +130,48 @@ class DocumentStatusTest extends TestCase
         $response->assertSee('Estintore cabina');
         $response->assertSee('Scaduta');
     }
+
+    public function test_equipment_status_filter_excludes_non_matching_items(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle('AB123CD', '0001', $group);
+        $equipmentType = EquipmentType::create(['name' => 'Estintore']);
+        Equipment::create([
+            'vehicle_id' => $vehicle->id,
+            'equipment_type_id' => $equipmentType->id,
+            'name' => 'Estintore scaduto',
+            'expiration_date' => now()->subDays(5),
+        ]);
+        Equipment::create([
+            'vehicle_id' => $vehicle->id,
+            'equipment_type_id' => $equipmentType->id,
+            'name' => 'Estintore valido',
+            'expiration_date' => now()->addYear(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.documents.index', ['equipment_status_filter' => 'expired']));
+
+        $response->assertOk();
+        $response->assertSee('Estintore scaduto');
+        $response->assertDontSee('Estintore valido');
+    }
+
+    public function test_equipment_can_be_grouped_by_type(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle('AB123CD', '0001', $group);
+        $extinguisherType = EquipmentType::create(['name' => 'Estintore']);
+        $chairType = EquipmentType::create(['name' => 'Sedia']);
+        Equipment::create(['vehicle_id' => $vehicle->id, 'equipment_type_id' => $extinguisherType->id, 'name' => 'Estintore cabina']);
+        Equipment::create(['vehicle_id' => $vehicle->id, 'equipment_type_id' => $chairType->id, 'name' => 'Sedia principale']);
+
+        $response = $this->actingAs($user)->get(route('admin.documents.index', ['equipment_group_by' => 'type']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Estintore', 'Estintore cabina', 'Sedia', 'Sedia principale']);
+    }
 }
