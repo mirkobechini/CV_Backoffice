@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DeadlineController;
+use App\Http\Controllers\Admin\DocumentStatusController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\EquipmentIssueController;
 use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
@@ -82,6 +83,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::resource("issues", IssueController::class);
         Route::get('deadlines/insurances', [DeadlineController::class, 'insurances'])
             ->name('deadlines.insurances');
+        Route::get('documents', [DocumentStatusController::class, 'index'])
+            ->name('documents.index');
         Route::resource("deadlines", DeadlineController::class);
         Route::patch('deadlines/{deadline}/renew', [DeadlineController::class, 'renew'])
             ->name('deadlines.renew');

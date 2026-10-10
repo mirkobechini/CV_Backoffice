@@ -50,6 +50,10 @@
             href="{{ route('admin.deadlines.index') }}" title="{{ __('Scadenze') }}">
             <i class="fa-solid fa-clock"></i><span>{{ __('Scadenze') }}</span>
         </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.documents.*') ? 'active' : '' }}"
+            href="{{ route('admin.documents.index') }}" title="{{ __('Stato documenti') }}">
+            <i class="fa-solid fa-folder-open"></i><span>{{ __('Stato documenti') }}</span>
+        </a>
     </nav>
 
     {{-- Sezione: Attrezzature --}}
