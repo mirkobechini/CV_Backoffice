@@ -70,9 +70,14 @@ class Deadline extends Model
     public const INSURANCE_COVERAGE_TYPES = [
         'RCA',
         'Kasko',
-        'Furto e incendio',
+        'Furto',
+        'Incendio',
         'Cristalli',
         'Assistenza stradale',
+        'Infortuni conducente',
+        'Tutela legale',
+        'Eventi speciali',
+        'Globale complementari',
         'Altro',
     ];
 

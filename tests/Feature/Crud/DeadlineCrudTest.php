@@ -291,6 +291,36 @@ class DeadlineCrudTest extends TestCase
         $response->assertSessionHasErrors(['coverages']);
     }
 
+    /**
+     * "Furto e incendio" è stato separato in due voci distinte, più
+     * l'aggiunta di Infortuni conducente/Tutela legale/Eventi speciali/
+     * Globale complementari (2026-10-10): verifica che il vocabolario
+     * accetti tutte le nuove voci, non solo le storiche.
+     */
+    public function test_insurance_deadline_accepts_all_coverage_types_in_vocabulary(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $coverages = [];
+        foreach (Deadline::INSURANCE_COVERAGE_TYPES as $type) {
+            $coverages[$type] = ['cost' => '100.00'];
+        }
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'coverages' => $coverages,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $deadline = Deadline::latest('id')->first();
+        $this->assertSame(count(Deadline::INSURANCE_COVERAGE_TYPES), $deadline->insuranceCoverages()->count());
+    }
+
     public function test_insurance_deadline_stores_multiple_coverages_with_separate_costs(): void
     {
         $user = $this->createUser();
