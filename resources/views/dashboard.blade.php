@@ -66,6 +66,13 @@
                 <div class="val">{{ $expiringEquipment->count() }}</div>
             </div>
         </a>
+        <a href="{{ route('admin.deadlines.insurances') }}" class="dash-kpi">
+            <div class="ic k7"><i class="fa-solid fa-shield-halved"></i></div>
+            <div>
+                <div class="lbl">{{ __('Premio assicurativo annuo') }}</div>
+                <div class="val">€ {{ number_format($activeInsurancePremiumTotal, 2, ',', '.') }}</div>
+            </div>
+        </a>
     </div>
 
     {{-- Riga 1: le due card scadenze (imminenti + scadute) affiancate --}}
