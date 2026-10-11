@@ -26,5 +26,8 @@
         "flatpickr": "^4.6.13",
         "heic2any": "^0.0.4",
         "styled-components": "^6.3.11"
+    },
+    "overrides": {
+        "postcss-selector-parser": "^7.1.6"
     }
 }
