@@ -68,6 +68,7 @@ class VerifyBackup extends Command
 
         if (! empty($truncatedTables)) {
             $tableList = implode(', ', $truncatedTables);
+
             return $this->failVerification($notifications, "L'ultimo backup ({$latest}) ha tabelle vuote che oggi contengono dati: {$tableList}.");
         }
 

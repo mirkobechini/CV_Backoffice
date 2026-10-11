@@ -79,7 +79,7 @@ class VehicleShowMissingEquipmentTest extends TestCase
         $response->assertSee('Estintore', false);
         $response->assertSee(__('Presenti :available di :required richieste', ['available' => 1, 'required' => 2]));
         $response->assertSee(route('admin.equipments.create'), false);
-        $response->assertSee('equipment_type_id=' . $extinguisherType->id, false);
+        $response->assertSee('equipment_type_id='.$extinguisherType->id, false);
     }
 
     public function test_show_page_does_not_list_missing_equipment_when_requirements_are_met(): void

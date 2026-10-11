@@ -38,7 +38,7 @@ return new class extends Migration
 
         foreach ($equipments as $equipment) {
             $regularMonths = $equipment->equipmentType?->regular_inspection_months;
-            if (!$regularMonths || $regularMonths <= 0) {
+            if (! $regularMonths || $regularMonths <= 0) {
                 continue;
             }
 
@@ -51,11 +51,11 @@ return new class extends Migration
         // 2) Cinghia distribuzione per veicoli esistenti
         $vehiclesWithBelt = Vehicle::with('vehicleType')
             ->where('has_timing_belt', true)
-            ->whereHas('deadlines', fn($q) => $q->where('type', Deadline::TYPE_CINGHIA), '=', 0)
+            ->whereHas('deadlines', fn ($q) => $q->where('type', Deadline::TYPE_CINGHIA), '=', 0)
             ->get();
 
         foreach ($vehiclesWithBelt as $vehicle) {
-            if (!$vehicle->immatricolation_date) {
+            if (! $vehicle->immatricolation_date) {
                 continue;
             }
             $dueDate = Carbon::parse($vehicle->immatricolation_date)
@@ -72,11 +72,11 @@ return new class extends Migration
 
         // 3) Primo tagliando per veicoli esistenti
         $vehiclesWithoutTagliando = Vehicle::with('vehicleType')
-            ->whereDoesntHave('deadlines', fn($q) => $q->where('type', Deadline::TYPE_TAGLIANDO))
+            ->whereDoesntHave('deadlines', fn ($q) => $q->where('type', Deadline::TYPE_TAGLIANDO))
             ->get();
 
         foreach ($vehiclesWithoutTagliando as $vehicle) {
-            if (!$vehicle->immatricolation_date) {
+            if (! $vehicle->immatricolation_date) {
                 continue;
             }
             $firstKm = (int) ($vehicle->vehicleType?->first_tagliando_km ?? 25000);

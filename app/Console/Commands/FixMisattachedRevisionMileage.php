@@ -28,9 +28,9 @@ class FixMisattachedRevisionMileage extends Command
             ->whereNotNull('last_mileage')
             ->where('last_mileage', '>', 0)
             ->with(['vehicle', 'renewsDeadline'])
-            ->when($vehicleId, fn($q) => $q->where('vehicle_id', $vehicleId))
+            ->when($vehicleId, fn ($q) => $q->where('vehicle_id', $vehicleId))
             ->get()
-            ->filter(fn(Deadline $child) => $child->renewsDeadline && ! $child->renewsDeadline->last_mileage);
+            ->filter(fn (Deadline $child) => $child->renewsDeadline && ! $child->renewsDeadline->last_mileage);
 
         if ($misattached->isEmpty()) {
             $this->info('Nessuna scadenza da correggere.');

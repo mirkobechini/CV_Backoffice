@@ -77,7 +77,7 @@ class User extends Authenticatable
      */
     public function generateRecoveryCodes(): array
     {
-        $codes = Collection::times(8, fn () => Str::random(10) . '-' . Str::random(10))->all();
+        $codes = Collection::times(8, fn () => Str::random(10).'-'.Str::random(10))->all();
 
         $this->two_factor_recovery_codes = $codes;
         $this->save();

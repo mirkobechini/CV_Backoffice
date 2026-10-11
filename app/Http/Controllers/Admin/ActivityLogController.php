@@ -3,9 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Deadline;
+use App\Models\Equipment;
+use App\Models\EquipmentType;
+use App\Models\Group;
+use App\Models\Issue;
+use App\Models\MaintenanceRecord;
+use App\Models\MileageLog;
+use App\Models\Provider;
+use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Spatie\Activitylog\Models\Activity;
 
 class ActivityLogController extends Controller
 {
@@ -40,7 +53,7 @@ class ActivityLogController extends Controller
             ->distinct('subject_type')
             ->pluck('subject_type')
             ->values()
-            ->mapWithKeys(fn($type) => [$type => $this->subjectTypeLabel($type)])
+            ->mapWithKeys(fn ($type) => [$type => $this->subjectTypeLabel($type)])
             ->sort();
 
         return view('admin.activity-log.index', compact('activities', 'subjectTypes'));
@@ -52,17 +65,17 @@ class ActivityLogController extends Controller
     public static function subjectTypeLabel(?string $subjectType): string
     {
         return match ($subjectType) {
-            \App\Models\Vehicle::class => __('Veicolo'),
-            \App\Models\Issue::class => __('Guasto'),
-            \App\Models\Deadline::class => __('Scadenza'),
-            \App\Models\MaintenanceRecord::class => __('Appuntamento'),
-            \App\Models\Equipment::class => __('Attrezzatura'),
-            \App\Models\EquipmentType::class => __('Tipo attrezzatura'),
-            \App\Models\VehicleType::class => __('Tipo veicolo'),
-            \App\Models\MileageLog::class => __('Chilometraggio'),
-            \App\Models\Provider::class => __('Officina'),
-            \App\Models\Group::class => __('Gruppo'),
-            \App\Models\User::class => __('Utente'),
+            Vehicle::class => __('Veicolo'),
+            Issue::class => __('Guasto'),
+            Deadline::class => __('Scadenza'),
+            MaintenanceRecord::class => __('Appuntamento'),
+            Equipment::class => __('Attrezzatura'),
+            EquipmentType::class => __('Tipo attrezzatura'),
+            VehicleType::class => __('Tipo veicolo'),
+            MileageLog::class => __('Chilometraggio'),
+            Provider::class => __('Officina'),
+            Group::class => __('Gruppo'),
+            User::class => __('Utente'),
             default => $subjectType ? class_basename($subjectType) : __('N/D'),
         };
     }
@@ -131,10 +144,12 @@ class ActivityLogController extends Controller
 
         if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?/', $value)) {
             try {
-                $date = \Illuminate\Support\Carbon::parse($value);
+                $date = Carbon::parse($value);
+
                 return $date->format($date->format('H:i:s') === '00:00:00' ? 'd/m/Y' : 'd/m/Y H:i');
             } catch (\Throwable $e) {
                 Log::warning("Activity log: valore \"{$value}\" simile a una data ma non parsabile: {$e->getMessage()}");
+
                 return (string) $value;
             }
         }
@@ -152,7 +167,7 @@ class ActivityLogController extends Controller
      *
      * @return array{mode: 'diff'|'flat', rows: array<int, array{field: string, before: string, after: string}>}
      */
-    public static function propertyRows(?\Illuminate\Support\Collection $properties): array
+    public static function propertyRows(?Collection $properties): array
     {
         if (! $properties || $properties->isEmpty()) {
             return ['mode' => 'flat', 'rows' => []];

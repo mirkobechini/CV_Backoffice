@@ -1,8 +1,9 @@
 <?php
 
 namespace App\Http\Controllers\Concerns;
-use Illuminate\Support\Collection;
+
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 trait SortableAndGroupable
 {
@@ -27,6 +28,7 @@ trait SortableAndGroupable
 
         // Ordinamento in memoria per accessor/relazioni
         $collection = $query->get();
+
         return $sortDir === 'desc'
             ? $collection->sortByDesc($entry)->values()
             : $collection->sortBy($entry)->values();
@@ -40,7 +42,7 @@ trait SortableAndGroupable
     {
         $entry = $sortMap[$sortBy] ?? null;
 
-        if ($entry === null || !is_callable($entry)) {
+        if ($entry === null || ! is_callable($entry)) {
             return $collection;
         }
 
@@ -54,6 +56,7 @@ trait SortableAndGroupable
         if ($groupBy === null) {
             return null;
         }
+
         return $collection->groupBy($groupCallback);
     }
 
@@ -65,6 +68,7 @@ trait SortableAndGroupable
         } else {
             $query['group_by'] = $field;
         }
+
         return route($routeName, $query);
     }
 
@@ -94,12 +98,16 @@ trait SortableAndGroupable
         $nextDirection = $currentSortBy === $field && $currentSortDir === 'asc' ? 'desc' : 'asc';
         $query['sort_by'] = $field;
         $query['sort_dir'] = $nextDirection;
+
         return route($routeName, $query);
     }
 
     protected function sortIcon(string $field, ?string $currentSortBy, string $currentSortDir): string
     {
-        if ($currentSortBy !== $field) return '↕';
+        if ($currentSortBy !== $field) {
+            return '↕';
+        }
+
         return $currentSortDir === 'asc' ? '↑' : '↓';
     }
 }

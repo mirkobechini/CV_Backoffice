@@ -75,7 +75,7 @@ class TelegramNotificationTest extends TestCase
         NotificationSetting::create([
             'user_id' => $user->id,
             'key' => 'telegram_link_token',
-            'value' => 'EXPIRED1|' . now()->subMinute()->timestamp,
+            'value' => 'EXPIRED1|'.now()->subMinute()->timestamp,
         ]);
 
         $this->postJson(route('telegram.webhook'), [

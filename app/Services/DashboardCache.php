@@ -14,7 +14,7 @@ class DashboardCache
 {
     public static function key(?int $groupId): string
     {
-        return 'dashboard.stats.' . ($groupId ?? 'none');
+        return 'dashboard.stats.'.($groupId ?? 'none');
     }
 
     public static function forgetForGroup(?int $groupId): void

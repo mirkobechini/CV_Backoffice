@@ -53,16 +53,16 @@ class MaintenanceRecordController extends Controller
         $q = $validated['q'] ?? null;
 
         $query = MaintenanceRecord::with(['vehicle.brand', 'vehicle.carModel', 'provider', 'items.itemable'])
-            ->whereHas('vehicle', fn($vq) => $vq->forCurrentUser());
+            ->whereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
 
-        $query->when($statusFilter === 'scheduled', fn($qr) => $qr->whereNull('return_date'))
-            ->when($statusFilter === 'completed', fn($qr) => $qr->whereNotNull('return_date'))
+        $query->when($statusFilter === 'scheduled', fn ($qr) => $qr->whereNull('return_date'))
+            ->when($statusFilter === 'completed', fn ($qr) => $qr->whereNotNull('return_date'))
             ->when(
                 $statusFilter === 'with_issues',
-                fn($qr) => $qr->whereHas('items', fn($iq) => $iq->where('itemable_type', Issue::class))
+                fn ($qr) => $qr->whereHas('items', fn ($iq) => $iq->where('itemable_type', Issue::class))
             );
 
-        $query->when($vehicleFilter, fn($qr) => $qr->where('vehicle_id', $vehicleFilter));
+        $query->when($vehicleFilter, fn ($qr) => $qr->where('vehicle_id', $vehicleFilter));
 
         $query->when($q, function ($qr) use ($q) {
             $qr->where(function ($sub) use ($q) {
@@ -85,8 +85,8 @@ class MaintenanceRecordController extends Controller
         });
 
         $maintenanceRecords = $this->applySorting($query, $sortBy, $sortDir, [
-            'vehicle' => fn(MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
-            'description' => fn(MaintenanceRecord $r) => $r->item_descriptions !== '' ? $r->item_descriptions : ($r->activity_type ?? ''),
+            'vehicle' => fn (MaintenanceRecord $r) => $r->vehicle?->internal_code ?? '',
+            'description' => fn (MaintenanceRecord $r) => $r->item_descriptions !== '' ? $r->item_descriptions : ($r->activity_type ?? ''),
             'date' => 'appointment_date',
         ]);
 
@@ -103,9 +103,9 @@ class MaintenanceRecordController extends Controller
         $vehicles = Vehicle::forCurrentUser()->orderBy('internal_code')->get(['id', 'internal_code']);
 
         return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords', 'statusFilter', 'vehicleFilter', 'vehicles') + [
-            'groupToggleUrl' => fn($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
-            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
-            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
+            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
+            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -277,7 +277,7 @@ class MaintenanceRecordController extends Controller
 
         $message = 'Intervento eliminato con successo.';
         if (! empty($restoredDeadlines)) {
-            $message .= ' Ripristinate le scadenze: ' . implode(', ', $restoredDeadlines) . '.';
+            $message .= ' Ripristinate le scadenze: '.implode(', ', $restoredDeadlines).'.';
         }
 
         $back = $request->input('back');
@@ -327,7 +327,7 @@ class MaintenanceRecordController extends Controller
         if (! $maintenanceRecord->return_date && $maintenanceRecord->appointment_date && Carbon::today()->lt($maintenanceRecord->appointment_date)) {
             return redirect()
                 ->back()
-                ->withErrors(['issue_resolved' => 'Non puoi completare un appuntamento la cui data non è ancora arrivata (' . $maintenanceRecord->appointment_date_formatted . ').']);
+                ->withErrors(['issue_resolved' => 'Non puoi completare un appuntamento la cui data non è ancora arrivata ('.$maintenanceRecord->appointment_date_formatted.').']);
         }
 
         $this->completionService->complete($maintenanceRecord, $data);

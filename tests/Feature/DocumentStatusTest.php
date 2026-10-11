@@ -20,9 +20,9 @@ class DocumentStatusTest extends TestCase
 
     private function vehicle(string $plate, string $code, ?Group $group = null, array $overrides = []): Vehicle
     {
-        $brand = Brand::create(['name' => 'Fiat ' . $code]);
-        $model = CarModel::create(['name' => 'Ducato ' . $code, 'brand_id' => $brand->id]);
-        $type = VehicleType::create(['name' => 'Ambulanza ' . $code, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $brand = Brand::create(['name' => 'Fiat '.$code]);
+        $model = CarModel::create(['name' => 'Ducato '.$code, 'brand_id' => $brand->id]);
+        $type = VehicleType::create(['name' => 'Ambulanza '.$code, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
 
         return Vehicle::create(array_merge([
             'license_plate' => $plate,

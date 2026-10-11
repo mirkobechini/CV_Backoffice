@@ -2,15 +2,19 @@
 
 namespace Tests\Feature\Crud;
 
-use App\Models\User;
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Deadline;
+use App\Models\Equipment;
+use App\Models\EquipmentType;
 use App\Models\Group;
+use App\Models\Issue;
+use App\Models\MileageLog;
+use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-
-
 use Tests\TestCase;
 
 class VehicleCrudTest extends TestCase
@@ -88,21 +92,18 @@ class VehicleCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_vehicle_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.vehicles.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_vehicle_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $vehicle = $this->createVehicle()['vehicle'];
 
         $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
@@ -112,7 +113,7 @@ class VehicleCrudTest extends TestCase
 
     public function test_vehicle_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $vehicle = $this->createVehicle()['vehicle'];
 
         $response = $this->actingAs($user)->get(route('admin.vehicles.edit', $vehicle));
@@ -120,10 +121,9 @@ class VehicleCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_vehicle_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $data = $this->createVehicleDependencies();
         $vehicleType = $data['vehicleType'];
         $brand = $data['brand'];
@@ -151,7 +151,6 @@ class VehicleCrudTest extends TestCase
             'car_model_id' => $carModel->id,
         ]);
     }
-
 
     public function test_vehicle_can_be_updated(): void
     {
@@ -227,7 +226,6 @@ class VehicleCrudTest extends TestCase
 
     }
 
-
     public function test_vehicle_cannot_be_updated_with_duplicate_license_plate()
     {
         $user = $this->createUser();
@@ -265,7 +263,7 @@ class VehicleCrudTest extends TestCase
         $response->assertSessionHasErrors(['license_plate']);
         $this->assertDatabaseHas('vehicles', [
             'id' => $vehicle->id,
-            'license_plate' => $vehicle->license_plate
+            'license_plate' => $vehicle->license_plate,
         ]); // Conferma che il secondo veicolo mantenga la sua targa originale.
 
     }
@@ -277,12 +275,12 @@ class VehicleCrudTest extends TestCase
         // (segnaposto :count), producendo un badge tipo "⚠ 3 3 guasto/i aperto/i".
         $user = $this->createUser();
         $vehicle = $this->createVehicle()['vehicle'];
-        \App\Models\Issue::create([
+        Issue::create([
             'vehicle_id' => $vehicle->id,
             'description' => 'Motore non parte',
             'status' => 'open',
         ]);
-        \App\Models\Issue::create([
+        Issue::create([
             'vehicle_id' => $vehicle->id,
             'description' => 'Freni da controllare',
             'status' => 'open',
@@ -303,19 +301,19 @@ class VehicleCrudTest extends TestCase
         $user = $this->createUser();
         $vehicle = $this->createVehicle()['vehicle'];
 
-        \App\Models\Issue::create([
+        Issue::create([
             'vehicle_id' => $vehicle->id,
             'description' => 'Guasto chiuso recente',
             'status' => 'closed',
             'event_date' => '2025-06-01',
         ]);
-        \App\Models\Issue::create([
+        Issue::create([
             'vehicle_id' => $vehicle->id,
             'description' => 'Guasto aperto vecchio',
             'status' => 'open',
             'event_date' => '2024-01-01',
         ]);
-        \App\Models\Issue::create([
+        Issue::create([
             'vehicle_id' => $vehicle->id,
             'description' => 'Guasto in lavorazione',
             'status' => 'in_progress',
@@ -352,8 +350,8 @@ class VehicleCrudTest extends TestCase
             'timing_belt_type' => 'dry_belt',
         ]);
 
-        $response->assertSessionHas('timingBeltPrompt', fn($prompt) => $prompt['action'] === 'create');
-        $this->assertDatabaseMissing('deadlines', ['vehicle_id' => $vehicle->id, 'type' => \App\Models\Deadline::TYPE_CINGHIA]);
+        $response->assertSessionHas('timingBeltPrompt', fn ($prompt) => $prompt['action'] === 'create');
+        $this->assertDatabaseMissing('deadlines', ['vehicle_id' => $vehicle->id, 'type' => Deadline::TYPE_CINGHIA]);
     }
 
     public function test_confirming_timing_belt_prompt_creates_the_deadline_from_immatriculation_date(): void
@@ -362,14 +360,14 @@ class VehicleCrudTest extends TestCase
         $data = $this->createVehicle();
         $vehicle = $data['vehicle'];
         $vehicle->update(['immatricolation_date' => '2020-01-15', 'timing_belt_type' => 'oil_bath_belt']);
-        $expectedDueDate = \Carbon\Carbon::parse('2020-01-15')->addDays(\App\Models\Deadline::TIMING_BELT_INTERVAL_DAYS);
+        $expectedDueDate = Carbon::parse('2020-01-15')->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS);
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.timing-belt-deadline.create', $vehicle));
 
         $response->assertRedirect(route('admin.vehicles.show', $vehicle));
         $this->assertDatabaseHas('deadlines', [
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'type' => Deadline::TYPE_CINGHIA,
             'due_date' => $expectedDueDate->format('Y-m-d 00:00:00'),
         ]);
     }
@@ -384,11 +382,11 @@ class VehicleCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.vehicles.timing-belt-deadline.create', $vehicle));
 
         $response->assertRedirect(route('admin.vehicles.show', $vehicle));
-        $deadline = \App\Models\Deadline::where('vehicle_id', $vehicle->id)->where('type', \App\Models\Deadline::TYPE_CINGHIA)->first();
+        $deadline = Deadline::where('vehicle_id', $vehicle->id)->where('type', Deadline::TYPE_CINGHIA)->first();
         $this->assertNotNull($deadline);
         $this->assertNull($deadline->due_date);
         $this->assertNull($deadline->interval_days);
-        $this->assertSame(\App\Models\Deadline::TIMING_BELT_INTERVAL_KM, $deadline->interval_km);
+        $this->assertSame(Deadline::TIMING_BELT_INTERVAL_KM, $deadline->interval_km);
     }
 
     public function test_turning_off_timing_belt_prompts_to_delete_the_active_deadline(): void
@@ -397,9 +395,9 @@ class VehicleCrudTest extends TestCase
         $data = $this->createVehicle();
         $vehicle = $data['vehicle'];
         $vehicle->update(['timing_belt_type' => 'oil_bath_belt']);
-        $deadline = \App\Models\Deadline::create([
+        $deadline = Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'type' => Deadline::TYPE_CINGHIA,
             'due_date' => '2030-01-15',
             'is_renewed' => false,
         ]);
@@ -415,7 +413,7 @@ class VehicleCrudTest extends TestCase
             'timing_belt_type' => 'chain',
         ]);
 
-        $response->assertSessionHas('timingBeltPrompt', fn($prompt) => $prompt['action'] === 'delete' && $prompt['deadline_id'] === $deadline->id);
+        $response->assertSessionHas('timingBeltPrompt', fn ($prompt) => $prompt['action'] === 'delete' && $prompt['deadline_id'] === $deadline->id);
         $this->assertDatabaseHas('deadlines', ['id' => $deadline->id, 'deleted_at' => null]);
     }
 
@@ -450,9 +448,9 @@ class VehicleCrudTest extends TestCase
         $vehicle = $this->createVehicle()['vehicle'];
         $vehicle->update(['timing_belt_type' => 'dry_belt']);
 
-        $old = \App\Models\Deadline::create([
+        $old = Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'type' => Deadline::TYPE_CINGHIA,
             'status' => 'renewed',
             'is_renewed' => true,
             'due_date' => null,
@@ -460,9 +458,9 @@ class VehicleCrudTest extends TestCase
             'last_mileage' => 50000,
         ]);
 
-        $active = \App\Models\Deadline::create([
+        $active = Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'type' => Deadline::TYPE_CINGHIA,
             'status' => 'pending',
             'is_renewed' => false,
             'due_date' => null,
@@ -473,7 +471,7 @@ class VehicleCrudTest extends TestCase
 
         $vehicle->load('deadlines');
         $grouped = $vehicle->deadlines_grouped;
-        $picked = $grouped->get(\App\Models\Deadline::TYPE_CINGHIA);
+        $picked = $grouped->get(Deadline::TYPE_CINGHIA);
 
         $this->assertNotNull($picked);
         $this->assertSame($active->id, $picked->id);
@@ -488,16 +486,16 @@ class VehicleCrudTest extends TestCase
         // Km vicini alla soglia (entro il 90%), così la scadenza risulta
         // "pending" ed entra nell'elenco delle scadenze attive mostrate
         // nella scheda (non solo "valid", che non vi compare).
-        \App\Models\Deadline::create([
+        Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'type' => Deadline::TYPE_CINGHIA,
             'status' => 'pending',
             'is_renewed' => false,
             'due_date' => null,
             'interval_km' => 100000,
             'last_mileage' => 0,
         ]);
-        \App\Models\MileageLog::create([
+        MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => now(),
             'mileage' => 95000,
@@ -515,12 +513,12 @@ class VehicleCrudTest extends TestCase
         $data = $this->createVehicle();
         $completeVehicle = $data['vehicle'];
 
-        $extinguisherType = \App\Models\EquipmentType::create([
+        $extinguisherType = EquipmentType::create([
             'name' => 'Estintore',
-            'category' => \App\Models\EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
+            'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
         ]);
         $data['vehicleType']->equipmentTypes()->attach($extinguisherType->id, ['required_quantity' => 1]);
-        \App\Models\Equipment::create([
+        Equipment::create([
             'name' => 'Estintore cabina',
             'equipment_type_id' => $extinguisherType->id,
             'vehicle_id' => $completeVehicle->id,
@@ -537,7 +535,7 @@ class VehicleCrudTest extends TestCase
             'immatricolation_date' => '2024-01-01',
             'group_id' => $this->defaultGroup()->id,
         ]);
-        \App\Models\Issue::create([
+        Issue::create([
             'vehicle_id' => $incompleteVehicle->id,
             'description' => 'Guasto aperto',
             'status' => 'open',

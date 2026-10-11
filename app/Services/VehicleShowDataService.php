@@ -13,8 +13,7 @@ class VehicleShowDataService
 {
     public function __construct(
         private readonly VehicleReliabilityTrendService $reliabilityTrendService,
-    ) {
-    }
+    ) {}
 
     public function build(Vehicle $vehicle): array
     {
@@ -35,8 +34,7 @@ class VehicleShowDataService
             ->flatMap(fn ($record) => $record->items
                 ->where('itemable_type', 'App\Models\Issue')
                 ->pluck('itemable_id')
-                ->mapWithKeys(fn ($issueId) => [$issueId => $record->provider]))
-        ;
+                ->mapWithKeys(fn ($issueId) => [$issueId => $record->provider]));
 
         // Attrezzatura assegnabile a questo veicolo: quella non assegnata a
         // nessun veicolo, o già assegnata a un altro veicolo del gruppo

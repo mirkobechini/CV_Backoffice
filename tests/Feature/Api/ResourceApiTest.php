@@ -37,6 +37,7 @@ class ResourceApiTest extends TestCase
     private function authToken(): string
     {
         $user = User::factory()->withRole('admin')->create();
+
         return $user->createToken('test')->plainTextToken;
     }
 
@@ -45,6 +46,7 @@ class ResourceApiTest extends TestCase
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
         $brand = Brand::create(['name' => 'Fiat']);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+
         return Vehicle::create([
             'license_plate' => 'AB123CD',
             'vehicle_type_id' => $vt->id,

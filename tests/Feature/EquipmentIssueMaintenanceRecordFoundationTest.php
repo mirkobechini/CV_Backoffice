@@ -31,13 +31,13 @@ class EquipmentIssueMaintenanceRecordFoundationTest extends TestCase
 
     private function createVehicle(Group $group): Vehicle
     {
-        $brand = Brand::create(['name' => 'Fiat ' . uniqid()]);
+        $brand = Brand::create(['name' => 'Fiat '.uniqid()]);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
-        $type = VehicleType::create(['name' => 'Amb ' . uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $type = VehicleType::create(['name' => 'Amb '.uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
 
         return Vehicle::create([
             'group_id' => $group->id,
-            'license_plate' => 'AB' . rand(100, 999) . 'CD',
+            'license_plate' => 'AB'.rand(100, 999).'CD',
             'internal_code' => (string) rand(1000, 9999),
             'brand_id' => $brand->id,
             'car_model_id' => $model->id,
@@ -48,13 +48,13 @@ class EquipmentIssueMaintenanceRecordFoundationTest extends TestCase
 
     private function createEquipment(?Vehicle $vehicle = null): Equipment
     {
-        $type = EquipmentType::create(['name' => 'Estintore ' . uniqid()]);
+        $type = EquipmentType::create(['name' => 'Estintore '.uniqid()]);
 
         return Equipment::create([
             'equipment_type_id' => $type->id,
             'vehicle_id' => $vehicle?->id,
             'name' => 'Estintore test',
-            'serial_number' => 'SN-' . uniqid(),
+            'serial_number' => 'SN-'.uniqid(),
         ]);
     }
 

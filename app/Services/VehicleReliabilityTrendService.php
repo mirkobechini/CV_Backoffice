@@ -45,7 +45,7 @@ class VehicleReliabilityTrendService
 
     /**
      * @return array{repairs_count:int, average_interval_days:int, last_interval_days:int, is_worsening:bool}|null
-     *         null se non c'è nemmeno abbastanza storico per una media.
+     *                                                                                                             null se non c'è nemmeno abbastanza storico per una media.
      */
     public function analyze(Vehicle $vehicle): ?array
     {

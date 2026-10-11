@@ -15,9 +15,9 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $manifestPath = public_path('build/manifest.json');
-        if (!file_exists($manifestPath)) {
+        if (! file_exists($manifestPath)) {
             $buildDir = public_path('build');
-            if (!is_dir($buildDir)) {
+            if (! is_dir($buildDir)) {
                 mkdir($buildDir, 0755, true);
             }
 

@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -49,7 +48,7 @@ class ReportMail extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {
@@ -58,7 +57,7 @@ class ReportMail extends Mailable
             ->output();
 
         return [
-            Attachment::fromData(fn() => $pdf, 'report-' . now()->format('Y-m-d') . '.pdf')
+            Attachment::fromData(fn () => $pdf, 'report-'.now()->format('Y-m-d').'.pdf')
                 ->withMime('application/pdf'),
         ];
     }

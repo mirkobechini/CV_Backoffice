@@ -30,15 +30,16 @@ class ImportCarData extends Command
     {
         $this->info('Inizio importazione dati...');
 
-        $res = Http::get("https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json");
+        $res = Http::get('https://raw.githubusercontent.com/matthlavacka/car-list/master/car-list.json');
 
-        if(!$res->successful()) {
-            $this->error("Impossibile scaricare i dati.");
+        if (! $res->successful()) {
+            $this->error('Impossibile scaricare i dati.');
+
             return;
         }
 
         $brandsData = $res->json();
-        //Crea o aggiorna i brand necessari
+        // Crea o aggiorna i brand necessari
         foreach ($brandsData as $brandItem) {
 
             $brandName = $brandItem['brand'];

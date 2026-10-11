@@ -23,7 +23,7 @@ class VehicleTypeController extends Controller
     {
         $vehicleTypes = VehicleType::when(
             $request->filled('q'),
-            fn ($query) => $query->where('name', 'like', '%' . $request->get('q') . '%')
+            fn ($query) => $query->where('name', 'like', '%'.$request->get('q').'%')
         )->orderBy('name')->paginate(20)->withQueryString();
 
         return view('admin.vehicle-types.index', compact('vehicleTypes'));

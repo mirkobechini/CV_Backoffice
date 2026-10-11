@@ -7,7 +7,6 @@ use App\Models\MileageLog;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -36,6 +35,7 @@ class MileageLogControllerTest extends TestCase
     private function vehicle(): Vehicle
     {
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+
         return Vehicle::create(['license_plate' => 'AB123CD', 'vehicle_type_id' => $vt->id, 'internal_code' => '1234', 'brand_id' => null, 'car_model_id' => null, 'fuel_type' => 'diesel', 'immatricolation_date' => '2024-01-01', 'group_id' => $this->defaultGroup()->id]);
     }
 

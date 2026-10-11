@@ -140,7 +140,7 @@ class EquipmentMaintenanceRecordController extends Controller
         // Selezionabili: i guasti aperti delle attrezzature collegate, più
         // quelli già collegati a questo appuntamento (anche se nel
         // frattempo risolti altrove), per poterli mantenere in modifica.
-        $selectableIssues = EquipmentIssue::where(function ($q) use ($linkedEquipmentIds, $equipmentMaintenanceRecord) {
+        $selectableIssues = EquipmentIssue::where(function ($q) use ($linkedEquipmentIds) {
             $q->whereIn('equipment_id', $linkedEquipmentIds)->open();
         })->orWhere('equipment_maintenance_record_id', $equipmentMaintenanceRecord->id)
             ->get(['id', 'equipment_id', 'description', 'event_date']);
@@ -173,7 +173,7 @@ class EquipmentMaintenanceRecordController extends Controller
                 'notes' => $data['notes'] ?? null,
             ]);
 
-    $equipmentMaintenanceRecord->equipments()->sync($data['equipment_ids']);
+            $equipmentMaintenanceRecord->equipments()->sync($data['equipment_ids']);
 
             // I guasti rimossi dalla selezione tornano scollegati (e in
             // lavorazione->aperto se non risolti altrove): loop su modelli

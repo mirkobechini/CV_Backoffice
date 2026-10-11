@@ -92,7 +92,7 @@ class MaintenanceRecordFormDataService
 
         return $query->orderByDesc('due_date')
             ->get()
-            ->unique(fn ($item) => $item->vehicle_id . '-' . $item->type)
+            ->unique(fn ($item) => $item->vehicle_id.'-'.$item->type)
             ->values();
     }
 }

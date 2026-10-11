@@ -2,14 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ReportMail;
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Deadline;
 use App\Models\Group;
+use App\Models\Issue;
+use App\Models\MileageLog;
 use App\Models\NotificationSetting;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
-use App\Mail\ReportMail;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -23,6 +27,7 @@ class SendSummaryReportTest extends TestCase
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
         $brand = Brand::create(['name' => 'Fiat']);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+
         return Vehicle::create([
             'license_plate' => 'AB123CD',
             'vehicle_type_id' => $vt->id,
@@ -44,7 +49,7 @@ class SendSummaryReportTest extends TestCase
      */
     private function userWithGroup(): User
     {
-        $group = Group::create(['name' => 'Gruppo ' . Group::generateInviteCode(), 'invite_code' => Group::generateInviteCode()]);
+        $group = Group::create(['name' => 'Gruppo '.Group::generateInviteCode(), 'invite_code' => Group::generateInviteCode()]);
         $user = User::factory()->create();
         $group->addUser($user, Group::ROLE_CAPO);
 
@@ -89,6 +94,7 @@ class SendSummaryReportTest extends TestCase
             $attachments = $mail->attachments();
             $this->assertNotEmpty($attachments);
             $this->assertStringContainsString('.pdf', $attachments[0]->as);
+
             return true;
         });
     }
@@ -112,7 +118,7 @@ class SendSummaryReportTest extends TestCase
     public function test_report_skips_weekly_recipient_on_non_monday(): void
     {
         Mail::fake();
-        $this->travelTo(now()->next(\Carbon\Carbon::TUESDAY));
+        $this->travelTo(now()->next(Carbon::TUESDAY));
 
         $user = User::factory()->create();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'weekly@example.com']);
@@ -128,7 +134,7 @@ class SendSummaryReportTest extends TestCase
     public function test_report_sends_to_weekly_recipient_on_monday(): void
     {
         Mail::fake();
-        $this->travelTo(now()->next(\Carbon\Carbon::MONDAY));
+        $this->travelTo(now()->next(Carbon::MONDAY));
 
         $user = User::factory()->create();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'weekly@example.com']);
@@ -166,8 +172,8 @@ class SendSummaryReportTest extends TestCase
             'group_id' => $groupB->id,
         ]);
 
-        \App\Models\Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'status' => 'open', 'event_date' => '2025-01-01']);
-        \App\Models\Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'status' => 'open', 'event_date' => '2025-01-01']);
+        Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'status' => 'open', 'event_date' => '2025-01-01']);
+        Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'status' => 'open', 'event_date' => '2025-01-01']);
 
         $this->artisan('app:send-summary-report');
 
@@ -201,7 +207,8 @@ class SendSummaryReportTest extends TestCase
         Mail::shouldReceive('to')
             ->once()
             ->with('b@example.com')
-            ->andReturn(new class {
+            ->andReturn(new class
+            {
                 public function send($mailable) {}
             });
 
@@ -218,11 +225,11 @@ class SendSummaryReportTest extends TestCase
         $user = $this->userWithGroup();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
         $vehicle = $this->vehicle($user->activeGroup());
-        \App\Models\Deadline::create([
+        Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_TAGLIANDO,
             'due_date' => now()->addDays(5),
-            'status' => \App\Models\Deadline::STATUS_PENDING,
+            'status' => Deadline::STATUS_PENDING,
             'is_renewed' => false,
         ]);
 
@@ -248,18 +255,18 @@ class SendSummaryReportTest extends TestCase
         $user = $this->userWithGroup();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
         $vehicle = $this->vehicle($user->activeGroup());
-        \App\Models\MileageLog::create([
+        MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => now(),
             'mileage' => 150000,
         ]);
-        \App\Models\Deadline::create([
+        Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'type' => Deadline::TYPE_CINGHIA,
             'due_date' => null,
             'interval_km' => 100000,
             'last_mileage' => 0,
-            'status' => \App\Models\Deadline::STATUS_PENDING,
+            'status' => Deadline::STATUS_PENDING,
             'is_renewed' => false,
         ]);
 
@@ -289,18 +296,18 @@ class SendSummaryReportTest extends TestCase
         $user = $this->userWithGroup();
         NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
         $vehicle = $this->vehicle($user->activeGroup());
-        \App\Models\Deadline::create([
+        Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_TAGLIANDO,
             'due_date' => now()->subDays(10),
-            'status' => \App\Models\Deadline::STATUS_PENDING,
+            'status' => Deadline::STATUS_PENDING,
             'is_renewed' => false,
         ]);
 
         $this->artisan('app:send-summary-report');
 
         Mail::assertSent(ReportMail::class, function (ReportMail $mail) {
-            return $mail->data['expiredDeadlines']->contains('type', \App\Models\Deadline::TYPE_TAGLIANDO);
+            return $mail->data['expiredDeadlines']->contains('type', Deadline::TYPE_TAGLIANDO);
         });
     }
 }

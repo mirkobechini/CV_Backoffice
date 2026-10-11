@@ -196,7 +196,7 @@ class TireController extends Controller
             $tire->update($updates);
         }
 
-        return redirect()->route('admin.tires.index')->with('status', count($tires) . ' pneumatici aggiornati con successo.');
+        return redirect()->route('admin.tires.index')->with('status', count($tires).' pneumatici aggiornati con successo.');
     }
 
     /**

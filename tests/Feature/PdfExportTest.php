@@ -1,8 +1,12 @@
 <?php
+
 namespace Tests\Feature;
+
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Deadline;
 use App\Models\Group;
+use App\Models\MileageLog;
 use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -10,9 +14,11 @@ use App\Models\VehicleType;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+
 class PdfExportTest extends TestCase
 {
     use RefreshDatabase;
+
     public function test_vehicle_pdf_downloads(): void
     {
         $user = User::factory()->withRole('admin')->create();
@@ -73,28 +79,28 @@ class PdfExportTest extends TestCase
 
         // Una scadenza per ogni tipo mostrato nella tabella, così ogni
         // branch della cella (data+km / solo data / assente) viene esercitato.
-        \App\Models\Deadline::create([
+        Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_TAGLIANDO,
+            'type' => Deadline::TYPE_TAGLIANDO,
             'due_date' => Carbon::today()->addMonths(6),
             'interval_km' => 20000,
             'last_mileage' => 10000,
             'status' => 'pending',
         ]);
-        \App\Models\Deadline::create([
+        Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_MINISTERIAL,
+            'type' => Deadline::TYPE_MINISTERIAL,
             'due_date' => Carbon::today()->addYear(),
             'status' => 'pending',
         ]);
-        \App\Models\Deadline::create([
+        Deadline::create([
             'vehicle_id' => $vehicle->id,
-            'type' => \App\Models\Deadline::TYPE_CINGHIA,
+            'type' => Deadline::TYPE_CINGHIA,
             'interval_km' => 100000,
             'last_mileage' => 0,
             'status' => 'pending',
         ]);
-        \App\Models\MileageLog::create([
+        MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => Carbon::today(),
             'mileage' => 12345,

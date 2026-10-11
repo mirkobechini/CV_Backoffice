@@ -27,12 +27,12 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
 
     private function createEquipment(string $name = 'Estintore test'): Equipment
     {
-        $type = EquipmentType::create(['name' => 'Estintore ' . uniqid()]);
+        $type = EquipmentType::create(['name' => 'Estintore '.uniqid()]);
 
         return Equipment::create([
             'equipment_type_id' => $type->id,
             'name' => $name,
-            'serial_number' => 'SN-' . uniqid(),
+            'serial_number' => 'SN-'.uniqid(),
         ]);
     }
 

@@ -2,9 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
+use App\Models\CarModel;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use App\Models\Group;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -127,11 +132,11 @@ class EquipmentRevisionTest extends TestCase
         $user = $this->admin();
         $equipment = $this->extinguisherEquipment();
 
-        $otherGroup = \App\Models\Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
-        $otherVehicleType = \App\Models\VehicleType::create(['name' => 'Ambulanza B', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
-        $otherBrand = \App\Models\Brand::create(['name' => 'Iveco']);
-        $otherModel = \App\Models\CarModel::create(['name' => 'Daily', 'brand_id' => $otherBrand->id]);
-        $otherVehicle = \App\Models\Vehicle::create([
+        $otherGroup = Group::create(['name' => 'Gruppo B', 'invite_code' => 'BBBB2222']);
+        $otherVehicleType = VehicleType::create(['name' => 'Ambulanza B', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $otherBrand = Brand::create(['name' => 'Iveco']);
+        $otherModel = CarModel::create(['name' => 'Daily', 'brand_id' => $otherBrand->id]);
+        $otherVehicle = Vehicle::create([
             'group_id' => $otherGroup->id,
             'license_plate' => 'ZZ999ZZ',
             'internal_code' => '0002',

@@ -36,12 +36,12 @@ class MileageLogCsvImporter extends AbstractCsvImporter
 
     public function import(array $row): array
     {
-        if (!isset($row['_vehicle_id']) || !$this->vehicleBelongsToCurrentUser($row['_vehicle_id'])) {
+        if (! isset($row['_vehicle_id']) || ! $this->vehicleBelongsToCurrentUser($row['_vehicle_id'])) {
             return ['error' => 'Veicolo non valido'];
         }
 
         if (isset($row['_exists']) && $row['_exists']) {
-            return ['error' => 'Chilometraggio già presente per ' . ($row['_label_date'] ?? $row['_date'])];
+            return ['error' => 'Chilometraggio già presente per '.($row['_label_date'] ?? $row['_date'])];
         }
 
         // whereDate() invece di where(): un confronto di uguaglianza esatta
@@ -52,7 +52,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
             ->exists();
 
         if ($exists) {
-            return ['error' => 'Chilometraggio già presente per ' . ($row['_label_date'] ?? $row['_date'])];
+            return ['error' => 'Chilometraggio già presente per '.($row['_label_date'] ?? $row['_date'])];
         }
 
         MileageLog::create([
@@ -74,6 +74,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                 return true;
             }
         }
+
         return false;
     }
 
@@ -83,6 +84,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
     private function monthNameToNumber(string $name): ?int
     {
         $index = array_search(mb_strtolower(trim($name)), self::MESI, true);
+
         return $index === false ? null : $index + 1;
     }
 
@@ -112,7 +114,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
         $existingLogDates = MileageLog::whereYear('log_date', $year)
             ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->get(['vehicle_id', 'log_date'])
-            ->map(fn ($log) => $log->vehicle_id . '|' . $log->log_date->toDateString())
+            ->map(fn ($log) => $log->vehicle_id.'|'.$log->log_date->toDateString())
             ->flip();
 
         foreach ($rows as $index => $row) {
@@ -127,7 +129,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
             // Trova veicolo (solo nel proprio gruppo: senza forCurrentUser()
             // qui, un capo poteva importare dati su un veicolo di un altro
             // gruppo indovinandone sigla/targa).
-            if (!isset($vehiclesCache[$vehicleRef])) {
+            if (! isset($vehiclesCache[$vehicleRef])) {
                 $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('internal_code', $vehicleRef)
                     ->orWhere('license_plate', $vehicleRef))
                     ->forCurrentUser()
@@ -135,7 +137,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
             }
             $vehicle = $vehiclesCache[$vehicleRef];
 
-            if (!$vehicle) {
+            if (! $vehicle) {
                 // Veicolo non trovato, crea record con errore
                 $results[] = [
                     'row' => $index + 2,
@@ -144,6 +146,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                     'errors' => ["Veicolo \"{$vehicleRef}\" (sigla: {$sigla}, targa: {$targa}) non trovato nel database."],
                     'warnings' => [],
                 ];
+
                 continue;
             }
 
@@ -155,7 +158,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                 }
 
                 $kmValue = str_replace(['.', ','], '', $kmValue);
-                if (!is_numeric($kmValue)) {
+                if (! is_numeric($kmValue)) {
                     continue;
                 }
 
@@ -163,7 +166,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                 $dateStr = sprintf('%04d-%02d-01', $year, $monthNum);
 
                 // Controllo duplicato
-                $exists = isset($existingLogDates[$vehicle->id . '|' . $dateStr]);
+                $exists = isset($existingLogDates[$vehicle->id.'|'.$dateStr]);
 
                 $warnings = [];
                 if ($exists) {
@@ -174,7 +177,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                     'row' => $index + 2,
                     'data' => [
                         '_vehicle_id' => $vehicle->id,
-                        '_vehicle_label' => $vehicle->internal_code . ' - ' . $vehicle->license_plate,
+                        '_vehicle_label' => $vehicle->internal_code.' - '.$vehicle->license_plate,
                         '_date' => $dateStr,
                         '_label_date' => sprintf('%02d/%04d', $monthNum, $year),
                         '_mileage' => $kmValue,
@@ -183,7 +186,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                         'mese' => sprintf('%02d/%04d', $monthNum, $year),
                         'chilometri' => $kmValue,
                     ],
-                    'valid' => !$exists,
+                    'valid' => ! $exists,
                     'errors' => [],
                     'warnings' => $warnings,
                 ];
@@ -215,7 +218,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                 $result['valid'] = false;
                 $result['errors'][] = 'Veicolo (targa/sigla) mancante.';
             } else {
-                if (!isset($vehiclesCache[$vehicleRef])) {
+                if (! isset($vehiclesCache[$vehicleRef])) {
                     // forCurrentUser(): vedi commento in validatePivot().
                     $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('license_plate', $vehicleRef)
                         ->orWhere('internal_code', $vehicleRef))
@@ -223,17 +226,17 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                         ->first();
                 }
                 $vehicle = $vehiclesCache[$vehicleRef];
-                if (!$vehicle) {
+                if (! $vehicle) {
                     $result['valid'] = false;
                     $result['errors'][] = "Veicolo \"{$vehicleRef}\" non trovato.";
                 } else {
                     $result['data']['_vehicle_id'] = $vehicle->id;
-                    $result['data']['_vehicle_label'] = $vehicle->internal_code . ' - ' . $vehicle->license_plate;
+                    $result['data']['_vehicle_label'] = $vehicle->internal_code.' - '.$vehicle->license_plate;
                 }
             }
 
             $mileage = $row['chilometri'] ?? $row['km'] ?? $row['mileage'] ?? '';
-            if (empty($mileage) || !is_numeric($mileage)) {
+            if (empty($mileage) || ! is_numeric($mileage)) {
                 $result['valid'] = false;
                 $result['errors'][] = "Chilometraggio \"{$mileage}\" non valido.";
             } else {

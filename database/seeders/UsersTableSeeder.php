@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class UsersTableSeeder extends Seeder
@@ -22,7 +21,7 @@ class UsersTableSeeder extends Seeder
             throw new \RuntimeException('UsersTableSeeder crea un account con password nota: eseguibile solo in locale/testing.');
         }
 
-        $user = new User();
+        $user = new User;
         $user->name = 'Mirko';
         $user->email = 'mirko@example.com';
         $user->password = bcrypt('password');

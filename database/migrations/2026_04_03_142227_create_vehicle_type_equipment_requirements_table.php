@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('vehicle_type_id')->constrained()->onDelete('cascade');
             $table->foreignId('equipment_type_id')->constrained()->onDelete('cascade');
             $table->unsignedInteger('required_quantity')->default(1);
-            $table->unique(['vehicle_type_id', 'equipment_type_id'],'vt_eq_req_vehicle_equipment_unique'); // Unique constraint to prevent duplicate entries(rinominato x nome troppo lungo)
+            $table->unique(['vehicle_type_id', 'equipment_type_id'], 'vt_eq_req_vehicle_equipment_unique'); // Unique constraint to prevent duplicate entries(rinominato x nome troppo lungo)
             $table->timestamps();
         });
     }

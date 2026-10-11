@@ -13,7 +13,6 @@ use Tests\TestCase;
 
 class DeadlineValidationTest extends TestCase
 {
-
     use RefreshDatabase;
 
     private function createUser(): User
@@ -60,11 +59,12 @@ class DeadlineValidationTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
             'status' => 'renewed',
-            'due_date' => "2025-01",
+            'due_date' => '2025-01',
         ]);
         $response->assertSessionHasErrors(['type']);
         $this->assertDatabaseCount('deadlines', $actualDeadlineCount);
     }
+
     public function test_deadline_store_fails_when_vehicle_id_is_missing(): void
     {
         $user = $this->createUser();
@@ -72,7 +72,7 @@ class DeadlineValidationTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'type' => Deadline::TYPE_MINISTERIAL,
             'status' => 'renewed',
-            'due_date' => "2025-01",
+            'due_date' => '2025-01',
         ]);
         $response->assertSessionHasErrors(['vehicle_id']);
         $this->assertDatabaseEmpty('deadlines');
@@ -88,7 +88,7 @@ class DeadlineValidationTest extends TestCase
             'vehicle_id' => $vehicle->id,
             'type' => Deadline::TYPE_MINISTERIAL,
             'status' => 'renewed',
-            'due_date' => "02-2025-01",
+            'due_date' => '02-2025-01',
         ]);
         $response->assertSessionHasErrors(['due_date']);
 
@@ -103,7 +103,7 @@ class DeadlineValidationTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
-            'type' => "Assicurazione",
+            'type' => 'Assicurazione',
             'status' => 'renewed',
         ]);
         $response->assertSessionHasErrors(['due_date']);

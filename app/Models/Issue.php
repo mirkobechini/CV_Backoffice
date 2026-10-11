@@ -2,22 +2,24 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Searchable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Concerns\Searchable;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\Builder;
 
 class Issue extends Model
 {
-    use SoftDeletes, LogsActivity, Searchable;
+    use LogsActivity, Searchable, SoftDeletes;
 
-    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return \Spatie\Activitylog\LogOptions::defaults()
+        return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty();
     }
+
     protected $fillable = [
         'vehicle_id',
         'description',
@@ -32,6 +34,7 @@ class Issue extends Model
     ];
 
     protected $searchable = ['description', 'status'];
+
     protected $fulltextable = ['description'];
 
     public function scopeOpen(Builder $query): Builder

@@ -10,6 +10,7 @@ use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -30,9 +31,9 @@ class TireCrudTest extends TestCase
 
     private function createVehicle(array $overrides = []): Vehicle
     {
-        $brand = Brand::create(['name' => 'Fiat ' . uniqid()]);
+        $brand = Brand::create(['name' => 'Fiat '.uniqid()]);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
-        $type = VehicleType::create(['name' => 'Ambulanza ' . uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $type = VehicleType::create(['name' => 'Ambulanza '.uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
 
         return Vehicle::create(array_merge([
             'group_id' => $this->group?->id,
@@ -217,7 +218,7 @@ class TireCrudTest extends TestCase
 
     public function test_season_filter_due_shows_only_mounted_tires_of_wrong_season(): void
     {
-        $this->travelTo(\Carbon\Carbon::parse('2026-12-01'));
+        $this->travelTo(Carbon::parse('2026-12-01'));
 
         $user = $this->admin();
         $vehicle = $this->createVehicle();
@@ -343,9 +344,9 @@ class TireCrudTest extends TestCase
             'group_id' => $otherGroup->id,
             'license_plate' => 'ZZ999ZZ',
             'internal_code' => '0002',
-            'brand_id' => Brand::create(['name' => 'Iveco ' . uniqid()])->id,
+            'brand_id' => Brand::create(['name' => 'Iveco '.uniqid()])->id,
             'car_model_id' => CarModel::create(['name' => 'Daily', 'brand_id' => Brand::first()->id])->id,
-            'vehicle_type_id' => VehicleType::create(['name' => 'Ambulanza ' . uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24])->id,
+            'vehicle_type_id' => VehicleType::create(['name' => 'Ambulanza '.uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24])->id,
             'immatricolation_date' => '2024-01-01',
         ]);
         $otherTire = $this->createTire($otherVehicle);

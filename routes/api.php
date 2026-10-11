@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\VehicleController;
-use App\Http\Controllers\Api\IssueController;
 use App\Http\Controllers\Api\DeadlineController;
+use App\Http\Controllers\Api\IssueController;
 use App\Http\Controllers\Api\MaintenanceRecordController;
+use App\Http\Controllers\Api\VehicleController;
 use Illuminate\Support\Facades\Route;
 
 /*

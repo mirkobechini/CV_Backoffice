@@ -14,12 +14,11 @@ class TwoFactorQrCodeGenerator
 {
     public function __construct(
         private readonly QrCodeGenerator $qrCodeGenerator,
-    ) {
-    }
+    ) {}
 
     public function svg(User $user): string
     {
-        $uri = (new Google2FA())->getQRCodeUrl(
+        $uri = (new Google2FA)->getQRCodeUrl(
             config('app.name'),
             $user->email,
             $user->two_factor_secret,

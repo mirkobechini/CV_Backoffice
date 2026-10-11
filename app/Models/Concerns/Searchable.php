@@ -56,14 +56,14 @@ trait Searchable
                         // Già validato come identificatore sicuro sopra.
                         // FULLTEXT MATCH (solo MySQL/MariaDB)
                         if ($i === 0) {
-                            $q->whereRaw("MATCH ({$column}) AGAINST (? IN BOOLEAN MODE)", [$term . '*']);
+                            $q->whereRaw("MATCH ({$column}) AGAINST (? IN BOOLEAN MODE)", [$term.'*']);
                         } else {
-                            $q->orWhereRaw("MATCH ({$column}) AGAINST (? IN BOOLEAN MODE)", [$term . '*']);
+                            $q->orWhereRaw("MATCH ({$column}) AGAINST (? IN BOOLEAN MODE)", [$term.'*']);
                         }
                     } else {
                         // LIKE per colonne corte (VARCHAR breve)
                         $method = $i === 0 ? 'where' : 'orWhere';
-                        $q->$method($column, 'like', '%' . $term . '%');
+                        $q->$method($column, 'like', '%'.$term.'%');
                     }
                 }
             });

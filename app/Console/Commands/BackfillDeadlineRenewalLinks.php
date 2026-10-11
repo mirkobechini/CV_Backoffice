@@ -41,7 +41,7 @@ class BackfillDeadlineRenewalLinks extends Command
         // Raggruppa per veicolo+tipo: ogni gruppo è una catena di rinnovi
         // indipendente. Ordinando per due_date, ogni scadenza (tranne la
         // prima) è per definizione quella che rinnova la precedente.
-        $groups = $query->get()->groupBy(fn (Deadline $d) => $d->vehicle_id . '|' . $d->type);
+        $groups = $query->get()->groupBy(fn (Deadline $d) => $d->vehicle_id.'|'.$d->type);
 
         $toLink = [];
 

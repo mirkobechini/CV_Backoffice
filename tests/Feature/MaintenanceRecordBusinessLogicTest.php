@@ -8,6 +8,7 @@ use App\Models\Deadline;
 use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
+use App\Models\MileageLog;
 use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -700,7 +701,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $vehicle = $this->createVehicle();
         $provider = $this->createProvider();
 
-        \App\Models\MileageLog::create([
+        MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => '2025-09-01',
             'mileage' => 90000,
@@ -722,7 +723,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $vehicle = $this->createVehicle();
         $provider = $this->createProvider();
 
-        \App\Models\MileageLog::create([
+        MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => '2025-09-01',
             'mileage' => 90000,

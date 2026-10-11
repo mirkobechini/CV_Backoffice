@@ -13,7 +13,7 @@ class TwoFactorAuthenticationTest extends TestCase
 
     private function enabledUser(): array
     {
-        $secret = (new Google2FA())->generateSecretKey();
+        $secret = (new Google2FA)->generateSecretKey();
         $user = User::factory()->create([
             'two_factor_secret' => $secret,
             'two_factor_confirmed_at' => now(),
@@ -25,7 +25,7 @@ class TwoFactorAuthenticationTest extends TestCase
 
     private function currentCode(string $secret): string
     {
-        return (new Google2FA())->getCurrentOtp($secret);
+        return (new Google2FA)->getCurrentOtp($secret);
     }
 
     public function test_login_with_two_factor_enabled_requires_challenge_instead_of_logging_in(): void
