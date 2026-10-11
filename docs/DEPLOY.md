@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - A [Laravel Cloud](https://cloud.laravel.com) account (free tier is enough)
+- PHP 8.4 or newer: set the environment's PHP version to **8.5** (or at least 8.4) in the Laravel Cloud settings *before* deploying. `composer.json` requires `^8.4` and the dependencies in `composer.lock` need PHP >= 8.4.1, so an older PHP makes the app fail at boot with a Composer platform error.
 - The repository on GitHub
 
 ## Steps

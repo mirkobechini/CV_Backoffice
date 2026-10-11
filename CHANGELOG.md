@@ -4,6 +4,35 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.6.0] - 2026-10-11
+
+### Added
+
+- Gestione assicurazioni migliorata: campi obbligatori per compagnia/numero polizza/coperture quando il tipo è "Assicurazione", poi estesa a **più coperture insieme** (es. RCA + Kasko), ciascuna con il proprio costo, invece del precedente tipo+premio singolo. Vocabolario coperture ampliato (Furto e Incendio separati, più Infortuni conducente/Tutela legale/Eventi speciali/Globale complementari). Export CSV con colonne dedicate, vista dedicata "Assicurazioni" con il totale premi, durata di rinnovo configurabile per il flusso "rinnova senza appuntamento".
+- Show di una scadenza: le coperture assicurative sono mostrate in un layout tipo/costo leggibile, e una nuova card "Storico rinnovi" percorre l'intera catena di rinnovi (non solo il passo immediato).
+- Nuova pagina **"Stato documenti"** (`/admin/documents`): una riga per veicolo con lo stato di carta di circolazione, garanzia e ogni tipologia di scadenza; le attrezzature in una sezione separata, con filtro per stato e raggruppamento per tipo/veicolo.
+- Dashboard: nuova card con il premio assicurativo annuo totale delle polizze attive.
+- Test `ComposerLockPhpVersionTest`: fallisce se il `composer.lock` richiede una versione di PHP più recente di quella dichiarata in `composer.json`.
+
+### Fixed
+
+- La durata di rinnovo configurabile delle polizze (`insurance_renewal_months`) veniva validata ma non salvata dal form di creazione/modifica scadenza.
+
+### Security
+
+- Un utente privo di gruppo attivo (stato raggiungibile rimuovendo un membro dal suo unico gruppo) otteneva accesso illimitato ai dati di **tutti** i gruppi, sia nelle liste che nell'accesso diretto per id — corretto a "nessun accesso" invece di "nessuna restrizione"; bloccata anche la rimozione di un membro dal suo unico gruppo.
+- Il webhook del bot Telegram accettava richieste non autenticate quando il secret non era configurato (fail-open); ora rifiuta sempre in quel caso (fail-closed), con confronto a tempo costante.
+- Backup del database e documenti caricati (carta di circolazione, foto guasti): fallback silenzioso al disco pubblico se `UPLOADS_DISK` non era configurato in produzione, corretto con un controllo di avvio che segnala il problema; i link ai file ora sono firmati e temporanei (non più permanenti), così il bucket di storage può restare privato.
+- Whitelist del nome colonna in `Searchable::scopeSearch()` prima di usarlo in una query raw (difesa in profondità, non derivato da input utente oggi).
+- Seeder di sviluppo con credenziali note bloccato fuori da ambiente locale/testing.
+
+### Changed
+
+- PHP minimo richiesto: **8.4** (`composer.json` `^8.4`); in produzione consigliata la 8.5 (PHP 8.2 termina il supporto di sicurezza il 31/12/2026). La CI ora testa 8.4 e 8.5. **Prima del deploy, impostare PHP 8.4/8.5 nell'ambiente di Laravel Cloud.**
+- Dipendenze PHP aggiornate entro i vincoli (Livewire 4.4, Symfony 8.1, Guzzle, Pint, PHPUnit e altre minori/patch).
+- Dipendenze di sviluppo npm: `concurrently` 10, `npm audit fix` e aggiornamenti minori (Sass, Vite 6.4.4, Font Awesome...); override `postcss-selector-parser` ^7.1.6 per correggere l'avviso di complessità quadratica (output CSS verificato identico al byte). Da 10 a 5 avvisi, tutti dev-only: restano `braces` (nessuna versione corretta pubblicata, la 3.0.3 è l'ultima) e i pacchetti che lo usano nella catena di `tailwindcss` 3; si chiude solo con la migrazione a Tailwind 4, da pianificare a parte.
+- Strumenti di sviluppo PHP: PHPUnit 13 (possibile con PHP ^8.4) e Laravel Tinker 3.
+
 ## [v1.5.1] - 2026-10-05
 
 ### Fixed
