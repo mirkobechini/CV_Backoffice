@@ -8,7 +8,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 - PHP minimo richiesto: **8.4** (`composer.json` `^8.4`); in produzione consigliata la 8.5 (PHP 8.2 termina il supporto di sicurezza il 31/12/2026). La CI ora testa 8.4 e 8.5. **Prima del deploy, impostare PHP 8.4/8.5 nell'ambiente di Laravel Cloud.**
 - Dipendenze PHP aggiornate entro i vincoli (Livewire 4.4, Symfony 8.1, Guzzle, Pint, PHPUnit e altre minori/patch); 668 test verdi.
-- Dipendenze di sviluppo npm: `concurrently` 10 e `npm audit fix` risolvono le vulnerabilità critiche (`shell-quote`) e `source-map-js` (da 10 a 7 avvisi). Restano solo quelli della catena di `tailwindcss` 3 (`braces`, `micromatch`, `chokidar`, `postcss-selector-parser`): sono strumenti di build che leggono solo i sorgenti del progetto, e la correzione richiede la migrazione a Tailwind 4, da pianificare a parte.
+- Dipendenze di sviluppo npm: `concurrently` 10, `npm audit fix` e aggiornamenti minori (Sass, Vite 6.4.4, Font Awesome...); override `postcss-selector-parser` ^7.1.6 per correggere l'avviso di complessità quadratica (output CSS verificato identico al byte). Da 10 a 5 avvisi, tutti dev-only: restano `braces` (nessuna versione corretta pubblicata, la 3.0.3 è l'ultima) e i pacchetti che lo usano nella catena di `tailwindcss` 3; si chiude solo con la migrazione a Tailwind 4, da pianificare a parte.
+- Strumenti di sviluppo PHP: PHPUnit 13 (possibile con PHP ^8.4) e Laravel Tinker 3; 669 test verdi, nessuna deprecazione.
 
 ### Added
 
