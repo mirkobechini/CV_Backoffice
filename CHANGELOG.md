@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Changed
+
+- PHP minimo richiesto: **8.4** (`composer.json` `^8.4`); in produzione consigliata la 8.5 (PHP 8.2 termina il supporto di sicurezza il 31/12/2026). La CI ora testa 8.4 e 8.5. **Prima del deploy, impostare PHP 8.4/8.5 nell'ambiente di Laravel Cloud.**
+- Dipendenze PHP aggiornate entro i vincoli (Livewire 4.4, Symfony 8.1, Guzzle, Pint, PHPUnit e altre minori/patch); 668 test verdi.
+- Dipendenze di sviluppo npm: `concurrently` 10 e `npm audit fix` risolvono le vulnerabilità critiche (`shell-quote`) e `source-map-js` (da 10 a 7 avvisi). Restano solo quelli della catena di `tailwindcss` 3 (`braces`, `micromatch`, `chokidar`, `postcss-selector-parser`): sono strumenti di build che leggono solo i sorgenti del progetto, e la correzione richiede la migrazione a Tailwind 4, da pianificare a parte.
+
+### Added
+
+- Test `ComposerLockPhpVersionTest`: fallisce se il `composer.lock` richiede una versione di PHP più recente di quella dichiarata in `composer.json`.
+
 ## [v1.5.1] - 2026-10-05
 
 ### Fixed
