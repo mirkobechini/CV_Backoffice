@@ -44,7 +44,7 @@
 
 | Technology                       | Purpose                             |
 | :-------------------------------- | :----------------------------------- |
-| **Laravel 12 (PHP 8.2+)**        | Core application and backend logic  |
+| **Laravel 12 (PHP 8.4+)**        | Core application and backend logic  |
 | **Blade + Bootstrap 5 (Breeze)** | Admin interface                     |
 | **Livewire 4**                   | Dynamic components (VehicleSelect)  |
 | **MySQL / SQLite**               | Data persistence                    |
@@ -62,7 +62,7 @@
 
 ### Requirements
 
-- PHP 8.2+
+- PHP 8.4+ (production on 8.5)
 - Composer
 - Node.js 18+ and npm
 - MySQL (or SQLite for local development)
