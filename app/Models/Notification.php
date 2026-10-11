@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class Notification extends Model
 {
@@ -23,10 +23,15 @@ class Notification extends Model
     ];
 
     public const TYPE_DEADLINE = 'deadline';
+
     public const TYPE_ISSUE = 'issue';
+
     public const TYPE_EQUIPMENT = 'equipment';
+
     public const TYPE_MAINTENANCE = 'maintenance';
+
     public const TYPE_TIRE_SEASON = 'tire_season';
+
     public const TYPE_SYSTEM = 'system';
 
     public function user()

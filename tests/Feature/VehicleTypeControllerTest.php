@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\EquipmentType;
 use App\Models\User;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -82,7 +83,7 @@ class VehicleTypeControllerTest extends TestCase
 
     public function test_store_with_equipment_requirements(): void
     {
-        $eqType = \App\Models\EquipmentType::create(['name' => 'Estintore']);
+        $eqType = EquipmentType::create(['name' => 'Estintore']);
 
         $this->actingAs($this->admin())
             ->post(route('admin.vehicle-types.store'), [

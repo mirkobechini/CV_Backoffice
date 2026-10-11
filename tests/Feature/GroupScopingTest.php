@@ -4,7 +4,11 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\Deadline;
+use App\Models\EquipmentType;
 use App\Models\Group;
+use App\Models\Issue;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -17,9 +21,9 @@ class GroupScopingTest extends TestCase
 
     private function vehicle(string $plate, string $code, ?Group $group = null): Vehicle
     {
-        $brand = Brand::create(['name' => 'Fiat ' . $code]);
-        $model = CarModel::create(['name' => 'Ducato ' . $code, 'brand_id' => $brand->id]);
-        $type = VehicleType::create(['name' => 'Ambulanza ' . $code, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $brand = Brand::create(['name' => 'Fiat '.$code]);
+        $model = CarModel::create(['name' => 'Ducato '.$code, 'brand_id' => $brand->id]);
+        $type = VehicleType::create(['name' => 'Ambulanza '.$code, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
 
         return Vehicle::create([
             'license_plate' => $plate,
@@ -216,7 +220,7 @@ class GroupScopingTest extends TestCase
         $userA = User::factory()->create();
         $groupA->addUser($userA, Group::ROLE_CAPO);
         $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
-        $issue = \App\Models\Issue::create([
+        $issue = Issue::create([
             'vehicle_id' => $vehicleB->id,
             'description' => 'Guasto di un altro gruppo',
             'event_date' => '2025-01-01',
@@ -237,8 +241,8 @@ class GroupScopingTest extends TestCase
         $groupA->addUser($userA, Group::ROLE_CAPO);
         $vehicleA = $this->vehicle('AB123CD', '0001', $groupA);
         $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
-        \App\Models\Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'event_date' => '2025-01-01']);
-        \App\Models\Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'event_date' => '2025-01-01']);
+        Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'event_date' => '2025-01-01']);
+        Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'event_date' => '2025-01-01']);
 
         $response = $this->actingAs($userA)->get(route('admin.issues.index'));
 
@@ -261,8 +265,8 @@ class GroupScopingTest extends TestCase
         $groupB->addUser($userB, Group::ROLE_CAPO);
         $vehicleA = $this->vehicle('AB123CD', '0001', $groupA);
         $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
-        \App\Models\Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'status' => 'open', 'event_date' => '2025-01-01']);
-        \App\Models\Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'status' => 'open', 'event_date' => '2025-01-01']);
+        Issue::create(['vehicle_id' => $vehicleA->id, 'description' => 'Guasto gruppo A', 'status' => 'open', 'event_date' => '2025-01-01']);
+        Issue::create(['vehicle_id' => $vehicleB->id, 'description' => 'Guasto gruppo B', 'status' => 'open', 'event_date' => '2025-01-01']);
 
         // userA per primo: se la cache fosse ancora globale, la sua
         // risposta (senza "Guasto gruppo B") verrebbe servita anche a userB.
@@ -307,7 +311,7 @@ class GroupScopingTest extends TestCase
         $userA = User::factory()->create();
         $groupA->addUser($userA, Group::ROLE_CAPO);
         $vehicleB = $this->vehicle('EF456GH', '0002', $groupB);
-        $providerId = \App\Models\Provider::create(['name' => 'Officina', 'type' => 'Meccanico'])->id;
+        $providerId = Provider::create(['name' => 'Officina', 'type' => 'Meccanico'])->id;
 
         $this->actingAs($userA)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicleB->id,
@@ -329,13 +333,13 @@ class GroupScopingTest extends TestCase
         // Ministeriale) alla creazione del veicolo B poco sopra: qui si
         // verifica solo che la POST non ne aggiunga altre, non che la
         // tabella sia vuota.
-        $deadlineCountBefore = \App\Models\Deadline::count();
+        $deadlineCountBefore = Deadline::count();
         $this->actingAs($userA)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicleB->id,
             'type' => 'Tagliando',
             'due_date' => '2027-01',
         ])->assertSessionHasErrors('vehicle_id');
-        $this->assertEquals($deadlineCountBefore, \App\Models\Deadline::count());
+        $this->assertEquals($deadlineCountBefore, Deadline::count());
 
         $this->actingAs($userA)->post(route('admin.mileage-logs.store'), [
             'vehicle_id' => $vehicleB->id,
@@ -354,7 +358,7 @@ class GroupScopingTest extends TestCase
         $this->actingAs($userA)->post(route('admin.equipments.store'), [
             'vehicle_id' => $vehicleB->id,
             'name' => 'Estintore indebito',
-            'equipment_type_id' => \App\Models\EquipmentType::create(['name' => 'Estintore'])->id,
+            'equipment_type_id' => EquipmentType::create(['name' => 'Estintore'])->id,
             'status' => 'stored',
         ])->assertSessionHasErrors('vehicle_id');
         $this->assertDatabaseCount('equipment', 0);

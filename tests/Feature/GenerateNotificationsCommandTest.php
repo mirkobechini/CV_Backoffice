@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\EventNotificationMail;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
@@ -14,7 +15,6 @@ use App\Models\Provider;
 use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
-use App\Mail\EventNotificationMail;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;

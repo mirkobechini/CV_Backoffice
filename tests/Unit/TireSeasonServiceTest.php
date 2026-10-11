@@ -15,7 +15,7 @@ class TireSeasonServiceTest extends TestCase
 
     private function service(): TireSeasonService
     {
-        return new TireSeasonService();
+        return new TireSeasonService;
     }
 
     private function group(array $overrides = []): Group

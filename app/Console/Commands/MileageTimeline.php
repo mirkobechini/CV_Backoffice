@@ -62,9 +62,9 @@ class MileageTimeline extends Command
             return self::SUCCESS;
         }
 
-        $sorted = $rows->sortBy(fn($r) => $r['date']->toDateString())->values();
+        $sorted = $rows->sortBy(fn ($r) => $r['date']->toDateString())->values();
 
-        $this->info("Veicolo #{$vehicle->id} ({$vehicle->internal_code}) — " . $sorted->count() . ' letture:');
+        $this->info("Veicolo #{$vehicle->id} ({$vehicle->internal_code}) — ".$sorted->count().' letture:');
         $this->newLine();
 
         $previousMileage = null;

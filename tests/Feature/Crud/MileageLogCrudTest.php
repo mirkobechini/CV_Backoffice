@@ -71,7 +71,7 @@ class MileageLogCrudTest extends TestCase
         $mileageLog = MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => '2025-01-25',
-            'mileage' => '1234'
+            'mileage' => '1234',
         ]);
 
         return compact('vehicle', 'mileageLog');
@@ -86,21 +86,18 @@ class MileageLogCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_mileage_log_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.mileage-logs.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_mileage_log_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $mileageLog = $this->createMileageLog()['mileageLog'];
 
         $response = $this->actingAs($user)->get(route('admin.mileage-logs.show', $mileageLog));
@@ -110,7 +107,7 @@ class MileageLogCrudTest extends TestCase
 
     public function test_mileage_log_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $mileageLog = $this->createMileageLog()['mileageLog'];
 
         $response = $this->actingAs($user)->get(route('admin.mileage-logs.edit', $mileageLog));
@@ -118,16 +115,15 @@ class MileageLogCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_mileage_log_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $vehicle = $this->createVehicle();
 
         $response = $this->actingAs($user)->post(route('admin.mileage-logs.store'), [
             'vehicle_id' => $vehicle->id,
             'log_date' => '2025-01-25',
-            'mileage' => '1234'
+            'mileage' => '1234',
         ]);
 
         $mileageLog = MileageLog::first();
@@ -141,7 +137,6 @@ class MileageLogCrudTest extends TestCase
         ]);
     }
 
-
     public function test_mileage_log_can_be_updated(): void
     {
         $user = $this->createUser();
@@ -152,7 +147,7 @@ class MileageLogCrudTest extends TestCase
         $response = $this->actingAs($user)->put(route('admin.mileage-logs.update', $mileageLog), [
             'vehicle_id' => $vehicle->id,
             'log_date' => '2024-01-25',
-            'mileage' => '5678'
+            'mileage' => '5678',
         ]);
 
         $response->assertRedirect(route('admin.mileage-logs.show', $mileageLog));

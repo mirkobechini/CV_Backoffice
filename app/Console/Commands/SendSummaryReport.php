@@ -2,18 +2,18 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Vehicle;
-use App\Models\Issue;
-use App\Models\User;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 use App\Mail\ReportMail;
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\NotificationSetting;
+use App\Models\User;
+use App\Models\Vehicle;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Throwable;
 
 class SendSummaryReport extends Command
@@ -105,67 +105,67 @@ class SendSummaryReport extends Command
 
                 // 'reminder_days_before' cambia i dati per-utente anche a parità
                 // di gruppo, quindi la cache è per gruppo + giorni di preavviso.
-                $cacheKey = ($groupId ?? 'none') . ':' . $reminderDays;
+                $cacheKey = ($groupId ?? 'none').':'.$reminderDays;
 
                 if (! isset($perGroupData[$cacheKey])) {
-                $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
-                    ->forGroup($groupId)
-                    ->get();
+                    $allVehicles = Vehicle::with('vehicleType.equipmentTypes', 'equipment')
+                        ->forGroup($groupId)
+                        ->get();
 
-                $vehicleIdsWithOpenIssues = Issue::open()
-                    ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
-                    ->distinct('vehicle_id')
-                    ->pluck('vehicle_id');
-
-                $perGroupData[$cacheKey] = [
-                    'totalVehicles' => $allVehicles->count(),
-                    'vehiclesOk' => $allVehicles->reject(fn ($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count(),
-                    'openIssues' => Issue::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))->open()->get(),
-                    // Filtriamo su automatic_status (calcolato live da data/km), non
-                    // sulla colonna status persistita: quest'ultima viene
-                    // risincronizzata solo alla creazione/modifica di una scadenza o
-                    // visitando l'elenco scadenze (Deadline::syncStatusesFromRules())
-                    // — una scadenza il cui due_date passa senza che nessuno la tocchi
-                    // resta "in regola" in DB anche se ormai scaduta, e il report
-                    // giornaliero non la includeva mai (stesso bug già corretto sulla
-                    // dashboard, vedi DashboardController).
-                    'expiredDeadlines' => Deadline::with('vehicle.latestMileageLog')
+                    $vehicleIdsWithOpenIssues = Issue::open()
                         ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
-                        ->where('is_renewed', false)
-                        ->get()
-                        ->filter(fn (Deadline $d) => $d->automatic_status === Deadline::STATUS_EXPIRED)
-                        ->sortBy('due_date')
-                        ->values(),
-                    'upcomingDeadlines' => Deadline::with('vehicle')
-                        ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
-                        ->upcoming($reminderDays)
-                        ->get(),
-                    'upcomingAppointments' => MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')
-                        ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
-                        ->whereNull('return_date')
-                        ->where('appointment_date', '>=', today())
-                        ->orderBy('appointment_date')
-                        ->take(5)
-                        ->get(),
-                    'incompleteVehicles' => $allVehicles->filter(fn ($v) => ! $v->hasAllRequiredEquipment()),
-                    'vehiclesInMaintenance' => MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
-                        ->whereNull('return_date')
                         ->distinct('vehicle_id')
-                        ->count('vehicle_id'),
-                    // L'attrezzatura non assegnata a un veicolo non ha un
-                    // gruppo proprio: resta inclusa, come nell'indice
-                    // attrezzature.
-                    'expiringEquipment' => Equipment::with('vehicle')
-                        ->where(function ($q) use ($groupId) {
-                            $q->whereDoesntHave('vehicle')
-                                ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
-                        })
-                        ->expiringSoonOverall($reminderDays)
-                        ->get()
-                        ->sortBy('next_due_date')
-                        ->values(),
-                ];
-            }
+                        ->pluck('vehicle_id');
+
+                    $perGroupData[$cacheKey] = [
+                        'totalVehicles' => $allVehicles->count(),
+                        'vehiclesOk' => $allVehicles->reject(fn ($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count(),
+                        'openIssues' => Issue::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))->open()->get(),
+                        // Filtriamo su automatic_status (calcolato live da data/km), non
+                        // sulla colonna status persistita: quest'ultima viene
+                        // risincronizzata solo alla creazione/modifica di una scadenza o
+                        // visitando l'elenco scadenze (Deadline::syncStatusesFromRules())
+                        // — una scadenza il cui due_date passa senza che nessuno la tocchi
+                        // resta "in regola" in DB anche se ormai scaduta, e il report
+                        // giornaliero non la includeva mai (stesso bug già corretto sulla
+                        // dashboard, vedi DashboardController).
+                        'expiredDeadlines' => Deadline::with('vehicle.latestMileageLog')
+                            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                            ->where('is_renewed', false)
+                            ->get()
+                            ->filter(fn (Deadline $d) => $d->automatic_status === Deadline::STATUS_EXPIRED)
+                            ->sortBy('due_date')
+                            ->values(),
+                        'upcomingDeadlines' => Deadline::with('vehicle')
+                            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                            ->upcoming($reminderDays)
+                            ->get(),
+                        'upcomingAppointments' => MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')
+                            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                            ->whereNull('return_date')
+                            ->where('appointment_date', '>=', today())
+                            ->orderBy('appointment_date')
+                            ->take(5)
+                            ->get(),
+                        'incompleteVehicles' => $allVehicles->filter(fn ($v) => ! $v->hasAllRequiredEquipment()),
+                        'vehiclesInMaintenance' => MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                            ->whereNull('return_date')
+                            ->distinct('vehicle_id')
+                            ->count('vehicle_id'),
+                        // L'attrezzatura non assegnata a un veicolo non ha un
+                        // gruppo proprio: resta inclusa, come nell'indice
+                        // attrezzature.
+                        'expiringEquipment' => Equipment::with('vehicle')
+                            ->where(function ($q) use ($groupId) {
+                                $q->whereDoesntHave('vehicle')
+                                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
+                            })
+                            ->expiringSoonOverall($reminderDays)
+                            ->get()
+                            ->sortBy('next_due_date')
+                            ->values(),
+                    ];
+                }
 
                 Mail::to($row->value)->send(new ReportMail($perGroupData[$cacheKey]));
                 $this->info("Report inviato con successo a {$row->value}!");

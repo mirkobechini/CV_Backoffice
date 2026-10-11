@@ -17,7 +17,6 @@ use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Observers\DashboardCacheObserver;
 use App\Observers\VehicleObserver;
-use App\Support\UploadsDiskGuard;
 use App\Policies\DeadlinePolicy;
 use App\Policies\EquipmentIssuePolicy;
 use App\Policies\EquipmentMaintenanceRecordPolicy;
@@ -29,6 +28,7 @@ use App\Policies\MileageLogPolicy;
 use App\Policies\ProviderPolicy;
 use App\Policies\VehiclePolicy;
 use App\Policies\VehicleTypePolicy;
+use App\Support\UploadsDiskGuard;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\Paginator;
@@ -88,7 +88,7 @@ class AppServiceProvider extends ServiceProvider
         // sarebbe forzabile a forza bruta nella finestra di validità.
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)
-                ->by($request->session()->get('login.2fa_user_id') . '|' . $request->ip());
+                ->by($request->session()->get('login.2fa_user_id').'|'.$request->ip());
         });
 
         // Rate limiting per le route API protette

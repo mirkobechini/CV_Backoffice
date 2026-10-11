@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Crud;
 
-use App\Models\User;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -51,7 +51,6 @@ class EquipmentCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_index_shows_expiration_date_not_last_revision_date_alongside_countdown(): void
     {
         // Prima di questo fix, la cella mostrava revision_date (l'ultima
@@ -70,7 +69,7 @@ class EquipmentCrudTest extends TestCase
 
     public function test_equipment_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.equipments.create'));
 
@@ -98,11 +97,9 @@ class EquipmentCrudTest extends TestCase
         $edit->assertSee('dall&#039;ultima revisione', false);
     }
 
-
-
     public function test_equipment_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $equipment = $this->createEquipment()['equipment'];
 
         $response = $this->actingAs($user)->get(route('admin.equipments.show', $equipment));
@@ -112,14 +109,13 @@ class EquipmentCrudTest extends TestCase
 
     public function test_equipment_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $equipment = $this->createEquipment()['equipment'];
 
         $response = $this->actingAs($user)->get(route('admin.equipments.edit', $equipment));
 
         $response->assertStatus(200);
     }
-
 
     public function test_index_groups_by_equipment_type(): void
     {
@@ -153,7 +149,7 @@ class EquipmentCrudTest extends TestCase
 
     public function test_equipment_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $equipmentType = $this->createEquipmentType();
 
         $response = $this->actingAs($user)->post(route('admin.equipments.store'), [
@@ -174,7 +170,6 @@ class EquipmentCrudTest extends TestCase
             'serial_number' => '111111',
         ]);
     }
-
 
     public function test_equipment_can_be_updated(): void
     {

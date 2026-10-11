@@ -50,7 +50,7 @@ class IssueCsvImporter extends AbstractCsvImporter
 
             // Veicolo: usa il parametro se fornito, altrimenti cerca nel file
             if ($vehicleRef) {
-                if (!isset($vehiclesCache[$vehicleRef])) {
+                if (! isset($vehiclesCache[$vehicleRef])) {
                     // forCurrentUser(): senza, un capo poteva importare dati
                     // su un veicolo di un altro gruppo indovinandone sigla/targa.
                     $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('internal_code', $vehicleRef)
@@ -59,12 +59,12 @@ class IssueCsvImporter extends AbstractCsvImporter
                         ->first();
                 }
                 $vehicle = $vehiclesCache[$vehicleRef];
-                if (!$vehicle) {
+                if (! $vehicle) {
                     $result['valid'] = false;
                     $result['errors'][] = "Veicolo \"{$vehicleRef}\" non trovato.";
                 } else {
                     $result['data']['_vehicle_id'] = $vehicle->id;
-                    $result['data']['_vehicle_label'] = $vehicle->internal_code . ' - ' . $vehicle->license_plate;
+                    $result['data']['_vehicle_label'] = $vehicle->internal_code.' - '.$vehicle->license_plate;
                 }
             } else {
                 $result['valid'] = false;
@@ -117,7 +117,7 @@ class IssueCsvImporter extends AbstractCsvImporter
 
     public function import(array $row): array
     {
-        if (!isset($row['_vehicle_id']) || !$this->vehicleBelongsToCurrentUser($row['_vehicle_id'])) {
+        if (! isset($row['_vehicle_id']) || ! $this->vehicleBelongsToCurrentUser($row['_vehicle_id'])) {
             return ['error' => 'Veicolo non valido'];
         }
 
@@ -138,21 +138,21 @@ class IssueCsvImporter extends AbstractCsvImporter
         // confirm(), perdendo anche le altre righe del batch.
         $parsedAppointmentDate = null;
         $providerId = null;
-        if (!empty($appointmentDate)) {
+        if (! empty($appointmentDate)) {
             $parsedAppointmentDate = $this->parseDate($appointmentDate);
-            if (!$parsedAppointmentDate) {
-                return ['error' => 'Data appuntamento "' . $appointmentDate . '" non valida.'];
+            if (! $parsedAppointmentDate) {
+                return ['error' => 'Data appuntamento "'.$appointmentDate.'" non valida.'];
             }
 
-            if (!empty($providerName)) {
-                $provider = Provider::where('name', 'like', '%' . $providerName . '%')->first();
+            if (! empty($providerName)) {
+                $provider = Provider::where('name', 'like', '%'.$providerName.'%')->first();
                 if ($provider) {
                     $providerId = $provider->id;
                 }
             }
 
             if ($providerId === null) {
-                return ['error' => 'Fornitore "' . $providerName . '" non trovato: impossibile creare l\'appuntamento per "' . mb_substr($description, 0, 50) . '".'];
+                return ['error' => 'Fornitore "'.$providerName.'" non trovato: impossibile creare l\'appuntamento per "'.mb_substr($description, 0, 50).'".'];
             }
         }
 
@@ -166,7 +166,7 @@ class IssueCsvImporter extends AbstractCsvImporter
             ->exists();
 
         if ($exists) {
-            return ['error' => 'Guasto già esistente: "' . mb_substr($description, 0, 50) . '"'];
+            return ['error' => 'Guasto già esistente: "'.mb_substr($description, 0, 50).'"'];
         }
 
         // Crea il guasto
@@ -213,6 +213,7 @@ class IssueCsvImporter extends AbstractCsvImporter
                 return Carbon::parse($date);
             } catch (\Exception $e) {
                 Log::warning("CSV import: data \"{$date}\" nel formato AAAA-MM-GG non valida: {$e->getMessage()}");
+
                 return null;
             }
         }
@@ -223,6 +224,7 @@ class IssueCsvImporter extends AbstractCsvImporter
                 return Carbon::createFromFormat('d/m/Y', $date);
             } catch (\Exception $e) {
                 Log::warning("CSV import: data \"{$date}\" nel formato GG/MM/AAAA non valida: {$e->getMessage()}");
+
                 return null;
             }
         }
@@ -234,9 +236,11 @@ class IssueCsvImporter extends AbstractCsvImporter
                 $today = Carbon::today();
                 // Se mese <= mese corrente, usa anno corrente, altrimenti anno precedente
                 $year = $parsed->month <= $today->month ? $today->year : $today->year - 1;
+
                 return $parsed->setYear($year);
             } catch (\Exception $e) {
                 Log::warning("CSV import: data \"{$date}\" nel formato GG/MM non valida: {$e->getMessage()}");
+
                 return null;
             }
         }
@@ -247,6 +251,7 @@ class IssueCsvImporter extends AbstractCsvImporter
                 return Carbon::createFromFormat('d/m/y', $date);
             } catch (\Exception $e) {
                 Log::warning("CSV import: data \"{$date}\" nel formato GG/MM/AA non valida: {$e->getMessage()}");
+
                 return null;
             }
         }

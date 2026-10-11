@@ -6,28 +6,28 @@ use App\Http\Controllers\Admin\DocumentStatusController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\EquipmentIssueController;
 use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
-use App\Http\Controllers\Admin\TireController;
+use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\PdfExportController;
 use App\Http\Controllers\Admin\MaintenanceCalendarController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
+use App\Http\Controllers\Admin\MileageLogController;
+use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\Admin\ProviderController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\TireController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
 use App\Http\Controllers\Admin\VehicleTypeController;
-use App\Http\Controllers\Admin\MileageLogController;
-use App\Http\Controllers\Admin\EquipmentTypeController;
-use App\Http\Controllers\Admin\NotificationSettingController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\TelegramWebhookController;
-use App\Http\Controllers\TwoFactorAuthenticationController;
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CsvExportController;
 use App\Http\Controllers\CsvImportController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PdfExportController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicFleetStatusController;
+use App\Http\Controllers\TelegramWebhookController;
+use App\Http\Controllers\TwoFactorAuthenticationController;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -75,20 +75,20 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
-    ->name("admin.")
-    ->prefix("admin")
+    ->name('admin.')
+    ->prefix('admin')
     ->group(function () {
-        Route::resource("vehicles", VehicleController::class);
-        Route::resource("providers", ProviderController::class);
-        Route::resource("issues", IssueController::class);
+        Route::resource('vehicles', VehicleController::class);
+        Route::resource('providers', ProviderController::class);
+        Route::resource('issues', IssueController::class);
         Route::get('deadlines/insurances', [DeadlineController::class, 'insurances'])
             ->name('deadlines.insurances');
         Route::get('documents', [DocumentStatusController::class, 'index'])
             ->name('documents.index');
-        Route::resource("deadlines", DeadlineController::class);
+        Route::resource('deadlines', DeadlineController::class);
         Route::patch('deadlines/{deadline}/renew', [DeadlineController::class, 'renew'])
             ->name('deadlines.renew');
-        Route::resource("equipments", EquipmentController::class);
+        Route::resource('equipments', EquipmentController::class);
         Route::post('equipments/{equipment}/record-revision', [EquipmentController::class, 'recordRevision'])
             ->name('equipments.record-revision');
         Route::post('equipments/bulk-record-revision', [EquipmentController::class, 'bulkRecordRevision'])
@@ -104,7 +104,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // "bulk-update" e fallendo il model binding.
         Route::patch('tires/bulk-update', [TireController::class, 'bulkUpdate'])
             ->name('tires.bulk-update');
-        Route::resource("tires", TireController::class);
+        Route::resource('tires', TireController::class);
         Route::post('tires/{tire}/record-change', [TireController::class, 'recordChange'])
             ->name('tires.record-change');
 
@@ -122,7 +122,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // già esistenti vive interamente nella pagina del gruppo.
         Route::get('groups/{group}/users/create', [UserController::class, 'create'])->name('groups.users.create');
         Route::post('groups/{group}/users', [UserController::class, 'store'])->name('groups.users.store');
-        Route::resource("groups", GroupController::class);
+        Route::resource('groups', GroupController::class);
         Route::get('mileage-logs/pivot', [MileageLogController::class, 'pivot'])
             ->name('mileage-logs.pivot');
         Route::post('mileage-logs/pivot/save', [MileageLogController::class, 'pivotSave'])
@@ -131,7 +131,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('mileage-logs.bulk');
         Route::post('mileage-logs/bulk/store', [MileageLogController::class, 'bulkStore'])
             ->name('mileage-logs.bulk-store');
-        Route::resource("mileage-logs", MileageLogController::class)
+        Route::resource('mileage-logs', MileageLogController::class)
             ->parameters(['mileage-logs' => 'mileageLog']);
         Route::delete('mileage-logs/bulk/delete', [MileageLogController::class, 'bulkDelete'])
             ->name('mileage-logs.bulk-delete');
@@ -143,11 +143,11 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::get('maintenance-records/events', [MaintenanceCalendarController::class, 'events'])
             ->name('maintenance-records.events');
 
-        Route::resource("maintenance-records", MaintenanceRecordController::class)
+        Route::resource('maintenance-records', MaintenanceRecordController::class)
             ->parameters(['maintenance-records' => 'maintenanceRecord']);
-        Route::resource("vehicle-types", VehicleTypeController::class)
+        Route::resource('vehicle-types', VehicleTypeController::class)
             ->parameters(['vehicle-types' => 'vehicleType']);
-        Route::resource("equipment-types", EquipmentTypeController::class)
+        Route::resource('equipment-types', EquipmentTypeController::class)
             ->parameters(['equipment-types' => 'equipmentType']);
         Route::patch('maintenance-records/{maintenanceRecord}/complete', [MaintenanceRecordController::class, 'complete'])
             ->name('maintenance-records.complete');
@@ -201,7 +201,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('csv-import.confirm');
     });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';
 
 // ⚠️ Dev only: login rapido per sviluppo.
 // Attivo SOLO in ambiente local E con debug abilitato (doppia guardia):
@@ -212,8 +212,10 @@ if (app()->environment('local') && config('app.debug')) {
         $user = User::first();
         if ($user) {
             Auth::login($user);
+
             return redirect('/dashboard');
         }
+
         return redirect('/login');
     });
 }

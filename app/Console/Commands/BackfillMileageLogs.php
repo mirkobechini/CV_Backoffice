@@ -47,9 +47,9 @@ class BackfillMileageLogs extends Command
             ->whereNotNull('due_date')
             ->whereIn('type', [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN])
             ->with('vehicle')
-            ->when($vehicleId, fn($q) => $q->where('vehicle_id', $vehicleId))
+            ->when($vehicleId, fn ($q) => $q->where('vehicle_id', $vehicleId))
             ->get()
-            ->map(fn(Deadline $d) => [
+            ->map(fn (Deadline $d) => [
                 'vehicle' => $d->vehicle,
                 'date' => $d->due_date,
                 'mileage' => $d->last_mileage,
@@ -59,9 +59,9 @@ class BackfillMileageLogs extends Command
         $maintenanceRecords = MaintenanceRecord::whereNotNull('mileage_at_service')
             ->whereNotNull('return_date')
             ->with('vehicle')
-            ->when($vehicleId, fn($q) => $q->where('vehicle_id', $vehicleId))
+            ->when($vehicleId, fn ($q) => $q->where('vehicle_id', $vehicleId))
             ->get()
-            ->map(fn(MaintenanceRecord $r) => [
+            ->map(fn (MaintenanceRecord $r) => [
                 'vehicle' => $r->vehicle,
                 'date' => $r->return_date,
                 'mileage' => $r->mileage_at_service,
@@ -69,8 +69,8 @@ class BackfillMileageLogs extends Command
             ]);
 
         $candidates = $deadlines->concat($maintenanceRecords)
-            ->filter(fn(array $c) => $c['vehicle'] !== null)
-            ->sortBy(fn(array $c) => $c['date']->toDateString())
+            ->filter(fn (array $c) => $c['vehicle'] !== null)
+            ->sortBy(fn (array $c) => $c['date']->toDateString())
             ->values();
 
         if ($candidates->isEmpty()) {

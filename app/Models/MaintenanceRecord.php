@@ -4,24 +4,30 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class MaintenanceRecord extends Model
 {
-    use SoftDeletes, LogsActivity;
+    use LogsActivity, SoftDeletes;
 
-    public function getActivitylogOptions(): \Spatie\Activitylog\LogOptions
+    public function getActivitylogOptions(): LogOptions
     {
-        return \Spatie\Activitylog\LogOptions::defaults()
+        return LogOptions::defaults()
             ->logAll()
             ->logOnlyDirty();
     }
 
     public const ACTIVITY_TAGLIANDO = 'Tagliando';
+
     public const ACTIVITY_REPAIR = 'Riparazione';
+
     public const ACTIVITY_REVISION_MINISTERIAL = 'Revisione Ministeriale';
+
     public const ACTIVITY_REVISION_OXYGEN = 'Revisione Impianto Ossigeno';
+
     public const ACTIVITY_TIMING_BELT = 'Cinghia Distribuzione';
+
     public const ACTIVITY_TIRE_CHANGE = 'Cambio Gomme';
 
     public const ACTIVITY_TYPES = [
@@ -67,7 +73,6 @@ class MaintenanceRecord extends Model
     {
         return $this->hasMany(MaintenanceRecordItem::class);
     }
-
 
     public function tires()
     {

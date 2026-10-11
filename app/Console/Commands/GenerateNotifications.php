@@ -89,7 +89,7 @@ class GenerateNotifications extends Command
                     foreach ($mails as $mail) {
                         Mail::to($recipient)->send($mail);
                     }
-                    $this->info('Sent ' . count($mails) . " email(s) to {$recipient}.");
+                    $this->info('Sent '.count($mails)." email(s) to {$recipient}.");
                 }
             }
 
@@ -103,7 +103,7 @@ class GenerateNotifications extends Command
                 foreach ($events as [$title, $message]) {
                     $telegram->send($user, $title, $message);
                 }
-                $this->info('Sent ' . count($events) . " Telegram message(s) to user {$userId}.");
+                $this->info('Sent '.count($events)." Telegram message(s) to user {$userId}.");
             }
         }
 
@@ -298,7 +298,7 @@ class GenerateNotifications extends Command
             $title = "Cambio gomme in ritardo: {$vehicle->internal_code}";
             $message = "Il veicolo {$vehicle->internal_code} non ha ancora montato le gomme {$seasonLabel}.";
             $url = route('admin.vehicles.show', $vehicle->id);
-            $marker = "#tire-season-{$vehicle->id}-" . today()->year . "-{$expectedSeason}";
+            $marker = "#tire-season-{$vehicle->id}-".today()->year."-{$expectedSeason}";
 
             $this->dispatchEvent($user, Notification::TYPE_TIRE_SEASON, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
         }

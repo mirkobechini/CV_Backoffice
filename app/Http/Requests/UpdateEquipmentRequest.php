@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Validator;
@@ -16,9 +17,8 @@ class UpdateEquipmentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
-
     public function rules(): array
     {
         return [
@@ -26,7 +26,7 @@ class UpdateEquipmentRequest extends FormRequest
             'name' => 'required|string|max:255',
             'brand' => 'nullable|string|max:255',
             'model' => 'nullable|string|max:255',
-            'serial_number' => 'unique:equipment,serial_number,' . $this->route('equipment')?->id . ',id|nullable|string|max:255',
+            'serial_number' => 'unique:equipment,serial_number,'.$this->route('equipment')?->id.',id|nullable|string|max:255',
             'identification_number' => 'nullable|string|max:255',
             'fabrication_date' => 'nullable|date',
             'revision_date' => 'nullable|date',
@@ -72,7 +72,7 @@ class UpdateEquipmentRequest extends FormRequest
             $expirationDate = $this->input('expiration_date');
             $revisionDate = $this->input('revision_date');
 
-            if (!$expirationDate || !$revisionDate) {
+            if (! $expirationDate || ! $revisionDate) {
                 return;
             }
 
@@ -85,7 +85,7 @@ class UpdateEquipmentRequest extends FormRequest
             $nextCollaudoDate = $this->input('next_collaudo_date');
             $collaudoDate = $this->input('collaudo_date');
 
-            if (!$nextCollaudoDate || !$collaudoDate) {
+            if (! $nextCollaudoDate || ! $collaudoDate) {
                 return;
             }
 

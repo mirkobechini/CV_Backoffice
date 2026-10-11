@@ -5,8 +5,9 @@ namespace App\Http\Requests;
 use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
-use Illuminate\Support\Carbon;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Validator;
 
 class StoreEquipmentRequest extends FormRequest
@@ -16,7 +17,7 @@ class StoreEquipmentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -71,7 +72,7 @@ class StoreEquipmentRequest extends FormRequest
             $expirationDate = $this->input('expiration_date');
             $revisionDate = $this->input('revision_date');
 
-            if (!$expirationDate || !$revisionDate) {
+            if (! $expirationDate || ! $revisionDate) {
                 return;
             }
 
@@ -84,7 +85,7 @@ class StoreEquipmentRequest extends FormRequest
             $nextCollaudoDate = $this->input('next_collaudo_date');
             $collaudoDate = $this->input('collaudo_date');
 
-            if (!$nextCollaudoDate || !$collaudoDate) {
+            if (! $nextCollaudoDate || ! $collaudoDate) {
                 return;
             }
 

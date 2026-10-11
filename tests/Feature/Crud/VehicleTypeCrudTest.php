@@ -9,7 +9,6 @@ use Tests\TestCase;
 
 class VehicleTypeCrudTest extends TestCase
 {
-
     use RefreshDatabase;
 
     private function createUser(): User
@@ -37,21 +36,18 @@ class VehicleTypeCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_vehicle_type_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.vehicle-types.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_vehicle_type_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $vehicleType = $this->createVehicleType();
 
         $response = $this->actingAs($user)->get(route('admin.vehicle-types.show', $vehicleType));
@@ -61,7 +57,7 @@ class VehicleTypeCrudTest extends TestCase
 
     public function test_vehicle_type_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $vehicleType = $this->createVehicleType();
 
         $response = $this->actingAs($user)->get(route('admin.vehicle-types.edit', $vehicleType));
@@ -69,10 +65,9 @@ class VehicleTypeCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_vehicle_type_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->post(route('admin.vehicle-types.store'), [
             'name' => 'Ambulanza',
@@ -92,7 +87,6 @@ class VehicleTypeCrudTest extends TestCase
             'regular_inspection_months' => 12,
         ]);
     }
-
 
     public function test_vehicle_type_can_be_updated(): void
     {
@@ -152,7 +146,6 @@ class VehicleTypeCrudTest extends TestCase
 
     }
 
-
     public function test_vehicle_type_cannot_be_updated_with_duplicate_name()
     {
         $user = $this->createUser();
@@ -176,7 +169,7 @@ class VehicleTypeCrudTest extends TestCase
         $response->assertSessionHasErrors(['name']);
         $this->assertDatabaseHas('vehicle_types', [
             'id' => $vehicleTypeBase->id,
-            'name' => $vehicleTypeBase->name
+            'name' => $vehicleTypeBase->name,
         ]); // Conferma che il tipo di veicolo mantenga il nome originale.
 
     }

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Provider extends Model
 {
-    use SoftDeletes, Searchable;
+    use Searchable, SoftDeletes;
 
     protected $fillable = [
         'name',

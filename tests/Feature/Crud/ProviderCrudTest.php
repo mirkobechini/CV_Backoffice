@@ -2,15 +2,22 @@
 
 namespace Tests\Feature\Crud;
 
+use App\Models\Brand;
+use App\Models\CarModel;
+use App\Models\Equipment;
+use App\Models\EquipmentMaintenanceRecord;
+use App\Models\EquipmentType;
 use App\Models\Group;
+use App\Models\MaintenanceRecord;
 use App\Models\Provider;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ProviderCrudTest extends TestCase
 {
-
     use RefreshDatabase;
 
     private function createUser(): User
@@ -34,8 +41,8 @@ class ProviderCrudTest extends TestCase
     private function createProvider(): Provider
     {
         return Provider::create([
-            'name' => "boh",
-            'contact_info' => "+39 3885245",
+            'name' => 'boh',
+            'contact_info' => '+39 3885245',
             'address' => 'Via roma 2, Milano',
             'type' => 'Meccanico',
         ]);
@@ -50,21 +57,18 @@ class ProviderCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_provider_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.providers.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_provider_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $provider = $this->createProvider();
 
         $response = $this->actingAs($user)->get(route('admin.providers.show', $provider));
@@ -74,7 +78,7 @@ class ProviderCrudTest extends TestCase
 
     public function test_provider_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $provider = $this->createProvider();
 
         $response = $this->actingAs($user)->get(route('admin.providers.edit', $provider));
@@ -82,14 +86,13 @@ class ProviderCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_provider_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->post(route('admin.providers.store'), [
-            'name' => "boh",
-            'contact_info' => "+39 3885245",
+            'name' => 'boh',
+            'contact_info' => '+39 3885245',
             'address' => 'Via roma 2, Milano',
             'type' => 'Meccanico',
         ]);
@@ -127,15 +130,14 @@ class ProviderCrudTest extends TestCase
         ]);
     }
 
-
     public function test_provider_can_be_updated(): void
     {
         $user = $this->createUser();
         $provider = $this->createProvider();
 
         $response = $this->actingAs($user)->put(route('admin.providers.update', $provider), [
-            'name' => "mah",
-            'contact_info' => "+39 3885245",
+            'name' => 'mah',
+            'contact_info' => '+39 3885245',
             'address' => 'Via milano 2, Napoli',
             'type' => 'Carrozziere',
         ]);
@@ -192,10 +194,10 @@ class ProviderCrudTest extends TestCase
         $bothProvider = Provider::create(['name' => 'Entrambi', 'type' => 'Meccanico']);
         $unusedProvider = Provider::create(['name' => 'Non usato', 'type' => 'Meccanico']);
 
-        $brand = \App\Models\Brand::create(['name' => 'Fiat']);
-        $model = \App\Models\CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
-        $vehicleType = \App\Models\VehicleType::create(['name' => 'Amb', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
-        $vehicle = \App\Models\Vehicle::create([
+        $brand = Brand::create(['name' => 'Fiat']);
+        $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $vehicleType = VehicleType::create(['name' => 'Amb', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $vehicle = Vehicle::create([
             'license_plate' => 'AB123CD',
             'internal_code' => '0001',
             'brand_id' => $brand->id,
@@ -204,28 +206,28 @@ class ProviderCrudTest extends TestCase
             'immatricolation_date' => '2024-01-01',
             'group_id' => $this->defaultGroup()->id,
         ]);
-        \App\Models\MaintenanceRecord::create([
+        MaintenanceRecord::create([
             'vehicle_id' => $vehicle->id,
             'provider_id' => $vehicleOnlyProvider->id,
             'appointment_date' => today(),
         ]);
-        \App\Models\MaintenanceRecord::create([
+        MaintenanceRecord::create([
             'vehicle_id' => $vehicle->id,
             'provider_id' => $bothProvider->id,
             'appointment_date' => today(),
         ]);
 
-        $equipmentType = \App\Models\EquipmentType::create(['name' => 'Estintore']);
-        $equipment = \App\Models\Equipment::create([
+        $equipmentType = EquipmentType::create(['name' => 'Estintore']);
+        $equipment = Equipment::create([
             'equipment_type_id' => $equipmentType->id,
             'name' => 'Estintore test',
             'serial_number' => 'SN-1',
         ]);
-        \App\Models\EquipmentMaintenanceRecord::create([
+        EquipmentMaintenanceRecord::create([
             'provider_id' => $equipmentOnlyProvider->id,
             'appointment_date' => today(),
         ]);
-        \App\Models\EquipmentMaintenanceRecord::create([
+        EquipmentMaintenanceRecord::create([
             'provider_id' => $bothProvider->id,
             'appointment_date' => today(),
         ]);

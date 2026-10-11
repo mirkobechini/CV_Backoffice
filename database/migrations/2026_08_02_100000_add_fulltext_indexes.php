@@ -19,7 +19,7 @@ return new class extends Migration
     {
         $driver = DB::getDriverName();
 
-        if (!in_array($driver, ['mysql', 'mariadb'], true)) {
+        if (! in_array($driver, ['mysql', 'mariadb'], true)) {
             return; // SQLite non supporta FULLTEXT
         }
 
@@ -36,7 +36,7 @@ return new class extends Migration
     {
         $driver = DB::getDriverName();
 
-        if (!in_array($driver, ['mysql', 'mariadb'], true)) {
+        if (! in_array($driver, ['mysql', 'mariadb'], true)) {
             return;
         }
 

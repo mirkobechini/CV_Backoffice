@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\Tire;
 use App\Rules\BelongsToCurrentUserGroup;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -15,7 +16,7 @@ class BulkUpdateTireRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -24,7 +25,7 @@ class BulkUpdateTireRequest extends FormRequest
             'tire_ids.*' => new BelongsToCurrentUserGroup(Tire::class, message: 'Uno o più pneumatici selezionati non esistono o non appartengono al tuo gruppo.'),
             'brand' => 'nullable|string|max:255',
             'model_name' => 'nullable|string|max:255',
-            'size' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
+            'size' => ['nullable', 'string', 'max:255', 'regex:'.Tire::SIZE_REGEX],
         ];
     }
 

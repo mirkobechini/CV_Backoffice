@@ -9,8 +9,8 @@ use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
 use App\Services\DashboardCache;
 use App\Services\TireSeasonService;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
@@ -77,7 +77,7 @@ class DashboardController extends Controller
                 ->forCurrentUser()
                 ->whereHas('vehicleType.equipmentTypes')
                 ->get()
-                ->filter(fn($v) => ! $v->hasAllRequiredEquipment());
+                ->filter(fn ($v) => ! $v->hasAllRequiredEquipment());
 
             // L'attrezzatura non assegnata a un veicolo non ha un gruppo
             // proprio: resta inclusa, come nell'indice attrezzature.

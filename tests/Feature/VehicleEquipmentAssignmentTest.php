@@ -22,7 +22,7 @@ class VehicleEquipmentAssignmentTest extends TestCase
     private function vehicle(Group $group, string $internalCode): Vehicle
     {
         return Vehicle::create([
-            'license_plate' => 'AA' . rand(100, 999) . 'BB',
+            'license_plate' => 'AA'.rand(100, 999).'BB',
             'internal_code' => $internalCode,
             'immatricolation_date' => now()->subYears(2),
             'group_id' => $group->id,

@@ -24,8 +24,7 @@ class BelongsToCurrentUserGroup implements ValidationRule
         private readonly string $modelClass,
         private readonly string $vehicleRelation = 'vehicle',
         private readonly ?string $message = null,
-    ) {
-    }
+    ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

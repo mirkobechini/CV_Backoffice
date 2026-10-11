@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\EquipmentType;
 use App\Models\VehicleType;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class VehicleTypeEquipmentRequirementSeeder extends Seeder

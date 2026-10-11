@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Concerns;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 trait DetectsDuplicates
 {

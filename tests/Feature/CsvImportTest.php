@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Group;
+use App\Models\MileageLog;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -39,6 +41,7 @@ class CsvImportTest extends TestCase
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
         $brand = Brand::create(['name' => 'Fiat']);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+
         return Vehicle::create([
             'license_plate' => 'AB123CD',
             'vehicle_type_id' => $vt->id,
@@ -98,7 +101,7 @@ class CsvImportTest extends TestCase
     {
         $user = $this->admin();
         $vehicle = $this->vehicle();
-        \App\Models\MileageLog::create([
+        MileageLog::create([
             'vehicle_id' => $vehicle->id,
             'log_date' => '2025-01-01',
             'mileage' => 1000,
@@ -265,7 +268,7 @@ class CsvImportTest extends TestCase
         // esatta su stringa non rilevava mai il duplicato se la colonna
         // conteneva un suffisso orario.
         $vehicle = $this->vehicle();
-        \App\Models\MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2025-03-01', 'mileage' => 9000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2025-03-01', 'mileage' => 9000]);
 
         $this->actingAs($this->admin())->post(route('admin.csv-import.confirm'), [
             'entity' => 'mileage-logs',
@@ -351,7 +354,7 @@ class CsvImportTest extends TestCase
     public function test_confirm_issue_with_resolved_provider_creates_maintenance_record(): void
     {
         $vehicle = $this->vehicle();
-        $provider = \App\Models\Provider::create(['name' => 'Officina Rossi', 'type' => 'Meccanico']);
+        $provider = Provider::create(['name' => 'Officina Rossi', 'type' => 'Meccanico']);
 
         $this->actingAs($this->admin())->post(route('admin.csv-import.confirm'), [
             'entity' => 'issues',

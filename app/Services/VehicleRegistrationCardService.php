@@ -42,7 +42,7 @@ class VehicleRegistrationCardService
             $this->deleteExisting($existingVehicle);
 
             $file = $request->file('registration_card');
-            $fileName = Str::random(40) . '.' . $file->getClientOriginalExtension();
+            $fileName = Str::random(40).'.'.$file->getClientOriginalExtension();
             $data['registration_card_path'] = $file->storeAs('registration_cards', $fileName, $this->disk());
 
             return;
@@ -71,7 +71,7 @@ class VehicleRegistrationCardService
             return null;
         }
 
-        $finalPath = 'registration_cards/' . Str::random(40) . '.' . pathinfo($pendingPath, PATHINFO_EXTENSION);
+        $finalPath = 'registration_cards/'.Str::random(40).'.'.pathinfo($pendingPath, PATHINFO_EXTENSION);
         Storage::disk($this->disk())->move($pendingPath, $finalPath);
 
         return $finalPath;

@@ -50,7 +50,7 @@ class CsvExportController extends Controller
 
     private function exportIssues()
     {
-        $issues = Issue::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
+        $issues = Issue::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Descrizione', 'Stato', 'Data Evento'];
         $rows = $issues->map(fn ($i) => [
@@ -65,7 +65,7 @@ class CsvExportController extends Controller
 
     private function exportDeadlines()
     {
-        $deadlines = Deadline::with('vehicle', 'insuranceCoverages')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
+        $deadlines = Deadline::with('vehicle', 'insuranceCoverages')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Tipo', 'Data Scadenza', 'Stato', 'Rinnovata', 'Compagnia', 'Numero Polizza', 'Coperture', 'Premio', 'Massimale', 'Broker'];
         $rows = $deadlines->map(fn ($d) => [
@@ -76,7 +76,7 @@ class CsvExportController extends Controller
             $d->is_renewed ? 'Sì' : 'No',
             $d->insurance_company ?? '',
             $d->insurance_policy_number ?? '',
-            $d->insuranceCoverages->map(fn ($c) => $c->coverage_type . ' (€' . number_format((float) $c->cost, 2, ',', '.') . ')')->implode('; '),
+            $d->insuranceCoverages->map(fn ($c) => $c->coverage_type.' (€'.number_format((float) $c->cost, 2, ',', '.').')')->implode('; '),
             $d->type === Deadline::TYPE_ASSICURAZIONE ? number_format($d->insurance_premium_total, 2, ',', '') : '',
             $d->insurance_coverage_limit !== null ? number_format((float) $d->insurance_coverage_limit, 2, ',', '') : '',
             $d->insurance_broker_contact ?? '',
@@ -92,7 +92,7 @@ class CsvExportController extends Controller
         $equipments = Equipment::with(['vehicle', 'equipmentType'])
             ->where(function ($q) {
                 $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn($vq) => $vq->forCurrentUser());
+                    ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
             })
             ->get();
 
@@ -111,7 +111,7 @@ class CsvExportController extends Controller
 
     private function exportMaintenanceRecords()
     {
-        $records = MaintenanceRecord::with(['vehicle', 'provider'])->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
+        $records = MaintenanceRecord::with(['vehicle', 'provider'])->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Fornitore', 'Data Appuntamento', 'Data Rientro', 'Tipo Attività', 'Km al Servizio', 'Costo'];
         $rows = $records->map(fn ($r) => [
@@ -129,7 +129,7 @@ class CsvExportController extends Controller
 
     private function exportMileageLogs()
     {
-        $logs = MileageLog::with('vehicle')->whereHas('vehicle', fn($q) => $q->forCurrentUser())->get();
+        $logs = MileageLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
 
         $headers = ['Veicolo', 'Data', 'Chilometri'];
         $rows = $logs->map(fn ($l) => [
@@ -190,12 +190,12 @@ class CsvExportController extends Controller
      */
     private function escapeCsvFormula(mixed $value): mixed
     {
-        if (!is_string($value) || $value === '') {
+        if (! is_string($value) || $value === '') {
             return $value;
         }
 
         return in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)
-            ? "'" . $value
+            ? "'".$value
             : $value;
     }
 }

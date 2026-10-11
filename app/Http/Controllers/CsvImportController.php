@@ -42,7 +42,7 @@ class CsvImportController extends Controller
 
             return view('admin.csv-import.preview', compact('entity', 'results', 'rows'));
         } catch (\Throwable $e) {
-            return back()->with('status_error', 'Errore nella validazione: ' . $e->getMessage());
+            return back()->with('status_error', 'Errore nella validazione: '.$e->getMessage());
         }
     }
 
@@ -64,7 +64,7 @@ class CsvImportController extends Controller
         DB::transaction(function () use ($importer, $editable, &$imported, &$errors) {
             foreach ($editable as $row) {
                 // Salta i record esclusi dall'utente
-                if (!empty($row['_skip'])) {
+                if (! empty($row['_skip'])) {
                     continue;
                 }
                 // Solo record validi
@@ -82,7 +82,7 @@ class CsvImportController extends Controller
         });
 
         $message = "{$imported} record importati con successo.";
-        if (!empty($errors)) {
+        if (! empty($errors)) {
             return redirect()->route('admin.csv-import.index')
                 ->with('status', $message)
                 ->with('status_errors', $errors);
@@ -95,8 +95,8 @@ class CsvImportController extends Controller
     private function importerFor(string $entity): CsvImporter
     {
         return match ($entity) {
-            'issues' => new IssueCsvImporter(),
-            'mileage-logs' => new MileageLogCsvImporter(),
+            'issues' => new IssueCsvImporter,
+            'mileage-logs' => new MileageLogCsvImporter,
         };
     }
 
@@ -104,23 +104,24 @@ class CsvImportController extends Controller
     {
         $rows = [];
         $handle = fopen($file->getRealPath(), 'r');
-        if (!$handle) {
+        if (! $handle) {
             return $rows;
         }
 
         $headers = fgetcsv($handle);
-        if (!$headers) {
+        if (! $headers) {
             fclose($handle);
+
             return $rows;
         }
 
-        $headers = array_map(fn($h) => trim(preg_replace('/^\xEF\xBB\xBF/', '', $h)), $headers);
+        $headers = array_map(fn ($h) => trim(preg_replace('/^\xEF\xBB\xBF/', '', $h)), $headers);
 
         // Assegna nomi univoci alle colonne senza header (es. _col_0, _col_1, ...)
         $counter = 0;
         foreach ($headers as $i => $h) {
             if ($h === '') {
-                $headers[$i] = '_col_' . $counter++;
+                $headers[$i] = '_col_'.$counter++;
             }
         }
 
@@ -135,6 +136,7 @@ class CsvImportController extends Controller
         }
 
         fclose($handle);
+
         return $rows;
     }
 }

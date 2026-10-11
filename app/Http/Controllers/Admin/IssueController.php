@@ -43,7 +43,7 @@ class IssueController extends Controller
         $search = $request->get('q');
 
         $issuesQuery = Issue::with('vehicle.brand', 'vehicle.carModel')
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser());
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser());
 
         // Issue::$searchable copre solo description/status: il campo cerca
         // "veicolo o descrizione" (vedi placeholder in vista), quindi il
@@ -105,7 +105,7 @@ class IssueController extends Controller
         $vehicles = Vehicle::forCurrentUser()->get();
         // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
-        $tires = Tire::whereHas('vehicle', fn($q) => $q->forCurrentUser())->with('vehicle')->get();
+        $tires = Tire::whereHas('vehicle', fn ($q) => $q->forCurrentUser())->with('vehicle')->get();
 
         return view('admin.issues.create', compact('vehicles', 'selectedVehicleId', 'tires'));
     }
@@ -152,7 +152,7 @@ class IssueController extends Controller
     public function edit(Issue $issue)
     {
         $vehicles = Vehicle::forCurrentUser()->get();
-        $tires = Tire::whereHas('vehicle', fn($q) => $q->forCurrentUser())->with('vehicle')->get();
+        $tires = Tire::whereHas('vehicle', fn ($q) => $q->forCurrentUser())->with('vehicle')->get();
 
         return view('admin.issues.edit', compact('issue', 'vehicles', 'tires'));
     }

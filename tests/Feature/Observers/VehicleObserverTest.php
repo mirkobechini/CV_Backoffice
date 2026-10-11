@@ -10,10 +10,9 @@ use Tests\TestCase;
 
 class VehicleObserverTest extends TestCase
 {
-
     use RefreshDatabase;
 
-    //Helper methods
+    // Helper methods
     private function createVehicleType(bool $needsOxygenCheck = true): VehicleType
     {
         return VehicleType::create([
@@ -38,7 +37,7 @@ class VehicleObserverTest extends TestCase
         ]);
     }
 
-    //Test methods
+    // Test methods
     public function test_vehicle_creation_generates_ministerial_deadline(): void
     {
         $vehicleType = $this->createVehicleType();

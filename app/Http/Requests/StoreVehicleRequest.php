@@ -2,21 +2,22 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\HandlesWarrantyExtension;
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Http\Requests\Concerns\HandlesWarrantyExtension;
 use App\Models\Tire;
 use App\Models\Vehicle;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreVehicleRequest extends FormRequest
 {
-    use HandlesWarrantyExtension, AdminOnlyAccess;
+    use AdminOnlyAccess, HandlesWarrantyExtension;
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -42,7 +43,7 @@ class StoreVehicleRequest extends FormRequest
             'engine_power_kw' => 'nullable|integer|min:0',
             'vehicle_category' => 'nullable|string|max:255',
             'allowed_tire_sizes' => 'nullable|array',
-            'allowed_tire_sizes.*' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
+            'allowed_tire_sizes.*' => ['nullable', 'string', 'max:255', 'regex:'.Tire::SIZE_REGEX],
             // Percorso "pending" della foto già caricata durante la
             // scansione del libretto (vedi VehicleController::scanRegistrationCard()
             // e promoteScannedRegistrationCard()): non è un campo del
@@ -69,13 +70,13 @@ class StoreVehicleRequest extends FormRequest
             'car_model_id.exists' => 'Il modello selezionato non esiste.',
             'car_model_id.car_model_belongs_to_brand' => 'Il modello selezionato non appartiene alla marca specificata.',
             'fuel_type.in' => 'Il tipo carburante selezionato non è valido.',
-            'immatricolation_date.required' => "La data di immatricolazione è obbligatoria.",
-            'registration_card.file' => "La carta di circolazione deve essere un file.",
-            'registration_card.mimes' => "La carta di circolazione deve essere un file PDF, JPG, JPEG o PNG.",
-            'has_warranty_extension.boolean' => "Il campo di estensione della garanzia deve essere un valore booleano.",
+            'immatricolation_date.required' => 'La data di immatricolazione è obbligatoria.',
+            'registration_card.file' => 'La carta di circolazione deve essere un file.',
+            'registration_card.mimes' => 'La carta di circolazione deve essere un file PDF, JPG, JPEG o PNG.',
+            'has_warranty_extension.boolean' => 'Il campo di estensione della garanzia deve essere un valore booleano.',
             'warranty_expiration_date.required_if_accepted' => "La data di scadenza è obbligatoria quando l'estensione garanzia è attiva.",
-            'warranty_expiration_date.date' => "La data di scadenza originale della garanzia deve essere una data valida.",
-            'warranty_expiration_date.after_or_equal' => "La data di scadenza originale della garanzia deve essere successiva o uguale alla data di immatricolazione.",
+            'warranty_expiration_date.date' => 'La data di scadenza originale della garanzia deve essere una data valida.',
+            'warranty_expiration_date.after_or_equal' => 'La data di scadenza originale della garanzia deve essere successiva o uguale alla data di immatricolazione.',
             'warranty_extension_duration.required_if_accepted' => "La durata estensione è obbligatoria quando l'estensione garanzia è attiva.",
             'warranty_extension_duration.integer' => "La durata dell'estensione della garanzia deve essere un numero intero.",
             'warranty_extension_duration.min' => "La durata dell'estensione della garanzia deve essere almeno di 1 mese.",

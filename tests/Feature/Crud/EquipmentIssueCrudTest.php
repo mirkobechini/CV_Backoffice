@@ -2,11 +2,15 @@
 
 namespace Tests\Feature\Crud;
 
+use App\Models\Brand;
+use App\Models\CarModel;
 use App\Models\Equipment;
 use App\Models\EquipmentIssue;
 use App\Models\EquipmentType;
 use App\Models\Group;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -21,12 +25,12 @@ class EquipmentIssueCrudTest extends TestCase
 
     private function createEquipment(): Equipment
     {
-        $type = EquipmentType::create(['name' => 'Estintore ' . uniqid()]);
+        $type = EquipmentType::create(['name' => 'Estintore '.uniqid()]);
 
         return Equipment::create([
             'equipment_type_id' => $type->id,
             'name' => 'Estintore test',
-            'serial_number' => 'SN-' . uniqid(),
+            'serial_number' => 'SN-'.uniqid(),
         ]);
     }
 
@@ -156,10 +160,10 @@ class EquipmentIssueCrudTest extends TestCase
         $otherGroup->addUser($otherOwner, Group::ROLE_CAPO);
 
         // Attrezzatura assegnata a un veicolo di un altro gruppo.
-        $brand = \App\Models\Brand::create(['name' => 'Iveco']);
-        $model = \App\Models\CarModel::create(['name' => 'Daily', 'brand_id' => $brand->id]);
-        $vehicleType = \App\Models\VehicleType::create(['name' => 'Amb altro', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
-        $otherVehicle = \App\Models\Vehicle::create([
+        $brand = Brand::create(['name' => 'Iveco']);
+        $model = CarModel::create(['name' => 'Daily', 'brand_id' => $brand->id]);
+        $vehicleType = VehicleType::create(['name' => 'Amb altro', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $otherVehicle = Vehicle::create([
             'license_plate' => 'XY987ZZ',
             'internal_code' => '9999',
             'brand_id' => $brand->id,

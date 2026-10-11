@@ -6,16 +6,18 @@ use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\MileageLog;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 class UpdateMileageLogRequest extends FormRequest
 {
     use AdminOnlyAccess;
+
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -46,7 +48,7 @@ class UpdateMileageLogRequest extends FormRequest
             $newMileage = $this->input('mileage');
             $currentId = $this->route('mileageLog')?->id;
 
-            if (!$vehicleId || !$logDate || !$newMileage) {
+            if (! $vehicleId || ! $logDate || ! $newMileage) {
                 return;
             }
 

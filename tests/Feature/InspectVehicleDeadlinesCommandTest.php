@@ -18,10 +18,10 @@ class InspectVehicleDeadlinesCommandTest extends TestCase
 
     private function createVehicle(array $overrides = []): Vehicle
     {
-        $group = Group::create(['name' => 'G' . uniqid(), 'invite_code' => Group::generateInviteCode()]);
-        $brand = Brand::create(['name' => 'Fiat ' . uniqid()]);
+        $group = Group::create(['name' => 'G'.uniqid(), 'invite_code' => Group::generateInviteCode()]);
+        $brand = Brand::create(['name' => 'Fiat '.uniqid()]);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
-        $type = VehicleType::create(['name' => 'Amb ' . uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $type = VehicleType::create(['name' => 'Amb '.uniqid(), 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
 
         return Vehicle::create(array_merge([
             'group_id' => $group->id,

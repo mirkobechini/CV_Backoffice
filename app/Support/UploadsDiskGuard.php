@@ -18,9 +18,9 @@ class UploadsDiskGuard
         if ($environment === 'production' && ($disk === 'public' || $disk === null)) {
             throw new \RuntimeException(
                 'UPLOADS_DISK non può essere "public" (o non impostato) in produzione: '
-                . 'backup del database e documenti caricati (carta di circolazione, foto guasti) '
-                . 'sarebbero pubblicamente accessibili senza autenticazione. '
-                . 'Imposta UPLOADS_DISK=s3 con le relative credenziali R2 (vedi docs/DEPLOY.md).'
+                .'backup del database e documenti caricati (carta di circolazione, foto guasti) '
+                .'sarebbero pubblicamente accessibili senza autenticazione. '
+                .'Imposta UPLOADS_DISK=s3 con le relative credenziali R2 (vedi docs/DEPLOY.md).'
             );
         }
     }

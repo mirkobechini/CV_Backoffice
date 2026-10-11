@@ -31,7 +31,7 @@ class CleanMileageLogTagliandoArtifacts extends Command
             ->where('last_mileage', '>', 0)
             ->whereNotNull('due_date')
             ->with('vehicle')
-            ->when($vehicleId, fn($q) => $q->where('vehicle_id', $vehicleId))
+            ->when($vehicleId, fn ($q) => $q->where('vehicle_id', $vehicleId))
             ->get();
 
         $found = 0;

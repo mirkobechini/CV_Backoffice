@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\Deadline;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
+use App\Models\MaintenanceRecordItem;
 use App\Models\Tire;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class MaintenanceCompletionService
@@ -15,8 +17,7 @@ class MaintenanceCompletionService
         private readonly DeadlineService $deadlineService,
         private readonly MileageLogService $mileageLogService,
         private readonly TireChangeService $tireChangeService,
-    ) {
-    }
+    ) {}
 
     /**
      * Per un appuntamento "Cambio Gomme", collega le gomme da montare: una
@@ -77,9 +78,9 @@ class MaintenanceCompletionService
      * Usata sia per costruire le regole di validazione in complete() sia
      * per il form del modale di completamento.
      *
-     * @return \Illuminate\Support\Collection<int, \App\Models\MaintenanceRecordItem>
+     * @return Collection<int, MaintenanceRecordItem>
      */
-    public function tireItemsRequiringDisposition(MaintenanceRecord $maintenanceRecord): \Illuminate\Support\Collection
+    public function tireItemsRequiringDisposition(MaintenanceRecord $maintenanceRecord): Collection
     {
         $maintenanceRecord->loadMissing('items.itemable');
 
@@ -223,7 +224,7 @@ class MaintenanceCompletionService
         $completedDeadlines = $maintenanceRecord->items
             ->where('itemable_type', Deadline::class)
             ->whereIn('itemable_id', $completedDeadlineIds)
-            ->map(fn($item) => $item->itemable)
+            ->map(fn ($item) => $item->itemable)
             ->filter();
 
         foreach ($completedDeadlines as $deadline) {
@@ -268,12 +269,14 @@ class MaintenanceCompletionService
         // inseriti + intervallo del tipo veicolo.
         if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
             $this->renewTagliandoDeadline($maintenanceRecord, $deadline);
+
             return;
         }
 
         // La cinghia ha una logica dedicata (intervallo giorni + km).
         if ($deadline->type === Deadline::TYPE_CINGHIA) {
             $this->renewTimingBeltDeadline($maintenanceRecord, $deadline);
+
             return;
         }
 

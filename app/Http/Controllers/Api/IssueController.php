@@ -11,9 +11,9 @@ class IssueController extends Controller
     public function index(Request $request)
     {
         $issues = Issue::with('vehicle')
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
-            ->when($request->q, fn($q, $search) => $q->search($search))
-            ->when($request->status, fn($q, $status) => $q->where('status', $status))
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->when($request->q, fn ($q, $search) => $q->search($search))
+            ->when($request->status, fn ($q, $status) => $q->where('status', $status))
             ->orderByDesc('event_date')
             ->paginate($request->per_page ?? 20);
 
@@ -33,6 +33,7 @@ class IssueController extends Controller
         }
 
         $issue->load('vehicle');
+
         return response()->json($issue);
     }
 
@@ -44,7 +45,7 @@ class IssueController extends Controller
         $request->validate(['q' => 'required|string|min:2']);
 
         $results = Issue::selectRaw('description, COUNT(*) as total')
-            ->where('description', 'like', '%' . $request->q . '%')
+            ->where('description', 'like', '%'.$request->q.'%')
             ->groupBy('description')
             ->orderByDesc('total')
             ->limit(10)

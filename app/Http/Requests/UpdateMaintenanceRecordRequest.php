@@ -7,11 +7,13 @@ use App\Http\Requests\Concerns\ValidatesTireSelection;
 use App\Models\Deadline;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
+use App\Models\MileageLog;
 use App\Models\Tire;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
-use Illuminate\Support\Carbon;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -23,7 +25,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -52,7 +54,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'new_tire_position' => 'nullable|in:front_left,front_right,rear_left,rear_right|required_if:new_tire_group,single',
             'new_tire_brand' => 'nullable|string|max:255',
             'new_tire_model_name' => 'nullable|string|max:255',
-            'new_tire_size' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
+            'new_tire_size' => ['nullable', 'string', 'max:255', 'regex:'.Tire::SIZE_REGEX],
         ];
     }
 
@@ -98,8 +100,8 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             // obbligatorio per calcolare la scadenza km del prossimo rinnovo.
             $deadlineIds = $this->input('deadline_ids', []);
             if (! empty($deadlineIds)) {
-                $hasKmDeadline = \App\Models\Deadline::whereIn('id', $deadlineIds)
-                    ->whereIn('type', [\App\Models\Deadline::TYPE_TAGLIANDO, \App\Models\Deadline::TYPE_CINGHIA])
+                $hasKmDeadline = Deadline::whereIn('id', $deadlineIds)
+                    ->whereIn('type', [Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA])
                     ->exists();
 
                 if ($hasKmDeadline && $this->input('mileage_at_service') === null) {
@@ -129,7 +131,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
                 && ($currentRecord->return_date?->toDateString() ?? $currentRecord->appointment_date?->toDateString()) === $endDate;
 
             if ($vehicleId && $startDate && ! $datesUnchanged) {
-                $conflict = \App\Models\MaintenanceRecord::where('vehicle_id', $vehicleId)
+                $conflict = MaintenanceRecord::where('vehicle_id', $vehicleId)
                     ->where('id', '!=', $currentId)
                     ->where(function ($q) use ($startDate, $endDate) {
                         $q->where(function ($q2) use ($startDate, $endDate) {
@@ -156,7 +158,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             $logDate = $this->input('return_date') ?: $this->input('appointment_date');
 
             if ($vehicleId && $mileageAtService !== null && $logDate) {
-                $conflict = \App\Models\MileageLog::findChronologyConflict((int) $vehicleId, $logDate, (int) $mileageAtService);
+                $conflict = MileageLog::findChronologyConflict((int) $vehicleId, $logDate, (int) $mileageAtService);
 
                 if ($conflict) {
                     $validator->errors()->add('mileage_at_service', $conflict);
