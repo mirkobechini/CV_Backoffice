@@ -41,7 +41,7 @@ class MileageLogService
      *                       l'anteprima).
      * @param  bool  $force  Se true, ignora un eventuale conflitto di
      *                       cronologia e registra comunque la lettura.
-     * @return string  'created'|'updated'|'unchanged'|'conflict'|'no_mileage'
+     * @return string 'created'|'updated'|'unchanged'|'conflict'|'no_mileage'
      */
     public function recordReading(Vehicle $vehicle, string|CarbonInterface $date, ?int $mileage, bool $apply = true, bool $force = false): string
     {

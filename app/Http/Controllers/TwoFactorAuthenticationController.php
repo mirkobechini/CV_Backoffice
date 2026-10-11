@@ -29,7 +29,7 @@ class TwoFactorAuthenticationController extends Controller
         }
 
         $user->forceFill([
-            'two_factor_secret' => (new Google2FA())->generateSecretKey(),
+            'two_factor_secret' => (new Google2FA)->generateSecretKey(),
         ])->save();
 
         return back();
@@ -52,7 +52,7 @@ class TwoFactorAuthenticationController extends Controller
             return back()->withErrors(['code' => 'Nessuna attivazione in corso: ricomincia dal primo passo.']);
         }
 
-        $valid = (new Google2FA())->verifyKey(
+        $valid = (new Google2FA)->verifyKey(
             $user->two_factor_secret,
             preg_replace('/\s+/', '', $request->input('code'))
         );

@@ -69,8 +69,8 @@ class MaintenanceRecordCrudTest extends TestCase
     private function createProvider(): Provider
     {
         return Provider::create([
-            'name' => "boh",
-            'contact_info' => "+39 3885245",
+            'name' => 'boh',
+            'contact_info' => '+39 3885245',
             'address' => 'Via roma 2, Milano',
             'type' => 'Meccanico',
         ]);
@@ -87,7 +87,7 @@ class MaintenanceRecordCrudTest extends TestCase
             'event_date' => '2025-01-02',
         ]);
 
-        return (compact('vehicle', 'issue'));
+        return compact('vehicle', 'issue');
     }
 
     private function createMaintenance(): array
@@ -117,21 +117,18 @@ class MaintenanceRecordCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_maintenance_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.maintenance-records.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_maintenance_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $maintenance = $this->createMaintenance()['maintenance'];
 
         $response = $this->actingAs($user)->get(route('admin.maintenance-records.show', $maintenance));
@@ -141,7 +138,7 @@ class MaintenanceRecordCrudTest extends TestCase
 
     public function test_maintenance_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $maintenance = $this->createMaintenance()['maintenance'];
 
         $response = $this->actingAs($user)->get(route('admin.maintenance-records.edit', $maintenance));
@@ -149,10 +146,9 @@ class MaintenanceRecordCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_maintenance_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $provider = $this->createProvider();
         $issueData = $this->createIssue();
         $vehicle = $issueData['vehicle'];
@@ -179,7 +175,6 @@ class MaintenanceRecordCrudTest extends TestCase
             'itemable_type' => Issue::class,
         ]);
     }
-
 
     public function test_maintenance_can_be_updated(): void
     {

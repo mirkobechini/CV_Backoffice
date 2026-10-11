@@ -15,7 +15,6 @@ class VehicleBusinessLogicTest extends TestCase
 {
     use RefreshDatabase;
 
-
     public function test_vehicle_has_all_required_equipment_when_requirements_are_met(): void
     {
         $vehicleType = VehicleType::create([
@@ -68,7 +67,7 @@ class VehicleBusinessLogicTest extends TestCase
             'name' => 'Barella 1',
         ]);
 
-        $this->assertTrue($vehicle->fresh()->hasAllRequiredEquipment()); //Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
+        $this->assertTrue($vehicle->fresh()->hasAllRequiredEquipment()); // Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
     }
 
     public function test_vehicle_does_not_have_all_required_equipment_when_one_is_missing(): void
@@ -117,7 +116,7 @@ class VehicleBusinessLogicTest extends TestCase
             'name' => 'Estintore 1',
         ]);
 
-        $this->assertFalse($vehicle->fresh()->hasAllRequiredEquipment()); //Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
+        $this->assertFalse($vehicle->fresh()->hasAllRequiredEquipment()); // Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
     }
 
     public function test_vehicle_missing_required_equipment_returns_missing_items(): void
@@ -170,7 +169,7 @@ class VehicleBusinessLogicTest extends TestCase
         $this->assertCount(1, $missing);
         $this->assertNotEmpty($missing);
         $this->assertTrue($missing->contains('name', 'Barella'));
-        $this->assertFalse($vehicle->fresh()->hasAllRequiredEquipment()); //Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
+        $this->assertFalse($vehicle->fresh()->hasAllRequiredEquipment()); // Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
     }
 
     public function test_vehicle_missing_required_equipment_considers_required_quantity(): void
@@ -212,7 +211,7 @@ class VehicleBusinessLogicTest extends TestCase
         ]);
 
         $missing = $vehicle->fresh()->missingRequiredEquipment();
-        $this->assertFalse($vehicle->fresh()->hasAllRequiredEquipment()); //Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
+        $this->assertFalse($vehicle->fresh()->hasAllRequiredEquipment()); // Fresh per ricaricare la relazione equipmentTypes dopo aver aggiunto gli equipaggiamenti
         $this->assertTrue($missing->contains('name', 'Estintore'));
     }
 

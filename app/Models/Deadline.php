@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -227,7 +228,7 @@ class Deadline extends Model
             self::TYPE_CINGHIA => 'cinghia',
             self::TYPE_MINISTERIAL => 'revisione',
             self::TYPE_OXYGEN => 'ossigeno',
-            default => \Illuminate\Support\Str::slug($this->type),
+            default => Str::slug($this->type),
         };
     }
 
@@ -244,9 +245,10 @@ class Deadline extends Model
             if ($currentMileage !== null) {
                 $remaining = ($this->last_mileage + $this->interval_km) - $currentMileage;
                 if ($remaining <= 0) {
-                    return '+' . number_format(abs($remaining), 0, ',', '.') . ' km';
+                    return '+'.number_format(abs($remaining), 0, ',', '.').' km';
                 }
-                return number_format($remaining, 0, ',', '.') . ' km';
+
+                return number_format($remaining, 0, ',', '.').' km';
             }
         }
 
@@ -254,9 +256,10 @@ class Deadline extends Model
         if ($this->due_date) {
             $days = Carbon::today()->diffInDays($this->due_date, false);
             if ($days < 0) {
-                return '+' . abs($days) . ' gg';
+                return '+'.abs($days).' gg';
             }
-            return $days . ' gg';
+
+            return $days.' gg';
         }
 
         return '—';
@@ -275,7 +278,7 @@ class Deadline extends Model
 
         $days = Carbon::today()->diffInDays($this->due_date, false);
 
-        return $days < 0 ? '+' . abs($days) . ' gg' : $days . ' gg';
+        return $days < 0 ? '+'.abs($days).' gg' : $days.' gg';
     }
 
     /**
@@ -297,7 +300,7 @@ class Deadline extends Model
         $remaining = ($this->last_mileage + $this->interval_km) - $currentMileage;
         $formatted = number_format(abs($remaining), 0, ',', '.');
 
-        return $remaining <= 0 ? '+' . $formatted . ' km' : $formatted . ' km';
+        return $remaining <= 0 ? '+'.$formatted.' km' : $formatted.' km';
     }
 
     public function getAutomaticStatusAttribute(): string

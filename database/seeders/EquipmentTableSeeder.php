@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Equipment;
 use Faker\Generator as Faker;
+use Illuminate\Database\Seeder;
 
 class EquipmentTableSeeder extends Seeder
 {
@@ -14,7 +13,7 @@ class EquipmentTableSeeder extends Seeder
      */
     public function run(Faker $faker): void
     {
-        //creare observers per aggiornare stato conformità in base a scadenze
+        // creare observers per aggiornare stato conformità in base a scadenze
         for ($i = 0; $i < 10; $i++) {
             Equipment::create([
                 'equipment_type_id' => $faker->numberBetween(1, 3),

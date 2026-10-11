@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateProviderRequest extends FormRequest
@@ -12,12 +13,12 @@ class UpdateProviderRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:providers,name,' . $this->route('provider')?->id . ',id',
+            'name' => 'required|string|max:255|unique:providers,name,'.$this->route('provider')?->id.',id',
             'address' => 'nullable|string|max:255',
             'contact_info' => 'nullable|string|max:255',
             'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore,Vetri,Elettrauto,Centro Revisioni',

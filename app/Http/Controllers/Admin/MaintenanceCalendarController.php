@@ -43,7 +43,7 @@ class MaintenanceCalendarController extends Controller
 
                 $title = $record->vehicle?->internal_code ?? 'N/A';
                 if ($record->activity_type) {
-                    $title .= ' - ' . $record->activity_type;
+                    $title .= ' - '.$record->activity_type;
                 }
 
                 return [

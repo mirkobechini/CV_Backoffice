@@ -4,9 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\MileageLog;
 use App\Models\Vehicle;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use Faker\Generator as Faker;
+use Illuminate\Database\Seeder;
 
 class MileageLogTableSeeder extends Seeder
 {
@@ -18,7 +17,7 @@ class MileageLogTableSeeder extends Seeder
         // Assuming you have a Vehicle model and it has some records
         $vehicleIds = Vehicle::pluck('id')->toArray();
 
-        for($i=0; $i < 10; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             MileageLog::create([
                 'vehicle_id' => $faker->randomElement($vehicleIds),
                 'log_date' => $faker->date(),

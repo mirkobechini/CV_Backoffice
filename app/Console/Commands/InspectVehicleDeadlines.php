@@ -52,7 +52,7 @@ class InspectVehicleDeadlines extends Command
 
     private function inspectVehicle(Vehicle $vehicle): void
     {
-        $this->info("Veicolo #{$vehicle->id} — sigla {$vehicle->internal_code}, targa {$vehicle->license_plate}, timing_belt_type: " . ($vehicle->timing_belt_type ?? 'NULL') . ($vehicle->trashed() ? ' | VEICOLO ELIMINATO il ' . $vehicle->deleted_at : ''));
+        $this->info("Veicolo #{$vehicle->id} — sigla {$vehicle->internal_code}, targa {$vehicle->license_plate}, timing_belt_type: ".($vehicle->timing_belt_type ?? 'NULL').($vehicle->trashed() ? ' | VEICOLO ELIMINATO il '.$vehicle->deleted_at : ''));
         $this->newLine();
 
         $query = Deadline::withTrashed()->where('vehicle_id', $vehicle->id);
@@ -62,17 +62,17 @@ class InspectVehicleDeadlines extends Command
         $deadlines = $query->orderBy('id')->get();
 
         if ($deadlines->isEmpty()) {
-            $this->warn('Nessuna scadenza trovata (nemmeno eliminata, via withTrashed) per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . '.');
+            $this->warn('Nessuna scadenza trovata (nemmeno eliminata, via withTrashed) per questo veicolo'.($type ? " di tipo \"{$type}\"" : '').'.');
         } else {
-            $this->info($deadlines->count() . ' scadenza/e trovate (incluse quelle eliminate):');
+            $this->info($deadlines->count().' scadenza/e trovate (incluse quelle eliminate):');
             $this->newLine();
         }
 
         foreach ($deadlines as $d) {
             $this->line("— Scadenza #{$d->id} [{$d->type}]");
-            $this->line("  status: {$d->status} | is_renewed: " . ($d->is_renewed ? 'sì' : 'no') . ($d->trashed() ? ' | ELIMINATA il ' . $d->deleted_at : ''));
-            $this->line('  due_date: ' . ($d->due_date?->toDateString() ?? 'NULL') . ' | interval_km: ' . ($d->interval_km ?? 'NULL') . ' | last_mileage: ' . ($d->last_mileage ?? 'NULL'));
-            $this->line('  renews_deadline_id: ' . ($d->renews_deadline_id ?? '—') . ' | creata: ' . $d->created_at . ' | aggiornata: ' . $d->updated_at);
+            $this->line("  status: {$d->status} | is_renewed: ".($d->is_renewed ? 'sì' : 'no').($d->trashed() ? ' | ELIMINATA il '.$d->deleted_at : ''));
+            $this->line('  due_date: '.($d->due_date?->toDateString() ?? 'NULL').' | interval_km: '.($d->interval_km ?? 'NULL').' | last_mileage: '.($d->last_mileage ?? 'NULL'));
+            $this->line('  renews_deadline_id: '.($d->renews_deadline_id ?? '—').' | creata: '.$d->created_at.' | aggiornata: '.$d->updated_at);
 
             $activities = Activity::where('subject_type', Deadline::class)
                 ->where('subject_id', $d->id)
@@ -112,8 +112,8 @@ class InspectVehicleDeadlines extends Command
     private function reportOrphanActivityTraces(Vehicle $vehicle, ?string $type, array $knownIds): void
     {
         $activities = Activity::where('subject_type', Deadline::class)
-            ->where('properties', 'like', '%"vehicle_id":' . $vehicle->id . '%')
-            ->when($type, fn ($q) => $q->where('properties', 'like', '%"type":"' . $type . '"%'))
+            ->where('properties', 'like', '%"vehicle_id":'.$vehicle->id.'%')
+            ->when($type, fn ($q) => $q->where('properties', 'like', '%"type":"'.$type.'"%'))
             ->whereNotIn('subject_id', $knownIds)
             ->with('causer')
             ->oldest()
@@ -121,17 +121,17 @@ class InspectVehicleDeadlines extends Command
 
         if ($activities->isEmpty()) {
             if (empty($knownIds)) {
-                $this->line('Nessuna traccia nemmeno nel registro attività per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . ': la scadenza non è mai esistita, oppure il registro non la copre.');
+                $this->line('Nessuna traccia nemmeno nel registro attività per questo veicolo'.($type ? " di tipo \"{$type}\"" : '').': la scadenza non è mai esistita, oppure il registro non la copre.');
             }
 
             return;
         }
 
-        $this->warn('Il registro attività ha tracce di scadenze per questo veicolo' . ($type ? " di tipo \"{$type}\"" : '') . ' che non esistono più in nessuna forma (riga eliminata senza soft delete, es. DELETE grezzo):');
+        $this->warn('Il registro attività ha tracce di scadenze per questo veicolo'.($type ? " di tipo \"{$type}\"" : '').' che non esistono più in nessuna forma (riga eliminata senza soft delete, es. DELETE grezzo):');
         foreach ($activities as $a) {
             $causer = $a->causer?->name ?? 'sistema/sconosciuto';
             $this->line("  [{$a->created_at}] subject_id={$a->subject_id} {$a->description} — {$causer}");
-            $this->line('  properties: ' . $a->properties);
+            $this->line('  properties: '.$a->properties);
         }
     }
 }

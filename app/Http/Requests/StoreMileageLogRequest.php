@@ -6,6 +6,7 @@ use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\MileageLog;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -16,7 +17,7 @@ class StoreMileageLogRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -46,7 +47,7 @@ class StoreMileageLogRequest extends FormRequest
             $logDate = $this->input('log_date');
             $newMileage = $this->input('mileage');
 
-            if (!$vehicleId || !$logDate || !$newMileage) {
+            if (! $vehicleId || ! $logDate || ! $newMileage) {
                 return;
             }
 

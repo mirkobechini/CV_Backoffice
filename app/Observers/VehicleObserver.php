@@ -13,14 +13,13 @@ class VehicleObserver
 
     public function __construct(
         private readonly DeadlineService $deadlineService,
-    ) {
-    }
+    ) {}
 
     public function created(Vehicle $vehicle): void
     {
         $vehicle->loadMissing('vehicleType');
 
-        if (!$vehicle->vehicleType || !$vehicle->immatricolation_date) {
+        if (! $vehicle->vehicleType || ! $vehicle->immatricolation_date) {
             return;
         }
 
@@ -47,7 +46,7 @@ class VehicleObserver
             $this->createDeadlineIfMissing($vehicle, Deadline::TYPE_MINISTERIAL, $dueDate, false);
         }
 
-        if (!Deadline::supportsOxygenCheckForVehicle($vehicle)) {
+        if (! Deadline::supportsOxygenCheckForVehicle($vehicle)) {
             return;
         }
 

@@ -51,7 +51,7 @@ class VehicleReliabilityTrendServiceTest extends TestCase
         $this->repair($vehicle, '2026-01-01');
         $this->repair($vehicle, '2026-03-01');
 
-        $result = (new VehicleReliabilityTrendService())->analyze($vehicle);
+        $result = (new VehicleReliabilityTrendService)->analyze($vehicle);
 
         $this->assertNull($result);
     }
@@ -63,7 +63,7 @@ class VehicleReliabilityTrendServiceTest extends TestCase
         $this->repair($vehicle, '2026-03-02'); // +60 days
         $this->repair($vehicle, '2026-05-01'); // +60 days
 
-        $result = (new VehicleReliabilityTrendService())->analyze($vehicle);
+        $result = (new VehicleReliabilityTrendService)->analyze($vehicle);
 
         $this->assertNotNull($result);
         $this->assertSame(3, $result['repairs_count']);
@@ -80,7 +80,7 @@ class VehicleReliabilityTrendServiceTest extends TestCase
         $this->repair($vehicle, '2026-05-01'); // +60 days
         $this->repair($vehicle, '2026-05-11'); // +10 days: molto più corto
 
-        $result = (new VehicleReliabilityTrendService())->analyze($vehicle);
+        $result = (new VehicleReliabilityTrendService)->analyze($vehicle);
 
         $this->assertSame(10, $result['last_interval_days']);
         $this->assertTrue($result['is_worsening']);
@@ -94,7 +94,7 @@ class VehicleReliabilityTrendServiceTest extends TestCase
         $this->repair($vehicle, '2026-05-01'); // +60 days
         $this->repair($vehicle, '2026-06-25'); // +55 days: non significativamente diverso
 
-        $result = (new VehicleReliabilityTrendService())->analyze($vehicle);
+        $result = (new VehicleReliabilityTrendService)->analyze($vehicle);
 
         $this->assertFalse($result['is_worsening']);
     }
@@ -111,7 +111,7 @@ class VehicleReliabilityTrendServiceTest extends TestCase
             'appointment_date' => '2026-04-01',
         ]);
 
-        $result = (new VehicleReliabilityTrendService())->analyze($vehicle);
+        $result = (new VehicleReliabilityTrendService)->analyze($vehicle);
 
         // Solo 2 riparazioni vere: sotto soglia.
         $this->assertNull($result);

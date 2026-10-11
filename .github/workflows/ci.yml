@@ -49,6 +49,10 @@ jobs:
       - name: Run PHPUnit
         run: php artisan test 2>&1 | tail -30
 
+      - name: Run Pint
+        if: matrix.php == '8.5'
+        run: vendor/bin/pint --test
+
   # ────────────────────────────────────────────
   #  Frontend build (Vite)
   # ────────────────────────────────────────────

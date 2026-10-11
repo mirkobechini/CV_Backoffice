@@ -22,7 +22,7 @@ class EquipmentTypeController extends Controller
     {
         $equipmentTypes = EquipmentType::when(
             $request->filled('q'),
-            fn ($query) => $query->where('name', 'like', '%' . $request->get('q') . '%')
+            fn ($query) => $query->where('name', 'like', '%'.$request->get('q').'%')
         )->orderBy('name')->paginate(20)->withQueryString();
 
         return view('admin.equipment-types.index', compact('equipmentTypes'));

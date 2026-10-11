@@ -13,8 +13,8 @@ Già fatto, tutto sul branch `dev` (CI verde su PHP 8.4 e 8.5; `main` non è sta
 
 ## 1. Prima di portare `dev` su `main` (obbligatorio)
 
-- [ ] **Laravel Cloud: impostare PHP 8.4 o 8.5 nell'ambiente** (General). Il lock richiede PHP >= 8.4.1: con 8.2/8.3 l'app non parte (errore di piattaforma di Composer). Vedi `docs/DEPLOY.md`.
-- [ ] Spostare le voci di `[Unreleased]` del `CHANGELOG.md` sotto una nuova versione, come per le release precedenti.
+- [x] **Laravel Cloud: impostare PHP 8.4 o 8.5 nell'ambiente** (General). Verificato con Mirko: già su PHP 8.5.
+- [x] Spostare le voci di `[Unreleased]` del `CHANGELOG.md` sotto una nuova versione, come per le release precedenti. Fatto in v1.6.0 (issue-206), già rilasciata su `main`.
 - Nota sulla storia: `main` ha 58 commit `release: vX.Y.Z` che `dev` non ha. Sono solo merge commit: `git diff dev...main` è vuoto, quindi il contenuto è lo stesso e il merge `dev` -> `main` è normale (nessun conflitto atteso).
 
 ## 2. Laravel 13
@@ -54,23 +54,13 @@ Da fare:
 - [ ] Alla fine **togliere l'override** `postcss-selector-parser` da `package.json` (non serve più) e controllare `npm audit`.
 - [ ] Facoltativo, a parte: `@fullcalendar/*` 6 -> 7 (major).
 
-## 5. Stile del codice: 185 file da formattare con Pint
+## 5. Stile del codice: 185 file da formattare con Pint — ✅ FATTO (issue-209, PR #210)
 
-Oggi `vendor/bin/pint --test` segnala **185 file** (già prima degli aggiornamenti: non dipendono da essi). Non c'è un `pint.json`, quindi vale il preset Laravel di default. Nota: il job della CI si chiama "PHPUnit + Pint" ma esegue **solo PHPUnit**, quindi nessuno se n'è accorto.
+`vendor/bin/pint` applicato (preset Laravel di default, nessun `pint.json`) in un commit unico di sola formattazione (182 file), SHA in `.git-blame-ignore-revs`, step `pint --test` aggiunto alla CI (girava solo su PHP 8.5 della matrice, non serve ripeterlo). 669 test verdi prima e dopo.
 
-Regole più frequenti: `ordered_imports` (73 file), `not_operator_with_successor_space` (57), `concat_space` (56), `fully_qualified_strict_types` (55), `unary_operator_spaces` (43), `blank_line_before_statement` (26), `class_attributes_separation` (25), `no_unused_imports` (24).
-Dove: `app/Http` 54 file, `tests/Feature` 43, `app/Services` 15, `app/Models` 14, `app/Console` 10, `app/Policies` 10, `database/migrations` 9, `database/seeders` 9, altri.
+Nota per il futuro: `vendor/bin/pint` (il binario standalone) richiede PHP ^8.3 per girare — su questa macchina solo disponibile via Laravel Herd (`~/.config/herd/bin/php85/php.exe`), non lo xampp di sistema (PHP 8.2).
 
-Perché non è stato applicato: è un diff enorme (185 file) che non cambia il comportamento ma genera conflitti con qualunque branch aperto (per esempio `feat/ui-base`).
-
-Come farlo, in sicurezza:
-1. [ ] Prima chiudere o unire i branch di lavoro aperti, così non ci sono conflitti.
-2. [ ] Branch `style/pint` da `dev`: `vendor/bin/pint` (senza opzioni, riscrive i file).
-3. [ ] `php artisan test` deve restare a **669 test verdi**. Se qualcosa cambia, non è solo stile: indagare.
-4. [ ] **Un solo commit** che contiene solo la formattazione, senza altre modifiche.
-5. [ ] Aggiungere lo SHA del commit a `.git-blame-ignore-revs` e lanciare `git config blame.ignoreRevsFile .git-blame-ignore-revs`, così `git blame` non punta a quel commit.
-6. [ ] Aggiungere alla CI lo step `vendor/bin/pint --test` (come in `portfolio-chicca` e nel portfolio), in modo che resti pulito.
-7. [ ] Facoltativo: creare un `pint.json` con le regole preferite prima di formattare (dopo è più difficile cambiare idea).
+- [ ] Facoltativo, non fatto: creare un `pint.json` con regole esplicite (oggi il preset Laravel di default è implicito).
 
 ## 6. Automazione (facoltativo)
 

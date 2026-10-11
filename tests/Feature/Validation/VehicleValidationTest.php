@@ -13,7 +13,6 @@ use Tests\TestCase;
 
 class VehicleValidationTest extends TestCase
 {
-
     use RefreshDatabase;
 
     private function createUser(): User

@@ -2,14 +2,16 @@
 
 namespace App\Livewire;
 
-use Livewire\Component;
 use App\Models\Brand;
 use App\Models\CarModel;
+use Livewire\Component;
 
 class VehicleSelect extends Component
 {
     public $brand_id;
+
     public $car_model_id;
+
     public $models = [];
 
     public function updatedBrandId($value)
@@ -33,7 +35,7 @@ class VehicleSelect extends Component
     public function render()
     {
         return view('livewire.vehicle-select', [
-            'brands' => Brand::orderBy('name')->get()
+            'brands' => Brand::orderBy('name')->get(),
         ]);
     }
 }

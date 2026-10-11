@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateNotificationSettingRequest extends FormRequest
@@ -20,7 +21,7 @@ class UpdateNotificationSettingRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -40,7 +41,7 @@ class UpdateNotificationSettingRequest extends FormRequest
     {
         return [
             'report_email.required' => "L'indirizzo email per il report è obbligatorio.",
-            'report_email.email' => "Inserisci un indirizzo email valido.",
+            'report_email.email' => 'Inserisci un indirizzo email valido.',
             'report_frequency.required' => 'La frequenza del report è obbligatoria.',
             'report_frequency.in' => 'La frequenza deve essere daily, weekly o monthly.',
             'reminder_days_before.required' => 'I giorni di preavviso sono obbligatori.',

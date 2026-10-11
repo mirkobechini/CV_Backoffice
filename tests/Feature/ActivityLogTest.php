@@ -104,7 +104,7 @@ class ActivityLogTest extends TestCase
 
     public function test_property_rows_handles_empty_properties(): void
     {
-        $result = ActivityLogController::propertyRows(new Collection());
+        $result = ActivityLogController::propertyRows(new Collection);
 
         $this->assertSame('flat', $result['mode']);
         $this->assertSame([], $result['rows']);

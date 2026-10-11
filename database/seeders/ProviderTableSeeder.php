@@ -3,9 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Provider;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use Faker\Generator as Faker;
+use Illuminate\Database\Seeder;
 
 class ProviderTableSeeder extends Seeder
 {

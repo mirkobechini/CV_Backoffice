@@ -75,7 +75,8 @@ class DeadlineCrudTest extends TestCase
             'status' => 'renewed',
             'due_date' => '2025-01',
         ]);
-        return (compact("vehicle", 'deadline'));
+
+        return compact('vehicle', 'deadline');
     }
 
     public function test_deadline_index_page_is_reachable(): void
@@ -113,7 +114,6 @@ class DeadlineCrudTest extends TestCase
         $response->assertSee('POL-123');
         $response->assertViewHas('deadlines', fn ($deadlines) => $deadlines->count() === 1);
     }
-
 
     public function test_index_default_view_shows_active_dry_belt_cinghia_not_the_renewed_one(): void
     {
@@ -153,24 +153,23 @@ class DeadlineCrudTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewHas('deadlines', function ($deadlines) use ($active, $old) {
             $ids = $deadlines->pluck('id')->all();
+
             return in_array($active->id, $ids, true) && ! in_array($old->id, $ids, true);
         });
     }
 
     public function test_deadline_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.deadlines.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_deadline_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $deadline = $this->createDeadline()['deadline'];
 
         $response = $this->actingAs($user)->get(route('admin.deadlines.show', $deadline));
@@ -180,7 +179,7 @@ class DeadlineCrudTest extends TestCase
 
     public function test_deadline_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $deadline = $this->createDeadline()['deadline'];
 
         $response = $this->actingAs($user)->get(route('admin.deadlines.edit', $deadline));
@@ -188,18 +187,16 @@ class DeadlineCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_deadline_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $vehicle = $this->createVehicle();
-
 
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
             'type' => 'Tagliando',
             'status' => 'renewed',
-            'due_date' => "2025-01",
+            'due_date' => '2025-01',
         ]);
 
         $deadline = Deadline::latest('id')->first();
@@ -211,7 +208,6 @@ class DeadlineCrudTest extends TestCase
             'type' => 'Tagliando',
         ]);
     }
-
 
     public function test_deadline_can_be_updated(): void
     {
@@ -434,10 +430,10 @@ class DeadlineCrudTest extends TestCase
         $deadline = $this->createDeadline()['deadline'];
 
         $response = $this->actingAs($user)->delete(route('admin.deadlines.destroy', $deadline), [
-            'back' => route('admin.deadlines.index') . '?status_filter=expired',
+            'back' => route('admin.deadlines.index').'?status_filter=expired',
         ]);
 
-        $response->assertRedirect(route('admin.deadlines.index') . '?status_filter=expired');
+        $response->assertRedirect(route('admin.deadlines.index').'?status_filter=expired');
     }
 
     public function test_ministerial_due_date_can_be_set_manually_instead_of_auto_calculated(): void

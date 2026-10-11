@@ -20,7 +20,7 @@ class PublicFleetStatusTest extends TestCase
     private function groupWithCapo(): array
     {
         $capo = User::factory()->create();
-        $group = Group::create(['name' => 'Gruppo ' . uniqid(), 'invite_code' => Group::generateInviteCode()]);
+        $group = Group::create(['name' => 'Gruppo '.uniqid(), 'invite_code' => Group::generateInviteCode()]);
         $group->addUser($capo, Group::ROLE_CAPO);
 
         return [$capo, $group];
@@ -28,9 +28,9 @@ class PublicFleetStatusTest extends TestCase
 
     private function createVehicle(Group $group, array $overrides = []): Vehicle
     {
-        $brand = Brand::create(['name' => 'Fiat ' . uniqid()]);
+        $brand = Brand::create(['name' => 'Fiat '.uniqid()]);
         $carModel = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
-        $vehicleType = VehicleType::create(['name' => 'Ambulanza ' . uniqid(), 'first_inspection_months' => 12, 'regular_inspection_months' => 12]);
+        $vehicleType = VehicleType::create(['name' => 'Ambulanza '.uniqid(), 'first_inspection_months' => 12, 'regular_inspection_months' => 12]);
 
         return Vehicle::create(array_merge([
             'license_plate' => 'AB123CD',

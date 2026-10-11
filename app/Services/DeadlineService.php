@@ -11,8 +11,7 @@ class DeadlineService
     public function __construct(
         private readonly MileageLogService $mileageLogService,
         private readonly DeadlineManualRenewalService $manualRenewalService,
-    ) {
-    }
+    ) {}
 
     /**
      * Tipi periodici per cui l'aggiunta di una nuova scadenza rinnova

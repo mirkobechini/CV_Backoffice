@@ -16,8 +16,7 @@ class MaintenanceRecordItemSyncService
 {
     public function __construct(
         private readonly MaintenanceCompletionService $completionService,
-    ) {
-    }
+    ) {}
 
     public function createForNewRecord(MaintenanceRecord $maintenanceRecord, array $data): void
     {

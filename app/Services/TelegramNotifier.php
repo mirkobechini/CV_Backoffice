@@ -40,7 +40,7 @@ class TelegramNotifier
 
         NotificationSetting::updateOrCreate(
             ['user_id' => $user->id, 'key' => 'telegram_link_token'],
-            ['value' => $token . '|' . now()->addMinutes(self::LINK_TOKEN_TTL_MINUTES)->timestamp]
+            ['value' => $token.'|'.now()->addMinutes(self::LINK_TOKEN_TTL_MINUTES)->timestamp]
         );
 
         return $token;
@@ -69,6 +69,7 @@ class TelegramNotifier
 
         if (Str::startsWith($text, '/start')) {
             $this->handleStart($chatId, trim(Str::after($text, '/start')));
+
             return;
         }
 
@@ -80,16 +81,18 @@ class TelegramNotifier
     private function handleStart(string $chatId, string $token): void
     {
         if ($token === '') {
-            $this->sendRaw($chatId, "Per collegare questo account, genera un codice dalla pagina del tuo profilo su CV Backoffice e invialo qui con /start CODICE.");
+            $this->sendRaw($chatId, 'Per collegare questo account, genera un codice dalla pagina del tuo profilo su CV Backoffice e invialo qui con /start CODICE.');
+
             return;
         }
 
         $setting = NotificationSetting::where('key', 'telegram_link_token')
-            ->where('value', 'like', strtoupper($token) . '|%')
+            ->where('value', 'like', strtoupper($token).'|%')
             ->first();
 
         if (! $setting) {
             $this->sendRaw($chatId, 'Codice non valido o già usato. Generane uno nuovo dal profilo.');
+
             return;
         }
 
@@ -98,6 +101,7 @@ class TelegramNotifier
         if ((int) $expiresAt < now()->timestamp) {
             $setting->delete();
             $this->sendRaw($chatId, 'Codice scaduto. Generane uno nuovo dal profilo.');
+
             return;
         }
 
@@ -143,7 +147,7 @@ class TelegramNotifier
             return false;
         }
 
-        $response = Http::post("https://api.telegram.org/bot" . config('services.telegram.bot_token') . "/sendMessage", [
+        $response = Http::post('https://api.telegram.org/bot'.config('services.telegram.bot_token').'/sendMessage', [
             'chat_id' => $chatId,
             'text' => $text,
         ]);

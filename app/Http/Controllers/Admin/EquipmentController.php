@@ -50,7 +50,7 @@ class EquipmentController extends Controller
         $query = Equipment::with('vehicle', 'equipmentType')
             ->where(function ($q) {
                 $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn($vq) => $vq->forCurrentUser());
+                    ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
             });
 
         if ($q = $request->get('q')) {
@@ -192,7 +192,7 @@ class EquipmentController extends Controller
                 'qrSvg' => $qrSvg,
             ]);
 
-        return $pdf->download('qr-equipment-' . $equipment->id . '.pdf');
+        return $pdf->download('qr-equipment-'.$equipment->id.'.pdf');
     }
 
     /**
@@ -241,7 +241,7 @@ class EquipmentController extends Controller
             // trabocca già al mese successivo PRIMA di endOfMonth(), dando
             // il risultato sbagliato (es. "2032-02" -> 31 marzo invece di
             // 29 febbraio).
-            $parsed = Carbon::createFromFormat('Y-m-d', $data[$field] . '-01');
+            $parsed = Carbon::createFromFormat('Y-m-d', $data[$field].'-01');
             $data[$field] = $parsed ? $parsed->endOfMonth()->toDateString() : null;
         }
 
@@ -348,8 +348,8 @@ class EquipmentController extends Controller
         });
 
         $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
-            ? count($equipments) . ' collaudi registrati con successo.'
-            : count($equipments) . ' revisioni registrate con successo.';
+            ? count($equipments).' collaudi registrati con successo.'
+            : count($equipments).' revisioni registrate con successo.';
 
         return redirect()->route('admin.equipments.index')->with('status', $message);
     }

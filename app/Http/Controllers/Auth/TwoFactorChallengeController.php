@@ -7,8 +7,8 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\View\View;
 use Illuminate\Validation\ValidationException;
+use Illuminate\View\View;
 use PragmaRX\Google2FA\Google2FA;
 
 /**
@@ -44,7 +44,7 @@ class TwoFactorChallengeController extends Controller
         $valid = false;
 
         if (! empty($data['code'])) {
-            $valid = (new Google2FA())->verifyKey(
+            $valid = (new Google2FA)->verifyKey(
                 $user->two_factor_secret,
                 preg_replace('/\s+/', '', $data['code'])
             );

@@ -1,0 +1,4 @@
+# Commit di sola formattazione (Pint), ignorati da `git blame`.
+# Attiva con: git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+303693129dce1597ed17d6d82a21de2f681ae2bb

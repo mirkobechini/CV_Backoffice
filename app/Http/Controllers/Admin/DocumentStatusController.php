@@ -54,7 +54,7 @@ class DocumentStatusController extends Controller
             ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->get()
             ->sortBy(fn (Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
-            ->unique(fn (Deadline $d) => $d->vehicle_id . '|' . $d->type)
+            ->unique(fn (Deadline $d) => $d->vehicle_id.'|'.$d->type)
             ->values();
 
         Deadline::syncStatusesFromRules($latestDeadlines);

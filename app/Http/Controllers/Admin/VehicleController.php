@@ -47,7 +47,7 @@ class VehicleController extends Controller
         $vehiclesWithEquipment = Vehicle::forCurrentUser()
             ->with('vehicleType.equipmentTypes', 'equipment')
             ->get();
-        $completeFleet = $vehiclesWithEquipment->filter(fn($v) => $v->hasAllRequiredEquipment())->count();
+        $completeFleet = $vehiclesWithEquipment->filter(fn ($v) => $v->hasAllRequiredEquipment())->count();
 
         $vehicles = Vehicle::query()
             ->forCurrentUser()
@@ -60,19 +60,19 @@ class VehicleController extends Controller
                     ->orderBy('due_date');
             }])
             ->withCount([
-                'issues as open_issues_count' => fn($query) => $query->where('status', 'open'),
-                'issues as in_progress_issues_count' => fn($query) => $query->where('status', 'in_progress'),
+                'issues as open_issues_count' => fn ($query) => $query->where('status', 'open'),
+                'issues as in_progress_issues_count' => fn ($query) => $query->where('status', 'in_progress'),
             ])
             ->search($request->get('q'));
 
         // Filtri chip (Tutti, Guasti, Scadenza prossima, Da integrare)
         if ($filter === 'issues') {
-            $vehicles = $vehicles->whereHas('issues', fn($q) => $q->whereIn('status', ['open', 'in_progress']));
+            $vehicles = $vehicles->whereHas('issues', fn ($q) => $q->whereIn('status', ['open', 'in_progress']));
         } elseif ($filter === 'deadline') {
-            $vehicles = $vehicles->whereHas('deadlines', fn($q) => $q->where('is_renewed', false)->whereIn('status', ['pending', 'expired']));
+            $vehicles = $vehicles->whereHas('deadlines', fn ($q) => $q->where('is_renewed', false)->whereIn('status', ['pending', 'expired']));
         } elseif ($filter === 'incomplete') {
             $incompleteIds = $vehiclesWithEquipment
-                ->reject(fn($v) => $v->hasAllRequiredEquipment())
+                ->reject(fn ($v) => $v->hasAllRequiredEquipment())
                 ->pluck('id');
             $vehicles = $vehicles->whereIn('id', $incompleteIds);
         }
@@ -82,10 +82,10 @@ class VehicleController extends Controller
         // Stats per la toolbar
         $totalVehicles = Vehicle::forCurrentUser()->count();
         $openIssuesCount = Issue::whereIn('status', ['open', 'in_progress'])
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->count();
         $deadlinesIn30 = Deadline::where('is_renewed', false)
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->upcoming(30)
             ->count();
 
@@ -161,7 +161,7 @@ class VehicleController extends Controller
         $frontPhoto = $request->file('photo_front');
         $frontTempPath = $frontPhoto->getRealPath();
 
-        $frontFileName = Str::random(40) . '.' . $frontPhoto->getClientOriginalExtension();
+        $frontFileName = Str::random(40).'.'.$frontPhoto->getClientOriginalExtension();
         $frontPendingPath = $frontPhoto->storeAs('registration_cards/pending', $frontFileName, $this->registrationCardService->disk());
 
         try {
@@ -254,7 +254,7 @@ class VehicleController extends Controller
                 'qrSvg' => $qrSvg,
             ]);
 
-        return $pdf->download('qr-' . $vehicle->internal_code . '.pdf');
+        return $pdf->download('qr-'.$vehicle->internal_code.'.pdf');
     }
 
     /**

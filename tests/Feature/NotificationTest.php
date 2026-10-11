@@ -20,7 +20,7 @@ class NotificationTest extends TestCase
     public function test_notify_user_creates_notification(): void
     {
         $user = $this->admin();
-        $service = new NotificationService();
+        $service = new NotificationService;
 
         $notification = $service->notifyUser($user, Notification::TYPE_SYSTEM, 'Test', 'Messaggio', '/dashboard');
 
@@ -40,7 +40,7 @@ class NotificationTest extends TestCase
         $admin1 = $this->admin();
         $admin2 = $this->admin();
         $worker = User::factory()->withRole('member')->create();
-        $service = new NotificationService();
+        $service = new NotificationService;
 
         $service->notifyAdmins(Notification::TYPE_SYSTEM, 'Test');
 
@@ -53,7 +53,7 @@ class NotificationTest extends TestCase
     public function test_notify_with_user_notifies_specific_user(): void
     {
         $user = $this->admin();
-        $service = new NotificationService();
+        $service = new NotificationService;
 
         $service->notify($user, Notification::TYPE_SYSTEM, 'Test');
 
@@ -64,7 +64,7 @@ class NotificationTest extends TestCase
     public function test_notify_without_user_notifies_all_admins(): void
     {
         $admin = $this->admin();
-        $service = new NotificationService();
+        $service = new NotificationService;
 
         $service->notify(null, Notification::TYPE_SYSTEM, 'Test');
 
@@ -106,7 +106,7 @@ class NotificationTest extends TestCase
     {
         $admin = $this->admin();
         $worker = User::factory()->withRole('member')->create();
-        $service = new NotificationService();
+        $service = new NotificationService;
 
         $service->notifyRole('member', Notification::TYPE_SYSTEM, 'Test');
 
@@ -120,7 +120,7 @@ class NotificationTest extends TestCase
         $admin = $this->admin();
         $worker = User::factory()->withRole('member')->create();
         $manager = User::factory()->withRole('sottocapo')->create();
-        $service = new NotificationService();
+        $service = new NotificationService;
 
         $service->notifyByRoles(['capo', 'member'], Notification::TYPE_SYSTEM, 'Test');
 

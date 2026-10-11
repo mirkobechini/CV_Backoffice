@@ -3,9 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Vehicle;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use Faker\Generator as Faker;
+use Illuminate\Database\Seeder;
 
 class VehicleTableSeeder extends Seeder
 {
@@ -15,7 +14,7 @@ class VehicleTableSeeder extends Seeder
     public function run(Faker $faker): void
     {
         for ($i = 0; $i < 5; $i++) {
-             Vehicle::create([
+            Vehicle::create([
                 'license_plate' => $faker->unique()->regexify('[A-Z]{2}[0-9]{3}[A-Z]{2}'),
                 'internal_code' => $faker->unique()->numberBetween(1000, 9999),
                 'brand_id' => $faker->numberBetween(1, 10), // Assumendo che ci siano 39 brand importati
@@ -28,7 +27,7 @@ class VehicleTableSeeder extends Seeder
                 'has_warranty_extension' => false,
                 'warranty_extension_duration' => null,
             ]);
-        }   
+        }
 
     }
 }

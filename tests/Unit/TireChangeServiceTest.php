@@ -18,7 +18,7 @@ class TireChangeServiceTest extends TestCase
 
     private function service(): TireChangeService
     {
-        return new TireChangeService();
+        return new TireChangeService;
     }
 
     private function vehicle(): Vehicle

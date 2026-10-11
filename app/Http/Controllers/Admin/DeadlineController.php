@@ -47,7 +47,7 @@ class DeadlineController extends Controller
             'sort_dir' => 'nullable|in:asc,desc',
             'latest_revision_only' => 'nullable|in:0,1',
             'status_filter' => 'nullable|in:all,expired,pending,valid,renewed',
-            'type_filter' => 'nullable|in:all,' . implode(',', self::TYPES),
+            'type_filter' => 'nullable|in:all,'.implode(',', self::TYPES),
         ]);
 
         // Default atteso alla prima visita (nessun filtro in query string):
@@ -69,7 +69,7 @@ class DeadlineController extends Controller
         $search = $request->get('q');
 
         $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser());
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser());
 
         // Deadline::$searchable copre solo type/status: il campo cerca
         // "tipologia o veicolo" (vedi placeholder in vista), quindi il
@@ -104,8 +104,8 @@ class DeadlineController extends Controller
         if ($latestRevisionOnly) {
             $deadlines = $deadlinesQuery
                 ->get()
-                ->sortBy(fn(Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
-                ->unique(fn(Deadline $d) => ($d->vehicle_id ?? 'N/A') . '|' . ($d->type ?? 'N/A'))
+                ->sortBy(fn (Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
+                ->unique(fn (Deadline $d) => ($d->vehicle_id ?? 'N/A').'|'.($d->type ?? 'N/A'))
                 ->values();
         } else {
             $deadlines = $deadlinesQuery->get();
@@ -114,18 +114,18 @@ class DeadlineController extends Controller
         Deadline::syncStatusesFromRules($deadlines);
 
         if ($statusFilter !== 'all') {
-            $deadlines = $deadlines->filter(fn(Deadline $d) => $d->automatic_status === $statusFilter)->values();
+            $deadlines = $deadlines->filter(fn (Deadline $d) => $d->automatic_status === $statusFilter)->values();
         }
 
         if ($typeFilter !== 'all') {
-            $deadlines = $deadlines->filter(fn(Deadline $d) => $d->type === $typeFilter)->values();
+            $deadlines = $deadlines->filter(fn (Deadline $d) => $d->type === $typeFilter)->values();
         }
 
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
-            'type' => fn(Deadline $d) => $d->type,
-            'status' => fn(Deadline $d) => $d->automatic_status,
-            'vehicle' => fn(Deadline $d) => $d->vehicle?->internal_code ?? '',
-            'date' => fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
+            'type' => fn (Deadline $d) => $d->type,
+            'status' => fn (Deadline $d) => $d->automatic_status,
+            'vehicle' => fn (Deadline $d) => $d->vehicle?->internal_code ?? '',
+            'date' => fn (Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
         ]);
 
         // Ogni chiave di raggruppamento attiva ha il suo callback etichetta;
@@ -134,27 +134,27 @@ class DeadlineController extends Controller
         // ecc. nell'ordine in cui le chiavi sono state attivate), invece di
         // poterne applicare uno solo alla volta.
         $groupLabelCallbacks = [
-            'type' => fn(Deadline $deadline) => $deadline->type ?? 'N/A',
-            'status' => fn(Deadline $deadline) => match ($deadline->automatic_status) {
+            'type' => fn (Deadline $deadline) => $deadline->type ?? 'N/A',
+            'status' => fn (Deadline $deadline) => match ($deadline->automatic_status) {
                 Deadline::STATUS_RENEWED => 'Rinnovata',
                 Deadline::STATUS_PENDING => 'In scadenza',
                 Deadline::STATUS_EXPIRED => 'Scaduta',
                 Deadline::STATUS_VALID => 'Valida',
                 default => 'Sconosciuto',
             },
-            'vehicle' => fn(Deadline $deadline) => $deadline->vehicle?->internal_code ?? 'N/A',
-            'date' => fn(Deadline $deadline) => $deadline->due_date_formatted ?? 'N/A',
+            'vehicle' => fn (Deadline $deadline) => $deadline->vehicle?->internal_code ?? 'N/A',
+            'date' => fn (Deadline $deadline) => $deadline->due_date_formatted ?? 'N/A',
         ];
 
         $groupedDeadlines = empty($groupByKeys)
             ? null
-            : $deadlines->groupBy(array_map(fn($key) => $groupLabelCallbacks[$key], $groupByKeys));
+            : $deadlines->groupBy(array_map(fn ($key) => $groupLabelCallbacks[$key], $groupByKeys));
 
         return view('admin.deadlines.index', compact('deadlines', 'groupByKeys', 'sortBy', 'sortDir', 'groupedDeadlines', 'latestRevisionOnly', 'statusFilter', 'typeFilter') + [
             'types' => self::TYPES,
-            'groupToggleUrl' => fn($f) => $this->multiGroupToggleUrl($f, $groupByKeys, 'admin.deadlines.index'),
-            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
-            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'groupToggleUrl' => fn ($f) => $this->multiGroupToggleUrl($f, $groupByKeys, 'admin.deadlines.index'),
+            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.index'),
+            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 
@@ -172,27 +172,27 @@ class DeadlineController extends Controller
         $sortDir = $request->get('sort_dir', $request->get('sort_by') ? 'asc' : 'desc');
 
         $deadlines = Deadline::with('vehicle', 'insuranceCoverages')
-            ->whereHas('vehicle', fn($q) => $q->forCurrentUser())
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->where('type', 'Assicurazione')
             ->get()
-            ->sortBy(fn(Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
-            ->unique(fn(Deadline $d) => $d->vehicle_id ?? 'N/A')
+            ->sortBy(fn (Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
+            ->unique(fn (Deadline $d) => $d->vehicle_id ?? 'N/A')
             ->values();
 
         Deadline::syncStatusesFromRules($deadlines);
 
         $deadlines = $this->applySortingToCollection($deadlines, $sortBy, $sortDir, [
-            'vehicle' => fn(Deadline $d) => $d->vehicle?->internal_code ?? '',
-            'company' => fn(Deadline $d) => $d->insurance_company ?? '',
-            'premium' => fn(Deadline $d) => $d->insurance_premium_total,
-            'date' => fn(Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
+            'vehicle' => fn (Deadline $d) => $d->vehicle?->internal_code ?? '',
+            'company' => fn (Deadline $d) => $d->insurance_company ?? '',
+            'premium' => fn (Deadline $d) => $d->insurance_premium_total,
+            'date' => fn (Deadline $d) => $d->due_date?->format('Y-m-d') ?? '',
         ]);
 
         $totalPremium = $deadlines->sum('insurance_premium_total');
 
         return view('admin.deadlines.insurances', compact('deadlines', 'sortBy', 'sortDir', 'totalPremium') + [
-            'sortToggleUrl' => fn($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.insurances'),
-            'sortIcon' => fn($f) => $this->sortIcon($f, $sortBy, $sortDir),
+            'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.deadlines.insurances'),
+            'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
     }
 

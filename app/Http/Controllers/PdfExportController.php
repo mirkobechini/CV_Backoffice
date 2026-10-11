@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Vehicle;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
 class PdfExportController extends Controller
 {
@@ -35,7 +35,8 @@ class PdfExportController extends Controller
         ]);
         $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
             ->loadView('pdfs.scheda-veicolo', compact('vehicle'));
-        return $pdf->download('scheda-' . $vehicle->internal_code . '.pdf');
+
+        return $pdf->download('scheda-'.$vehicle->internal_code.'.pdf');
     }
 
     /**
@@ -57,6 +58,6 @@ class PdfExportController extends Controller
         $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
             ->loadView('pdfs.fleet-overview', compact('vehicles'));
 
-        return $pdf->download('flotta-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->download('flotta-'.now()->format('Y-m-d').'.pdf');
     }
 }

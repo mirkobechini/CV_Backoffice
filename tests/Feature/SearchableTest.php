@@ -19,6 +19,7 @@ class SearchableTest extends TestCase
         $vt = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true, 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
         $brand = Brand::create(['name' => 'Fiat']);
         $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+
         return Vehicle::create([
             'license_plate' => 'AB123CD',
             'vehicle_type_id' => $vt->id,
@@ -73,7 +74,8 @@ class SearchableTest extends TestCase
      */
     public function test_search_rejects_unsafe_fulltext_column_name(): void
     {
-        $model = new class extends Issue {
+        $model = new class extends Issue
+        {
             protected $fulltextable = ['description) OR 1=1 -- '];
         };
 

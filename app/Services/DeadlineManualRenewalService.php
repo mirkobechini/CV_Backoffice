@@ -24,8 +24,7 @@ class DeadlineManualRenewalService
 {
     public function __construct(
         private readonly MileageLogService $mileageLogService,
-    ) {
-    }
+    ) {}
 
     /**
      * Stessa logica di calcolo della prossima occorrenza di

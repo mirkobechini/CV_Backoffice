@@ -6,6 +6,7 @@ use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Group;
 use App\Models\Issue;
+use App\Models\Tire;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -74,7 +75,8 @@ class IssueCrudTest extends TestCase
             'status' => 'closed',
             'event_date' => '2025-01-02',
         ]);
-        return (compact("vehicle", 'issue'));
+
+        return compact('vehicle', 'issue');
     }
 
     public function test_issue_index_page_is_reachable(): void
@@ -86,21 +88,18 @@ class IssueCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_issue_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.issues.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_issue_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $issue = $this->createIssue()['issue'];
 
         $response = $this->actingAs($user)->get(route('admin.issues.show', $issue));
@@ -110,7 +109,7 @@ class IssueCrudTest extends TestCase
 
     public function test_issue_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $issue = $this->createIssue()['issue'];
 
         $response = $this->actingAs($user)->get(route('admin.issues.edit', $issue));
@@ -118,12 +117,10 @@ class IssueCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_issue_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $vehicle = $this->createVehicle();
-
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
@@ -143,7 +140,6 @@ class IssueCrudTest extends TestCase
             'event_date' => '2025-01-02 00:00:00',
         ]);
     }
-
 
     public function test_issue_can_be_updated(): void
     {
@@ -235,10 +231,10 @@ class IssueCrudTest extends TestCase
     public function test_edit_page_shows_tire_picker_when_issue_already_has_a_tire(): void
     {
         $vehicle = $this->createVehicle();
-        $tire = \App\Models\Tire::create([
+        $tire = Tire::create([
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
-            'position' => \App\Models\Tire::POSITION_FRONT_LEFT,
+            'position' => Tire::POSITION_FRONT_LEFT,
             'status' => 'mounted',
         ]);
         $issue = Issue::create([
@@ -261,10 +257,10 @@ class IssueCrudTest extends TestCase
     {
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
-        $tire = \App\Models\Tire::create([
+        $tire = Tire::create([
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
-            'position' => \App\Models\Tire::POSITION_FRONT_LEFT,
+            'position' => Tire::POSITION_FRONT_LEFT,
             'status' => 'mounted',
         ]);
 

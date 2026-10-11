@@ -2,9 +2,8 @@
 
 namespace Tests\Feature\Crud;
 
-
-use App\Models\User;
 use App\Models\EquipmentType;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -37,21 +36,18 @@ class EquipmentTypeCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_equipment_type_create_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->get(route('admin.equipment-types.create'));
 
         $response->assertStatus(200);
     }
 
-
-
     public function test_equipment_type_show_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $equipmentType = $this->createEquipmentType();
 
         $response = $this->actingAs($user)->get(route('admin.equipment-types.show', $equipmentType));
@@ -61,7 +57,7 @@ class EquipmentTypeCrudTest extends TestCase
 
     public function test_equipment_type_edit_page_is_reachable(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
         $equipmentType = $this->createEquipmentType();
 
         $response = $this->actingAs($user)->get(route('admin.equipment-types.edit', $equipmentType));
@@ -69,10 +65,9 @@ class EquipmentTypeCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
-
     public function test_equipment_type_can_be_stored(): void
     {
-        $user = $this->createUser();    //fake user
+        $user = $this->createUser();    // fake user
 
         $response = $this->actingAs($user)->post(route('admin.equipment-types.store'), [
             'name' => 'Estintore',
@@ -91,7 +86,6 @@ class EquipmentTypeCrudTest extends TestCase
             'regular_inspection_months' => 6,
         ]);
     }
-
 
     public function test_equipment_type_can_be_updated(): void
     {
@@ -151,7 +145,6 @@ class EquipmentTypeCrudTest extends TestCase
 
     }
 
-
     public function test_equipment_type_cannot_be_updated_with_duplicate_name()
     {
         $user = $this->createUser();
@@ -175,7 +168,7 @@ class EquipmentTypeCrudTest extends TestCase
         $response->assertSessionHasErrors(['name']);
         $this->assertDatabaseHas('equipment_types', [
             'id' => $equipmentType->id,
-            'name' => $equipmentType->name
+            'name' => $equipmentType->name,
         ]); // Conferma che il tipo di equipaggiamento mantenga il nome originale.
 
     }

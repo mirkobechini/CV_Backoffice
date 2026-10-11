@@ -6,6 +6,7 @@ use App\Http\Requests\Concerns\AdminOnlyAccess;
 use App\Models\Tire;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTireRequest extends FormRequest
@@ -15,7 +16,7 @@ class StoreTireRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -25,7 +26,7 @@ class StoreTireRequest extends FormRequest
             'position' => 'required|in:front_left,front_right,rear_left,rear_right',
             'brand' => 'nullable|string|max:255',
             'model_name' => 'nullable|string|max:255',
-            'size' => ['nullable', 'string', 'max:255', 'regex:' . Tire::SIZE_REGEX],
+            'size' => ['nullable', 'string', 'max:255', 'regex:'.Tire::SIZE_REGEX],
             'status' => 'required|in:mounted,stored,retired',
             'mounted_date' => 'nullable|date',
             'mounted_mileage' => 'nullable|integer|min:0',
