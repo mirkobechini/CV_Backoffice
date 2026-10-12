@@ -53,6 +53,10 @@ jobs:
         if: matrix.php == '8.5'
         run: vendor/bin/pint --test
 
+      - name: Composer audit
+        if: matrix.php == '8.5'
+        run: composer audit
+
   # ────────────────────────────────────────────
   #  Frontend build (Vite)
   # ────────────────────────────────────────────
@@ -73,3 +77,6 @@ jobs:
 
       - name: Build frontend
         run: npm run build
+
+      - name: npm audit
+        run: npm audit --omit=dev
