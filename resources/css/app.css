@@ -1,6 +1,53 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:where([data-bs-theme="dark"], [data-bs-theme="dark"] *));
+
+@theme {
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface: var(--surface);
+
+  --color-ink: var(--text);
+  --color-ink-muted: var(--text-muted);
+
+  --color-line: var(--border);
+
+  --color-brand: var(--primary);
+  --color-brand-soft: var(--primary-soft);
+
+  --color-ok: var(--green);
+  --color-ok-soft: var(--green-soft);
+
+  --color-warn: var(--amber);
+  --color-warn-soft: var(--amber-soft);
+
+  --color-danger: var(--red);
+  --color-danger-soft: var(--red-soft);
+
+  --color-info: var(--blue);
+  --color-info-soft: var(--blue-soft);
+
+  --color-accent: var(--purple);
+  --color-accent-soft: var(--purple-soft);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
 
 /* =============================================
    Tema Dashboard Pro — variabili CSS
@@ -3701,15 +3748,15 @@ td .email {
    ============================================= */
 
 .card-dp {
-    @apply bg-surface border border-line rounded shadow;
+    @apply bg-surface border border-line rounded-sm shadow-sm;
 }
 
 .btn-dp {
-    @apply inline-flex items-center gap-2 font-semibold text-[12.5px] h-9 px-3 rounded border border-line bg-surface text-ink;
+    @apply inline-flex items-center gap-2 font-semibold text-[12.5px] h-9 px-3 rounded-sm border border-line bg-surface text-ink;
 }
 
 .btn-dp-primary {
-    @apply inline-flex items-center gap-2 font-semibold text-[12.5px] h-9 px-3 rounded bg-brand text-white border-brand;
+    @apply inline-flex items-center gap-2 font-semibold text-[12.5px] h-9 px-3 rounded-sm bg-brand text-white border-brand;
 }
 
 .badge-dp {
@@ -3717,7 +3764,7 @@ td .email {
 }
 
 .input-dp {
-    @apply w-full h-10 px-3 rounded border border-line bg-surface text-ink text-[13.5px] outline-none;
+    @apply w-full h-10 px-3 rounded-sm border border-line bg-surface text-ink text-[13.5px] outline-hidden;
 }
 
 /* =============================================

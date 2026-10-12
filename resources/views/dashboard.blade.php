@@ -17,7 +17,7 @@
                         {{ __('Il tuo ruolo ha accesso ampio ai dati della flotta: proteggi il tuo account con un secondo fattore.') }}
                     </p>
                 </div>
-                <a href="{{ route('profile.edit') }}" class="btn outline">{{ __('Vai alle impostazioni') }}</a>
+                <a href="{{ route('profile.edit') }}" class="btn outline-solid">{{ __('Vai alle impostazioni') }}</a>
             </div>
         </div>
     @endif

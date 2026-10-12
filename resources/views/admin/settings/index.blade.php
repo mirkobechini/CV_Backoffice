@@ -22,7 +22,7 @@
             <div class="body">
                 <p class="hint" style="margin-bottom:10px;">
                     {{ __('Nome, email, password e altre impostazioni personali del tuo account.') }}</p>
-                <a href="{{ route('profile.edit') }}" class="btn outline">
+                <a href="{{ route('profile.edit') }}" class="btn outline-solid">
                     <i class="fa-solid fa-arrow-right"></i> {{ __('Vai al tuo account') }}
                 </a>
                 <p class="hint" style="margin-top:14px;">
@@ -49,7 +49,7 @@
                         {{ __('Crea un backup del database in formato JSON.') }}</p>
                     <form method="POST" action="{{ route('admin.settings.backup') }}" data-single-submit="true">
                         @csrf
-                        <button type="submit" class="btn outline" data-loading-text="{{ __('Creazione...') }}">
+                        <button type="submit" class="btn outline-solid" data-loading-text="{{ __('Creazione...') }}">
                             <i class="fa-solid fa-floppy-disk"></i> {{ __('Crea backup') }}
                         </button>
                     </form>
