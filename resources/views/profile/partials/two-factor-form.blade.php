@@ -16,10 +16,10 @@
                     @endforeach
                 </div>
                 <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                    <button type="button" class="btn outline" id="recovery-codes-copy">
+                    <button type="button" class="btn outline-solid" id="recovery-codes-copy">
                         <i class="fa-solid fa-copy"></i> {{ __('Copia negli appunti') }}
                     </button>
-                    <button type="button" class="btn outline" id="recovery-codes-download">
+                    <button type="button" class="btn outline-solid" id="recovery-codes-download">
                         <i class="fa-solid fa-download"></i> {{ __('Scarica file') }}
                     </button>
                 </div>
@@ -67,7 +67,7 @@
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <form method="post" action="{{ route('two-factor.recovery-codes') }}" data-single-submit="true">
                 @csrf
-                <button type="submit" class="btn outline">
+                <button type="submit" class="btn outline-solid">
                     <i class="fa-solid fa-rotate"></i> {{ __('Rigenera codici di recupero') }}
                 </button>
             </form>

@@ -39,7 +39,7 @@
                     <form method="POST" action="{{ route('admin.notifications.telegram-unlink') }}" data-single-submit="true">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn outline">{{ __('Scollega Telegram') }}</button>
+                        <button type="submit" class="btn outline-solid">{{ __('Scollega Telegram') }}</button>
                     </form>
                 @else
                     <p class="hint" style="margin-bottom:14px;">

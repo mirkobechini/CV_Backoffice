@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('content')
     <div class="container py-4">
-        <div class="card p-4 shadow rounded-lg">
+        <div class="card p-4 shadow-sm rounded-lg">
             <h1 class="mb-4">Informativa Privacy</h1>
 
             <p class="text-muted">Ultimo aggiornamento: {{ now()->format('d/m/Y') }}</p>

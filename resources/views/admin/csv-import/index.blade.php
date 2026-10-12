@@ -90,7 +90,7 @@
             </div>
             <div class="card-body">
                 <h6>Guasti (dal tuo foglio Google)</h6>
-                <pre class="bg-light p-2 rounded"><code>DATA;DESCRIZIONE;...;APPUNTAMENTO;OFFICINA;RISOLTO
+                <pre class="bg-light p-2 rounded-sm"><code>DATA;DESCRIZIONE;...;APPUNTAMENTO;OFFICINA;RISOLTO
 17/07/2024;Pasticche Freni;;;17/07/2024;Mezzani;17/07/2024</code></pre>
                 <p class="text-muted small mb-0">
                     Il veicolo va specificato nel nome file (es. "1727 - Guasti.csv") o nel campo apposito.
@@ -101,7 +101,7 @@
                 <hr>
 
                 <h6>Chilometraggi (formato pivot — dal tuo foglio Google)</h6>
-                <pre class="bg-light p-2 rounded"><code>SIGLA;MEZZI;TARGA;GENNAIO;FEBBRAIO;MARZO;...
+                <pre class="bg-light p-2 rounded-sm"><code>SIGLA;MEZZI;TARGA;GENNAIO;FEBBRAIO;MARZO;...
 1726;DUCATO;GP 365 YL;30742;32556;35907;...</code></pre>
                 <p class="text-muted small mb-0">
                     Ogni riga è un veicolo, le colonne sono i mesi (italiano). I km vengono
@@ -112,7 +112,7 @@
                 <hr>
 
                 <h6>Chilometraggi (formato semplice alternativo)</h6>
-                <pre class="bg-light p-2 rounded"><code>veicolo;mese;chilometri
+                <pre class="bg-light p-2 rounded-sm"><code>veicolo;mese;chilometri
 AB123CD;03/2026;45000
 1001;03/2026;32000</code></pre>
                 <p class="text-muted small mb-0">Formato alternativo: una riga per lettura.</p>

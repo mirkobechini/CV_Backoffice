@@ -22,7 +22,7 @@
             @csrf
             <input type="text" name="invite_code" class="input" placeholder="{{ __('Codice invito') }}" maxlength="12"
                 required>
-            <button type="submit" class="btn outline">{{ __('Entra') }}</button>
+            <button type="submit" class="btn outline-solid">{{ __('Entra') }}</button>
         </form>
         @error('invite_code')
             <div class="field-error" style="margin-top:8px;">{{ $message }}</div>
