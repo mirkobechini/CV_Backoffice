@@ -18,6 +18,12 @@
         </include>
     </source>
     <php>
+        <!-- Senza questo, un memory_limit CLI basso (es. 128M di default su
+             alcuni setup locali) fa fallire la generazione PDF in modo
+             intermittente quando l'autoload cresce (es. aggiunta dell'SDK
+             AWS per il driver S3); la CI di GitHub Actions non lo richiede
+             perché usa già memory_limit=-1. -->
+        <ini name="memory_limit" value="-1"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
