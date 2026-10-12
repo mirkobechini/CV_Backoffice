@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Changed
+
+- Formattazione del codice uniformata con Pint (preset Laravel di default); aggiunto `pint --test` alla CI.
+- `laravel/framework` 12 → **13**, con l'aggiornamento a cascata di Guzzle, Symfony e `brick/math`. Nessuna modifica al codice applicativo necessaria.
+
 ## [v1.6.0] - 2026-10-11
 
 ### Added
