@@ -8,6 +8,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 - Formattazione del codice uniformata con Pint (preset Laravel di default); aggiunto `pint --test` alla CI.
 - `laravel/framework` 12 → **13**, con l'aggiornamento a cascata di Guzzle, Symfony e `brick/math`. Nessuna modifica al codice applicativo necessaria.
+- `spatie/laravel-activitylog` 4 → **5**: trait unificato `HasActivity`, namespace di `LogOptions` cambiato, config semplificata. Migrazione dati automatica dei log di attività esistenti (i valori prima/dopo passano dalla colonna `properties` alla nuova `attribute_changes`) — verificata su dati reali, non solo in teoria.
 
 ## [v1.6.0] - 2026-10-11
 

@@ -71,14 +71,14 @@
                             </td>
                             <td>{{ $activity->description }}</td>
                             <td>
-                                @if ($activity->properties && $activity->properties->isNotEmpty())
+                                @if ($activity->attribute_changes && $activity->attribute_changes->isNotEmpty())
                                     <button type="button" class="detail-btn" data-bs-toggle="modal"
                                         data-bs-target="#detailModal-{{ $activity->id }}" title="{{ __('Dettagli') }}">
                                         <i class="fa-solid fa-eye"></i>
                                     </button>
 
                                     @php
-                                        $propertyData = \App\Http\Controllers\Admin\ActivityLogController::propertyRows($activity->properties);
+                                        $propertyData = \App\Http\Controllers\Admin\ActivityLogController::propertyRows($activity->attribute_changes);
                                     @endphp
                                     <div class="modal fade" id="detailModal-{{ $activity->id }}" tabindex="-1"
                                         aria-hidden="true">

@@ -60,6 +60,46 @@ class ActivityLogTest extends TestCase
         $response->assertDontSee('Issue activity');
     }
 
+    /**
+     * spatie/laravel-activitylog v5 salva i valori prima/dopo (attributes/
+     * old) in attribute_changes, non più in properties: la ricerca testuale
+     * deve guardare anche lì, altrimenti cercare un valore che è cambiato
+     * (es. un nome) non trova più nulla.
+     */
+    public function test_activity_log_search_matches_attribute_changes(): void
+    {
+        $user = $this->admin();
+
+        // Le description sono il marcatore di "quale riga è stata
+        // mostrata": il termine cercato non può servire a questo scopo,
+        // dato che il campo di ricerca lo riflette sempre nel suo
+        // attributo value, a prescindere dal filtro reale sui risultati.
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'riga-con-match-marker',
+            'subject_type' => Vehicle::class,
+            'subject_id' => 1,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+            'attribute_changes' => ['attributes' => ['internal_code' => 'ZZ999FINDME']],
+        ]);
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'riga-senza-match-marker',
+            'subject_type' => Vehicle::class,
+            'subject_id' => 2,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+            'attribute_changes' => ['attributes' => ['internal_code' => 'UNRELATED']],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.activity-log.index', ['q' => 'ZZ999FINDME']));
+
+        $response->assertOk();
+        $response->assertSee('riga-con-match-marker');
+        $response->assertDontSee('riga-senza-match-marker');
+    }
+
     public function test_activity_log_requires_auth(): void
     {
         $response = $this->get(route('admin.activity-log.index'));

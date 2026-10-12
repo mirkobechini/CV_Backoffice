@@ -111,9 +111,12 @@ class InspectVehicleDeadlines extends Command
      */
     private function reportOrphanActivityTraces(Vehicle $vehicle, ?string $type, array $knownIds): void
     {
+        // vehicle_id/type sono attributi del modello (non properties custom):
+        // spatie/laravel-activitylog v5 li salva in attribute_changes, non
+        // più in properties (vedi migrazione upgrade_activity_log_table_to_v5_schema).
         $activities = Activity::where('subject_type', Deadline::class)
-            ->where('properties', 'like', '%"vehicle_id":'.$vehicle->id.'%')
-            ->when($type, fn ($q) => $q->where('properties', 'like', '%"type":"'.$type.'"%'))
+            ->where('attribute_changes', 'like', '%"vehicle_id":'.$vehicle->id.'%')
+            ->when($type, fn ($q) => $q->where('attribute_changes', 'like', '%"type":"'.$type.'"%'))
             ->whereNotIn('subject_id', $knownIds)
             ->with('causer')
             ->oldest()
@@ -131,7 +134,7 @@ class InspectVehicleDeadlines extends Command
         foreach ($activities as $a) {
             $causer = $a->causer?->name ?? 'sistema/sconosciuto';
             $this->line("  [{$a->created_at}] subject_id={$a->subject_id} {$a->description} — {$causer}");
-            $this->line('  properties: '.$a->properties);
+            $this->line('  attribute_changes: '.$a->attribute_changes);
         }
     }
 }

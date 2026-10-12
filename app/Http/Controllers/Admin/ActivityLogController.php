@@ -37,12 +37,16 @@ class ActivityLogController extends Controller
             $query->where('subject_type', $request->subject_type);
         }
 
-        // Filtro per descrizione (testo libero)
+        // Filtro per descrizione (testo libero): attribute_changes è dove
+        // spatie/laravel-activitylog v5 salva i valori prima/dopo (vedi
+        // migrazione upgrade_activity_log_table_to_v5_schema), properties
+        // resta per eventuali custom property aggiunte manualmente.
         if ($request->filled('q')) {
             $search = $request->q;
             $query->where(function ($q) use ($search) {
                 $q->where('description', 'like', "%{$search}%")
-                    ->orWhere('properties', 'like', "%{$search}%");
+                    ->orWhere('properties', 'like', "%{$search}%")
+                    ->orWhere('attribute_changes', 'like', "%{$search}%");
             });
         }
 

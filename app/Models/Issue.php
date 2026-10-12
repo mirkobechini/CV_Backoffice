@@ -6,12 +6,12 @@ use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Concerns\HasActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Issue extends Model
 {
-    use LogsActivity, Searchable, SoftDeletes;
+    use HasActivity, Searchable, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
