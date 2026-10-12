@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.7.0] - 2026-10-12
+
 ### Changed
 
 - Formattazione del codice uniformata con Pint (preset Laravel di default); aggiunto `pint --test` alla CI.
