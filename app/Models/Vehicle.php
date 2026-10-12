@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Activitylog\LogOptions;
-use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\Models\Concerns\HasActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Vehicle extends Model
 {
-    use LogsActivity, Searchable, SoftDeletes;
+    use HasActivity, Searchable, SoftDeletes;
 
     public const TIMING_BELT_TYPE_CHAIN = 'chain';
 
