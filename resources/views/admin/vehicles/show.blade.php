@@ -14,10 +14,10 @@
         <a href="{{ request('back', route('admin.vehicles.index')) }}" class="btn">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}
         </a>
-        <a href="{{ route('admin.vehicles.pdf', $vehicle->id) }}" class="btn outline" target="_blank">
+        <a href="{{ route('admin.vehicles.pdf', $vehicle->id) }}" class="btn outline-solid" target="_blank">
             <i class="fa-solid fa-file-pdf"></i> PDF
         </a>
-        <a href="{{ route('admin.vehicles.qr-label', $vehicle->id) }}" class="btn outline" target="_blank"
+        <a href="{{ route('admin.vehicles.qr-label', $vehicle->id) }}" class="btn outline-solid" target="_blank"
             title="{{ __('Etichetta QR da stampare e attaccare sul mezzo') }}">
             <i class="fa-solid fa-qrcode"></i> QR
         </a>

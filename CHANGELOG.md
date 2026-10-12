@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.7.0] - 2026-10-12
+
+### Changed
+
+- Formattazione del codice uniformata con Pint (preset Laravel di default); aggiunto `pint --test` alla CI.
+- `laravel/framework` 12 → **13**, con l'aggiornamento a cascata di Guzzle, Symfony e `brick/math`. Nessuna modifica al codice applicativo necessaria.
+- `spatie/laravel-activitylog` 4 → **5**: trait unificato `HasActivity`, namespace di `LogOptions` cambiato, config semplificata. Migrazione dati automatica dei log di attività esistenti (i valori prima/dopo passano dalla colonna `properties` alla nuova `attribute_changes`) — verificata su dati reali, non solo in teoria.
+- Tailwind CSS 3 → **4**: configurazione spostata da `tailwind.config.js` (rimosso) al blocco `@theme` in CSS; `vite` 6 → 8 e `laravel-vite-plugin` 1 → 3 a corredo. Chiude la catena di dipendenze vulnerabile (`braces`/`chokidar`/`micromatch`/`fast-glob`) citata in v1.6.0: rimosso l'override `postcss-selector-parser`, non più necessario (0 vulnerabilità npm).
+- Aggiunto `.github/dependabot.yml` (composer/npm/github-actions, settimanale, verso `dev`, ignora i major di `laravel/framework`) e `composer audit`/`npm audit --omit=dev` in CI: i controlli di sicurezza sulle dipendenze non sono più solo manuali.
+
 ## [v1.6.0] - 2026-10-11
 
 ### Added

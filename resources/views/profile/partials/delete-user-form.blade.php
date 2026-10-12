@@ -11,7 +11,7 @@
     </p>
 
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
-        <a href="{{ route('profile.export') }}" class="btn outline">
+        <a href="{{ route('profile.export') }}" class="btn outline-solid">
             <i class="fa-solid fa-download"></i> {{ __('Esporta i miei dati (GDPR)') }}
         </a>
         <button type="button" class="btn danger" data-bs-toggle="modal" data-bs-target="#delete-account">

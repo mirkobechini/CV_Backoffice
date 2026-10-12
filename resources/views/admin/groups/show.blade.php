@@ -229,7 +229,7 @@
                                 @enderror
                             </div>
                         </div>
-                        <button type="submit" class="btn outline" data-loading-text="{{ __('Salvataggio...') }}">
+                        <button type="submit" class="btn outline-solid" data-loading-text="{{ __('Salvataggio...') }}">
                             <i class="fa-solid fa-check"></i> {{ __('Salva date') }}
                         </button>
                     </form>
