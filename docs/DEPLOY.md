@@ -18,7 +18,8 @@
     | `APP_URL`               | `https://your-domain.laravel.cloud`      |                                                            |
     | `DB_CONNECTION`         | `mysql`                                  | Laravel Cloud provides MySQL                               |
     | `APP_LOCALE`            | `it`                                     |                                                            |
-    | `MAIL_MAILER`           | `log`                                    | For testing, then switch to SMTP (Laravel Cloud injects it via `MAIL_URL` if you enable the email add-on) |
+    | `MAIL_MAILER`           | `log`                                    | For testing, then switch to `resend` once you have a [Resend](https://resend.com) account (free tier) — set `RESEND_KEY` too. Laravel Cloud's own Resend integration is currently API-only (no dashboard UI as of 2026-10), so use a Resend account directly instead of waiting for it. |
+    | `RESEND_KEY`            | your Resend API key                      | Only needed once `MAIL_MAILER=resend`                     |
     | `OPENROUTER_API_KEY`    | your OpenRouter key                      | Required for the registration document scan; without it the feature fails gracefully, the rest of the app is unaffected |
     | `UPLOADS_DISK`          | `s3`                                     | **Required.** User-uploaded files (registration cards, fault photos) must not use the `public` (local disk) driver — Laravel Cloud's compute doesn't serve files written to local disk, so they 404 even after `storage:link`. See `R2_*` below. |
     | `R2_ACCESS_KEY_ID`      | from your Cloudflare R2 API token        |                                                            |
