@@ -34,7 +34,7 @@
                 @if ($telegramLinked)
                     <p class="hint" style="margin-bottom:14px;">
                         <span class="badge b-green">{{ __('Collegato') }}</span>
-                        {{ __('Riceverai le notifiche anche su Telegram, oltre all\'email.') }}
+                        {{ __('Riceverai qui anche il report riassuntivo (il PDF) e le notifiche, oltre all\'email.') }}
                     </p>
                     <form method="POST" action="{{ route('admin.notifications.telegram-unlink') }}" data-single-submit="true">
                         @csrf
@@ -43,7 +43,7 @@
                     </form>
                 @else
                     <p class="hint" style="margin-bottom:14px;">
-                        {{ __('Collega il tuo account Telegram per ricevere qui le stesse notifiche dell\'email.') }}
+                        {{ __('Collega il tuo account Telegram per ricevere qui il report riassuntivo e le notifiche, oltre all\'email.') }}
                     </p>
                     <form method="POST" action="{{ route('admin.notifications.telegram-link') }}" data-single-submit="true">
                         @csrf
