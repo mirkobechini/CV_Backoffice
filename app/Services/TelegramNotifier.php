@@ -141,6 +141,31 @@ class TelegramNotifier
         return $this->sendRaw($chatId, $message ? "{$title}\n{$message}" : $title);
     }
 
+    /**
+     * Invia un file (es. il PDF del report riassuntivo) a un utente, se ha
+     * collegato Telegram.
+     */
+    public function sendDocument(User $user, string $filename, string $contents, ?string $caption = null): bool
+    {
+        $chatId = $user->notificationSetting('telegram_chat_id');
+
+        if (! $chatId || ! $this->isConfigured()) {
+            return false;
+        }
+
+        $response = Http::attach('document', $contents, $filename)
+            ->post('https://api.telegram.org/bot'.config('services.telegram.bot_token').'/sendDocument', array_filter([
+                'chat_id' => $chatId,
+                'caption' => $caption,
+            ]));
+
+        if ($response->failed()) {
+            Log::warning("Telegram: invio documento fallito per chat {$chatId}: {$response->body()}");
+        }
+
+        return $response->successful();
+    }
+
     private function sendRaw(string $chatId, string $text): bool
     {
         if (! $this->isConfigured()) {

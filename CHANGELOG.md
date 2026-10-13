@@ -4,6 +4,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.7.1] - 2026-10-13
+
+### Added
+
+- Il report riassuntivo (PDF) arriva anche via Telegram a chi ha collegato l'account, non solo via email — canale indipendente: se la mail non è configurata o fallisce, il report arriva comunque su Telegram.
+- Corretta dipendenza mancante `resend/resend-php` (stesso tipo di bug di `league/flysystem-aws-s3-v3`) e documentato il setup email in produzione via Resend.
+
+### Fixed
+
+- `league/flysystem-aws-s3-v3` non era una dipendenza diretta: `Storage::disk('s3')` crashava in produzione, probabile causa di upload rotti (carta di circolazione, foto guasti) oltre all'errore osservato sulla verifica dei backup.
+
 ## [v1.7.0] - 2026-10-12
 
 ### Changed
