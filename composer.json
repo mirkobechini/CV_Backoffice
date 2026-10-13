@@ -18,6 +18,7 @@
         "league/flysystem-aws-s3-v3": "^3.25",
         "livewire/livewire": "^4.2",
         "pragmarx/google2fa": "^9.1",
+        "resend/resend-php": "^1.0",
         "spatie/laravel-activitylog": "^5.0"
     },
     "require-dev": {
