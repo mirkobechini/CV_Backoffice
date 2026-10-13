@@ -15,6 +15,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -283,6 +284,64 @@ class SendSummaryReportTest extends TestCase
 
             return true;
         });
+    }
+
+    public function test_report_also_sends_pdf_via_telegram_when_linked(): void
+    {
+        Mail::fake();
+        config(['services.telegram.bot_token' => 'fake-token']);
+        Http::fake();
+
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'telegram_chat_id', 'value' => '999']);
+
+        $this->vehicle();
+
+        $this->artisan('app:send-summary-report');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'fake-token/sendDocument')
+            && str_contains($request->body(), '999'));
+    }
+
+    public function test_report_is_not_sent_via_telegram_when_not_linked(): void
+    {
+        Mail::fake();
+        config(['services.telegram.bot_token' => 'fake-token']);
+        Http::fake();
+
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+
+        $this->vehicle();
+
+        $this->artisan('app:send-summary-report');
+
+        Http::assertNothingSent();
+    }
+
+    public function test_report_still_reaches_telegram_when_email_sending_fails(): void
+    {
+        // Il canale Telegram non deve dipendere dal successo dell'email:
+        // è esattamente il caso che ha motivato questa feature (mail non
+        // configurata/fallita, ma il destinatario ha Telegram collegato).
+        config(['services.telegram.bot_token' => 'fake-token']);
+        Http::fake();
+
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'telegram_chat_id', 'value' => '999']);
+
+        $this->vehicle();
+
+        Mail::shouldReceive('to')
+            ->once()
+            ->with('admin@example.com')
+            ->andThrow(new \RuntimeException('SMTP down'));
+
+        $this->artisan('app:send-summary-report');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'fake-token/sendDocument'));
     }
 
     public function test_report_includes_deadline_expired_by_date_even_if_status_column_is_stale(): void

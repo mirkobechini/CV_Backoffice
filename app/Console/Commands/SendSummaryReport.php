@@ -10,6 +10,7 @@ use App\Models\MaintenanceRecord;
 use App\Models\NotificationSetting;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Services\TelegramNotifier;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -33,7 +34,7 @@ class SendSummaryReport extends Command
      * viene lanciato ogni giorno dallo scheduler; qui si decide, per ciascun
      * destinatario configurato, se "oggi" è il suo giorno di invio.
      */
-    public function handle()
+    public function handle(TelegramNotifier $telegram)
     {
         $recipientRows = NotificationSetting::where('key', 'report_email')
             ->whereNotNull('value')
@@ -64,10 +65,12 @@ class SendSummaryReport extends Command
             ->get(['user_id', 'key', 'value'])
             ->groupBy('user_id');
 
-        $groupIdByUserId = User::whereIn('id', $recipientRows->pluck('user_id'))
+        $usersById = User::whereIn('id', $recipientRows->pluck('user_id'))
             ->with('groups')
             ->get()
-            ->mapWithKeys(fn (User $user) => [$user->id => $user->activeGroup()?->id]);
+            ->keyBy('id');
+
+        $groupIdByUserId = $usersById->map(fn (User $user) => $user->activeGroup()?->id);
 
         $today = Carbon::today();
         $sentCount = 0;
@@ -99,6 +102,8 @@ class SendSummaryReport extends Command
             // destinatari nel ciclo, bloccando l'invio a TUTTI senza lasciare
             // traccia in laravel.log — solo nell'output console, che nessuno
             // legge quando il comando gira via scheduler.
+            $report = null;
+
             try {
                 $reminderDays = (int) ($userSettings->firstWhere('key', 'reminder_days_before')?->value ?? 7);
                 $groupId = $groupIdByUserId->get($userId);
@@ -167,12 +172,33 @@ class SendSummaryReport extends Command
                     ];
                 }
 
-                Mail::to($row->value)->send(new ReportMail($perGroupData[$cacheKey]));
+                $report = new ReportMail($perGroupData[$cacheKey]);
+
+                Mail::to($row->value)->send($report);
                 $this->info("Report inviato con successo a {$row->value}!");
                 $sentCount++;
             } catch (Throwable $e) {
                 $this->error("Errore nell'invio del report a {$row->value}: {$e->getMessage()}");
                 Log::error("app:send-summary-report: invio fallito per {$row->value} (user_id {$userId}): {$e->getMessage()}", ['exception' => $e]);
+            }
+
+            // Canale indipendente dall'email: se Resend/SMTP non è
+            // configurato o fallisce, il report arriva comunque via
+            // Telegram a chi ha collegato l'account (stesso pattern di
+            // GenerateNotifications, un canale non blocca l'altro).
+            $user = $usersById->get($userId);
+
+            if ($report && $user && $telegram->isLinked($user)) {
+                try {
+                    $telegram->sendDocument(
+                        $user,
+                        'report-'.$today->format('Y-m-d').'.pdf',
+                        $report->renderPdf(),
+                        '📋 Report riassuntivo - CV Backoffice'
+                    );
+                } catch (Throwable $e) {
+                    Log::error("app:send-summary-report: invio Telegram fallito per user_id {$userId}: {$e->getMessage()}", ['exception' => $e]);
+                }
             }
         }
 

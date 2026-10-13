@@ -52,13 +52,23 @@ class ReportMail extends Mailable
      */
     public function attachments(): array
     {
-        $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
-            ->loadView('pdfs.report', ['data' => $this->data])
-            ->output();
+        $pdf = $this->renderPdf();
 
         return [
             Attachment::fromData(fn () => $pdf, 'report-'.now()->format('Y-m-d').'.pdf')
                 ->withMime('application/pdf'),
         ];
+    }
+
+    /**
+     * Genera il PDF del report. Estratto da attachments() per poterlo
+     * riusare anche per l'invio via Telegram (SendSummaryReport), che non
+     * passa dal Mailer.
+     */
+    public function renderPdf(): string
+    {
+        return Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
+            ->loadView('pdfs.report', ['data' => $this->data])
+            ->output();
     }
 }
