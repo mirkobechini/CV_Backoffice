@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.7.1] - 2026-10-13
+
 ### Added
 
 - Il report riassuntivo (PDF) arriva anche via Telegram a chi ha collegato l'account, non solo via email — canale indipendente: se la mail non è configurata o fallisce, il report arriva comunque su Telegram.
