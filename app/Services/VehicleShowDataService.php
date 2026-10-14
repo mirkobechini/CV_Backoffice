@@ -17,7 +17,7 @@ class VehicleShowDataService
 
     public function build(Vehicle $vehicle): array
     {
-        $vehicle->load(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment.equipmentType', 'issues', 'deadlines', 'mileageLogs', 'tires']);
+        $vehicle->load(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment.equipmentType', 'issues', 'deadlines', 'mileageLogs', 'tires', 'tireChanges.tire', 'tireChanges.previousTire']);
 
         $vehicleAppointments = $vehicle->maintenanceRecords()
             ->with('items.itemable', 'provider')

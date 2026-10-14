@@ -8,6 +8,7 @@
             <thead>
                 <tr>
                     <th>Descrizione</th>
+                    <th>Parte</th>
                     <th>Data</th>
                     <th>Stato</th>
                 </tr>
@@ -16,6 +17,7 @@
                 @foreach ($vehicle->open_issues as $issue)
                     <tr>
                         <td>{{ $issue->description }}</td>
+                        <td>{{ $issue->part ?? '—' }}</td>
                         <td>{{ $issue->event_date?->format('d/m/Y') ?? '—' }}</td>
                         <td><span class="tag tag-{{ $issue->status_color }}">{{ $issue->status_label }}</span></td>
                     </tr>
