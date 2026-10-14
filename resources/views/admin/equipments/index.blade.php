@@ -103,7 +103,6 @@
                                     title="{{ __('Ordina per scadenza') }}">{{ $sortIcon('expiration') }}</a>
                             </div>
                         </th>
-                        <th>{{ __('Prossimo collaudo') }}</th>
                         <th>
                             <div class="th-wrap"><span>{{ __('Sigla') }}</span>
                                 <a href="{{ $groupToggleUrl('vehicle') }}"
@@ -132,14 +131,14 @@
                     @if ($groupedEquipments !== null)
                         @forelse ($groupedEquipments as $groupLabel => $groupEquipments)
                             <tr class="group-row" data-group-row="g{{ $loop->index }}">
-                                <td colspan="10"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupEquipments->count() }})</td>
+                                <td colspan="9"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupEquipments->count() }})</td>
                             </tr>
                             @foreach ($groupEquipments as $equipment)
                                 <x-admin.equipment-row :equipment="$equipment" :group-key="$loop->parent->index" />
                             @endforeach
                         @empty
                             <tr>
-                                <td colspan="10" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
+                                <td colspan="9" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
                             </tr>
                         @endforelse
                     @else
@@ -147,7 +146,7 @@
                             <x-admin.equipment-row :equipment="$equipment" />
                         @empty
                             <tr>
-                                <td colspan="10" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
+                                <td colspan="9" class="empty">{{ __('Nessuna attrezzatura trovata.') }}</td>
                             </tr>
                         @endforelse
                     @endif

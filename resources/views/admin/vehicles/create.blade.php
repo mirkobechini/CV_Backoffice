@@ -236,17 +236,20 @@
                         {{ __('Un veicolo può averne più di una (es. assale anteriore diverso dal posteriore).') }}
                     </div>
                     <div data-tire-size-container>
-                        @foreach (old('allowed_tire_sizes', []) as $i => $size)
-                            <x-form.tire-size-input name="allowed_tire_sizes[]" id="allowed_tire_sizes_{{ $i }}"
-                                :value="$size" label="{{ __('Misura pneumatici') }}" removable />
+                        @foreach (old('allowed_tire_sizes', []) as $i => $entry)
+                            <x-form.tire-size-input name="allowed_tire_sizes[][size]" id="allowed_tire_sizes_{{ $i }}"
+                                :value="$entry['size'] ?? null" label="{{ __('Misura pneumatici') }}" removable
+                                position-field="allowed_tire_sizes[][position]"
+                                :position-value="$entry['position'] ?? 'either'" />
                         @endforeach
                     </div>
                     <button type="button" class="btn ghost" data-tire-size-add>
                         <i class="fa-solid fa-plus"></i> {{ __("Aggiungi un'altra misura") }}
                     </button>
                     <template data-tire-size-template>
-                        <x-form.tire-size-input name="allowed_tire_sizes[]" id="allowed_tire_sizes_new"
-                            label="{{ __('Misura pneumatici') }}" removable />
+                        <x-form.tire-size-input name="allowed_tire_sizes[][size]" id="allowed_tire_sizes_new"
+                            label="{{ __('Misura pneumatici') }}" removable
+                            position-field="allowed_tire_sizes[][position]" />
                     </template>
                 </div>
             </div>

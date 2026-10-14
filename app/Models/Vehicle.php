@@ -119,6 +119,29 @@ class Vehicle extends Model
         };
     }
 
+    /**
+     * Elenco leggibile delle misure consigliate con la posizione tra
+     * parentesi, solo quando non è "entrambi" (il caso comune, già chiaro
+     * senza etichetta aggiuntiva). Usato nella show e nel PDF scheda
+     * veicolo, invece di duplicare la stessa logica in due viste.
+     */
+    public function getAllowedTireSizesLabelAttribute(): string
+    {
+        if (empty($this->allowed_tire_sizes)) {
+            return 'N/A';
+        }
+
+        return collect($this->allowed_tire_sizes)->map(function ($entry) {
+            $label = match ($entry['position'] ?? 'either') {
+                'front' => ' (anteriore)',
+                'rear' => ' (posteriore)',
+                default => '',
+            };
+
+            return ($entry['size'] ?? '').$label;
+        })->implode(', ');
+    }
+
     public function needsTimingBeltDeadline(): bool
     {
         return in_array($this->timing_belt_type, [

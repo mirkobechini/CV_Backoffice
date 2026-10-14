@@ -33,20 +33,18 @@
                 @endif
             </div>
         @endif
-    </td>
-    <td>
-        @if ($equipment->next_collaudo_date)
-            {{ $equipment->next_collaudo_date_formatted }}
-            <div class="cell-sub">
+        {{-- Il collaudo riguarda solo alcuni tipi di attrezzatura (es.
+        estintori): niente colonna dedicata sempre vuota per tutto il
+        resto, solo un avviso qui quando è vicino o scaduto. --}}
+        @if (in_array($equipment->collaudo_status_label, ['In scadenza', 'Scaduto'], true))
+            <div class="{{ $equipment->collaudo_status_label === 'Scaduto' ? 'cell-sub-expired' : 'cell-sub-due' }}">
                 @php($collaudoDaysDiff = \Carbon\Carbon::today()->diffInDays($equipment->next_collaudo_date, false))
                 @if ($collaudoDaysDiff < 0)
-                    {{ __('scaduto da :n gg', ['n' => abs($collaudoDaysDiff)]) }}
+                    {{ __('collaudo scaduto da :n gg', ['n' => abs($collaudoDaysDiff)]) }}
                 @else
-                    {{ __('scade tra :n gg', ['n' => $collaudoDaysDiff]) }}
+                    {{ __('collaudo in scadenza tra :n gg', ['n' => $collaudoDaysDiff]) }}
                 @endif
             </div>
-        @else
-            —
         @endif
     </td>
     <td class="code">{{ $equipment->vehicle?->internal_code ?? 'N/A' }}</td>

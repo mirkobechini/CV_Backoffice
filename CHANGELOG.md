@@ -4,6 +4,20 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.8.0] - 2026-10-14
+
+### Added
+
+- Misure pneumatici consigliate del veicolo: ogni misura ora ha anche una posizione (anteriore/posteriore/entrambi), perché il libretto a volte indica misure diverse per assale che non vanno bene a vicenda. L'avviso di misura non corrispondente (`Tire::sizeMismatchWarning`) ora tiene conto della posizione della gomma. La scansione automatica del libretto prova a leggere anche la posizione (default "entrambi" se non specificata).
+
+### Changed
+
+- Index attrezzature: rimossa la colonna "Prossimo collaudo" (vuota per tutto tranne gli estintori); quando il collaudo è vicino o scaduto, l'avviso compare ora nella colonna "Data di revisione".
+
+### Fixed
+
+- Creazione pneumatico: il form permetteva una sola posizione per volta nonostante il messaggio dicesse "Set di gomme creato con successo" — per montare un set completo servivano 4 invii separati. Aggiunto il selettore "Quante gomme" (set completo/coppia/singola), già presente nel flusso "Cambio Gomme".
+
 ## [v1.7.1] - 2026-10-13
 
 ### Added

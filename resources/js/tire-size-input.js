@@ -70,11 +70,16 @@ const refreshTireSizeSuggestions = (root) => {
         sizes = [];
     }
 
+    const positionLabel = {
+        front: ' (anteriore)',
+        rear: ' (posteriore)',
+    };
+
     suggestSelect.innerHTML = `<option value="">${suggestSelect.dataset.placeholder || ''}</option>`;
-    sizes.forEach((size) => {
+    sizes.forEach((entry) => {
         const option = document.createElement('option');
-        option.value = size;
-        option.textContent = size;
+        option.value = entry.size;
+        option.textContent = entry.size + (positionLabel[entry.position] || '');
         suggestSelect.appendChild(option);
     });
     suggestSelect.style.display = sizes.length ? '' : 'none';

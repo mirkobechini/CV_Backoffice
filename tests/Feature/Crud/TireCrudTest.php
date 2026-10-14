@@ -102,16 +102,21 @@ class TireCrudTest extends TestCase
     public function test_create_and_edit_pages_expose_vehicle_allowed_tire_sizes_for_suggestion(): void
     {
         $user = $this->admin();
-        $vehicle = $this->createVehicle(['allowed_tire_sizes' => ['225/75R16C', '225/75R16']]);
+        $allowedSizes = [
+            ['size' => '225/75R16C', 'position' => 'either'],
+            ['size' => '225/75R16', 'position' => 'front'],
+        ];
+        $vehicle = $this->createVehicle(['allowed_tire_sizes' => $allowedSizes]);
         $tire = $this->createTire($vehicle);
+        $expected = 'data-tire-sizes="'.htmlentities(json_encode($allowedSizes)).'"';
 
         $this->actingAs($user)->get(route('admin.tires.create'))
             ->assertStatus(200)
-            ->assertSee('data-tire-sizes="[&quot;225\/75R16C&quot;,&quot;225\/75R16&quot;]"', false);
+            ->assertSee($expected, false);
 
         $this->actingAs($user)->get(route('admin.tires.edit', $tire))
             ->assertStatus(200)
-            ->assertSee('data-tire-sizes="[&quot;225\/75R16C&quot;,&quot;225\/75R16&quot;]"', false);
+            ->assertSee($expected, false);
     }
 
     public function test_tire_can_be_stored(): void
@@ -122,6 +127,7 @@ class TireCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
+            'tire_group' => 'single',
             'position' => 'front_left',
             'brand' => 'Pirelli',
             'model_name' => 'Cinturato',
@@ -137,6 +143,63 @@ class TireCrudTest extends TestCase
             'season' => 'summer',
             'brand' => 'Pirelli',
         ]);
+    }
+
+    public function test_tire_full_set_creates_four_tires_in_one_request(): void
+    {
+        // Prima del fix, il messaggio diceva "Set di gomme creato con
+        // successo" ma il form permetteva una sola posizione per volta: per
+        // montare un set completo servivano 4 invii separati.
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.tires.store'), [
+            'vehicle_id' => $vehicle->id,
+            'season' => 'summer',
+            'tire_group' => 'full_set',
+            'brand' => 'Pirelli',
+            'size' => '205/55R16',
+            'status' => 'stored',
+        ]);
+
+        $response->assertRedirect(route('admin.tires.index', ['vehicle_id' => $vehicle->id]));
+        $this->assertDatabaseCount('tires', 4);
+        foreach (Tire::POSITIONS as $position) {
+            $this->assertDatabaseHas('tires', ['vehicle_id' => $vehicle->id, 'position' => $position, 'brand' => 'Pirelli']);
+        }
+    }
+
+    public function test_tire_front_pair_creates_two_tires(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+
+        $this->actingAs($user)->post(route('admin.tires.store'), [
+            'vehicle_id' => $vehicle->id,
+            'season' => 'summer',
+            'tire_group' => 'front_pair',
+            'status' => 'stored',
+        ]);
+
+        $this->assertDatabaseCount('tires', 2);
+        $this->assertDatabaseHas('tires', ['vehicle_id' => $vehicle->id, 'position' => Tire::POSITION_FRONT_LEFT]);
+        $this->assertDatabaseHas('tires', ['vehicle_id' => $vehicle->id, 'position' => Tire::POSITION_FRONT_RIGHT]);
+    }
+
+    public function test_tire_single_requires_position(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.tires.store'), [
+            'vehicle_id' => $vehicle->id,
+            'season' => 'summer',
+            'tire_group' => 'single',
+            'status' => 'stored',
+        ]);
+
+        $response->assertSessionHasErrors(['position']);
+        $this->assertDatabaseCount('tires', 0);
     }
 
     public function test_tire_can_be_updated(): void
