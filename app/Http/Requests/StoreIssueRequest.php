@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\Issue;
 use App\Models\Tire;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
@@ -24,6 +25,7 @@ class StoreIssueRequest extends FormRequest
             'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'tire_ids' => ['nullable', 'array'],
             'tire_ids.*' => [new BelongsToCurrentUserGroup(Tire::class, message: 'Uno o più pneumatici selezionati non esistono o non appartengono al tuo gruppo.')],
+            'part' => ['required', 'in:'.implode(',', Issue::PARTS)],
             'description' => 'required|string',
             'notes' => 'nullable|string',
             'event_date' => 'required|date',
@@ -44,6 +46,8 @@ class StoreIssueRequest extends FormRequest
     {
         return [
             'vehicle_id.required' => 'Il veicolo è obbligatorio.',
+            'part.required' => 'La parte del veicolo coinvolta è obbligatoria.',
+            'part.in' => 'La parte selezionata non è valida.',
             'description.required' => 'La descrizione è obbligatoria.',
             'description.string' => 'La descrizione deve essere una stringa.',
             'notes.string' => 'Le note devono essere una stringa.',

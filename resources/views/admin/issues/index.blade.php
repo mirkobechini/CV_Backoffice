@@ -46,6 +46,11 @@
                                 class="fa-solid fa-xmark"></i></a>
                     @endif
                 </form>
+                @if ($issuesWithoutPartCount > 0)
+                    <a href="{{ route('admin.issues.backfill-parts.index') }}" class="btn" title="{{ __('Assegna la parte del veicolo ai guasti che ne sono ancora privi') }}">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Allinea parti') }} ({{ $issuesWithoutPartCount }})
+                    </a>
+                @endif
                 <a href="{{ route('admin.csv.export', 'issues') }}" class="btn" title="{{ __('Scarica CSV') }}">
                     <i class="fa-solid fa-download"></i> CSV
                 </a>
@@ -73,6 +78,16 @@
                             </div>
                         </th>
                         <th>{{ __('Descrizione') }}</th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Parte') }}</span>
+                                <a href="{{ $groupToggleUrl('part') }}"
+                                    class="mini {{ $groupBy === 'part' ? 'on' : '' }}"
+                                    title="{{ __('Raggruppa per parte') }}">Grp</a>
+                                <a href="{{ $sortToggleUrl('part') }}"
+                                    class="mini {{ $sortBy === 'part' ? 'on' : '' }}"
+                                    title="{{ __('Ordina per parte') }}">{{ $sortIcon('part') }}</a>
+                            </div>
+                        </th>
                         <th>
                             <div class="th-wrap"><span>{{ __('Stato') }}</span>
                                 <a href="{{ $groupToggleUrl('status') }}"
@@ -104,7 +119,7 @@
                     @forelse ($groups as $groupLabel => $groupIssues)
                         @if ($groupBy !== null)
                             <tr class="group-row" data-group-row="g{{ $loop->index }}">
-                                <td colspan="5"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupIssues->count() }})</td>
+                                <td colspan="6"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupIssues->count() }})</td>
                             </tr>
                         @endif
 
@@ -122,6 +137,7 @@
                                     </div>
                                 </td>
                                 <td>{{ $issue->description }}</td>
+                                <td>{{ $issue->part ?? 'N/A' }}</td>
                                 <td><span
                                         class="badge {{ $badgeClass($issue->status_color) }}">{{ $issue->status_label }}</span>
                                 </td>
@@ -143,7 +159,7 @@
                         @endforeach
                     @empty
                         <tr>
-                            <td colspan="5" class="empty">{{ __('Nessun guasto trovato.') }}</td>
+                            <td colspan="6" class="empty">{{ __('Nessun guasto trovato.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

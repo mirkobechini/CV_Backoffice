@@ -91,6 +91,10 @@
                 </div>
             @endif
             <div class="dl-kv">
+                <span class="k">{{ __('Parte coinvolta') }}</span>
+                <span class="v">{{ $issue->part ?? 'N/A' }}</span>
+            </div>
+            <div class="dl-kv">
                 <span class="k">{{ __('Data del guasto') }}</span>
                 <span class="v">{{ $issue->event_date_formatted ?? 'N/A' }}</span>
             </div>
