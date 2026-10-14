@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Creazione pneumatico: il form permetteva una sola posizione per volta nonostante il messaggio dicesse "Set di gomme creato con successo" — per montare un set completo servivano 4 invii separati. Aggiunto il selettore "Quante gomme" (set completo/coppia/singola), già presente nel flusso "Cambio Gomme".
+
 ## [v1.7.1] - 2026-10-13
 
 ### Added

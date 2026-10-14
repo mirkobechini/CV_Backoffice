@@ -316,6 +316,7 @@ class GroupScopingTest extends TestCase
         $this->actingAs($userA)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicleB->id,
             'season' => 'summer',
+            'tire_group' => 'single',
             'position' => 'front_left',
             'status' => 'stored',
         ])->assertSessionHasErrors('vehicle_id');

@@ -429,6 +429,7 @@ class VehicleScanTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
+            'tire_group' => 'single',
             'position' => 'front_left',
             'size' => '205/55R16',
             'status' => 'stored',
@@ -458,6 +459,7 @@ class VehicleScanTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
+            'tire_group' => 'single',
             'position' => 'front_left',
             'size' => '205/55R16',
             'status' => 'stored',
@@ -485,6 +487,7 @@ class VehicleScanTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
+            'tire_group' => 'single',
             'position' => 'front_left',
             'size' => '205/55R16',
             'status' => 'stored',
@@ -512,6 +515,7 @@ class VehicleScanTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
             'vehicle_id' => $vehicle->id,
             'season' => 'summer',
+            'tire_group' => 'single',
             'position' => 'front_left',
             'size' => 'not-a-tire-size',
             'status' => 'stored',
