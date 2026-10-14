@@ -48,6 +48,8 @@ class Issue extends Model
 
     public const PART_IMPIANTO_ELETTRICO = 'Impianto elettrico';
 
+    public const PART_ALIMENTAZIONE = 'Alimentazione';
+
     public const PART_CLIMATIZZAZIONE = 'Climatizzazione';
 
     public const PART_SCARICO = 'Scarico';
@@ -55,6 +57,8 @@ class Issue extends Model
     public const PART_CARROZZERIA = 'Carrozzeria';
 
     public const PART_VETRI = 'Vetri';
+
+    public const PART_INTERNI_ABITACOLO = 'Interni/Abitacolo';
 
     public const PART_ALLESTIMENTO = 'Allestimento';
 
@@ -70,10 +74,12 @@ class Issue extends Model
         self::PART_TRASMISSIONE,
         self::PART_PNEUMATICI,
         self::PART_IMPIANTO_ELETTRICO,
+        self::PART_ALIMENTAZIONE,
         self::PART_CLIMATIZZAZIONE,
         self::PART_SCARICO,
         self::PART_CARROZZERIA,
         self::PART_VETRI,
+        self::PART_INTERNI_ABITACOLO,
         self::PART_ALLESTIMENTO,
         self::PART_ILLUMINAZIONE_SIRENA,
         self::PART_ALTRO,
