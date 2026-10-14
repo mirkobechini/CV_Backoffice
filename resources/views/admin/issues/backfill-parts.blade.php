@@ -64,7 +64,7 @@
                                         <select class="select @error("parts.{$issue->id}") is-invalid @enderror"
                                             id="part-select-{{ $issue->id }}" name="parts[{{ $issue->id }}]">
                                             <option value="">{{ __('Non assegnata') }}</option>
-                                            @foreach (\App\Models\Issue::PARTS as $part)
+                                            @foreach (\App\Models\Issue::sortedParts() as $part)
                                                 <option value="{{ $part }}" {{ old("parts.{$issue->id}") === $part ? 'selected' : '' }}>
                                                     {{ $part }}
                                                 </option>
