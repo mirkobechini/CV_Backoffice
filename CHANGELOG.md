@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Changed
+
+- Index attrezzature: rimossa la colonna "Prossimo collaudo" (vuota per tutto tranne gli estintori); quando il collaudo è vicino o scaduto, l'avviso compare ora nella colonna "Data di revisione".
+
 ### Fixed
 
 - Creazione pneumatico: il form permetteva una sola posizione per volta nonostante il messaggio dicesse "Set di gomme creato con successo" — per montare un set completo servivano 4 invii separati. Aggiunto il selettore "Quante gomme" (set completo/coppia/singola), già presente nel flusso "Cambio Gomme".

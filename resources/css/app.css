@@ -1021,6 +1021,23 @@ body {
     margin-top: 2px;
 }
 
+/* Riga secondaria "attenzione" (es. collaudo vicino/scaduto accanto alla
+   data di revisione): stesso stile di .cell-sub ma colorato come i badge
+   di stato, per farla risaltare senza una colonna dedicata. */
+.cell-sub-expired {
+    font-size: 11px;
+    color: var(--red);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.cell-sub-due {
+    font-size: 11px;
+    color: var(--amber);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
 .code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 12px;
