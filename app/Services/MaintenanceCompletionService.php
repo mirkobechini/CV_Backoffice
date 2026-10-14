@@ -43,6 +43,7 @@ class MaintenanceCompletionService
 
         if (! empty($data['new_tire_season'])) {
             $vehicle = $maintenanceRecord->vehicle;
+            $warning = null;
 
             foreach (Tire::positionsForGroup($data['new_tire_group'] ?? null, $data['new_tire_position'] ?? null) as $position) {
                 $tires->push(Tire::create([
@@ -54,9 +55,11 @@ class MaintenanceCompletionService
                     'size' => $data['new_tire_size'] ?? null,
                     'status' => Tire::STATUS_STORED,
                 ]));
+
+                $warning ??= Tire::sizeMismatchWarning($data['new_tire_size'] ?? null, $vehicle, $position);
             }
 
-            if ($warning = Tire::sizeMismatchWarning($data['new_tire_size'] ?? null, $vehicle)) {
+            if ($warning) {
                 session()->flash('tire_size_warning', $warning);
             }
         }

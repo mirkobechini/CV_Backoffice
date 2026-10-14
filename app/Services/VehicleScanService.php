@@ -56,7 +56,10 @@ J=categoria del veicolo (es. "M1"). Le misure dei pneumatici, se presenti,
 vanno restituite nel formato canonico "LARGHEZZA/PROFILOR DIAMETROC" (es.
 "225/75R16C"), senza spazi prima di "R", con "C" solo se rinforzato: se il
 documento indica misure diverse per assale anteriore e posteriore,
-restituiscile entrambe come voci separate dell'array.
+restituiscile entrambe come voci separate dell'array, ciascuna con la
+propria posizione ("front" se vale solo per l'anteriore, "rear" se vale
+solo per il posteriore, "either" se il documento non specifica un assale
+o la stessa misura vale per entrambi).
 
 Rispondi SOLO con un oggetto JSON con queste chiavi (usa null se un dato
 non è leggibile o non è presente sul documento):
@@ -74,7 +77,7 @@ non è leggibile o non è presente sul documento):
   "engine_displacement_cc": integer|null,
   "engine_power_kw": integer|null,
   "vehicle_category": string|null,
-  "allowed_tire_sizes": string[] (array vuoto se non presenti),
+  "allowed_tire_sizes": {"size": string, "position": "front"|"rear"|"either"}[] (array vuoto se non presenti),
   "has_timing_belt_suggested": boolean|null
 }
 
@@ -151,7 +154,44 @@ PROMPT;
             $result[$field] = $decoded[$field] ?? null;
         }
 
+        $result['allowed_tire_sizes'] = $this->normalizeAllowedTireSizes($result['allowed_tire_sizes']);
+
         return $result;
+    }
+
+    /**
+     * Il modello a volte non rispetta esattamente lo schema richiesto (es.
+     * restituisce una stringa semplice invece di {size, position}, o omette
+     * la posizione): qui si normalizza difensivamente invece di propagare
+     * un formato inatteso al form, con "either" come fallback sicuro
+     * (nessuna restrizione per assale, lo stesso comportamento di prima che
+     * questo campo esistesse).
+     *
+     * @return array<int, array{size: string, position: string}>
+     */
+    private function normalizeAllowedTireSizes(mixed $sizes): array
+    {
+        if (! is_array($sizes)) {
+            return [];
+        }
+
+        return collect($sizes)
+            ->map(function ($entry) {
+                $size = is_array($entry) ? ($entry['size'] ?? null) : $entry;
+                $position = is_array($entry) ? ($entry['position'] ?? null) : null;
+
+                if (! is_string($size) || $size === '') {
+                    return null;
+                }
+
+                return [
+                    'size' => $size,
+                    'position' => in_array($position, ['front', 'rear', 'either'], true) ? $position : 'either',
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**

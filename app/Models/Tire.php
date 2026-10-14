@@ -46,6 +46,21 @@ class Tire extends Model
     ];
 
     /**
+     * Assale di una posizione, usato per confrontare una gomma con le
+     * misure consigliate del veicolo per assale (Vehicle::allowed_tire_sizes):
+     * alcune misure del libretto valgono solo per l'anteriore o il
+     * posteriore, non per entrambi.
+     */
+    public const AXLE_FRONT = 'front';
+
+    public const AXLE_REAR = 'rear';
+
+    public static function axleForPosition(string $position): string
+    {
+        return str_starts_with($position, 'front_') ? self::AXLE_FRONT : self::AXLE_REAR;
+    }
+
+    /**
      * Formato canonico di una misura pneumatico (es. "225/75R16C 121/120Q"),
      * lo stesso composto da <x-form.tire-size-input>. Condiviso da Tire,
      * MaintenanceRecord (new_tire_size) e Vehicle (allowed_tire_size) così
@@ -166,28 +181,49 @@ class Tire extends Model
     /**
      * Avviso non bloccante (non una regola di validazione) quando la misura
      * inserita non corrisponde a nessuna di quelle consigliate per il
-     * veicolo (un veicolo può averne più di una, es. assale anteriore
-     * diverso dal posteriore): tutte passano dallo stesso componente/
-     * formato canonico, quindi un confronto diretto (case-insensitive) è
-     * affidabile. Nessun avviso se il veicolo non ha misure consigliate
-     * impostate.
+     * veicolo, per la posizione data: ogni misura consigliata (vedi
+     * Vehicle::allowed_tire_sizes, forma {size, position}) vale per
+     * "front", "rear" o "either" (entrambi). Senza $position, il confronto
+     * ignora l'assale (usato dove la posizione non è ancora nota). Tutte le
+     * misure passano dallo stesso componente/formato canonico, quindi un
+     * confronto diretto (case-insensitive) è affidabile. Nessun avviso se
+     * il veicolo non ha misure consigliate impostate.
      */
-    public static function sizeMismatchWarning(?string $enteredSize, ?Vehicle $vehicle): ?string
+    public static function sizeMismatchWarning(?string $enteredSize, ?Vehicle $vehicle, ?string $position = null): ?string
     {
-        $allowedSizes = $vehicle?->allowed_tire_sizes ?? [];
+        $allowedEntries = $vehicle?->allowed_tire_sizes ?? [];
 
-        if (! $enteredSize || empty($allowedSizes)) {
+        if (! $enteredSize || empty($allowedEntries)) {
             return null;
         }
 
         $enteredSize = trim($enteredSize);
-        $matches = collect($allowedSizes)->contains(fn ($size) => strcasecmp($enteredSize, trim($size)) === 0);
+        $axle = $position ? self::axleForPosition($position) : null;
+
+        $matches = collect($allowedEntries)->contains(function ($entry) use ($enteredSize, $axle) {
+            $size = $entry['size'] ?? null;
+            $entryPosition = $entry['position'] ?? 'either';
+
+            if (! $size || strcasecmp($enteredSize, trim($size)) !== 0) {
+                return false;
+            }
+
+            return $axle === null || $entryPosition === 'either' || $entryPosition === $axle;
+        });
 
         if ($matches) {
             return null;
         }
 
-        $allowedList = implode(', ', $allowedSizes);
+        $axleLabel = fn (string $position) => match ($position) {
+            self::AXLE_FRONT => ' (anteriore)',
+            self::AXLE_REAR => ' (posteriore)',
+            default => '',
+        };
+
+        $allowedList = collect($allowedEntries)
+            ->map(fn ($entry) => ($entry['size'] ?? '').$axleLabel($entry['position'] ?? 'either'))
+            ->implode(', ');
 
         return "La misura inserita ({$enteredSize}) non corrisponde a nessuna delle misure consigliate per questo veicolo ({$allowedList}).";
     }
