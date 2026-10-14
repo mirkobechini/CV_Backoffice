@@ -30,13 +30,15 @@ class MaintenanceRecord extends Model
 
     public const ACTIVITY_TIRE_CHANGE = 'Cambio Gomme';
 
+    public const ACTIVITY_WASH = 'Lavaggio';
+
     public const ACTIVITY_TYPES = [
         self::ACTIVITY_TAGLIANDO,
         self::ACTIVITY_REPAIR,
         self::ACTIVITY_REVISION_MINISTERIAL,
         self::ACTIVITY_REVISION_OXYGEN,
         self::ACTIVITY_TIMING_BELT,
-        'Lavaggio',
+        self::ACTIVITY_WASH,
         self::ACTIVITY_TIRE_CHANGE,
         'Altro',
     ];
