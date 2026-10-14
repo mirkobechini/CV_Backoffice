@@ -384,9 +384,24 @@ class GroupControllerTest extends TestCase
         ]);
 
         // Senza conferma, l'eliminazione viene bloccata
-        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group));
+        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group), [
+            'confirm_name' => 'Gruppo A',
+        ]);
         $response->assertSessionHasErrors('delete_vehicles');
         $this->assertDatabaseHas('groups', ['id' => $group->id]);
+    }
+
+    public function test_destroy_group_requires_matching_name_confirmation(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group), [
+            'confirm_name' => 'Nome sbagliato',
+        ]);
+        $response->assertSessionHasErrors('confirm_name');
+        $this->assertDatabaseHas('groups', ['id' => $group->id, 'deleted_at' => null]);
     }
 
     public function test_destroy_group_with_vehicle_confirmation_deletes_vehicles(): void
@@ -411,9 +426,10 @@ class GroupControllerTest extends TestCase
         // Con conferma, il gruppo e i veicoli vengono eliminati
         $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group), [
             'delete_vehicles' => '1',
+            'confirm_name' => 'Gruppo A',
         ]);
         $response->assertRedirect();
-        $this->assertDatabaseMissing('groups', ['id' => $group->id]);
+        $this->assertSoftDeleted('groups', ['id' => $group->id]);
         $this->assertSoftDeleted('vehicles', ['id' => $vehicle->id]);
     }
 
@@ -423,10 +439,26 @@ class GroupControllerTest extends TestCase
         $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
         $group->addUser($capo, Group::ROLE_CAPO);
 
-        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group));
+        $response = $this->actingAs($capo)->delete(route('admin.groups.destroy', $group), [
+            'confirm_name' => 'Gruppo A',
+        ]);
 
         $response->assertRedirect();
-        $this->assertDatabaseMissing('groups', ['id' => $group->id]);
+        $this->assertSoftDeleted('groups', ['id' => $group->id]);
+    }
+
+    public function test_destroy_group_is_recoverable_via_soft_delete(): void
+    {
+        $capo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+
+        $this->actingAs($capo)->delete(route('admin.groups.destroy', $group), [
+            'confirm_name' => 'Gruppo A',
+        ]);
+
+        $this->assertNotNull(Group::withTrashed()->find($group->id));
+        $this->assertDatabaseHas('group_user', ['group_id' => $group->id, 'user_id' => $capo->id]);
     }
 
     public function test_capo_can_send_invite_via_email(): void

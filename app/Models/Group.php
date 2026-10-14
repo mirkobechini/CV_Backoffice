@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Group extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'invite_code',
