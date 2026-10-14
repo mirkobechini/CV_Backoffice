@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.8.0] - 2026-10-14
+
 ### Added
 
 - Misure pneumatici consigliate del veicolo: ogni misura ora ha anche una posizione (anteriore/posteriore/entrambi), perché il libretto a volte indica misure diverse per assale che non vanno bene a vicenda. L'avviso di misura non corrispondente (`Tire::sizeMismatchWarning`) ora tiene conto della posizione della gomma. La scansione automatica del libretto prova a leggere anche la posizione (default "entrambi" se non specificata).
