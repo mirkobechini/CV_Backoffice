@@ -67,6 +67,72 @@ class EquipmentCrudTest extends TestCase
         $response->assertDontSee($equipment->revision_date_formatted);
     }
 
+    public function test_index_has_no_separate_collaudo_column(): void
+    {
+        $user = $this->createUser();
+        $this->createEquipment();
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index'));
+
+        $response->assertStatus(200);
+        $response->assertDontSee('Prossimo collaudo');
+    }
+
+    public function test_index_warns_about_collaudo_in_the_revision_column_when_expired(): void
+    {
+        // Il collaudo riguarda solo alcuni tipi di attrezzatura (es.
+        // estintori): niente colonna dedicata sempre vuota per tutto il
+        // resto, solo un avviso nella colonna "Data di revisione" quando è
+        // vicino o scaduto.
+        $user = $this->createUser();
+        $equipmentType = EquipmentType::create([
+            'name' => 'Estintore',
+            'first_inspection_months' => 6,
+            'regular_inspection_months' => 6,
+            'collaudo_interval_months' => 60,
+        ]);
+        Equipment::create([
+            'equipment_type_id' => $equipmentType->id,
+            'name' => 'Estintore scaduto',
+            'serial_number' => '222222',
+            'revision_date' => now()->subMonths(5),
+            'expiration_date' => now()->addMonths(1),
+            'collaudo_date' => now()->subYears(6),
+            'next_collaudo_date' => now()->subMonth(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('collaudo scaduto da', false);
+    }
+
+    public function test_index_does_not_warn_about_collaudo_when_far_away(): void
+    {
+        $user = $this->createUser();
+        $equipmentType = EquipmentType::create([
+            'name' => 'Estintore',
+            'first_inspection_months' => 6,
+            'regular_inspection_months' => 6,
+            'collaudo_interval_months' => 60,
+        ]);
+        Equipment::create([
+            'equipment_type_id' => $equipmentType->id,
+            'name' => 'Estintore ok',
+            'serial_number' => '333333',
+            'revision_date' => now()->subMonths(1),
+            'expiration_date' => now()->addMonths(5),
+            'collaudo_date' => now()->subMonths(1),
+            'next_collaudo_date' => now()->addYears(5),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.equipments.index'));
+
+        $response->assertStatus(200);
+        $response->assertDontSee('collaudo scaduto da', false);
+        $response->assertDontSee('collaudo in scadenza tra', false);
+    }
+
     public function test_equipment_create_page_is_reachable(): void
     {
         $user = $this->createUser();    // fake user
