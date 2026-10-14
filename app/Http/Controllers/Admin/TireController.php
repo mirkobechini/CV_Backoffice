@@ -142,7 +142,12 @@ class TireController extends Controller
             fn (string $position) => Tire::create($shared + ['position' => $position])
         );
 
-        if ($warning = Tire::sizeMismatchWarning($data['size'] ?? null, $tires->first()?->vehicle)) {
+        $warning = $tires
+            ->map(fn (Tire $tire) => Tire::sizeMismatchWarning($data['size'] ?? null, $tire->vehicle, $tire->position))
+            ->filter()
+            ->first();
+
+        if ($warning) {
             session()->flash('tire_size_warning', $warning);
         }
 
@@ -181,7 +186,7 @@ class TireController extends Controller
     {
         $tire->update($request->validated());
 
-        if ($warning = Tire::sizeMismatchWarning($tire->size, $tire->vehicle)) {
+        if ($warning = Tire::sizeMismatchWarning($tire->size, $tire->vehicle, $tire->position)) {
             session()->flash('tire_size_warning', $warning);
         }
 

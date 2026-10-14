@@ -80,8 +80,7 @@
         </div>
         <div class="info-row">
             <span class="label">Misure pneumatici</span>
-            <span
-                class="value">{{ ! empty($vehicle->allowed_tire_sizes) ? implode(', ', $vehicle->allowed_tire_sizes) : 'N/A' }}</span>
+            <span class="value">{{ $vehicle->allowed_tire_sizes_label }}</span>
         </div>
     </div>
 

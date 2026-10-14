@@ -25,7 +25,7 @@
                 class="v">{{ $vehicle->engine_power_kw ? $vehicle->engine_power_kw . ' kW' : 'N/A' }}</span>
         </div>
         <div class="veh-kv"><span class="k">{{ __('Misure pneumatici') }}</span><span
-                class="v">{{ ! empty($vehicle->allowed_tire_sizes) ? implode(', ', $vehicle->allowed_tire_sizes) : 'N/A' }}</span>
+                class="v">{{ $vehicle->allowed_tire_sizes_label }}</span>
         </div>
     </div>
 </div>

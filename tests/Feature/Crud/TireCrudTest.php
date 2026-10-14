@@ -102,16 +102,21 @@ class TireCrudTest extends TestCase
     public function test_create_and_edit_pages_expose_vehicle_allowed_tire_sizes_for_suggestion(): void
     {
         $user = $this->admin();
-        $vehicle = $this->createVehicle(['allowed_tire_sizes' => ['225/75R16C', '225/75R16']]);
+        $allowedSizes = [
+            ['size' => '225/75R16C', 'position' => 'either'],
+            ['size' => '225/75R16', 'position' => 'front'],
+        ];
+        $vehicle = $this->createVehicle(['allowed_tire_sizes' => $allowedSizes]);
         $tire = $this->createTire($vehicle);
+        $expected = 'data-tire-sizes="'.htmlentities(json_encode($allowedSizes)).'"';
 
         $this->actingAs($user)->get(route('admin.tires.create'))
             ->assertStatus(200)
-            ->assertSee('data-tire-sizes="[&quot;225\/75R16C&quot;,&quot;225\/75R16&quot;]"', false);
+            ->assertSee($expected, false);
 
         $this->actingAs($user)->get(route('admin.tires.edit', $tire))
             ->assertStatus(200)
-            ->assertSee('data-tire-sizes="[&quot;225\/75R16C&quot;,&quot;225\/75R16&quot;]"', false);
+            ->assertSee($expected, false);
     }
 
     public function test_tire_can_be_stored(): void
