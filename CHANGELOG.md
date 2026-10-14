@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.10.0] - 2026-10-14
+
 ### Added
 
 - Show veicolo: nuove card "Storico interventi" (tutti gli appuntamenti) e "Storico cambi gomme" (montaggi/smontaggi) — i dati erano già disponibili ma non mostrati da nessuna vista.
