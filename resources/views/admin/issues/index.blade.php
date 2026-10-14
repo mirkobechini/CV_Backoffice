@@ -46,7 +46,7 @@
                                 class="fa-solid fa-xmark"></i></a>
                     @endif
                 </form>
-                @if ($issuesWithoutPartCount > 0)
+                @if ($issuesWithoutPartCount > 0 && auth()->user()->canUseLicenseFeature(\App\Models\License::FEATURE_AI_BACKFILL))
                     <a href="{{ route('admin.issues.backfill-parts.index') }}" class="btn" title="{{ __('Assegna la parte del veicolo ai guasti che ne sono ancora privi') }}">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Allinea parti') }} ({{ $issuesWithoutPartCount }})
                     </a>

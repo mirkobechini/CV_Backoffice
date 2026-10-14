@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Exceptions\IssuePartClassificationException;
+use App\Http\Controllers\Concerns\ChecksLicenseFeature;
 use App\Http\Controllers\Controller;
 use App\Models\Issue;
+use App\Models\License;
 use App\Services\IssuePartClassifierService;
 use Illuminate\Http\Request;
 
@@ -13,13 +15,17 @@ use Illuminate\Http\Request;
  * di Issue::part (obbligatoria da subito per i nuovi, ma i vecchi restano
  * "part" null finché non vengono rivisti qui): un suggerimento AI per
  * ciascuno, sempre da confermare o correggere a mano prima del salvataggio,
- * mai applicato automaticamente.
+ * mai applicato automaticamente. Incluso solo da una licenza Pro in su
+ * (vedi ADR §16).
  */
 class IssuePartBackfillController extends Controller
 {
-    public function index()
+    use ChecksLicenseFeature;
+
+    public function index(Request $request)
     {
         $this->authorize('update', Issue::class);
+        $this->abortUnlessLicenseHasFeature($request->user(), License::FEATURE_AI_BACKFILL);
 
         $issues = Issue::with('vehicle')
             ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
@@ -41,6 +47,7 @@ class IssuePartBackfillController extends Controller
     public function suggest(Request $request)
     {
         $this->authorize('update', Issue::class);
+        $this->abortUnlessLicenseHasFeature($request->user(), License::FEATURE_AI_BACKFILL);
 
         $data = $request->validate([
             'issue_ids' => 'required|array|max:25',
@@ -68,6 +75,7 @@ class IssuePartBackfillController extends Controller
     public function store(Request $request)
     {
         $this->authorize('update', Issue::class);
+        $this->abortUnlessLicenseHasFeature($request->user(), License::FEATURE_AI_BACKFILL);
 
         $data = $request->validate([
             'parts' => 'required|array',
