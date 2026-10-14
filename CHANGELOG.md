@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Show veicolo: nuove card "Storico interventi" (tutti gli appuntamenti) e "Storico cambi gomme" (montaggi/smontaggi) — i dati erano già disponibili ma non mostrati da nessuna vista.
+- PDF scheda veicolo aggiornato: dettaglio coperture assicurative, orario appuntamento, colonna "parte" sui guasti, sezione storico cambi gomme.
+
 ## [v1.9.2] - 2026-10-14
 
 ### Added
