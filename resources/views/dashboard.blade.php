@@ -204,7 +204,7 @@
                                 {{ $appointment->appointment_date?->format('d/m/Y') }} · {{ $appointment->provider?->name }}
                             </div>
                         </div>
-                        <span class="badge b-green">{{ $appointment->appointment_date?->format('d/m') }}</span>
+                        <span class="badge b-green">{{ $appointment->appointment_date?->format('d/m') }}{{ $appointment->appointment_time ? ' '.$appointment->appointment_time : '' }}</span>
                     </a>
                 @empty
                     <div class="dash-empty">

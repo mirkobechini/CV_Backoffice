@@ -77,6 +77,7 @@
                 <h2><span class="num">3</span> {{ __('Dettagli appuntamento') }}</h2>
                 <div class="row2">
                     <x-form.date-input name="appointment_date" label="{{ __('Data appuntamento') }}" required />
+                    <x-form.time-input name="appointment_time" label="{{ __('Orario (facoltativo)') }}" />
                     <div class="field">
                         <label for="activity_type">{{ __('Tipo attività') }}</label>
                         <select class="select @error('activity_type') is-invalid @enderror" id="activity_type"

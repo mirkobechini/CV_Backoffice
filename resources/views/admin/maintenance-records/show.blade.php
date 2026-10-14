@@ -79,7 +79,7 @@
             <span class="badge {{ $isCompleted ? 'b-green' : 'b-blue' }}">
                 {{ $isCompleted ? __('Completato') : __('In programma') }}
             </span>
-            <span class="hint">{{ __('il :d', ['d' => $maintenanceRecord->appointment_date_formatted ?? 'N/A']) }}</span>
+            <span class="hint">{{ __('il :d', ['d' => $maintenanceRecord->appointment_date_time_formatted ?? 'N/A']) }}</span>
         </div>
     </div>
 
@@ -110,7 +110,7 @@
             </div>
             <div class="dl-kv">
                 <span class="k">{{ __('Data appuntamento') }}</span>
-                <span class="v">{{ $maintenanceRecord->appointment_date_formatted ?? 'N/A' }}</span>
+                <span class="v">{{ $maintenanceRecord->appointment_date_time_formatted ?? 'N/A' }}</span>
             </div>
             <div class="dl-kv">
                 <span class="k">{{ __('Data restituzione') }}</span>

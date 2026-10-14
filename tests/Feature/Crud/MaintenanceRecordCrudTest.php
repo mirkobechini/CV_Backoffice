@@ -176,6 +176,79 @@ class MaintenanceRecordCrudTest extends TestCase
         ]);
     }
 
+    public function test_maintenance_can_be_stored_with_optional_time(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $issueData = $this->createIssue();
+        $vehicle = $issueData['vehicle'];
+        $issue = $issueData['issue'];
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'issue_ids' => [$issue->id],
+            'appointment_date' => '2025/01/03',
+            'appointment_time' => '14:30',
+        ]);
+
+        $maintenance = MaintenanceRecord::first();
+        $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
+        $this->assertSame('14:30', $maintenance->appointment_time);
+    }
+
+    public function test_maintenance_time_is_optional(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $issueData = $this->createIssue();
+        $vehicle = $issueData['vehicle'];
+        $issue = $issueData['issue'];
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'issue_ids' => [$issue->id],
+            'appointment_date' => '2025/01/03',
+        ]);
+
+        $maintenance = MaintenanceRecord::first();
+        $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
+        $this->assertNull($maintenance->appointment_time);
+    }
+
+    public function test_maintenance_rejects_invalid_time_format(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $issueData = $this->createIssue();
+        $vehicle = $issueData['vehicle'];
+        $issue = $issueData['issue'];
+
+        $response = $this->actingAs($user)->post(route('admin.maintenance-records.store'), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'issue_ids' => [$issue->id],
+            'appointment_date' => '2025/01/03',
+            'appointment_time' => 'not-a-time',
+        ]);
+
+        $response->assertSessionHasErrors(['appointment_time']);
+        $this->assertDatabaseCount('maintenance_records', 0);
+    }
+
+    public function test_appointment_date_time_formatted_includes_time_only_when_set(): void
+    {
+        $data = $this->createMaintenance();
+        $maintenance = $data['maintenance'];
+
+        $maintenance->update(['appointment_date' => '2026-01-03', 'appointment_time' => '09:15']);
+        $this->assertSame('03/01/2026 09:15', $maintenance->fresh()->appointment_date_time_formatted);
+
+        $maintenance->update(['appointment_time' => null]);
+        $this->assertSame('03/01/2026', $maintenance->fresh()->appointment_date_time_formatted);
+    }
+
     public function test_maintenance_can_be_updated(): void
     {
         $user = $this->createUser();
