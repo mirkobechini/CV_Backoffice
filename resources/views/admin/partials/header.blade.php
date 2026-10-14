@@ -54,6 +54,10 @@
             href="{{ route('admin.documents.index') }}" title="{{ __('Stato documenti') }}">
             <i class="fa-solid fa-folder-open"></i><span>{{ __('Stato documenti') }}</span>
         </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.statistics.*') ? 'active' : '' }}"
+            href="{{ route('admin.statistics.index') }}" title="{{ __('Statistiche') }}">
+            <i class="fa-solid fa-chart-column"></i><span>{{ __('Statistiche') }}</span>
+        </a>
     </nav>
 
     {{-- Sezione: Attrezzature --}}

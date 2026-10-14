@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.11.0] - 2026-10-14
+
+### Added
+
+- Nuova pagina **Statistiche** (`/admin/statistics`, solo capi/sottocapi): guasti per parte del veicolo (totale flotta e per veicolo), andamento mensile, costo riparazioni per parte (diviso in parti uguali quando un appuntamento copre più guasti insieme).
+
 ## [v1.10.0] - 2026-10-14
 
 ### Added
