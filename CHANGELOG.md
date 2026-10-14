@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.9.1] - 2026-10-14
+
 ### Fixed
 
 - Revisione AI dei guasti: "Genera suggerimenti" classificava tutti i guasti in un'unica richiesta sincrona, superando il timeout del proxy Cloudflare davanti a Laravel Cloud quando erano molti. Ora via AJAX a blocchi da 25.
