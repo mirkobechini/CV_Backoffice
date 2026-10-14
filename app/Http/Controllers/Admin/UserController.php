@@ -36,6 +36,12 @@ class UserController extends Controller
     {
         $this->authorizeGroupCapo($group);
 
+        if (! $group->canAddUser()) {
+            return back()->withErrors([
+                'license' => 'Hai raggiunto il limite di utenti della tua licenza. Contatta l\'amministratore per aumentarlo.',
+            ])->withInput();
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],

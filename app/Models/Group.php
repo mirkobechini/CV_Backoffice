@@ -77,6 +77,26 @@ class Group extends Model
     }
 
     /**
+     * Nessuna licenza assegnata = illimitato (fail-open, compatibilità con
+     * i gruppi creati prima di questa feature); con una licenza, il limite
+     * si applica davvero (anche a 0 se scaduta: License::hasVehicleCapacity()
+     * lo gestisce).
+     */
+    public function canAddVehicle(): bool
+    {
+        $license = $this->currentLicense();
+
+        return ! $license || $license->hasVehicleCapacity($this->vehicles()->count());
+    }
+
+    public function canAddUser(): bool
+    {
+        $license = $this->currentLicense();
+
+        return ! $license || $license->hasUserCapacity($this->users()->count());
+    }
+
+    /**
      * Il capo del gruppo (primo utente con ruolo capo).
      */
     public function capo()

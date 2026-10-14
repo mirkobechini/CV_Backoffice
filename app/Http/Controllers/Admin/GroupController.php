@@ -158,6 +158,12 @@ class GroupController extends Controller
             return redirect()->route('admin.groups.show', $group)->with('status', 'Fai già parte di questo gruppo.');
         }
 
+        if (! $group->canAddUser()) {
+            return back()->withErrors([
+                'invite_code' => 'Questo gruppo ha raggiunto il limite di utenti della sua licenza.',
+            ]);
+        }
+
         $group->addUser($user, Group::ROLE_MEMBER);
 
         return redirect()->route('admin.groups.show', $group)->with('status', 'Sei entrato nel gruppo.');
