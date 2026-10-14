@@ -85,6 +85,21 @@ class Issue extends Model
         self::PART_ALTRO,
     ];
 
+    /**
+     * PARTS in ordine alfabetico, per i select nei form: l'ordine della
+     * costante resta quello "logico" sopra (usato anche nel prompt AI del
+     * classificatore), solo la visualizzazione va in ordine alfabetico.
+     *
+     * @return array<int, string>
+     */
+    public static function sortedParts(): array
+    {
+        $parts = self::PARTS;
+        sort($parts);
+
+        return $parts;
+    }
+
     protected $fillable = [
         'vehicle_id',
         'part',

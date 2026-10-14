@@ -10,6 +10,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - PDF scheda veicolo aggiornato: dettaglio coperture assicurative, orario appuntamento, colonna "parte" sui guasti, sezione storico cambi gomme.
 - Scadenze assicurative: data di scadenza con giorno esatto (es. "15/06/2026"), non più solo mese/anno — le altre tipologie (revisioni, tagliando, cinghia) restano invariate.
 
+### Changed
+
+- Officine (select appuntamenti veicolo/attrezzatura) e parti guasto (select/pagina di revisione) ora ordinate alfabeticamente.
+
 ## [v1.9.2] - 2026-10-14
 
 ### Added

@@ -54,6 +54,19 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_create_page_lists_providers_alphabetically(): void
+    {
+        $user = $this->createUser();
+        Provider::create(['name' => 'Zeta Autofficina', 'type' => 'Meccanico']);
+        Provider::create(['name' => 'Alfa Autofficina', 'type' => 'Meccanico']);
+
+        $response = $this->actingAs($user)->get(route('admin.equipment-maintenance-records.create'));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+        $this->assertTrue(strpos($content, 'Alfa Autofficina') < strpos($content, 'Zeta Autofficina'));
+    }
+
     public function test_show_page_is_reachable(): void
     {
         $user = $this->createUser();

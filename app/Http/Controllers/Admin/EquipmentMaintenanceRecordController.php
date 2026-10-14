@@ -75,7 +75,7 @@ class EquipmentMaintenanceRecordController extends Controller
     {
         $equipments = $this->selectableEquipments();
         $selectedEquipmentId = request('equipment_id');
-        $providers = Provider::all();
+        $providers = Provider::orderBy('name')->get();
         $openIssues = EquipmentIssue::open()
             ->whereHas('equipment', fn ($q) => $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser()))
             ->get(['id', 'equipment_id', 'description', 'event_date']);
@@ -133,7 +133,7 @@ class EquipmentMaintenanceRecordController extends Controller
         $equipmentMaintenanceRecord->load('equipments', 'issues');
 
         $equipments = $this->selectableEquipments();
-        $providers = Provider::all();
+        $providers = Provider::orderBy('name')->get();
         $linkedEquipmentIds = $equipmentMaintenanceRecord->equipments->pluck('id');
         $linkedIssueIds = $equipmentMaintenanceRecord->issues->pluck('id');
 
