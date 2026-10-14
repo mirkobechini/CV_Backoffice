@@ -115,6 +115,27 @@ class DashboardController extends Controller
                 ->unique('vehicle_id')
                 ->sum('insurance_premium_total');
 
+            // "Lavato questo mese" conta solo gli appuntamenti di lavaggio
+            // conclusi (return_date valorizzato), non quelli solo
+            // programmati: un appuntamento ancora aperto non garantisce che
+            // il veicolo sia stato lavato davvero.
+            $carWashRecords = MaintenanceRecord::with('vehicle')
+                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->where('activity_type', MaintenanceRecord::ACTIVITY_WASH)
+                ->whereNotNull('return_date')
+                ->whereBetween('return_date', [Carbon::today()->startOfMonth(), Carbon::today()->endOfMonth()])
+                ->orderByDesc('return_date')
+                ->get()
+                ->unique('vehicle_id')
+                ->values();
+
+            $carWashTotal = $totalVehicles;
+            $carWashedVehicleIds = $carWashRecords->pluck('vehicle_id');
+            $carWashMissingVehicles = Vehicle::forCurrentUser()->get()
+                ->reject(fn (Vehicle $v) => $carWashedVehicleIds->contains($v->id))
+                ->values();
+            $carWashWashedCount = $carWashedVehicleIds->count();
+
             return compact(
                 'totalVehicles',
                 'openIssues',
@@ -127,7 +148,11 @@ class DashboardController extends Controller
                 'tireSeasonExpected',
                 'tireSeasonPending',
                 'tireSeasonCompliantCount',
-                'activeInsurancePremiumTotal'
+                'activeInsurancePremiumTotal',
+                'carWashRecords',
+                'carWashTotal',
+                'carWashMissingVehicles',
+                'carWashWashedCount'
             );
         });
 

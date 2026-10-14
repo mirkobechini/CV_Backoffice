@@ -235,6 +235,90 @@ class DashboardTest extends TestCase
         $response->assertDontSee('Cambio gomme stagionale');
     }
 
+    public function test_dashboard_shows_car_wash_card_with_washed_and_missing_vehicles(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+        $washed = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $missing = Vehicle::create([
+            'license_plate' => 'EF456GH',
+            'internal_code' => '0002',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Autolavaggio Test', 'type' => 'Lavaggio']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $washed->id,
+            'provider_id' => $provider->id,
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+            'appointment_date' => now()->startOfMonth(),
+            'return_date' => now()->startOfMonth(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Lavaggi del mese');
+        $response->assertSee('0001');
+        $response->assertSee('0002');
+    }
+
+    public function test_dashboard_car_wash_card_does_not_count_appointments_still_open(): void
+    {
+        // Un appuntamento di lavaggio non ancora concluso (return_date
+        // nullo) non garantisce che il veicolo sia stato lavato davvero.
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Autolavaggio Test', 'type' => 'Lavaggio']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+            'appointment_date' => now()->startOfMonth(),
+            'return_date' => null,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('/ 1 veicoli lavati questo mese');
+        $response->assertSee('1 veicolo da lavare');
+    }
+
+    public function test_dashboard_car_wash_card_ignores_washes_from_previous_month(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Autolavaggio Test', 'type' => 'Lavaggio']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+            'appointment_date' => now()->subMonth(),
+            'return_date' => now()->subMonth(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('/ 1 veicoli lavati questo mese');
+        $response->assertSee('1 veicolo da lavare');
+    }
+
     public function test_dashboard_shows_total_premium_of_active_insurance_policies_only(): void
     {
         $user = User::factory()->withRole('admin')->create();
