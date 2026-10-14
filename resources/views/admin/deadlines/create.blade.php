@@ -68,7 +68,12 @@
                     </div>
                 </div>
                 <div id="due-date-group">
-                    <x-form.month-input name="due_date" id="due_date" label="{{ __('Data di scadenza') }}" />
+                    <div id="due-date-month-field">
+                        <x-form.month-input name="due_date" id="due_date_month" label="{{ __('Data di scadenza') }}" />
+                    </div>
+                    <div id="due-date-day-field" style="display:none;">
+                        <x-form.date-input name="due_date" id="due_date_day" label="{{ __('Data di scadenza') }}" />
+                    </div>
                     <div class="hint" id="due-date-hint">
                         {{ __('Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno" la data viene calcolata automaticamente se lasciata vuota; compilala per impostarla manualmente.') }}
                     </div>
@@ -242,11 +247,15 @@
             const vehicleSelect = document.getElementById('vehicle_id');
             const typeSelect = document.getElementById('type');
             const oxygenOption = document.getElementById('oxygen-type-option');
-            // Flatpickr sposta l'id "due_date" sull'altInput visibile: per
-            // svuotare il valore reale che viene inviato dobbiamo usare il
-            // campo originale (nascosto), individuabile per name.
-            const dueDateReal = document.querySelector('input[name="due_date"]');
-            const dueDateLabel = document.getElementById('due_date-label');
+            // Due campi distinti (mese/anno per le revisioni, data completa
+            // per le assicurazioni che rinnovano a un giorno preciso): solo
+            // quello visibile per la tipologia corrente va inviato, l'altro
+            // resta disabled per non comparire nel submit (stesso name="due_date").
+            const dueDateMonthReal = document.getElementById('due_date_month');
+            const dueDateDayReal = document.getElementById('due_date_day');
+            const dueDateMonthField = document.getElementById('due-date-month-field');
+            const dueDateDayField = document.getElementById('due-date-day-field');
+            const dueDateMonthLabel = document.getElementById('due_date_month-label');
             const dueDateHint = document.getElementById('due-date-hint');
             const kmSettingsGroup = document.getElementById('km-settings-group');
             const intervalKmField = document.getElementById('interval-km-field');
@@ -286,20 +295,29 @@
             const toggleVisibility = () => {
                 const isAutoCalculated = [ministerialType, oxygenType].includes(typeSelect.value);
                 const isKmType = kmTypes.includes(typeSelect.value);
+                const isInsurance = typeSelect.value === insuranceType;
 
-                if (isAutoCalculated) {
-                    dueDateLabel.textContent = @json(__('Data di scadenza (facoltativa)'));
+                // Le assicurazioni rinnovano a un giorno preciso: campo data
+                // completa invece di mese/anno. Solo quello visibile va
+                // inviato (disabled esclude un campo dal submit).
+                dueDateMonthField.style.display = isInsurance ? 'none' : '';
+                dueDateDayField.style.display = isInsurance ? '' : 'none';
+                dueDateMonthReal.disabled = isInsurance;
+                dueDateDayReal.disabled = !isInsurance;
+
+                if (isInsurance) {
+                    dueDateHint.textContent = @json(__('Data esatta di scadenza della polizza (giorno/mese/anno).'));
+                } else if (isAutoCalculated) {
+                    dueDateMonthLabel.textContent = @json(__('Data di scadenza (facoltativa)'));
                     dueDateHint.textContent = @json(__('Lascia vuoto per calcolarla automaticamente in base all\'ultima revisione, oppure compilala per impostarla manualmente.'));
                 } else {
-                    dueDateLabel.textContent = @json(__('Data di scadenza'));
+                    dueDateMonthLabel.textContent = @json(__('Data di scadenza'));
                     dueDateHint.textContent = @json(__('Per "Revisione Ministeriale" e "Revisione Impianto Ossigeno" la data viene calcolata automaticamente se lasciata vuota; compilala per impostarla manualmente.'));
                 }
 
                 // Per Tagliando/Cinghia servono intervallo km/giorni per calcolare
                 // la prossima scadenza; per le revisioni (data auto-calcolata) si
                 // mostra solo il km facoltativo come semplice annotazione.
-                const isInsurance = typeSelect.value === insuranceType;
-
                 kmSettingsGroup.style.display = (isKmType || isAutoCalculated) ? '' : 'none';
                 intervalKmField.style.display = isKmType ? '' : 'none';
                 intervalDaysField.style.display = isKmType ? '' : 'none';
@@ -321,11 +339,13 @@
             // uno diverso (solo un cambio esplicito di tipo la azzera, non
             // il caricamento iniziale della pagina).
             const clearDueDate = () => {
-                if (dueDateReal._flatpickr) {
-                    dueDateReal._flatpickr.clear();
-                } else {
-                    dueDateReal.value = '';
-                }
+                [dueDateMonthReal, dueDateDayReal].forEach((el) => {
+                    if (el._flatpickr) {
+                        el._flatpickr.clear();
+                    } else {
+                        el.value = '';
+                    }
+                });
             };
 
             syncOxygenTypeAvailability();

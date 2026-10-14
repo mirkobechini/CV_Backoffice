@@ -16,7 +16,7 @@
             <tbody>
                 @foreach ($vehicle->maintenanceRecords as $record)
                     <tr>
-                        <td>{{ $record->appointment_date?->format('d/m/Y') ?? '—' }}</td>
+                        <td>{{ $record->appointment_date_time_formatted ?? '—' }}</td>
                         <td>{{ $record->provider?->name ?? '—' }}</td>
                         <td>{{ $record->items->where('itemable_type', 'App\Models\Issue')->map(fn($item) => $item->itemable?->description)->filter()->implode(', ') ?: $record->activity_type }}
                         </td>

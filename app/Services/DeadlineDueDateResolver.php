@@ -54,12 +54,19 @@ class DeadlineDueDateResolver
     }
 
     /**
-     * Converte una stringa "Y-m" in data Carbon (fine mese).
+     * Converte una stringa "Y-m" in data Carbon (fine mese), oppure "Y-m-d"
+     * tenendo il giorno esatto: le assicurazioni rinnovano a una data
+     * precisa (vedi Store/UpdateDeadlineRequest), le altre tipologie
+     * restano a livello di mese/anno come da sempre.
      */
     private static function resolveManualDueDate(?string $dueDate): ?Carbon
     {
         if (! $dueDate) {
             return null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $dueDate)) {
+            return Carbon::createFromFormat('Y-m-d', $dueDate) ?: null;
         }
 
         $parsedDate = Carbon::createFromFormat('Y-m', $dueDate);

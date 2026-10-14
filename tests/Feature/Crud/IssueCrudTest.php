@@ -257,6 +257,28 @@ class IssueCrudTest extends TestCase
         $withoutLink->assertSee('Allinea parti');
     }
 
+    public function test_sorted_parts_is_alphabetical(): void
+    {
+        $sorted = Issue::sortedParts();
+
+        $this->assertSame($sorted, collect($sorted)->sort()->values()->all());
+        $this->assertSame(count(Issue::PARTS), count($sorted));
+        $this->assertEmpty(array_diff(Issue::PARTS, $sorted));
+    }
+
+    public function test_create_page_lists_parts_alphabetically(): void
+    {
+        $user = $this->createUser();
+
+        $response = $this->actingAs($user)->get(route('admin.issues.create'));
+
+        $response->assertStatus(200);
+        $content = $response->getContent();
+        // "Allestimento" viene prima di "Motore" in ordine alfabetico, ma
+        // dopo nella costante Issue::PARTS (ordine "logico").
+        $this->assertTrue(strpos($content, 'Allestimento') < strpos($content, 'Motore'));
+    }
+
     public function test_search_finds_issue_by_vehicle_internal_code(): void
     {
         // Il campo cerca "veicolo o descrizione" (vedi placeholder), ma

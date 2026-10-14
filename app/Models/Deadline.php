@@ -201,9 +201,20 @@ class Deadline extends Model
         };
     }
 
+    /**
+     * Le assicurazioni hanno un giorno di scadenza preciso (polizza che
+     * rinnova a una data esatta), le altre tipologie solo mese/anno
+     * (revisioni/tagliando/cinghia, calcolate o impostate a livello di mese).
+     */
     public function getDueDateFormattedAttribute(): ?string
     {
-        return $this->due_date?->format('m/Y');
+        if (! $this->due_date) {
+            return null;
+        }
+
+        return $this->type === self::TYPE_ASSICURAZIONE
+            ? $this->due_date->format('d/m/Y')
+            : $this->due_date->format('m/Y');
     }
 
     public function getStatusLabelAttribute(): string

@@ -22,7 +22,7 @@ class MaintenanceRecordFormDataService
             // latestMileageLog eager-caricato: serve per mostrare l'ultimo km noto
             // come placeholder/suggerimento nel campo "Chilometraggio all'appuntamento".
             'vehicles' => Vehicle::with('latestMileageLog')->forCurrentUser()->get(),
-            'providers' => Provider::all(),
+            'providers' => Provider::orderBy('name')->get(),
             // Guasti aperti o in lavorazione: selezionabili per nuovi appuntamenti.
             'openIssues' => Issue::whereIn('status', ['open', 'in_progress'])->get(['id', 'vehicle_id', 'description', 'event_date']),
             // Guasti risolti non ancora collegati: per registrare riparazioni già avvenute.
@@ -52,7 +52,7 @@ class MaintenanceRecordFormDataService
 
         return [
             'vehicles' => Vehicle::with('latestMileageLog')->forCurrentUser()->get(),
-            'providers' => Provider::all(),
+            'providers' => Provider::orderBy('name')->get(),
             // In edit rendiamo selezionabili i guasti attivi + quelli già collegati al record.
             'openIssues' => Issue::whereIn('status', ['open'])
                 ->orWhereIn('id', $linkedIssueIds)

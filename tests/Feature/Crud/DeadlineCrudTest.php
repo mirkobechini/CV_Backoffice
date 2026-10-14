@@ -239,7 +239,7 @@ class DeadlineCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
             'type' => 'Assicurazione',
-            'due_date' => '2026-06',
+            'due_date' => '2026-06-15',
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
             'coverages' => ['RCA' => ['cost' => '850.50']],
@@ -250,6 +250,65 @@ class DeadlineCrudTest extends TestCase
 
         $response->assertRedirect(route('admin.deadlines.show', $deadline));
         $this->assertSame(6, $deadline->insurance_renewal_months);
+    }
+
+    public function test_insurance_deadline_keeps_the_exact_day_not_end_of_month(): void
+    {
+        // Le assicurazioni rinnovano a un giorno preciso (polizza che
+        // scade in una data esatta): a differenza delle altre tipologie
+        // (solo mese/anno, spostate automaticamente a fine mese), il
+        // giorno indicato non deve essere alterato.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06-15',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'coverages' => ['RCA' => ['cost' => '850.50']],
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+        $this->assertSame('2026-06-15', $deadline->due_date->toDateString());
+        $this->assertSame('15/06/2026', $deadline->due_date_formatted);
+    }
+
+    public function test_insurance_deadline_rejects_month_only_due_date(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $countBefore = Deadline::count();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'coverages' => ['RCA' => ['cost' => '850.50']],
+        ]);
+
+        $response->assertSessionHasErrors(['due_date']);
+        $this->assertSame($countBefore, Deadline::count());
+    }
+
+    public function test_non_insurance_deadline_still_snaps_to_end_of_month(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'due_date' => '2026-06',
+            'interval_km' => 20000,
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+        $this->assertSame('2026-06-30', $deadline->due_date->toDateString());
+        $this->assertSame('06/2026', $deadline->due_date_formatted);
     }
 
     public function test_insurance_deadline_requires_essential_policy_fields(): void
@@ -306,7 +365,7 @@ class DeadlineCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
             'type' => 'Assicurazione',
-            'due_date' => '2026-06',
+            'due_date' => '2026-06-15',
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
             'coverages' => $coverages,
@@ -325,7 +384,7 @@ class DeadlineCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
             'vehicle_id' => $vehicle->id,
             'type' => 'Assicurazione',
-            'due_date' => '2026-06',
+            'due_date' => '2026-06-15',
             'insurance_company' => 'Generali',
             'insurance_policy_number' => 'POL-123',
             'coverages' => [
@@ -372,7 +431,7 @@ class DeadlineCrudTest extends TestCase
         $response = $this->actingAs($user)->put(route('admin.deadlines.update', $deadline), [
             'vehicle_id' => $vehicle->id,
             'type' => 'Assicurazione',
-            'due_date' => '2025-01',
+            'due_date' => '2025-01-15',
             'insurance_company' => 'Allianz',
             'insurance_policy_number' => 'POL-999',
             'coverages' => ['RCA' => ['cost' => '920.00']],

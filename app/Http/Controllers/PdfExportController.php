@@ -28,10 +28,13 @@ class PdfExportController extends Controller
             'deadlines' => function ($query) {
                 $query->orderBy('due_date', 'desc');
             },
+            'deadlines.insuranceCoverages',
             'equipment.equipmentType',
             'maintenanceRecords.provider',
             'maintenanceRecords.items.itemable',
             'tires',
+            'tireChanges.tire',
+            'tireChanges.previousTire',
         ]);
         $pdf = Pdf::setOption(['defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true])
             ->loadView('pdfs.scheda-veicolo', compact('vehicle'));

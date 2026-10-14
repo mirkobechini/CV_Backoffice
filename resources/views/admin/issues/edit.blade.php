@@ -51,7 +51,7 @@
                         <label for="part">{{ __('Parte del veicolo coinvolta') }} <span class="req">*</span></label>
                         <select class="select @error('part') is-invalid @enderror" id="part" name="part" required>
                             <option value="" disabled {{ old('part', $issue->part) ? '' : 'selected' }}>{{ __('Seleziona...') }}</option>
-                            @foreach (\App\Models\Issue::PARTS as $part)
+                            @foreach (\App\Models\Issue::sortedParts() as $part)
                                 <option value="{{ $part }}" {{ old('part', $issue->part) == $part ? 'selected' : '' }}>{{ $part }}</option>
                             @endforeach
                         </select>
