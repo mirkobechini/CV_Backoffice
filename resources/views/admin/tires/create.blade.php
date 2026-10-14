@@ -60,9 +60,25 @@
                 </div>
                 <div class="row2">
                     <div class="field">
+                        <label for="tire_group">{{ __('Quante gomme') }} <span class="req">*</span></label>
+                        <select class="select @error('tire_group') is-invalid @enderror" id="tire_group"
+                            name="tire_group" required>
+                            <option value="single" {{ old('tire_group', 'single') == 'single' ? 'selected' : '' }}>
+                                {{ __('Singola (1)') }}</option>
+                            <option value="front_pair" {{ old('tire_group') == 'front_pair' ? 'selected' : '' }}>
+                                {{ __('Anteriori (2)') }}</option>
+                            <option value="rear_pair" {{ old('tire_group') == 'rear_pair' ? 'selected' : '' }}>
+                                {{ __('Posteriori (2)') }}</option>
+                            <option value="full_set" {{ old('tire_group') == 'full_set' ? 'selected' : '' }}>
+                                {{ __('Set completo (4)') }}</option>
+                        </select>
+                        @error('tire_group')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="field" id="position-field">
                         <label for="position">{{ __('Posizione') }} <span class="req">*</span></label>
-                        <select class="select @error('position') is-invalid @enderror" id="position" name="position"
-                            required>
+                        <select class="select @error('position') is-invalid @enderror" id="position" name="position">
                             <option value="" disabled {{ old('position') ? '' : 'selected' }}>{{ __('Seleziona...') }}</option>
                             <option value="front_left" {{ old('position') == 'front_left' ? 'selected' : '' }}>
                                 {{ __('Anteriore sinistra') }}</option>
@@ -78,6 +94,7 @@
                         @enderror
                     </div>
                 </div>
+                <div class="hint">{{ __('Marca, modello, misura e le altre informazioni qui sotto vengono applicate a tutte le gomme create insieme.') }}</div>
                 <div class="row2">
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
@@ -154,4 +171,23 @@
             </div>
         </form>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const tireGroupSelect = document.getElementById('tire_group');
+                const positionField = document.getElementById('position-field');
+                const positionSelect = document.getElementById('position');
+
+                const togglePositionField = () => {
+                    const isSingle = tireGroupSelect.value === 'single';
+                    positionField.style.display = isSingle ? '' : 'none';
+                    positionSelect.required = isSingle;
+                };
+
+                togglePositionField();
+                tireGroupSelect.addEventListener('change', togglePositionField);
+            });
+        </script>
+    @endpush
 @endsection

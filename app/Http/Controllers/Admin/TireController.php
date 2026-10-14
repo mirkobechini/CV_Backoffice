@@ -126,18 +126,32 @@ class TireController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store a newly created resource in storage. "tire_group" determina
+     * quante gomme creare in un colpo solo (set completo/coppia/singola),
+     * stesso pattern già usato in "Cambio Gomme" (vedi Tire::positionsForGroup()
+     * e MaintenanceCompletionService::linkTireItems()) — prima si poteva
+     * creare solo una gomma per volta nonostante il messaggio dicesse "set".
      */
     public function store(StoreTireRequest $request)
     {
         $data = $request->validated();
-        $tire = Tire::create($data);
+        $positions = Tire::positionsForGroup($data['tire_group'], $data['position'] ?? null);
+        $shared = collect($data)->except(['tire_group', 'position'])->toArray();
 
-        if ($warning = Tire::sizeMismatchWarning($tire->size, $tire->vehicle)) {
+        $tires = collect($positions)->map(
+            fn (string $position) => Tire::create($shared + ['position' => $position])
+        );
+
+        if ($warning = Tire::sizeMismatchWarning($data['size'] ?? null, $tires->first()?->vehicle)) {
             session()->flash('tire_size_warning', $warning);
         }
 
-        return redirect()->route('admin.tires.show', $tire)->with('status', 'Set di gomme creato con successo.');
+        if ($tires->count() === 1) {
+            return redirect()->route('admin.tires.show', $tires->first())->with('status', 'Pneumatico creato con successo.');
+        }
+
+        return redirect()->route('admin.tires.index', ['vehicle_id' => $data['vehicle_id']])
+            ->with('status', $tires->count().' pneumatici creati con successo.');
     }
 
     /**
