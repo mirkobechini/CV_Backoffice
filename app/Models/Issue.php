@@ -20,8 +20,52 @@ class Issue extends Model
             ->logOnlyDirty();
     }
 
+    /**
+     * Vocabolario fisso della parte del veicolo coinvolta, per abilitare
+     * statistiche sui guasti per parte (prima solo descrizione libera, non
+     * aggregabile). Un guasto = una parte sola: se un evento ne coinvolge
+     * più di una (es. un incidente), si aprono più guasti collegati allo
+     * stesso appuntamento, come già avviene oggi.
+     */
+    public const PART_MOTORE = 'Motore';
+
+    public const PART_FRENI = 'Freni';
+
+    public const PART_SOSPENSIONI = 'Sospensioni';
+
+    public const PART_PNEUMATICI = 'Pneumatici';
+
+    public const PART_ELETTRONICA = 'Elettronica/Elettrico';
+
+    public const PART_CARROZZERIA = 'Carrozzeria';
+
+    public const PART_CLIMATIZZAZIONE = 'Climatizzazione';
+
+    public const PART_TRASMISSIONE = 'Trasmissione/Cambio';
+
+    public const PART_IMPIANTO_SANITARIO = 'Impianto sanitario';
+
+    public const PART_ILLUMINAZIONE_SIRENA = 'Illuminazione/Sirena';
+
+    public const PART_ALTRO = 'Altro';
+
+    public const PARTS = [
+        self::PART_MOTORE,
+        self::PART_FRENI,
+        self::PART_SOSPENSIONI,
+        self::PART_PNEUMATICI,
+        self::PART_ELETTRONICA,
+        self::PART_CARROZZERIA,
+        self::PART_CLIMATIZZAZIONE,
+        self::PART_TRASMISSIONE,
+        self::PART_IMPIANTO_SANITARIO,
+        self::PART_ILLUMINAZIONE_SIRENA,
+        self::PART_ALTRO,
+    ];
+
     protected $fillable = [
         'vehicle_id',
+        'part',
         'description',
         'notes',
         'status',

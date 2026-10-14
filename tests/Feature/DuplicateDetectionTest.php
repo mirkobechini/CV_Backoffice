@@ -63,9 +63,9 @@ class DuplicateDetectionTest extends TestCase
     {
         $u = $this->admin();
         $v = $this->vehicle();
-        $this->actingAs($u)->post(route('admin.issues.store'), ['vehicle_id' => $v->id, 'description' => 'Test dup', 'event_date' => '2025-01-01', 'status' => 'open']);
+        $this->actingAs($u)->post(route('admin.issues.store'), ['vehicle_id' => $v->id, 'part' => Issue::PART_MOTORE, 'description' => 'Test dup', 'event_date' => '2025-01-01', 'status' => 'open']);
         $this->assertEquals(1, Issue::count());
-        $this->actingAs($u)->post(route('admin.issues.store'), ['vehicle_id' => $v->id, 'description' => 'Test dup', 'event_date' => '2025-01-01', 'status' => 'open']);
+        $this->actingAs($u)->post(route('admin.issues.store'), ['vehicle_id' => $v->id, 'part' => Issue::PART_MOTORE, 'description' => 'Test dup', 'event_date' => '2025-01-01', 'status' => 'open']);
         $this->assertEquals(1, Issue::count());
     }
 

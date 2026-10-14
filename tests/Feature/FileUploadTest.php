@@ -100,6 +100,7 @@ class FileUploadTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_MOTORE,
             'description' => 'Motore non parte',
             'event_date' => '2024-01-01',
             'status' => 'open',
@@ -135,6 +136,7 @@ class FileUploadTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_MOTORE,
             'description' => 'Motore non parte',
             'event_date' => '2024-01-01',
             'status' => 'open',
@@ -173,6 +175,7 @@ class FileUploadTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_MOTORE,
             'description' => 'Motore non parte',
             'event_date' => '2024-01-01',
             'status' => 'open',
@@ -201,6 +204,7 @@ class FileUploadTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_MOTORE,
             'description' => 'Motore non parte',
             'event_date' => '2024-01-01',
             'status' => 'open',

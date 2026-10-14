@@ -324,6 +324,7 @@ class GroupScopingTest extends TestCase
 
         $this->actingAs($userA)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicleB->id,
+            'part' => Issue::PART_MOTORE,
             'description' => 'Guasto indebito',
             'event_date' => '2025-01-01',
             'status' => 'open',

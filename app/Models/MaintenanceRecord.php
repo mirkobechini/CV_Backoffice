@@ -30,13 +30,15 @@ class MaintenanceRecord extends Model
 
     public const ACTIVITY_TIRE_CHANGE = 'Cambio Gomme';
 
+    public const ACTIVITY_WASH = 'Lavaggio';
+
     public const ACTIVITY_TYPES = [
         self::ACTIVITY_TAGLIANDO,
         self::ACTIVITY_REPAIR,
         self::ACTIVITY_REVISION_MINISTERIAL,
         self::ACTIVITY_REVISION_OXYGEN,
         self::ACTIVITY_TIMING_BELT,
-        'Lavaggio',
+        self::ACTIVITY_WASH,
         self::ACTIVITY_TIRE_CHANGE,
         'Altro',
     ];
@@ -45,6 +47,7 @@ class MaintenanceRecord extends Model
         'vehicle_id',
         'provider_id',
         'appointment_date',
+        'appointment_time',
         'return_date',
         'activity_type',
         'mileage_at_service',
@@ -82,6 +85,22 @@ class MaintenanceRecord extends Model
     public function getAppointmentDateFormattedAttribute(): ?string
     {
         return $this->appointment_date?->format('d/m/Y');
+    }
+
+    /**
+     * Data + orario insieme quando l'orario è impostato (facoltativo), solo
+     * la data altrimenti — per non mostrare un posto vuoto o un orario
+     * finto (es. 00:00) quando l'utente non l'ha specificato.
+     */
+    public function getAppointmentDateTimeFormattedAttribute(): ?string
+    {
+        if (! $this->appointment_date) {
+            return null;
+        }
+
+        return $this->appointment_time
+            ? $this->appointment_date->format('d/m/Y').' '.$this->appointment_time
+            : $this->appointment_date->format('d/m/Y');
     }
 
     public function getReturnDateFormattedAttribute(): ?string

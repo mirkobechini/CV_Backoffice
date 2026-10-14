@@ -439,6 +439,7 @@ class TireCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
             'tire_ids' => [$tire->id],
+            'part' => Issue::PART_PNEUMATICI,
             'description' => 'Forature ricorrenti',
             'event_date' => '2026-05-01',
             'status' => 'open',
