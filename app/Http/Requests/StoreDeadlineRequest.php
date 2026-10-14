@@ -24,7 +24,7 @@ class StoreDeadlineRequest extends FormRequest
         return [
             'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'type' => 'required|in:Assicurazione,Revisione Ministeriale,Revisione Impianto Ossigeno,Tagliando,Cinghia Distribuzione',
-            'due_date' => 'nullable|date_format:Y-m|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
+            'due_date' => 'nullable|required_unless:type,Revisione Ministeriale,Revisione Impianto Ossigeno',
             'status' => 'nullable|in:pending,expired,renewed,valid',
             'is_renewed' => 'nullable|boolean',
             'interval_km' => 'nullable|integer|min:0',
@@ -49,7 +49,6 @@ class StoreDeadlineRequest extends FormRequest
             'type.in' => 'La tipologia selezionata non è valida.',
             'due_date.required' => 'La data di scadenza è obbligatoria.',
             'due_date.required_unless' => 'La data di scadenza è obbligatoria per questa tipologia.',
-            'due_date.date_format' => 'La data di scadenza deve essere nel formato mese/anno valido.',
             'status.in' => 'Lo stato selezionato non è valido.',
             'is_renewed.boolean' => 'Il valore di rinnovo non è valido.',
             'interval_km.integer' => "L'intervallo km deve essere un numero.",
@@ -79,6 +78,22 @@ class StoreDeadlineRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            // Solo le assicurazioni hanno un giorno di scadenza preciso
+            // (polizza che rinnova a una data esatta): le altre tipologie
+            // restano a livello di mese/anno, come da sempre.
+            $dueDate = $this->input('due_date');
+
+            if ($dueDate) {
+                $format = $this->input('type') === Deadline::TYPE_ASSICURAZIONE ? 'Y-m-d' : 'Y-m';
+                $parsed = \DateTime::createFromFormat('!'.$format, $dueDate);
+
+                if (! $parsed || $parsed->format($format) !== $dueDate) {
+                    $validator->errors()->add('due_date', $this->input('type') === Deadline::TYPE_ASSICURAZIONE
+                        ? 'La data di scadenza deve essere una data valida (giorno/mese/anno).'
+                        : 'La data di scadenza deve essere nel formato mese/anno valido.');
+                }
+            }
+
             $coverages = $this->input('coverages', []);
 
             if (! is_array($coverages)) {
