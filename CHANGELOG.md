@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.9.0] - 2026-10-14
+
 ### Added
 
 - Guasti: nuovo campo obbligatorio "parte del veicolo coinvolta" (vocabolario fisso: motore, freni, sospensioni, pneumatici, elettronica, carrozzeria, climatizzazione, trasmissione, impianto sanitario, illuminazione/sirena, altro), per abilitare statistiche sui guasti per parte in futuro. Indice guasti filtrabile/raggruppabile anche per parte. Nuova pagina di revisione (`/admin/issues/backfill-parts`, solo capi/sottocapi) per allineare i guasti esistenti: suggerimento AI per ciascuno (OpenRouter, stessa infrastruttura dello scan libretto), sempre da confermare o correggere prima di salvare.
