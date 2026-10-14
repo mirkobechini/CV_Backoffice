@@ -124,6 +124,7 @@ class IssueCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_MOTORE,
             'description' => 'something',
             'status' => 'closed',
             'event_date' => '2025-01-02',
@@ -150,6 +151,7 @@ class IssueCrudTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('admin.issues.update', $issue), [
             'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_MOTORE,
             'description' => 'something else',
             'status' => 'open',
             'event_date' => '2026-01-02',
@@ -186,6 +188,7 @@ class IssueCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_MOTORE,
             'status' => 'closed',
             'event_date' => '2025-01-02',
         ]);
@@ -193,6 +196,65 @@ class IssueCrudTest extends TestCase
         // Verifica che il campo `description` sia obbligatorio.
         $response->assertSessionHasErrors(['description']);
         $this->assertDatabaseCount('issues', 0); // Conferma che non venga creato alcun issue senza descrizione.
+    }
+
+    public function test_issue_part_is_required(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.issues.store'), [
+            'vehicle_id' => $vehicle->id,
+            'description' => 'something',
+            'status' => 'closed',
+            'event_date' => '2025-01-02',
+        ]);
+
+        $response->assertSessionHasErrors(['part']);
+        $this->assertDatabaseCount('issues', 0);
+    }
+
+    public function test_issue_rejects_part_outside_fixed_vocabulary(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.issues.store'), [
+            'vehicle_id' => $vehicle->id,
+            'part' => 'Non esiste',
+            'description' => 'something',
+            'status' => 'closed',
+            'event_date' => '2025-01-02',
+        ]);
+
+        $response->assertSessionHasErrors(['part']);
+        $this->assertDatabaseCount('issues', 0);
+    }
+
+    public function test_index_shows_and_can_group_by_part(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        Issue::create(['vehicle_id' => $vehicle->id, 'part' => Issue::PART_FRENI, 'description' => 'Frena male', 'status' => 'open', 'event_date' => '2026-01-01']);
+
+        $response = $this->actingAs($user)->get(route('admin.issues.index', ['group_by' => 'part']));
+
+        $response->assertOk();
+        $response->assertSee(Issue::PART_FRENI);
+    }
+
+    public function test_index_shows_backfill_link_only_when_issues_without_part_exist(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $withLink = $this->actingAs($user)->get(route('admin.issues.index'));
+        $withLink->assertDontSee('Allinea parti');
+
+        Issue::create(['vehicle_id' => $vehicle->id, 'description' => 'Senza parte', 'status' => 'open', 'event_date' => '2026-01-01']);
+
+        $withoutLink = $this->actingAs($user)->get(route('admin.issues.index'));
+        $withoutLink->assertSee('Allinea parti');
     }
 
     public function test_search_finds_issue_by_vehicle_internal_code(): void
@@ -267,6 +329,7 @@ class IssueCrudTest extends TestCase
         $response = $this->actingAs($user)->post(route('admin.issues.store'), [
             'vehicle_id' => $vehicle->id,
             'tire_ids' => [$tire->id],
+            'part' => Issue::PART_PNEUMATICI,
             'description' => 'Foratura',
             'status' => 'open',
             'event_date' => '2025-01-02',

@@ -46,6 +46,20 @@
                     </div>
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" :model="$issue" required />
                 </div>
+                <div class="row2">
+                    <div class="field">
+                        <label for="part">{{ __('Parte del veicolo coinvolta') }} <span class="req">*</span></label>
+                        <select class="select @error('part') is-invalid @enderror" id="part" name="part" required>
+                            <option value="" disabled {{ old('part', $issue->part) ? '' : 'selected' }}>{{ __('Seleziona...') }}</option>
+                            @foreach (\App\Models\Issue::PARTS as $part)
+                                <option value="{{ $part }}" {{ old('part', $issue->part) == $part ? 'selected' : '' }}>{{ $part }}</option>
+                            @endforeach
+                        </select>
+                        @error('part')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
                 @php($issueTireIds = old('tire_ids', $issue->tires->pluck('id')->map(fn ($id) => (string) $id)->all()))
                 <label class="check" style="margin-bottom:8px;">
                     <input type="checkbox" id="is-tire-issue" {{ !empty($issueTireIds) ? 'checked' : '' }}>

@@ -29,8 +29,8 @@ class IssueController extends Controller
     public function index(Request $request)
     {
         $validated = $request->validate([
-            'group_by' => 'nullable|in:vehicle,status,date',
-            'sort_by' => 'nullable|in:vehicle,status,date',
+            'group_by' => 'nullable|in:vehicle,status,date,part',
+            'sort_by' => 'nullable|in:vehicle,status,date,part',
             'sort_dir' => 'nullable|in:asc,desc',
             'status_filter' => 'nullable|in:all,open,in_progress,closed',
         ]);
@@ -72,6 +72,7 @@ class IssueController extends Controller
                 'vehicle' => fn (Issue $i) => $i->vehicle?->internal_code ?? '',
                 'status' => 'status',
                 'date' => 'event_date',
+                'part' => 'part',
             ]
         );
 
@@ -87,10 +88,15 @@ class IssueController extends Controller
                 'date' => $issue->event_date
                     ? ucfirst($issue->event_date->locale('it')->translatedFormat('F Y'))
                     : 'N/A',
+                'part' => $issue->part ?? 'N/A',
             };
         });
 
-        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues', 'statusFilter') + [
+        $issuesWithoutPartCount = Issue::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->whereNull('part')
+            ->count();
+
+        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues', 'statusFilter', 'issuesWithoutPartCount') + [
             'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
             'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
             'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
@@ -188,6 +194,7 @@ class IssueController extends Controller
     {
         $issueData = [
             'vehicle_id' => $data['vehicle_id'],
+            'part' => $data['part'],
             'description' => $data['description'],
             'notes' => $data['notes'] ?? null,
             'event_date' => $data['event_date'],

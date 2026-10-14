@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
+use App\Http\Controllers\Admin\IssuePartBackfillController;
 use App\Http\Controllers\Admin\MaintenanceCalendarController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\MileageLogController;
@@ -80,6 +81,12 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
     ->group(function () {
         Route::resource('vehicles', VehicleController::class);
         Route::resource('providers', ProviderController::class);
+        Route::get('issues/backfill-parts', [IssuePartBackfillController::class, 'index'])
+            ->name('issues.backfill-parts.index');
+        Route::post('issues/backfill-parts/suggest', [IssuePartBackfillController::class, 'suggest'])
+            ->name('issues.backfill-parts.suggest');
+        Route::post('issues/backfill-parts', [IssuePartBackfillController::class, 'store'])
+            ->name('issues.backfill-parts.store');
         Route::resource('issues', IssueController::class);
         Route::get('deadlines/insurances', [DeadlineController::class, 'insurances'])
             ->name('deadlines.insurances');
