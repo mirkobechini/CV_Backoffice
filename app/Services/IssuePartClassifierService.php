@@ -24,16 +24,22 @@ class IssuePartClassifierService
 
     private const SYSTEM_PROMPT_TEMPLATE = <<<'PROMPT'
 Sei un assistente che classifica la descrizione di un guasto su un veicolo
-(ambulanza/mezzo di soccorso) nella parte del veicolo più probabilmente
+(ambulanza/mezzo di soccorso) nella parte del VEICOLO più probabilmente
 coinvolta, scegliendo UNA SOLA opzione tra questo elenco fisso (testuale
 esatto, mai altre parole): %s
 
+Importante: classifica solo parti del veicolo (motore, freni, carrozzeria,
+impianto elettrico, ecc.), MAI attrezzature o dispositivi medicali (barella,
+bombola ossigeno, defibrillatore, estintore...), che sono guasti di un altro
+tipo e non rientrano in questo elenco: se la descrizione riguarda chiaramente
+un'attrezzatura e non il veicolo, rispondi null.
+
 Ricevi un array JSON di oggetti {"id": int, "description": string}.
 Rispondi SOLO con un oggetto JSON {"classifications": [{"id": int, "part": string|null}, ...]},
-uno per ogni guasto ricevuto, nello stesso ordine, stessi id. Usa null se la
-descrizione è troppo vaga o generica per scegliere con ragionevole sicurezza
-(es. "controllo generale", "manutenzione"). Il valore di "part" deve essere
-ESATTAMENTE una delle stringhe dell'elenco sopra, altrimenti null.
+uno per ogni guasto ricevuto, nello stesso ordine, stessi id. Usa null anche
+se la descrizione è troppo vaga o generica per scegliere con ragionevole
+sicurezza (es. "controllo generale", "manutenzione"). Il valore di "part"
+deve essere ESATTAMENTE una delle stringhe dell'elenco sopra, altrimenti null.
 PROMPT;
 
     public function __construct(

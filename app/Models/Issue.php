@@ -26,24 +26,37 @@ class Issue extends Model
      * aggregabile). Un guasto = una parte sola: se un evento ne coinvolge
      * più di una (es. un incidente), si aprono più guasti collegati allo
      * stesso appuntamento, come già avviene oggi.
+     *
+     * Solo parti del VEICOLO, mai attrezzature/dispositivi medicali (quelli
+     * sono già tracciati a parte con Equipment/EquipmentIssue — es. barella,
+     * ossigeno, DAE — un "Impianto sanitario" qui li avrebbe duplicati).
+     * Alcune voci sono specifiche per un'ambulanza come VEICOLO (non come
+     * dotazione): l'allestimento (il cassone costruito dall'allestitore) e
+     * illuminazione/sirena sono componenti del mezzo, non equipaggiamento.
      */
     public const PART_MOTORE = 'Motore';
 
     public const PART_FRENI = 'Freni';
 
+    public const PART_STERZO = 'Sterzo';
+
     public const PART_SOSPENSIONI = 'Sospensioni';
-
-    public const PART_PNEUMATICI = 'Pneumatici';
-
-    public const PART_ELETTRONICA = 'Elettronica/Elettrico';
-
-    public const PART_CARROZZERIA = 'Carrozzeria';
-
-    public const PART_CLIMATIZZAZIONE = 'Climatizzazione';
 
     public const PART_TRASMISSIONE = 'Trasmissione/Cambio';
 
-    public const PART_IMPIANTO_SANITARIO = 'Impianto sanitario';
+    public const PART_PNEUMATICI = 'Pneumatici';
+
+    public const PART_IMPIANTO_ELETTRICO = 'Impianto elettrico';
+
+    public const PART_CLIMATIZZAZIONE = 'Climatizzazione';
+
+    public const PART_SCARICO = 'Scarico';
+
+    public const PART_CARROZZERIA = 'Carrozzeria';
+
+    public const PART_VETRI = 'Vetri';
+
+    public const PART_ALLESTIMENTO = 'Allestimento';
 
     public const PART_ILLUMINAZIONE_SIRENA = 'Illuminazione/Sirena';
 
@@ -52,13 +65,16 @@ class Issue extends Model
     public const PARTS = [
         self::PART_MOTORE,
         self::PART_FRENI,
+        self::PART_STERZO,
         self::PART_SOSPENSIONI,
-        self::PART_PNEUMATICI,
-        self::PART_ELETTRONICA,
-        self::PART_CARROZZERIA,
-        self::PART_CLIMATIZZAZIONE,
         self::PART_TRASMISSIONE,
-        self::PART_IMPIANTO_SANITARIO,
+        self::PART_PNEUMATICI,
+        self::PART_IMPIANTO_ELETTRICO,
+        self::PART_CLIMATIZZAZIONE,
+        self::PART_SCARICO,
+        self::PART_CARROZZERIA,
+        self::PART_VETRI,
+        self::PART_ALLESTIMENTO,
         self::PART_ILLUMINAZIONE_SIRENA,
         self::PART_ALTRO,
     ];

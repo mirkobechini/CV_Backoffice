@@ -30,28 +30,39 @@ class IssuePartBackfillController extends Controller
         return view('admin.issues.backfill-parts', compact('issues'));
     }
 
-    public function suggest()
+    /**
+     * Endpoint JSON chiamato via fetch dal browser un blocco alla volta
+     * (vedi backfill-parts.blade.php): classificare TUTTI i guasti in
+     * un'unica richiesta sincrona poteva superare il timeout del proxy
+     * davanti a Laravel Cloud (Cloudflare) quando i guasti da allineare
+     * erano molti, interrompendo la richiesta senza alcun risultato.
+     * A blocchi piccoli, ogni richiesta resta sotto qualunque timeout.
+     */
+    public function suggest(Request $request)
     {
         $this->authorize('update', Issue::class);
 
+        $data = $request->validate([
+            'issue_ids' => 'required|array|max:25',
+            'issue_ids.*' => 'integer',
+        ]);
+
         $issues = Issue::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->whereNull('part')
+            ->whereIn('id', $data['issue_ids'])
             ->get();
 
         if ($issues->isEmpty()) {
-            return redirect()->route('admin.issues.backfill-parts.index');
+            return response()->json(['suggestions' => []]);
         }
 
         try {
             $suggestions = app(IssuePartClassifierService::class)->suggestParts($issues);
         } catch (IssuePartClassificationException $e) {
-            return redirect()->route('admin.issues.backfill-parts.index')
-                ->with('error', "Impossibile generare i suggerimenti: {$e->getMessage()}");
+            return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        return redirect()->route('admin.issues.backfill-parts.index')
-            ->with('part_suggestions', $suggestions)
-            ->with('status', 'Suggerimenti generati: verifica e correggi prima di salvare.');
+        return response()->json(['suggestions' => $suggestions]);
     }
 
     public function store(Request $request)

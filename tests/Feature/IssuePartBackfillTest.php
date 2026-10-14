@@ -81,7 +81,7 @@ class IssuePartBackfillTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_suggest_flashes_suggestions_and_redirects_back(): void
+    public function test_suggest_returns_suggestions_as_json(): void
     {
         $user = $this->admin();
         $vehicle = $this->vehicle();
@@ -97,24 +97,81 @@ class IssuePartBackfillTest extends TestCase
             ]),
         ]);
 
-        $response = $this->actingAs($user)->post(route('admin.issues.backfill-parts.suggest'));
+        $response = $this->actingAs($user)->postJson(route('admin.issues.backfill-parts.suggest'), [
+            'issue_ids' => [$issue->id],
+        ]);
 
-        $response->assertRedirect(route('admin.issues.backfill-parts.index'));
-        $response->assertSessionHas('part_suggestions', [$issue->id => Issue::PART_FRENI]);
+        $response->assertOk();
+        $response->assertJson(['suggestions' => [$issue->id => Issue::PART_FRENI]]);
     }
 
-    public function test_suggest_shows_error_on_classification_failure(): void
+    public function test_suggest_only_classifies_requested_batch(): void
+    {
+        // Il flusso reale chiama questo endpoint un blocco alla volta (vedi
+        // backfill-parts.blade.php): un'unica richiesta che classifica
+        // tutti i guasti insieme poteva superare il timeout del proxy
+        // davanti a Laravel Cloud quando erano molti.
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+        $requested = Issue::create(['vehicle_id' => $vehicle->id, 'description' => 'Frena male', 'status' => 'open', 'event_date' => '2026-01-01']);
+        $other = Issue::create(['vehicle_id' => $vehicle->id, 'description' => 'Foratura', 'status' => 'open', 'event_date' => '2026-01-01']);
+
+        Http::fake([
+            '*/chat/completions' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => json_encode([
+                        'classifications' => [['id' => $requested->id, 'part' => Issue::PART_FRENI]],
+                    ])]],
+                ],
+            ]),
+        ]);
+
+        $response = $this->actingAs($user)->postJson(route('admin.issues.backfill-parts.suggest'), [
+            'issue_ids' => [$requested->id],
+        ]);
+
+        $response->assertOk();
+        Http::assertSentCount(1);
+        $sentBody = json_decode(Http::recorded()[0][0]->body(), true);
+        $descriptions = json_decode($sentBody['messages'][1]['content'], true);
+        $this->assertCount(1, $descriptions);
+        $this->assertSame($requested->id, $descriptions[0]['id']);
+    }
+
+    public function test_suggest_requires_issue_ids(): void
+    {
+        $user = $this->admin();
+
+        $response = $this->actingAs($user)->postJson(route('admin.issues.backfill-parts.suggest'), []);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_suggest_rejects_batches_larger_than_25(): void
+    {
+        $user = $this->admin();
+
+        $response = $this->actingAs($user)->postJson(route('admin.issues.backfill-parts.suggest'), [
+            'issue_ids' => range(1, 26),
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_suggest_returns_error_json_on_classification_failure(): void
     {
         $user = $this->admin();
         $vehicle = $this->vehicle();
-        Issue::create(['vehicle_id' => $vehicle->id, 'description' => 'Boh', 'status' => 'open', 'event_date' => '2026-01-01']);
+        $issue = Issue::create(['vehicle_id' => $vehicle->id, 'description' => 'Boh', 'status' => 'open', 'event_date' => '2026-01-01']);
 
         Http::fake(['*/chat/completions' => Http::response([], 500)]);
 
-        $response = $this->actingAs($user)->post(route('admin.issues.backfill-parts.suggest'));
+        $response = $this->actingAs($user)->postJson(route('admin.issues.backfill-parts.suggest'), [
+            'issue_ids' => [$issue->id],
+        ]);
 
-        $response->assertRedirect(route('admin.issues.backfill-parts.index'));
-        $response->assertSessionHas('error');
+        $response->assertStatus(422);
+        $response->assertJsonStructure(['message']);
     }
 
     public function test_store_saves_confirmed_parts(): void
