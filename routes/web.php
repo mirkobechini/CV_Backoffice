@@ -28,6 +28,9 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PdfExportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicFleetStatusController;
+use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
+use App\Http\Controllers\Superadmin\DiscountCodeController;
+use App\Http\Controllers\Superadmin\LicenseController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TwoFactorAuthenticationController;
 use App\Models\User;
@@ -209,6 +212,27 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('csv-import.preview');
         Route::post('csv-import/confirm', [CsvImportController::class, 'confirm'])
             ->name('csv-import.confirm');
+    });
+
+// Pannello superadmin: gestione licenze/codici sconto di tutte le
+// associazioni, namespace separato da admin.* (vedi ADR §13) — nessuna
+// Policy per-record qui, l'autorizzazione è solo il middleware 'superadmin'.
+Route::middleware(['auth', 'verified', 'superadmin'])
+    ->name('superadmin.')
+    ->prefix('superadmin')
+    ->group(function () {
+        Route::get('/', [SuperadminDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('groups/{group}/licenses/create', [LicenseController::class, 'create'])
+            ->name('licenses.create');
+        Route::post('groups/{group}/licenses', [LicenseController::class, 'store'])
+            ->name('licenses.store');
+
+        Route::get('discount-codes', [DiscountCodeController::class, 'index'])->name('discount-codes.index');
+        Route::get('discount-codes/create', [DiscountCodeController::class, 'create'])->name('discount-codes.create');
+        Route::post('discount-codes', [DiscountCodeController::class, 'store'])->name('discount-codes.store');
+        Route::patch('discount-codes/{discountCode}/toggle', [DiscountCodeController::class, 'toggle'])
+            ->name('discount-codes.toggle');
     });
 
 require __DIR__.'/auth.php';
