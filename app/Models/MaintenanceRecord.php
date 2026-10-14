@@ -47,6 +47,7 @@ class MaintenanceRecord extends Model
         'vehicle_id',
         'provider_id',
         'appointment_date',
+        'appointment_time',
         'return_date',
         'activity_type',
         'mileage_at_service',
@@ -84,6 +85,22 @@ class MaintenanceRecord extends Model
     public function getAppointmentDateFormattedAttribute(): ?string
     {
         return $this->appointment_date?->format('d/m/Y');
+    }
+
+    /**
+     * Data + orario insieme quando l'orario è impostato (facoltativo), solo
+     * la data altrimenti — per non mostrare un posto vuoto o un orario
+     * finto (es. 00:00) quando l'utente non l'ha specificato.
+     */
+    public function getAppointmentDateTimeFormattedAttribute(): ?string
+    {
+        if (! $this->appointment_date) {
+            return null;
+        }
+
+        return $this->appointment_time
+            ? $this->appointment_date->format('d/m/Y').' '.$this->appointment_time
+            : $this->appointment_date->format('d/m/Y');
     }
 
     public function getReturnDateFormattedAttribute(): ?string

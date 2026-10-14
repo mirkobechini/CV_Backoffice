@@ -6,6 +6,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- Orario facoltativo sulla data appuntamento (MaintenanceRecord): mostrato quando compilato (es. "12/10/2026 14:30"), altrimenti solo la data come prima.
 - Dashboard: nuova card "Lavaggi del mese" — quanti veicoli sono stati lavati nel mese corrente (appuntamento "Lavaggio" concluso), con dettaglio espandibile su quali e quando, e quali mancano ancora.
 
 ## [v1.8.0] - 2026-10-14

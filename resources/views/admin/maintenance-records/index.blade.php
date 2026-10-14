@@ -184,7 +184,7 @@
                                 </td>
                                 <td>
                                     <div class="date-cell">
-                                        <span class="date-main">{{ $record->appointment_date_formatted ?? 'N/A' }}</span>
+                                        <span class="date-main">{{ $record->appointment_date_time_formatted ?? 'N/A' }}</span>
                                         @if ($record->appointment_date)
                                             <span
                                                 class="date-sub">{{ $relativeDate($record->appointment_date) }}</span>

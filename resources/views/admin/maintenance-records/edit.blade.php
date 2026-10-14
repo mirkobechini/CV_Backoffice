@@ -95,6 +95,8 @@
                 <div class="row2">
                     <x-form.date-input name="appointment_date" label="{{ __('Data appuntamento') }}"
                         :model="$maintenanceRecord" required />
+                    <x-form.time-input name="appointment_time" label="{{ __('Orario (facoltativo)') }}"
+                        :value="$maintenanceRecord->appointment_time" />
                     <div class="field">
                         <label for="activity_type">{{ __('Tipo attività') }}</label>
                         <select class="select @error('activity_type') is-invalid @enderror" id="activity_type"
