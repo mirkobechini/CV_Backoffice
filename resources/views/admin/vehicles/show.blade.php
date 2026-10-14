@@ -98,6 +98,8 @@
     </div>
 
     <x-admin.vehicle-show.deadlines-history-card :vehicle="$vehicle" />
+    <x-admin.vehicle-show.appointments-history-card :appointments="$vehicleAppointments" />
+    <x-admin.vehicle-show.tire-changes-history-card :tire-changes="$vehicle->tireChanges" />
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

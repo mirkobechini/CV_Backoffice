@@ -6,8 +6,12 @@ use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\Deadline;
 use App\Models\Group;
+use App\Models\Issue;
+use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
+use App\Models\Provider;
 use App\Models\Tire;
+use App\Models\TireChange;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -45,12 +49,54 @@ class PdfExportTest extends TestCase
         // resources/views/pdfs/scheda-veicolo.blade.php): senza una gomma
         // registrata, un eventuale errore negli accessor usati lì (position_label,
         // season_label, ecc.) non verrebbe mai esercitato da questo test.
-        Tire::create([
+        $oldTire = Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_STORED,
+        ]);
+        $newTire = Tire::create([
             'vehicle_id' => $vehicle->id,
             'season' => Tire::SEASON_WINTER,
             'position' => Tire::POSITION_FRONT_LEFT,
             'status' => Tire::STATUS_MOUNTED,
         ]);
+        // Copre anche lo storico cambi gomme e la nuova sezione coperture
+        // assicurative/parte guasto del PDF: senza queste righe, un errore
+        // negli accessor usati lì non verrebbe mai esercitato da questo test.
+        TireChange::create([
+            'vehicle_id' => $vehicle->id,
+            'tire_id' => $newTire->id,
+            'previous_tire_id' => $oldTire->id,
+            'changed_date' => Carbon::today(),
+            'mileage_at_change' => 50000,
+        ]);
+        $insurance = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_ASSICURAZIONE,
+            'due_date' => Carbon::today()->addMonths(6)->toDateString(),
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'status' => 'pending',
+        ]);
+        $insurance->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 300]);
+        Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'part' => Issue::PART_FRENI,
+            'description' => 'Frena male',
+            'status' => 'open',
+            'event_date' => Carbon::today(),
+        ]);
+        $provider = Provider::create(['name' => 'Autolavaggio Test', 'type' => 'Lavaggio']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+            'appointment_date' => Carbon::today(),
+            'appointment_time' => '14:30',
+            'return_date' => Carbon::today(),
+        ]);
+
         $response = $this->actingAs($user)->get(route('admin.vehicles.pdf', $vehicle->id));
         $response->assertOk();
         $response->assertHeader('content-type', 'application/pdf');

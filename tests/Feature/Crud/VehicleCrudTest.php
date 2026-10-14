@@ -9,7 +9,11 @@ use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Group;
 use App\Models\Issue;
+use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
+use App\Models\Provider;
+use App\Models\Tire;
+use App\Models\TireChange;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -109,6 +113,59 @@ class VehicleCrudTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
 
         $response->assertStatus(200);
+    }
+
+    public function test_show_page_lists_appointments_history(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $provider = Provider::create(['name' => 'Autolavaggio Rossi', 'type' => 'Lavaggio']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+            'appointment_date' => '2026-01-10',
+            'return_date' => '2026-01-10',
+            'cost' => 25,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertStatus(200);
+        $response->assertSee('Storico interventi');
+        $response->assertSee('Autolavaggio Rossi');
+        $response->assertSee(MaintenanceRecord::ACTIVITY_WASH);
+    }
+
+    public function test_show_page_lists_tire_change_history(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $oldTire = Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_STORED,
+        ]);
+        $newTire = Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_WINTER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+        TireChange::create([
+            'vehicle_id' => $vehicle->id,
+            'tire_id' => $newTire->id,
+            'previous_tire_id' => $oldTire->id,
+            'changed_date' => '2026-01-10',
+            'mileage_at_change' => 50000,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertStatus(200);
+        $response->assertSee('Storico cambi gomme');
+        $response->assertSee('50000');
     }
 
     public function test_vehicle_edit_page_is_reachable(): void

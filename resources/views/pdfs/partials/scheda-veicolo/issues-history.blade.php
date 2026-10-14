@@ -8,6 +8,7 @@
             <thead>
                 <tr>
                     <th>Guasto</th>
+                    <th>Parte</th>
                     <th>Data</th>
                     <th>Intervento</th>
                     <th>Data Intervento</th>
@@ -18,6 +19,7 @@
                 @foreach ($vehicle->issues as $issue)
                     <tr>
                         <td>{{ $issue->description }}</td>
+                        <td>{{ $issue->part ?? '—' }}</td>
                         <td>{{ $issue->event_date?->format('d/m/Y') ?? '—' }}</td>
                         <td>{{ $issue->maintenanceRecords?->first()?->activity_type ?? '—' }}</td>
                         <td>{{ $issue->maintenanceRecords?->first()?->appointment_date?->format('d/m/Y') ?? '—' }}</td>

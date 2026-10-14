@@ -16,6 +16,8 @@
 
 @include('pdfs.partials.scheda-veicolo.tires')
 
+@include('pdfs.partials.scheda-veicolo.tire-changes')
+
 <!-- FOOTER -->
 <div class="footer">
     <p>Documento generato automaticamente da CV Backoffice — Dati aggiornati al {{ now()->format('d/m/Y H:i') }}</p>
