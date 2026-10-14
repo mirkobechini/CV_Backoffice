@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.9.2] - 2026-10-14
+
 ### Added
 
 - Vocabolario parti guasto: aggiunte "Alimentazione" (AdBlue, metano/GPL) e "Interni/Abitacolo" (sedili, parasole, supporti/porta telecomando) — casi reali che prima finivano forzatamente in "Allestimento" o "Altro".
