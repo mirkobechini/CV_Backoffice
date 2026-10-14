@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\MileageLogController;
 use App\Http\Controllers\Admin\NotificationSettingController;
 use App\Http\Controllers\Admin\ProviderController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Admin\TireController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
@@ -92,6 +93,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('deadlines.insurances');
         Route::get('documents', [DocumentStatusController::class, 'index'])
             ->name('documents.index');
+        Route::get('statistics', [StatisticsController::class, 'index'])
+            ->name('statistics.index');
         Route::resource('deadlines', DeadlineController::class);
         Route::patch('deadlines/{deadline}/renew', [DeadlineController::class, 'renew'])
             ->name('deadlines.renew');
