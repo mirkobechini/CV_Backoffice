@@ -72,6 +72,18 @@ class User extends Authenticatable
     }
 
     /**
+     * Nessuna licenza assegnata al gruppo attivo = feature consentita
+     * (fail-open, vedi ADR §16): il blocco si applica solo quando esiste
+     * una licenza che esplicitamente non la include.
+     */
+    public function canUseLicenseFeature(string $feature): bool
+    {
+        $license = $this->activeGroup()?->currentLicense();
+
+        return ! $license || $license->hasFeature($feature);
+    }
+
+    /**
      * True se l'utente ha confermato l'attivazione del 2FA (un segreto
      * generato ma non ancora confermato con un codice non conta).
      */

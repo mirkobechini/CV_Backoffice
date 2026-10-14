@@ -74,6 +74,15 @@
                 </div>
             </div>
 
+            @php($activeGroupLicense = auth()->user()?->activeGroup()?->currentLicense())
+            @if ($activeGroupLicense?->isExpired())
+                <div class="container pt-3">
+                    <div class="alert alert-warning" role="alert">
+                        {{ __('La licenza del tuo gruppo è scaduta il :date. Alcune funzionalità e la creazione di nuovi veicoli/utenti potrebbero essere bloccate finché non viene rinnovata.', ['date' => $activeGroupLicense->expires_at->format('d/m/Y')]) }}
+                    </div>
+                </div>
+            @endif
+
             @if ($errors->any())
                 <div class="container pt-3">
                     <div class="alert alert-danger" role="alert">

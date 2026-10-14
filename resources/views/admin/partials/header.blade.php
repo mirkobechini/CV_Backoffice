@@ -54,10 +54,12 @@
             href="{{ route('admin.documents.index') }}" title="{{ __('Stato documenti') }}">
             <i class="fa-solid fa-folder-open"></i><span>{{ __('Stato documenti') }}</span>
         </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.statistics.*') ? 'active' : '' }}"
-            href="{{ route('admin.statistics.index') }}" title="{{ __('Statistiche') }}">
-            <i class="fa-solid fa-chart-column"></i><span>{{ __('Statistiche') }}</span>
-        </a>
+        @if (auth()->user()?->canUseLicenseFeature(\App\Models\License::FEATURE_STATISTICS))
+            <a class="sidebar-link {{ request()->routeIs('admin.statistics.*') ? 'active' : '' }}"
+                href="{{ route('admin.statistics.index') }}" title="{{ __('Statistiche') }}">
+                <i class="fa-solid fa-chart-column"></i><span>{{ __('Statistiche') }}</span>
+            </a>
+        @endif
     </nav>
 
     {{-- Sezione: Attrezzature --}}
