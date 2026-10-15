@@ -131,6 +131,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::post('groups/join', [GroupController::class, 'join'])->name('groups.join');
         Route::post('groups/{group}/invite', [GroupController::class, 'invite'])->name('groups.invite');
         Route::patch('groups/{group}/invite-code', [GroupController::class, 'regenerateInviteCode'])->name('groups.invite-code');
+        Route::patch('groups/{group}/invite-permission', [GroupController::class, 'updateInvitePermission'])->name('groups.invite-permission.update');
         Route::patch('groups/{group}/public-status-token', [GroupController::class, 'generatePublicStatusToken'])->name('groups.public-status-token.generate');
         Route::delete('groups/{group}/public-status-token', [GroupController::class, 'revokePublicStatusToken'])->name('groups.public-status-token.revoke');
         Route::patch('groups/{group}/tire-season', [GroupController::class, 'updateTireSeason'])->name('groups.tire-season.update');
