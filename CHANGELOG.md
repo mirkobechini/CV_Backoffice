@@ -4,6 +4,20 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.15.0] - 2026-10-15
+
+### Added
+
+- Pannello superadmin: modifica del nome di un'associazione, correzione di nome/email del capo (con reinvio del link per impostare la password), form di rinnovo licenza precompilato con i valori della licenza attuale.
+- Statistiche: nuove tab "Costi" (spesa per anno/veicolo/officina, costo per km percorso) e "Affidabilità e utilizzo" (km percorsi, classifica guasti per veicolo, tempo medio di fermo officina); pagina riorganizzata a tab invece di sezioni verticali.
+- Sidebar: nuova sezione "Report" con Stato documenti e Statistiche.
+- Modale di completamento del form di modifica appuntamento: chiede ora la disposizione (magazzino/dismessa) delle gomme sostituite, come il bottone "Completa" dedicato.
+
+### Fixed
+
+- Salvare un appuntamento "Cambio Gomme" con data di rientro dal form di modifica normale (non il bottone "Completa") non montava più le gomme collegate.
+- Verifica email: `User` non implementava il contratto `MustVerifyEmail` (mai attivato dallo scaffold Breeze), quindi il middleware `verified` già presente su più rotte non ha mai avuto effetto. Ora attivo (anche prima dell'attivazione del 2FA), con migrazione di backfill per non bloccare gli account esistenti.
+
 ## [v1.14.0] - 2026-10-15
 
 ### Changed
