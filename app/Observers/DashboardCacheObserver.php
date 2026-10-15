@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\Group;
 use App\Models\Vehicle;
 use App\Services\DashboardCache;
 
@@ -14,7 +15,7 @@ use App\Services\DashboardCache;
  *
  * Registrato per tutti i modelli i cui dati alimentano la dashboard
  * (Deadline, Issue, MaintenanceRecord, Equipment, Tire, MileageLog,
- * Vehicle): vedi AppServiceProvider::boot().
+ * Vehicle, Group): vedi AppServiceProvider::boot().
  */
 class DashboardCacheObserver
 {
@@ -30,9 +31,11 @@ class DashboardCacheObserver
 
     private function forget(mixed $model): void
     {
-        $groupId = $model instanceof Vehicle
-            ? $model->group_id
-            : $model->vehicle?->group_id;
+        $groupId = match (true) {
+            $model instanceof Group => $model->id,
+            $model instanceof Vehicle => $model->group_id,
+            default => $model->vehicle?->group_id,
+        };
 
         DashboardCache::forgetForGroup($groupId);
     }

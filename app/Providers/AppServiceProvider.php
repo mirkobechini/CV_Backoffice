@@ -8,6 +8,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentIssue;
 use App\Models\EquipmentMaintenanceRecord;
 use App\Models\EquipmentType;
+use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
@@ -145,6 +146,7 @@ class AppServiceProvider extends ServiceProvider
         Equipment::observe(DashboardCacheObserver::class);
         Tire::observe(DashboardCacheObserver::class);
         MileageLog::observe(DashboardCacheObserver::class);
+        Group::observe(DashboardCacheObserver::class);
 
         // Testo in italiano per l'email di reset/impostazione password
         // (di default in inglese): usata sia per il "password dimenticata"
