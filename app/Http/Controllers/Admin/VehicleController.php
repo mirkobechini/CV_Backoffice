@@ -118,7 +118,14 @@ class VehicleController extends Controller
         $data = $request->validated();
 
         // Assegna il veicolo al gruppo dell'utente autenticato.
-        $data['group_id'] = $request->user()->activeGroup()?->id;
+        $group = $request->user()->activeGroup();
+        $data['group_id'] = $group?->id;
+
+        if ($group && ! $group->canAddVehicle()) {
+            return back()->withErrors([
+                'license' => 'Hai raggiunto il limite di veicoli della tua licenza. Contatta l\'amministratore per aumentarlo.',
+            ])->withInput();
+        }
 
         $this->registrationCardService->resolvePath($request, $data);
 

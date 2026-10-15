@@ -55,7 +55,32 @@ class User extends Authenticatable
             // chiaro da un dump del database (vedi anche VerifyBackup).
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
+            'is_superadmin' => 'boolean',
         ];
+    }
+
+    /**
+     * True se l'utente è il proprietario della piattaforma (gestisce
+     * licenze/gruppi di tutte le associazioni). Ortogonale ai ruoli di
+     * gruppo (capo/sottocapo/member): un superadmin può anche essere capo
+     * del proprio gruppo, le due cose non si escludono. Impostabile solo
+     * da CLI (comando make:superadmin), mai da una rotta o un form.
+     */
+    public function isSuperadmin(): bool
+    {
+        return (bool) $this->is_superadmin;
+    }
+
+    /**
+     * Nessuna licenza assegnata al gruppo attivo = feature consentita
+     * (fail-open, vedi ADR §16): il blocco si applica solo quando esiste
+     * una licenza che esplicitamente non la include.
+     */
+    public function canUseLicenseFeature(string $feature): bool
+    {
+        $license = $this->activeGroup()?->currentLicense();
+
+        return ! $license || $license->hasFeature($feature);
     }
 
     /**

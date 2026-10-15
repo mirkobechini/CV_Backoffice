@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Group extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'invite_code',
@@ -37,6 +40,60 @@ class Group extends Model
     public function vehicles()
     {
         return $this->hasMany(Vehicle::class);
+    }
+
+    /**
+     * Licenze assegnate al gruppo nel tempo (una riga per periodo/rinnovo).
+     */
+    public function licenses()
+    {
+        return $this->hasMany(License::class);
+    }
+
+    /**
+     * L'ultima licenza assegnata (per id: le righe si creano solo in
+     * ordine cronologico, mai retrodatate). hasOne...ofMany, non una
+     * semplice query con limit(), per restare corretta anche quando questa
+     * relazione viene eager-caricata su più gruppi insieme (un limit()
+     * dentro un eager load si applicherebbe all'intero risultato, non per
+     * gruppo).
+     */
+    public function latestLicense()
+    {
+        return $this->hasOne(License::class)->latestOfMany();
+    }
+
+    /**
+     * La licenza più recente del gruppo (può essere scaduta: isExpired()
+     * sulla licenza stessa distingue i due stati). Null = nessuna licenza
+     * mai assegnata, trattato come illimitato per compatibilità con i
+     * gruppi creati prima di questa feature.
+     */
+    public function currentLicense(): ?License
+    {
+        return $this->relationLoaded('latestLicense')
+            ? $this->getRelation('latestLicense')
+            : $this->latestLicense()->first();
+    }
+
+    /**
+     * Nessuna licenza assegnata = illimitato (fail-open, compatibilità con
+     * i gruppi creati prima di questa feature); con una licenza, il limite
+     * si applica davvero (anche a 0 se scaduta: License::hasVehicleCapacity()
+     * lo gestisce).
+     */
+    public function canAddVehicle(): bool
+    {
+        $license = $this->currentLicense();
+
+        return ! $license || $license->hasVehicleCapacity($this->vehicles()->count());
+    }
+
+    public function canAddUser(): bool
+    {
+        $license = $this->currentLicense();
+
+        return ! $license || $license->hasUserCapacity($this->users()->count());
     }
 
     /**

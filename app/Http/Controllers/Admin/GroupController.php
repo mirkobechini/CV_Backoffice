@@ -158,6 +158,12 @@ class GroupController extends Controller
             return redirect()->route('admin.groups.show', $group)->with('status', 'Fai già parte di questo gruppo.');
         }
 
+        if (! $group->canAddUser()) {
+            return back()->withErrors([
+                'invite_code' => 'Questo gruppo ha raggiunto il limite di utenti della sua licenza.',
+            ]);
+        }
+
         $group->addUser($user, Group::ROLE_MEMBER);
 
         return redirect()->route('admin.groups.show', $group)->with('status', 'Sei entrato nel gruppo.');
@@ -309,9 +315,11 @@ class GroupController extends Controller
     }
 
     /**
-     * Elimina un gruppo (solo il capo).
+     * Elimina (soft delete) un gruppo (solo il capo).
      * I veicoli del gruppo vengono eliminati solo con conferma esplicita,
-     * per evitare che restino orfani senza gruppo.
+     * per evitare che restino orfani senza gruppo. Per evitare un click
+     * accidentale su un'azione così pesante, il capo deve ridigitare
+     * esattamente il nome del gruppo.
      */
     public function destroy(Request $request, Group $group)
     {
@@ -319,6 +327,14 @@ class GroupController extends Controller
 
         if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
             abort(403, 'Solo il capo può eliminare il gruppo.');
+        }
+
+        $request->validate(['confirm_name' => 'required|string']);
+
+        if (trim($request->input('confirm_name')) !== $group->name) {
+            return back()->withErrors([
+                'confirm_name' => 'Il nome digitato non corrisponde al nome del gruppo.',
+            ]);
         }
 
         $deleteVehicles = $request->boolean('delete_vehicles');

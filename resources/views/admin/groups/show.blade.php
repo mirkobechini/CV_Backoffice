@@ -318,7 +318,7 @@
             aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <form method="POST" action="{{ route('admin.groups.destroy', $group) }}">
+                    <form method="POST" action="{{ route('admin.groups.destroy', $group) }}" id="delete-group-form">
                         @csrf
                         @method('DELETE')
                         <div class="modal-header">
@@ -328,7 +328,7 @@
                                 aria-label="{{ __('Chiudi') }}"></button>
                         </div>
                         <div class="modal-body">
-                            {{ __('Questa azione non può essere annullata.') }}
+                            {{ __('Azione pesante: tutti i dati del gruppo smettono di essere accessibili.') }}
                             @if ($group->vehicles->isNotEmpty())
                                 <label class="check" style="margin-top:12px;">
                                     <input type="checkbox" name="delete_vehicles" value="1" required>
@@ -340,12 +340,29 @@
                                     </div>
                                 </label>
                             @endif
+                            <div style="margin-top:14px;">
+                                <label for="confirm-group-name" class="label">
+                                    {{ __('Per confermare, scrivi il nome del gruppo: ":name"', ['name' => $group->name]) }}
+                                </label>
+                                <input type="text" id="confirm-group-name" name="confirm_name" class="form-control"
+                                    autocomplete="off" required>
+                            </div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Annulla') }}</button>
-                            <button type="submit" class="btn btn-danger">{{ __('Elimina definitivamente') }}</button>
+                            <button type="submit" class="btn btn-danger" id="confirm-delete-group-btn" disabled>{{ __('Elimina gruppo') }}</button>
                         </div>
                     </form>
+                    <script>
+                        (function() {
+                            const input = document.getElementById('confirm-group-name');
+                            const btn = document.getElementById('confirm-delete-group-btn');
+                            const expected = @json($group->name);
+                            input.addEventListener('input', () => {
+                                btn.disabled = input.value !== expected;
+                            });
+                        })();
+                    </script>
                 </div>
             </div>
         </div>

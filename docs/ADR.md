@@ -317,6 +317,27 @@ This directly replaces the original roadmap idea of a per-component failure pred
 
 ---
 
+## 16. SaaS licensing: superadmin namespace separate from per-tenant admin
+
+### Decision
+
+A new `is_superadmin` boolean flag on `User` (settable only via `php artisan make:superadmin {email}`, never from a route/form) gates a new route namespace, `/superadmin`, kept entirely separate from `/admin` (§10's per-group tenant panel). `License` belongs to `Group` (one license = one association, matching the existing tenant boundary): one row per assignment period, renewing creates a new row rather than mutating the current one, giving a natural history. `DiscountCode` is a standalone model (code, percent, usage/expiry limits) applied manually when a superadmin assigns or renews a license; there is no real payment integration, `final_price_eur` is only a snapshot for Mirko's own bookkeeping.
+
+### Rationale
+
+- `is_superadmin` is orthogonal to the group-based `capo`/`sottocapo`/`member` roles (§10): it is a platform-level prerogative, not a tenant one, so it deliberately doesn't go through `canManageData()`/`HasGroupScopedAccess` — a user can be superadmin and also capo of their own group at the same time, the two are independent
+- No per-record Policy is needed for `/superadmin`: a superadmin can see/manage every group by definition, so a single route-level middleware (`EnsureIsSuperAdmin`) is sufficient, unlike every other admin-facing feature which needs group scoping
+- A missing license on a group (every group created before this feature) is treated as unlimited (fail-open) — enforcement only applies to groups a superadmin deliberately assigns a license to; an **expired** license is a distinct, explicit degraded state instead
+- `Group::latestLicense()` is a `hasOne()->latestOfMany()` relation, not a `limit(1)` eager-load constraint: the latter only limits the total rows across all parents when eager-loading over multiple groups at once, not per group
+
+### Consequences
+
+- Numeric limit enforcement (blocking new vehicles/users past a license's cap) and feature gating (Statistics, AI issue-part backfill restricted below the Pro tier) are **not** implemented yet — tracked as separate follow-up issues, built only when needed rather than bundled into the foundation
+- `License::TIER_PRESETS` (free/pro/enterprise) only prefill the assignment form; the actual stored columns per row remain the source of truth, so a superadmin can still hand-tune a one-off deal without inventing a new tier
+- Prerequisite done first: `Group` gained `SoftDeletes` (previously a hard delete) plus a "retype the group name" confirmation before destroying one, since the superadmin view now exposes every group, raising the cost of an accidental deletion
+
+---
+
 ## References
 
 - [Laravel SoftDeletes documentation](https://laravel.com/docs/11/eloquent#soft-deleting)
