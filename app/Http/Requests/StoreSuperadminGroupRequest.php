@@ -20,9 +20,10 @@ class StoreSuperadminGroupRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'capo_name' => ['required', 'string', 'max:255'],
-            'capo_email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            'capo_password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'self_capo' => ['nullable', 'boolean'],
+            'capo_name' => ['required_unless:self_capo,1', 'exclude_if:self_capo,1', 'string', 'max:255'],
+            'capo_email' => ['required_unless:self_capo,1', 'exclude_if:self_capo,1', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'capo_password' => ['required_unless:self_capo,1', 'exclude_if:self_capo,1', 'confirmed', Rules\Password::defaults()],
         ];
     }
 

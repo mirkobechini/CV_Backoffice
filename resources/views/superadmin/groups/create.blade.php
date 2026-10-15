@@ -34,11 +34,18 @@
 
             <div class="form-section" style="margin-bottom:0;">
                 <h2><span class="num">2</span> {{ __('Primo capo') }}</h2>
-                <div class="hint" style="margin:0 0 12px;">
-                    {{ __("L'account creato qui diventa capo del nuovo gruppo; potrà poi creare sottocapi/membri da solo.") }}
-                </div>
-                <div class="field">
-                    <label for="capo_name">{{ __('Nome') }} <span class="req">*</span></label>
+
+                <label class="check" style="margin-bottom:12px;">
+                    <input type="checkbox" id="self_capo" name="self_capo" value="1" {{ old('self_capo') ? 'checked' : '' }}>
+                    <div class="label">{{ __('Sono io il capo di questa associazione') }}</div>
+                </label>
+
+                <div id="capo-account-fields">
+                    <div class="hint" style="margin:0 0 12px;">
+                        {{ __("L'account creato qui diventa capo del nuovo gruppo; potrà poi creare sottocapi/membri da solo.") }}
+                    </div>
+                    <div class="field">
+                        <label for="capo_name">{{ __('Nome') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('capo_name') is-invalid @enderror" id="capo_name"
                         name="capo_name" value="{{ old('capo_name') }}" placeholder="{{ __('es. Luca Verdi') }}" required>
                     @error('capo_name')
@@ -74,6 +81,7 @@
                         </button>
                     </div>
                 </div>
+                </div>
             </div>
 
             <div class="form-actions">
@@ -84,4 +92,22 @@
             </div>
         </form>
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const selfCapo = document.getElementById('self_capo');
+                const fields = document.getElementById('capo-account-fields');
+                const inputs = fields.querySelectorAll('input');
+
+                const toggle = () => {
+                    fields.style.display = selfCapo.checked ? 'none' : '';
+                    inputs.forEach(input => input.disabled = selfCapo.checked);
+                };
+
+                toggle();
+                selfCapo.addEventListener('change', toggle);
+            });
+        </script>
+    @endpush
 @endsection

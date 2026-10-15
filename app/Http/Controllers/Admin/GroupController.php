@@ -49,33 +49,6 @@ class GroupController extends Controller
     }
 
     /**
-     * Mostra il form per creare un gruppo.
-     */
-    public function create()
-    {
-        return view('admin.groups.create');
-    }
-
-    /**
-     * Crea un nuovo gruppo e assegna l'utente corrente come capo.
-     */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-        ]);
-
-        $group = Group::create([
-            'name' => $data['name'],
-            'invite_code' => Group::generateInviteCode(),
-        ]);
-
-        $group->addUser($this->currentUser(), Group::ROLE_CAPO);
-
-        return redirect()->route('admin.groups.show', $group)->with('status', 'Gruppo creato con successo.');
-    }
-
-    /**
      * Aggiorna il nome del gruppo (solo il capo).
      */
     public function update(Request $request, Group $group)
@@ -312,46 +285,6 @@ class GroupController extends Controller
         $group->removeUser($user);
 
         return back()->with('status', 'Membro rimosso dal gruppo.');
-    }
-
-    /**
-     * Elimina (soft delete) un gruppo (solo il capo).
-     * I veicoli del gruppo vengono eliminati solo con conferma esplicita,
-     * per evitare che restino orfani senza gruppo. Per evitare un click
-     * accidentale su un'azione così pesante, il capo deve ridigitare
-     * esattamente il nome del gruppo.
-     */
-    public function destroy(Request $request, Group $group)
-    {
-        $this->authorizeGroup($group);
-
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può eliminare il gruppo.');
-        }
-
-        $request->validate(['confirm_name' => 'required|string']);
-
-        if (trim($request->input('confirm_name')) !== $group->name) {
-            return back()->withErrors([
-                'confirm_name' => 'Il nome digitato non corrisponde al nome del gruppo.',
-            ]);
-        }
-
-        $deleteVehicles = $request->boolean('delete_vehicles');
-
-        if ($group->vehicles()->exists() && ! $deleteVehicles) {
-            return back()->withErrors([
-                'delete_vehicles' => 'Il gruppo ha veicoli associati. Conferma di volerli eliminare per procedere.',
-            ]);
-        }
-
-        if ($deleteVehicles) {
-            $group->vehicles()->delete();
-        }
-
-        $group->delete();
-
-        return redirect()->route('admin.groups.index')->with('status', 'Gruppo eliminato.');
     }
 
     /**
