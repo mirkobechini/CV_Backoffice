@@ -2,6 +2,12 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Fixed
+
+- Dashboard: un appuntamento di oggi non ancora rientrato compariva sia in "Veicoli in officina" sia in "Prossimi appuntamenti" (le due query si sovrapponevano su oggi). Ora compare solo nella prima.
+
 ## [v1.16.0] - 2026-10-15
 
 ### Added
