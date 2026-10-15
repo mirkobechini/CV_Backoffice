@@ -5,7 +5,6 @@ namespace App\Services\CsvImport;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Provider;
-use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -51,18 +50,17 @@ class IssueCsvImporter extends AbstractCsvImporter
             // Veicolo: usa il parametro se fornito, altrimenti cerca nel file
             if ($vehicleRef) {
                 if (! isset($vehiclesCache[$vehicleRef])) {
-                    // forCurrentUser(): senza, un capo poteva importare dati
-                    // su un veicolo di un altro gruppo indovinandone sigla/targa.
-                    $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('internal_code', $vehicleRef)
-                        ->orWhere('license_plate', $vehicleRef))
-                        ->forCurrentUser()
-                        ->first();
+                    $vehiclesCache[$vehicleRef] = $this->resolveVehicleByRef($vehicleRef);
                 }
-                $vehicle = $vehiclesCache[$vehicleRef];
-                if (! $vehicle) {
+                $resolved = $vehiclesCache[$vehicleRef];
+                if ($resolved['ambiguous']) {
+                    $result['valid'] = false;
+                    $result['errors'][] = "Più veicoli trovati con sigla \"{$vehicleRef}\": usa la targa per indicare quale.";
+                } elseif (! $resolved['vehicle']) {
                     $result['valid'] = false;
                     $result['errors'][] = "Veicolo \"{$vehicleRef}\" non trovato.";
                 } else {
+                    $vehicle = $resolved['vehicle'];
                     $result['data']['_vehicle_id'] = $vehicle->id;
                     $result['data']['_vehicle_label'] = $vehicle->internal_code.' - '.$vehicle->license_plate;
                 }
