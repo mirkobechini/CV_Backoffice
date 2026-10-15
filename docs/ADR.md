@@ -101,6 +101,7 @@ Roles (`capo`/lead, `sottocapo`/deputy, `member`) are managed via **Laravel Poli
 - The first user automatically becomes `capo`/lead of a new default group (`php artisan make:admin` command — named after the command's purpose, not the role)
 - Rate limiting: 30 req/min for admin routes, 5 req/min for login
 - Optional TOTP two-factor authentication (added later, see §13) builds on top of this Sanctum session login, not a separate auth system
+- Email verification (`MustVerifyEmail`) is enforced: `User` implements the contract (fixed 2026-10-15 — it was commented out since the Breeze scaffold, so the `verified` middleware already present on `/dashboard`/`/admin/*` was silently a no-op for everyone). Accounts created for someone else (a new capo from `/superadmin`, a sottocapo/member from `/admin`) get both the password-set link and the verification email sent immediately, so neither gate blocks them unexpectedly on first login, and verification now happens before `/profile`'s 2FA setup is reachable at all.
 
 ---
 

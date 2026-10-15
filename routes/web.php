@@ -56,7 +56,12 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+// 'verified' qui (non solo 'auth'): senza, un utente che ha impostato la
+// password dal link di reset ma non ha mai cliccato il link di verifica
+// email separato poteva comunque attivare il 2FA da /profile, saltando
+// la verifica dell'indirizzo prima ancora di proteggere l'account con un
+// secondo fattore.
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

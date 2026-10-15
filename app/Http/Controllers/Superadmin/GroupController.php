@@ -100,9 +100,9 @@ class GroupController extends Controller
     public function store(StoreSuperadminGroupRequest $request)
     {
         $data = $request->validated();
-        $newCapoEmail = null;
+        $newCapo = null;
 
-        $group = DB::transaction(function () use ($data, $request, &$newCapoEmail) {
+        $group = DB::transaction(function () use ($data, $request, &$newCapo) {
             $group = Group::create([
                 'name' => $data['name'],
                 'invite_code' => Group::generateInviteCode(),
@@ -122,19 +122,23 @@ class GroupController extends Controller
                 ]);
 
                 $group->addUser($capo, Group::ROLE_CAPO);
-                $newCapoEmail = $capo->email;
+                $newCapo = $capo;
             }
 
             return $group;
         });
 
-        if ($newCapoEmail) {
-            Password::sendResetLink(['email' => $newCapoEmail]);
+        if ($newCapo) {
+            Password::sendResetLink(['email' => $newCapo->email]);
+            // Inviata subito, non al primo tentativo di accesso bloccato
+            // dal middleware 'verified': il capo la trova già pronta
+            // insieme a quella per impostare la password.
+            $newCapo->sendEmailVerificationNotification();
         }
 
         return redirect()->route('superadmin.licenses.create', $group)
             ->with('status', "Associazione \"{$group->name}\" creata. Assegna ora una licenza.".
-                ($newCapoEmail ? ' Email per impostare la password inviata al capo.' : ''));
+                ($newCapo ? ' Email per impostare la password inviata al capo.' : ''));
     }
 
     /**

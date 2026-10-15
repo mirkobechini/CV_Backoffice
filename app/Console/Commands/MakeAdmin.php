@@ -59,6 +59,12 @@ class MakeAdmin extends Command
             'password' => bcrypt($password),
         ]);
 
+        // Verificata subito (non mass-assegnabile, serve forceFill): creato
+        // da chi ha già accesso CLI al server, un livello di fiducia ben
+        // più alto di un form via browser — non ha senso bloccarlo dietro
+        // una verifica email per il proprio stesso account.
+        $user->forceFill(['email_verified_at' => now()])->save();
+
         // Crea un gruppo di default e assegna l'utente come capo.
         $group = Group::create([
             'name' => 'Associazione di default',

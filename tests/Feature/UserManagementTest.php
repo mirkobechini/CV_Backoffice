@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Group;
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 /**
@@ -56,6 +58,21 @@ class UserManagementTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('password_reset_tokens', ['email' => 'nuovo@example.com']);
+    }
+
+    public function test_new_user_also_receives_a_verification_email_immediately(): void
+    {
+        Notification::fake();
+        [$capo, $group] = $this->capoWithGroup();
+
+        $this->actingAs($capo)->post(route('admin.groups.users.store', $group), [
+            'name' => 'Nuovo Utente',
+            'email' => 'nuovo@example.com',
+            'role' => 'member',
+        ]);
+
+        $newUser = User::where('email', 'nuovo@example.com')->first();
+        Notification::assertSentTo($newUser, VerifyEmail::class);
     }
 
     public function test_member_cannot_create_user(): void
