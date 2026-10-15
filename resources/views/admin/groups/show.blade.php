@@ -43,9 +43,6 @@
                 <button type="button" class="btn sm" onclick="document.getElementById('rename-group').hidden = !document.getElementById('rename-group').hidden">
                     <i class="fa-solid fa-pen"></i> {{ __('Rinomina') }}
                 </button>
-                <button type="button" class="btn danger sm" data-bs-toggle="modal" data-bs-target="#deleteGroupModal">
-                    <i class="fa-solid fa-trash"></i> {{ __('Elimina gruppo') }}
-                </button>
             </div>
         @endif
     </div>
@@ -313,58 +310,4 @@
         </div>
     </div>
 
-    @if ($isCapo)
-        <div class="modal fade" id="deleteGroupModal" tabindex="-1" aria-labelledby="deleteGroupModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <form method="POST" action="{{ route('admin.groups.destroy', $group) }}" id="delete-group-form">
-                        @csrf
-                        @method('DELETE')
-                        <div class="modal-header">
-                            <h1 class="modal-title fs-5" id="deleteGroupModalLabel">{{ __('Eliminare questo gruppo?') }}
-                            </h1>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                aria-label="{{ __('Chiudi') }}"></button>
-                        </div>
-                        <div class="modal-body">
-                            {{ __('Azione pesante: tutti i dati del gruppo smettono di essere accessibili.') }}
-                            @if ($group->vehicles->isNotEmpty())
-                                <label class="check" style="margin-top:12px;">
-                                    <input type="checkbox" name="delete_vehicles" value="1" required>
-                                    <div>
-                                        <div class="label">
-                                            {{ __('Elimina anche i :n veicoli del gruppo', ['n' => $group->vehicles->count()]) }}
-                                        </div>
-                                        <div class="sub">{{ __('Necessario per procedere: il gruppo ha veicoli associati.') }}</div>
-                                    </div>
-                                </label>
-                            @endif
-                            <div style="margin-top:14px;">
-                                <label for="confirm-group-name" class="label">
-                                    {{ __('Per confermare, scrivi il nome del gruppo: ":name"', ['name' => $group->name]) }}
-                                </label>
-                                <input type="text" id="confirm-group-name" name="confirm_name" class="form-control"
-                                    autocomplete="off" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Annulla') }}</button>
-                            <button type="submit" class="btn btn-danger" id="confirm-delete-group-btn" disabled>{{ __('Elimina gruppo') }}</button>
-                        </div>
-                    </form>
-                    <script>
-                        (function() {
-                            const input = document.getElementById('confirm-group-name');
-                            const btn = document.getElementById('confirm-delete-group-btn');
-                            const expected = @json($group->name);
-                            input.addEventListener('input', () => {
-                                btn.disabled = input.value !== expected;
-                            });
-                        })();
-                    </script>
-                </div>
-            </div>
-        </div>
-    @endif
 @endsection

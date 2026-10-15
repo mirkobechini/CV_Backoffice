@@ -65,4 +65,21 @@ class GroupCreationTest extends TestCase
 
         $this->assertDatabaseMissing('groups', ['name' => 'Croce Verde Esempio']);
     }
+
+    public function test_superadmin_creates_group_with_self_as_capo(): void
+    {
+        $superadmin = User::factory()->create(['is_superadmin' => true]);
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.groups.store'), [
+            'name' => 'Il Mio Gruppo',
+            'self_capo' => '1',
+        ]);
+
+        $group = Group::where('name', 'Il Mio Gruppo')->first();
+        $this->assertNotNull($group);
+        $response->assertRedirect(route('superadmin.licenses.create', $group));
+
+        $this->assertSame(Group::ROLE_CAPO, $superadmin->roleIn($group));
+        $this->assertSame(1, $group->users()->count());
+    }
 }

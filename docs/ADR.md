@@ -332,9 +332,10 @@ A new `is_superadmin` boolean flag on `User` (settable only via `php artisan mak
 
 ### Consequences
 
-- Numeric limit enforcement (blocking new vehicles/users past a license's cap) and feature gating (Statistics, AI issue-part backfill restricted below the Pro tier) are **not** implemented yet — tracked as separate follow-up issues, built only when needed rather than bundled into the foundation
+- Numeric limit enforcement (blocking new vehicles/users past a license's cap) and feature gating (Statistics, AI issue-part backfill restricted below the Pro tier) are implemented (`Group::canAddVehicle()`/`canAddUser()`, `User::canUseLicenseFeature()`), plus a banner in `/admin` when the group's license is expired
 - `License::TIER_PRESETS` (free/pro/enterprise) only prefill the assignment form; the actual stored columns per row remain the source of truth, so a superadmin can still hand-tune a one-off deal without inventing a new tier
 - Prerequisite done first: `Group` gained `SoftDeletes` (previously a hard delete) plus a "retype the group name" confirmation before destroying one, since the superadmin view now exposes every group, raising the cost of an accidental deletion
+- **Creating and deleting a `Group` is now a superadmin-only action** (`admin.groups.create`/`store`/`destroy` removed; `Route::resource('groups', ...)->only(['index','show','update'])`): any authenticated user being able to self-create a brand-new, unlicensed association from `/admin` would make the entire licensing system pointless to bypass. `/admin/groups` keeps management of groups the user already belongs to (rename, invites, roles, join-by-code) — joining an *existing* group isn't a licensing concern. `/superadmin/groups/create` has a "sono io il capo" option so the superadmin can still create a group for themselves without a separate capo account.
 
 ---
 
