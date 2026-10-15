@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Added
 
 - Pagina gruppo riorganizzata in tab "Panoramica"/"Impostazioni"; nuovo permesso per-gruppo che il capo può attivare per estendere la gestione di codice invito, inviti via email e creazione account ai sottocapi (di default riservata solo al capo).
+- Dashboard: nuova card "Veicoli in officina" che elenca quali veicoli sono attualmente in officina, presso quale fornitore e da quanti giorni (prima il KPI mostrava solo un numero).
 
 ### Changed
 
