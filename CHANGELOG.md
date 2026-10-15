@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.14.0] - 2026-10-15
+
+### Changed
+
+- Creazione di un nuovo utente (sia il primo capo da `/superadmin`, sia un sottocapo/membro da `/admin` dentro un gruppo esistente): chi crea l'account non ne sceglie più la password. Il nuovo utente riceve un'email con un link per impostarla da solo.
+- Email di reset/impostazione password localizzata in italiano (era in inglese di default).
+
 ## [v1.13.0] - 2026-10-15
 
 ### Added
