@@ -30,6 +30,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicFleetStatusController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\DiscountCodeController;
+use App\Http\Controllers\Superadmin\GroupController as SuperadminGroupController;
 use App\Http\Controllers\Superadmin\LicenseController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TwoFactorAuthenticationController;
@@ -135,7 +136,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // già esistenti vive interamente nella pagina del gruppo.
         Route::get('groups/{group}/users/create', [UserController::class, 'create'])->name('groups.users.create');
         Route::post('groups/{group}/users', [UserController::class, 'store'])->name('groups.users.store');
-        Route::resource('groups', GroupController::class);
+        // Niente create/store/destroy qui: un gruppo si crea o si elimina
+        // solo da /superadmin (vedi ADR §16), altrimenti il sistema di
+        // licenze è bypassabile da chiunque abbia un account.
+        Route::resource('groups', GroupController::class)->only(['index', 'show', 'update']);
         Route::get('mileage-logs/pivot', [MileageLogController::class, 'pivot'])
             ->name('mileage-logs.pivot');
         Route::post('mileage-logs/pivot/save', [MileageLogController::class, 'pivotSave'])
@@ -222,6 +226,10 @@ Route::middleware(['auth', 'verified', 'superadmin'])
     ->prefix('superadmin')
     ->group(function () {
         Route::get('/', [SuperadminDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('groups/create', [SuperadminGroupController::class, 'create'])->name('groups.create');
+        Route::post('groups', [SuperadminGroupController::class, 'store'])->name('groups.store');
+        Route::delete('groups/{group}', [SuperadminGroupController::class, 'destroy'])->name('groups.destroy');
 
         Route::get('groups/{group}/licenses/create', [LicenseController::class, 'create'])
             ->name('licenses.create');

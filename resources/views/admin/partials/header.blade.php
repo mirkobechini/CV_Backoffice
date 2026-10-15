@@ -102,6 +102,11 @@
             href="{{ route('admin.settings.index') }}" title="{{ __('Impostazioni') }}">
             <i class="fa-solid fa-gear"></i><span>{{ __('Impostazioni') }}</span>
         </a>
+        @if (auth()->user()?->isSuperadmin())
+            <a class="sidebar-link" href="{{ route('superadmin.dashboard') }}" title="{{ __('Pannello Superadmin') }}">
+                <i class="fa-solid fa-crown"></i><span>{{ __('Pannello Superadmin') }}</span>
+            </a>
+        @endif
     </nav>
 
     {{-- Footer sidebar: utente + logout --}}

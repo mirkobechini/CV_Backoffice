@@ -47,4 +47,22 @@ class SuperadminAccessTest extends TestCase
 
         $response->assertRedirect(route('login'));
     }
+
+    public function test_admin_sidebar_shows_superadmin_link_only_to_superadmins(): void
+    {
+        $superadmin = User::factory()->create(['is_superadmin' => true]);
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($superadmin, Group::ROLE_CAPO);
+
+        $this->actingAs($superadmin)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Pannello Superadmin');
+
+        $regularUser = User::factory()->create();
+        $group->addUser($regularUser, Group::ROLE_MEMBER);
+
+        $this->actingAs($regularUser)->get(route('dashboard'))
+            ->assertOk()
+            ->assertDontSee('Pannello Superadmin');
+    }
 }

@@ -11,9 +11,6 @@
 
     <div class="page-header">
         <h1>{{ __('Gruppi') }}</h1>
-        <a href="{{ route('admin.groups.create') }}" class="btn primary">
-            <i class="fa-solid fa-plus"></i> {{ __('Nuovo gruppo') }}
-        </a>
     </div>
 
     <div class="join-card">
