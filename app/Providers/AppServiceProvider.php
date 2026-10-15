@@ -29,8 +29,10 @@ use App\Policies\ProviderPolicy;
 use App\Policies\VehiclePolicy;
 use App\Policies\VehicleTypePolicy;
 use App\Support\UploadsDiskGuard;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -142,6 +144,25 @@ class AppServiceProvider extends ServiceProvider
         Equipment::observe(DashboardCacheObserver::class);
         Tire::observe(DashboardCacheObserver::class);
         MileageLog::observe(DashboardCacheObserver::class);
+
+        // Testo in italiano per l'email di reset/impostazione password
+        // (di default in inglese): usata sia per il "password dimenticata"
+        // classico sia per il link che un capo creato dal superadmin
+        // riceve per scegliere lui stesso la password del suo account
+        // (vedi Superadmin\GroupController::store — il superadmin non deve
+        // mai conoscere la password di un account che crea per altri).
+        ResetPassword::toMailUsing(function ($notifiable, string $token) {
+            $url = url()->route('password.reset', ['token' => $token, 'email' => $notifiable->getEmailForPasswordReset()]);
+            $expireMinutes = config('auth.passwords.users.expire');
+
+            return (new MailMessage)
+                ->subject('Imposta la tua password - '.config('app.name'))
+                ->greeting("Ciao {$notifiable->name},")
+                ->line('Clicca il pulsante qui sotto per impostare la password del tuo account su '.config('app.name').'.')
+                ->action('Imposta password', $url)
+                ->line("Questo link scade tra {$expireMinutes} minuti.")
+                ->line('Se non ti aspettavi questa email, puoi ignorarla in sicurezza.');
+        });
 
         Validator::extend('car_model_belongs_to_brand', function ($attribute, $value, $parameters, $validator) {
             $brandField = $parameters[0] ?? null;
