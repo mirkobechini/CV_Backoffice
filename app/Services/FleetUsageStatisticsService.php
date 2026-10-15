@@ -17,11 +17,12 @@ use Illuminate\Support\Collection;
 class FleetUsageStatisticsService
 {
     /**
-     * Km percorsi per veicolo nel periodo: differenza tra la lettura più
-     * alta e quella più bassa registrate. Serve almeno 2 letture distinte
-     * nel periodo per avere un intervallo, altrimenti il veicolo non ha
-     * dati sufficienti e viene escluso (non mostrato a zero, sarebbe
-     * fuorviante quanto un dato mancante).
+     * Km percorsi per veicolo NEL periodo: differenza tra la lettura più
+     * alta e quella più bassa registrate (serve almeno 2 letture distinte,
+     * altrimenti il veicolo non ha dati sufficienti e viene escluso, non
+     * mostrato a zero). Usato anche da CostStatisticsService::costPerKm():
+     * lì il denominatore deve restare sempre una distanza percorsa, mai il
+     * chilometraggio assoluto — per quello vedi currentMileageByVehicle().
      *
      * Righe (vehicle_id/label/km), non una mappa label => valore:
      * internal_code non è univoco (solo il formato a 4 cifre è vincolato),
@@ -48,6 +49,32 @@ class FleetUsageStatisticsService
                 'vehicle_id' => $row->vehicle_id,
                 'label' => $labels->get($row->vehicle_id, 'N/A'),
                 'km' => $row->max_mileage - $row->min_mileage,
+            ])
+            ->sortByDesc('km')
+            ->values();
+    }
+
+    /**
+     * Chilometraggio ASSOLUTO per veicolo: l'ultima lettura (per log_date),
+     * stesso criterio di Vehicle::getMileageAttribute()/latestMileageLog.
+     * Usato dalla card "Km percorsi per veicolo" con filtro "Tutto": la
+     * differenza MAX-MIN da quando il veicolo è tracciato nell'app sarebbe
+     * inferiore al reale per un mezzo che aveva già km sul contachilometri
+     * prima di iniziare a usarla, disallineato da quanto mostrato ovunque
+     * altrove (scheda veicolo, PDF).
+     *
+     * @return Collection<int, array{vehicle_id: int, label: string, km: int}>
+     */
+    public function currentMileageByVehicle(): Collection
+    {
+        return Vehicle::with('latestMileageLog')
+            ->forCurrentUser()
+            ->get()
+            ->filter(fn (Vehicle $v) => $v->latestMileageLog !== null)
+            ->map(fn (Vehicle $v) => [
+                'vehicle_id' => $v->id,
+                'label' => $v->internal_code ?? 'N/A',
+                'km' => $v->latestMileageLog->mileage,
             ])
             ->sortByDesc('km')
             ->values();
