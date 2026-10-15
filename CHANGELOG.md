@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Changed
+
+- Dashboard: "Veicoli in officina" affiancata a "Prossimi appuntamenti", "Cambio gomme stagionale" affiancata a "Lavaggi del mese" (prima occupavano da sole l'intera larghezza).
+
 ### Fixed
 
 - Dashboard: le date di cambio gomme stagionale aggiornate dal capo non comparivano finché non scadeva naturalmente la cache dashboard (5 minuti) — Group non era tra i modelli osservati per l'invalidazione.
