@@ -4,6 +4,18 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.12.0] - 2026-10-15
+
+### Added
+
+- Pannello **superadmin** (`/superadmin`, namespace separato da `/admin`, nuovo flag `is_superadmin` impostabile solo via `php artisan make:superadmin {email}`): gestione licenze per associazione (tier Free/Pro/Enterprise, limiti veicoli/utenti, feature incluse) e codici sconto.
+- Licenze: enforcement dei limiti di veicoli/utenti per gruppo (nessun limite se non assegnata una licenza), feature gating di Statistiche e revisione AI parti guasto (incluse da Pro in su), banner nel pannello quando la licenza del gruppo è scaduta.
+- Backup database: comando di ripristino (`php artisan app:restore-database`, CLI-only, richiede conferma) e pulizia automatica dei backup più vecchi di 30 giorni (`app:prune-backups`, schedulato).
+
+### Changed
+
+- Gruppi: ora recuperabili (soft delete) invece di cancellazione definitiva; eliminarne uno richiede di ridigitare il nome del gruppo per confermare.
+
 ## [v1.11.0] - 2026-10-14
 
 ### Added
