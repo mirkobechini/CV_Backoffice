@@ -77,4 +77,17 @@
 | `php artisan app:generate-notifications`         | Generates in-app notifications (deadlines, faults, equipment)     |
 | `php artisan app:generate-notifications --email` | Generates notifications + sends automatic emails                  |
 | `php artisan app:backup-database`                | Creates a JSON database backup                                    |
+| `php artisan app:verify-backup`                  | Checks the latest backup isn't missing, stale or truncated        |
+| `php artisan app:restore-database {file?} {--force}` | **Destructive.** Restores the database from a backup (latest if no filename given). Asks for confirmation unless `--force` is passed |
+| `php artisan app:prune-backups`                  | Deletes backups older than the retention window (20 days)         |
 | `php artisan schedule:run`                       | Runs scheduled commands                                           |
+
+### Disaster recovery
+
+Backups run automatically every day (3:00 create, 3:15 verify, 3:30 prune), stored on the `UPLOADS_DISK` (R2 in production — persistent across deploys, unlike local disk). If the Laravel Cloud **Scheduler** toggle is off, none of this runs silently; `app:verify-backup` only catches a missing/stale backup, not a disabled scheduler itself, so check that toggle first if backups seem to have stopped.
+
+To restore in an emergency, run (via Laravel Cloud's console/SSH):
+```
+php artisan app:restore-database
+```
+This picks the most recent backup and asks for confirmation before overwriting all current data. Pass a specific filename (as stored under `backups/` on the uploads disk) to restore an older one instead. There is no restore button in the UI — this is deliberately CLI-only given how destructive it is.
