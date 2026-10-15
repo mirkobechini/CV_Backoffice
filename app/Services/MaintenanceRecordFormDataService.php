@@ -16,6 +16,11 @@ use App\Models\Vehicle;
  */
 class MaintenanceRecordFormDataService
 {
+    public function __construct(
+        private readonly MaintenanceCompletionService $completionService,
+        private readonly TireChangeService $tireChangeService,
+    ) {}
+
     public function forCreate(): array
     {
         return [
@@ -72,6 +77,16 @@ class MaintenanceRecordFormDataService
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->get(['id', 'vehicle_id', 'season', 'position', 'brand', 'model_name', 'size']),
             'linkedTireIds' => $linkedTireIds,
+            // Una domanda per ogni gomma collegata che sostituisce davvero
+            // una gomma già montata nella stessa posizione (primo montaggio
+            // = nessuna scelta da fare) — stessa logica di
+            // x-admin.complete-maintenance-modal, qui per il modale di
+            // completamento del form di modifica.
+            'tireDispositionChoices' => $this->completionService->tireItemsRequiringDisposition($maintenanceRecord)
+                ->map(fn ($item) => [
+                    'item' => $item,
+                    'previousTire' => $this->tireChangeService->findPreviousMountedTire($item->itemable),
+                ]),
         ];
     }
 
