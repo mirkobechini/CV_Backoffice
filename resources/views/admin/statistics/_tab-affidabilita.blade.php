@@ -1,18 +1,18 @@
-@php($maxKm = $kmTraveledByVehicle->max() ?: 1)
+@php($maxKm = $kmTraveledByVehicle->max('km') ?: 1)
 
 <div class="table-card" style="margin-bottom:16px;">
     <div class="toolbar">
         <h2>{{ __('Km percorsi per veicolo') }}</h2>
     </div>
     <div class="body" style="padding:16px 20px;">
-        @forelse ($kmTraveledByVehicle as $vehicleLabel => $km)
+        @forelse ($kmTraveledByVehicle as $row)
             <div class="dash-list-item" style="align-items:flex-start;flex-direction:column;gap:4px;">
                 <div style="display:flex;align-items:baseline;gap:6px;width:100%;">
-                    <span class="name">{{ $vehicleLabel }}</span>
-                    <span class="meta" style="margin-left:auto;">{{ number_format($km, 0, ',', '.') }} km</span>
+                    <span class="name">{{ $row['label'] }}</span>
+                    <span class="meta" style="margin-left:auto;">{{ number_format($row['km'], 0, ',', '.') }} km</span>
                 </div>
                 <div style="width:100%;height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;">
-                    <div style="height:100%;background:var(--blue);width:{{ ($km / $maxKm) * 100 }}%;">
+                    <div style="height:100%;background:var(--blue);width:{{ ($row['km'] / $maxKm) * 100 }}%;">
                     </div>
                 </div>
             </div>
@@ -22,21 +22,21 @@
     </div>
 </div>
 
-@php($maxIssueCount = $issueCountByVehicle->max() ?: 1)
+@php($maxIssueCount = $issueCountByVehicle->max('count') ?: 1)
 
 <div class="table-card" style="margin-bottom:16px;">
     <div class="toolbar">
         <h2>{{ __('Veicoli con più guasti') }}</h2>
     </div>
     <div class="body" style="padding:16px 20px;">
-        @forelse ($issueCountByVehicle as $vehicleLabel => $count)
+        @forelse ($issueCountByVehicle as $row)
             <div class="dash-list-item" style="align-items:flex-start;flex-direction:column;gap:4px;">
                 <div style="display:flex;align-items:baseline;gap:6px;width:100%;">
-                    <span class="name">{{ $vehicleLabel }}</span>
-                    <span class="meta" style="margin-left:auto;">{{ $count }}</span>
+                    <span class="name">{{ $row['label'] }}</span>
+                    <span class="meta" style="margin-left:auto;">{{ $row['count'] }}</span>
                 </div>
                 <div style="width:100%;height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;">
-                    <div style="height:100%;background:var(--amber);width:{{ ($count / $maxIssueCount) * 100 }}%;">
+                    <div style="height:100%;background:var(--amber);width:{{ ($row['count'] / $maxIssueCount) * 100 }}%;">
                     </div>
                 </div>
             </div>

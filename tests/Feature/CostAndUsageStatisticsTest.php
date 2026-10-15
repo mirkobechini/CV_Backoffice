@@ -33,7 +33,7 @@ class CostAndUsageStatisticsTest extends TestCase
         );
     }
 
-    private function vehicle(string $internalCode = '0001', ?Group $group = null): Vehicle
+    private function vehicle(string $internalCode = '0001', ?Group $group = null, ?string $licensePlate = null): Vehicle
     {
         $brand = Brand::firstOrCreate(['name' => 'Fiat']);
         $model = CarModel::firstOrCreate(['name' => 'Ducato', 'brand_id' => $brand->id]);
@@ -43,7 +43,7 @@ class CostAndUsageStatisticsTest extends TestCase
         );
 
         return Vehicle::create([
-            'license_plate' => 'AB'.$internalCode.'CD',
+            'license_plate' => $licensePlate ?? 'AB'.$internalCode.'CD',
             'internal_code' => $internalCode,
             'vehicle_type_id' => $type->id,
             'brand_id' => $brand->id,
@@ -208,6 +208,37 @@ class CostAndUsageStatisticsTest extends TestCase
         $response->assertOk();
         $response->assertSee('Officina Beta');
         $response->assertSee('4 giorni');
+    }
+
+    /**
+     * Regressione: internal_code non è univoco (solo il formato a 4 cifre
+     * è vincolato). Due veicoli diversi con lo stesso codice (es. un
+     * mezzo dismesso sostituito con lo stesso numero di flotta) non
+     * devono confondere i rispettivi dati sotto un'unica riga — prima,
+     * una mappa label => valore faceva sì che uno sovrascrivesse
+     * silenziosamente l'altro (bug segnalato 2026-10-15).
+     */
+    public function test_km_traveled_keeps_vehicles_with_same_internal_code_separate(): void
+    {
+        $user = $this->admin();
+        $oldVehicle = $this->vehicle('1726', licensePlate: 'OLD726XX');
+        $currentVehicle = $this->vehicle('1726', licensePlate: 'NEW726XX');
+
+        // Il vecchio mezzo (dismesso) ha un intervallo di km molto più
+        // piccolo di quello attuale.
+        MileageLog::create(['vehicle_id' => $oldVehicle->id, 'log_date' => '2024-01-01', 'mileage' => 20000]);
+        MileageLog::create(['vehicle_id' => $oldVehicle->id, 'log_date' => '2024-06-01', 'mileage' => 21000]);
+
+        MileageLog::create(['vehicle_id' => $currentVehicle->id, 'log_date' => '2026-01-01', 'mileage' => 61000]);
+        MileageLog::create(['vehicle_id' => $currentVehicle->id, 'log_date' => '2026-02-01', 'mileage' => 82989]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        // Entrambi devono comparire con i propri km, non uno che
+        // sovrascrive l'altro sotto l'etichetta condivisa "1726".
+        $response->assertSee('1.000 km');
+        $response->assertSee('21.989 km');
     }
 
     public function test_statistics_default_tab_is_guasti(): void
