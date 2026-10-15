@@ -39,7 +39,7 @@
                         <label for="tier">{{ __('Tier') }} <span class="req">*</span></label>
                         <select class="select @error('tier') is-invalid @enderror" id="tier" name="tier" required>
                             @foreach (\App\Models\License::TIERS as $tier)
-                                <option value="{{ $tier }}" {{ old('tier') === $tier ? 'selected' : '' }}>
+                                <option value="{{ $tier }}" {{ old('tier', $currentLicense?->tier) === $tier ? 'selected' : '' }}>
                                     {{ ucfirst($tier) }}
                                 </option>
                             @endforeach
@@ -52,7 +52,7 @@
                     <div class="field">
                         <label for="list_price_eur">{{ __('Prezzo di listino (€/mese)') }}</label>
                         <input type="number" step="0.01" min="0" class="input @error('list_price_eur') is-invalid @enderror"
-                            id="list_price_eur" name="list_price_eur" value="{{ old('list_price_eur') }}">
+                            id="list_price_eur" name="list_price_eur" value="{{ old('list_price_eur', $currentLicense?->list_price_eur) }}">
                         @error('list_price_eur')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
@@ -63,7 +63,7 @@
                     <div class="field">
                         <label for="max_vehicles">{{ __('Limite veicoli') }}</label>
                         <input type="number" min="0" class="input @error('max_vehicles') is-invalid @enderror"
-                            id="max_vehicles" name="max_vehicles" value="{{ old('max_vehicles') }}"
+                            id="max_vehicles" name="max_vehicles" value="{{ old('max_vehicles', $currentLicense?->max_vehicles) }}"
                             placeholder="{{ __('vuoto = illimitato') }}">
                         @error('max_vehicles')
                             <div class="field-error">{{ $message }}</div>
@@ -72,7 +72,7 @@
                     <div class="field">
                         <label for="max_users">{{ __('Limite utenti') }}</label>
                         <input type="number" min="0" class="input @error('max_users') is-invalid @enderror"
-                            id="max_users" name="max_users" value="{{ old('max_users') }}"
+                            id="max_users" name="max_users" value="{{ old('max_users', $currentLicense?->max_users) }}"
                             placeholder="{{ __('vuoto = illimitato') }}">
                         @error('max_users')
                             <div class="field-error">{{ $message }}</div>
@@ -80,16 +80,17 @@
                     </div>
                 </div>
 
+                @php($selectedFeatures = old('features', $currentLicense?->features ?? []))
                 <div class="field">
                     <label>{{ __('Funzionalità premium incluse') }}</label>
                     <label class="check">
                         <input type="checkbox" name="features[]" value="{{ \App\Models\License::FEATURE_STATISTICS }}"
-                            {{ in_array(\App\Models\License::FEATURE_STATISTICS, old('features', [])) ? 'checked' : '' }}>
+                            {{ in_array(\App\Models\License::FEATURE_STATISTICS, $selectedFeatures) ? 'checked' : '' }}>
                         <div class="label">{{ __('Statistiche guasti') }}</div>
                     </label>
                     <label class="check">
                         <input type="checkbox" name="features[]" value="{{ \App\Models\License::FEATURE_AI_BACKFILL }}"
-                            {{ in_array(\App\Models\License::FEATURE_AI_BACKFILL, old('features', [])) ? 'checked' : '' }}>
+                            {{ in_array(\App\Models\License::FEATURE_AI_BACKFILL, $selectedFeatures) ? 'checked' : '' }}>
                         <div class="label">{{ __('Backfill AI parti guasto') }}</div>
                     </label>
                 </div>

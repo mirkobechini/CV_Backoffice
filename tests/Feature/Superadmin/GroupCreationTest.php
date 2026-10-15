@@ -4,7 +4,9 @@ namespace Tests\Feature\Superadmin;
 
 use App\Models\Group;
 use App\Models\User;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class GroupCreationTest extends TestCase
@@ -46,6 +48,21 @@ class GroupCreationTest extends TestCase
         // password è partito, senza che il superadmin sia mai passato da
         // una password in chiaro (non gliene è stata chiesta nessuna).
         $this->assertDatabaseHas('password_reset_tokens', ['email' => 'luca@example.com']);
+    }
+
+    public function test_new_capo_also_receives_a_verification_email_immediately(): void
+    {
+        Notification::fake();
+        $superadmin = User::factory()->create(['is_superadmin' => true]);
+
+        $this->actingAs($superadmin)->post(route('superadmin.groups.store'), [
+            'name' => 'Croce Verde Esempio',
+            'capo_name' => 'Luca Verdi',
+            'capo_email' => 'luca@example.com',
+        ]);
+
+        $capo = User::where('email', 'luca@example.com')->first();
+        Notification::assertSentTo($capo, VerifyEmail::class);
     }
 
     public function test_rejects_duplicate_capo_email(): void

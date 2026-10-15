@@ -209,11 +209,24 @@ class MaintenanceCompletionService
 
     /**
      * Processa gli item marcati come completati in un appuntamento con data
-     * di rientro: chiude i guasti e rinnova le scadenze.
+     * di rientro: chiude i guasti, rinnova le scadenze e monta le gomme
+     * collegate non ancora completate (stesso passo 5 di complete() — un
+     * "Cambio Gomme" salvato da qui, con data di rientro già compilata,
+     * passava per questo metodo invece che per complete() e le gomme
+     * restavano "da montare al completamento" anche a intervento concluso).
      */
-    public function processCompletedItems(MaintenanceRecord $maintenanceRecord, array $completedIssueIds, array $completedDeadlineIds): void
+    public function processCompletedItems(MaintenanceRecord $maintenanceRecord, array $completedIssueIds, array $completedDeadlineIds, array $previousDisposition = []): void
     {
-        $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
+        // load(), non loadMissing(): chiamato sempre dopo che gli item sono
+        // stati ricreati da zero (delete + re-create in
+        // syncForExistingRecord()/createForNewRecord()), quindi una
+        // relazione 'items' già in cache su questa stessa istanza — es.
+        // caricata da UpdateMaintenanceRecordRequest per calcolare quali
+        // gomme richiedono una disposizione, prima ancora che il
+        // controller le ricreasse — andrebbe aggiornata qui, non
+        // riutilizzata: altrimenti si opera sugli item vecchi (già
+        // cancellati) e quelli nuovi restano "completed" a false.
+        $maintenanceRecord->load(['items.itemable', 'vehicle.vehicleType']);
 
         // Chiudi i guasti completati (loop su modelli singoli, non query di
         // massa — vedi commento in update() sullo stesso tema).
@@ -234,6 +247,26 @@ class MaintenanceCompletionService
             if (in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO, Deadline::TYPE_CINGHIA], true)) {
                 $this->renewDeadline($maintenanceRecord, $deadline);
             }
+        }
+
+        $tireItems = $maintenanceRecord->items->where('itemable_type', Tire::class);
+        foreach ($tireItems as $tireItem) {
+            if ($tireItem->completed || ! $tireItem->itemable) {
+                continue;
+            }
+
+            // 'stored' come default innocuo quando non è stata indicata una
+            // disposizione (stesso default di complete()).
+            $disposition = $previousDisposition[$tireItem->itemable_id] ?? Tire::STATUS_STORED;
+
+            $this->tireChangeService->recordChange(
+                $tireItem->itemable,
+                $maintenanceRecord->return_date,
+                $maintenanceRecord->mileage_at_service,
+                $disposition,
+                "Appuntamento del {$maintenanceRecord->appointment_date_formatted}",
+            );
+            $tireItem->update(['completed' => true]);
         }
     }
 

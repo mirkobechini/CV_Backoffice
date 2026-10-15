@@ -25,6 +25,9 @@ class MakeAdminTest extends TestCase
         $this->assertNotNull($user);
         $this->assertTrue($user->isCapo());
         $this->assertNotNull($user->activeGroup());
+        // Creato da CLI: non deve restare bloccato dietro la verifica
+        // email per il proprio stesso account.
+        $this->assertNotNull($user->email_verified_at);
     }
 
     public function test_make_admin_fails_if_capo_already_exists(): void

@@ -56,7 +56,12 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware('auth')->group(function () {
+// 'verified' qui (non solo 'auth'): senza, un utente che ha impostato la
+// password dal link di reset ma non ha mai cliccato il link di verifica
+// email separato poteva comunque attivare il 2FA da /profile, saltando
+// la verifica dell'indirizzo prima ancora di proteggere l'account con un
+// secondo fattore.
+Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -229,6 +234,11 @@ Route::middleware(['auth', 'verified', 'superadmin'])
 
         Route::get('groups/create', [SuperadminGroupController::class, 'create'])->name('groups.create');
         Route::post('groups', [SuperadminGroupController::class, 'store'])->name('groups.store');
+        Route::get('groups/{group}/edit', [SuperadminGroupController::class, 'edit'])->name('groups.edit');
+        Route::put('groups/{group}', [SuperadminGroupController::class, 'update'])->name('groups.update');
+        Route::put('groups/{group}/capo', [SuperadminGroupController::class, 'updateCapo'])->name('groups.capo.update');
+        Route::post('groups/{group}/capo/resend-password-link', [SuperadminGroupController::class, 'resendCapoPasswordLink'])
+            ->name('groups.capo.resend-password-link');
         Route::delete('groups/{group}', [SuperadminGroupController::class, 'destroy'])->name('groups.destroy');
 
         Route::get('groups/{group}/licenses/create', [LicenseController::class, 'create'])

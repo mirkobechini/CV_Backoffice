@@ -27,12 +27,82 @@ class GroupController extends Controller
         return view('superadmin.groups.create');
     }
 
+    public function edit(Group $group)
+    {
+        $capo = $group->capo();
+
+        return view('superadmin.groups.edit', compact('group', 'capo'));
+    }
+
+    public function update(Request $request, Group $group)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $group->update(['name' => $data['name']]);
+
+        return redirect()->route('superadmin.dashboard')->with('status', "Associazione rinominata in \"{$group->name}\".");
+    }
+
+    /**
+     * Corregge nome/email del capo del gruppo. Serve soprattutto per un
+     * refuso nell'email in fase di creazione: senza questo, il capo non
+     * riceve mai il link per impostare la password e resta bloccato fuori
+     * senza alcun modo di rimediare da solo (non può nemmeno loggarsi per
+     * cambiarsi l'email dal proprio profilo).
+     */
+    public function updateCapo(Request $request, Group $group)
+    {
+        $capo = $group->capo();
+
+        if (! $capo) {
+            abort(404, 'Questo gruppo non ha ancora un capo.');
+        }
+
+        $data = $request->validate([
+            'capo_name' => ['required', 'string', 'max:255'],
+            'capo_email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$capo->id],
+        ]);
+
+        $capo->name = $data['capo_name'];
+
+        // Stesso comportamento di ProfileController::update(): un
+        // indirizzo email diverso non è automaticamente verificato.
+        if ($capo->email !== $data['capo_email']) {
+            $capo->email = $data['capo_email'];
+            $capo->email_verified_at = null;
+        }
+
+        $capo->save();
+
+        return redirect()->route('superadmin.groups.edit', $group)->with('status', 'Dati del capo aggiornati.');
+    }
+
+    /**
+     * Rimanda l'email per impostare la password al capo del gruppo (utile
+     * se non l'ha mai ricevuta, es. dopo aver corretto un'email sbagliata).
+     */
+    public function resendCapoPasswordLink(Group $group)
+    {
+        $capo = $group->capo();
+
+        if (! $capo) {
+            abort(404, 'Questo gruppo non ha ancora un capo.');
+        }
+
+        Password::sendResetLink(['email' => $capo->email]);
+
+        return redirect()->route('superadmin.groups.edit', $group)
+            ->with('status', "Email per impostare la password inviata a {$capo->email}.");
+    }
+
     public function store(StoreSuperadminGroupRequest $request)
     {
         $data = $request->validated();
-        $newCapoEmail = null;
+        $newCapo = null;
 
-        $group = DB::transaction(function () use ($data, $request, &$newCapoEmail) {
+        $group = DB::transaction(function () use ($data, $request, &$newCapo) {
             $group = Group::create([
                 'name' => $data['name'],
                 'invite_code' => Group::generateInviteCode(),
@@ -52,19 +122,23 @@ class GroupController extends Controller
                 ]);
 
                 $group->addUser($capo, Group::ROLE_CAPO);
-                $newCapoEmail = $capo->email;
+                $newCapo = $capo;
             }
 
             return $group;
         });
 
-        if ($newCapoEmail) {
-            Password::sendResetLink(['email' => $newCapoEmail]);
+        if ($newCapo) {
+            Password::sendResetLink(['email' => $newCapo->email]);
+            // Inviata subito, non al primo tentativo di accesso bloccato
+            // dal middleware 'verified': il capo la trova già pronta
+            // insieme a quella per impostare la password.
+            $newCapo->sendEmailVerificationNotification();
         }
 
         return redirect()->route('superadmin.licenses.create', $group)
             ->with('status', "Associazione \"{$group->name}\" creata. Assegna ora una licenza.".
-                ($newCapoEmail ? ' Email per impostare la password inviata al capo.' : ''));
+                ($newCapo ? ' Email per impostare la password inviata al capo.' : ''));
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Models\MileageLog;
 use App\Models\Tire;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
+use App\Services\MaintenanceCompletionService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
@@ -56,6 +57,8 @@ class UpdateMaintenanceRecordRequest extends FormRequest
             'new_tire_brand' => 'nullable|string|max:255',
             'new_tire_model_name' => 'nullable|string|max:255',
             'new_tire_size' => ['nullable', 'string', 'max:255', 'regex:'.Tire::SIZE_REGEX],
+            'previous_disposition' => 'nullable|array',
+            'previous_disposition.*' => 'in:stored,retired',
         ];
     }
 
@@ -164,6 +167,26 @@ class UpdateMaintenanceRecordRequest extends FormRequest
 
                 if ($conflict) {
                     $validator->errors()->add('mileage_at_service', $conflict);
+                }
+            }
+
+            // Se la data di rientro è compilata, l'appuntamento viene
+            // completato da qui (vedi MaintenanceCompletionService::
+            // processCompletedItems()): ogni gomma collegata che ne
+            // sostituisce una già montata nella stessa posizione deve
+            // avere una disposizione scelta, stessa regola del bottone
+            // dedicato "Completa" — 'stored' di default qui sarebbe un
+            // default silenzioso su un dato che non ha un valore ovvio.
+            if ($currentRecord && $this->input('return_date')) {
+                $tireItemsNeedingDisposition = app(MaintenanceCompletionService::class)
+                    ->tireItemsRequiringDisposition($currentRecord);
+
+                foreach ($tireItemsNeedingDisposition as $item) {
+                    $value = $this->input("previous_disposition.{$item->itemable_id}");
+                    if (! in_array($value, ['stored', 'retired'], true)) {
+                        $validator->errors()->add('previous_disposition', 'Indica cosa fare di ogni gomma sostituita.');
+                        break;
+                    }
                 }
             }
 
