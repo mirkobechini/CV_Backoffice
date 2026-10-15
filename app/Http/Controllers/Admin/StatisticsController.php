@@ -58,7 +58,12 @@ class StatisticsController extends Controller
                 'costPerKm' => $costStatistics->costPerKm($since),
             ],
             'affidabilita' => [
-                'kmTraveledByVehicle' => $usageStatistics->kmTraveledByVehicle($since),
+                // "Tutto" mostra il km assoluto (ultima lettura), non la
+                // distanza percorsa da quando il veicolo è tracciato
+                // nell'app — vedi FleetUsageStatisticsService::currentMileageByVehicle().
+                'kmTraveledByVehicle' => $since === null
+                    ? $usageStatistics->currentMileageByVehicle()
+                    : $usageStatistics->kmTraveledByVehicle($since),
                 'issueCountByVehicle' => $usageStatistics->issueCountByVehicle($since),
                 'downtime' => $usageStatistics->averageDowntimeByProvider($since),
             ],

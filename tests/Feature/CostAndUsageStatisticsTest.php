@@ -14,6 +14,7 @@ use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Services\CostStatisticsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class CostAndUsageStatisticsTest extends TestCase
@@ -143,29 +144,64 @@ class CostAndUsageStatisticsTest extends TestCase
 
     // --- Affidabilità/Utilizzo ---
 
-    public function test_km_traveled_by_vehicle_needs_at_least_two_readings(): void
+    public function test_km_traveled_by_vehicle_needs_at_least_two_readings_in_period(): void
     {
+        // Con un periodo specifico (non "Tutto") serve un intervallo:
+        // una sola lettura non dà una distanza percorsa calcolabile.
         $user = $this->admin();
         $vehicle = $this->vehicle();
-        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 1000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subMonths(1), 'mileage' => 1000]);
 
-        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => '6m']));
 
         $response->assertOk();
         $response->assertSee('Nessun veicolo con almeno due letture km');
     }
 
-    public function test_km_traveled_by_vehicle_with_two_readings(): void
+    public function test_km_traveled_by_vehicle_with_two_readings_in_period(): void
     {
         $user = $this->admin();
         $vehicle = $this->vehicle();
-        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 1000]);
-        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-02-01', 'mileage' => 1500]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subMonths(2), 'mileage' => 1000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subMonth(), 'mileage' => 1500]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => '6m']));
+
+        $response->assertOk();
+        $response->assertSee('500 km');
+    }
+
+    public function test_km_traveled_by_vehicle_shows_absolute_mileage_with_all_filter(): void
+    {
+        // Confermato con Mirko (2026-10-15): con "Tutto" deve comparire il
+        // chilometraggio assoluto (ultima lettura), non la distanza
+        // percorsa da quando il veicolo è tracciato nell'app — altrimenti
+        // un mezzo che aveva già km prima di adottare l'app mostrerebbe
+        // sempre meno del contachilometri reale.
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2024-01-01', 'mileage' => 50000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 61500]);
 
         $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
 
         $response->assertOk();
-        $response->assertSee('500 km');
+        $response->assertSee('61.500 km');
+        $response->assertDontSee('11.500 km');
+    }
+
+    public function test_km_traveled_by_vehicle_shows_absolute_mileage_with_single_reading(): void
+    {
+        // Con "Tutto" basta una sola lettura: non è una distanza (non serve
+        // un intervallo), è il valore assoluto dell'ultima lettura.
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 42000]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSee('42.000 km');
     }
 
     public function test_issue_count_by_vehicle_ranks_most_problematic_first(): void
@@ -235,10 +271,11 @@ class CostAndUsageStatisticsTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
 
         $response->assertOk();
-        // Entrambi devono comparire con i propri km, non uno che
-        // sovrascrive l'altro sotto l'etichetta condivisa "1726".
-        $response->assertSee('1.000 km');
-        $response->assertSee('21.989 km');
+        // Entrambi devono comparire con il proprio km assoluto (ultima
+        // lettura), non uno che sovrascrive l'altro sotto l'etichetta
+        // condivisa "1726".
+        $response->assertSee('21.000 km');
+        $response->assertSee('82.989 km');
     }
 
     public function test_statistics_default_tab_is_guasti(): void
