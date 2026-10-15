@@ -113,7 +113,18 @@ class IssueController extends Controller
         $selectedVehicleId = request('vehicle_id');
         $tires = Tire::whereHas('vehicle', fn ($q) => $q->forCurrentUser())->with('vehicle')->get();
 
-        return view('admin.issues.create', compact('vehicles', 'selectedVehicleId', 'tires'));
+        // Guasti ancora aperti/in lavorazione di tutti i veicoli del gruppo,
+        // mostrati filtrati per veicolo selezionato (stesso pattern delle
+        // gomme sopra): chi segnala un nuovo guasto vede prima se qualcun
+        // altro ha già segnalato lo stesso problema su quel veicolo, invece
+        // di scoprirlo solo dopo un controllo duplicati che intercetta solo
+        // un doppio submit identico entro 5 minuti.
+        $openIssues = Issue::whereIn('status', ['open', 'in_progress'])
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->orderByDesc('event_date')
+            ->get();
+
+        return view('admin.issues.create', compact('vehicles', 'selectedVehicleId', 'tires', 'openIssues'));
     }
 
     /**

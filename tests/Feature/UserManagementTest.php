@@ -105,4 +105,54 @@ class UserManagementTest extends TestCase
         $response->assertForbidden();
         $this->assertDatabaseMissing('users', ['email' => 'nuovo@example.com']);
     }
+
+    public function test_sottocapo_cannot_create_user_by_default(): void
+    {
+        [$capo, $group] = $this->capoWithGroup();
+        $sottocapo = User::factory()->create();
+        $group->addUser($sottocapo, Group::ROLE_SOTTOCAPO);
+
+        $response = $this->actingAs($sottocapo)->post(route('admin.groups.users.store', $group), [
+            'name' => 'Nuovo Utente',
+            'email' => 'nuovo@example.com',
+            'role' => 'member',
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('users', ['email' => 'nuovo@example.com']);
+    }
+
+    public function test_sottocapo_can_create_user_once_capo_enables_invite_permission(): void
+    {
+        [$capo, $group] = $this->capoWithGroup();
+        $sottocapo = User::factory()->create();
+        $group->addUser($sottocapo, Group::ROLE_SOTTOCAPO);
+        $group->update(['sottocapo_can_manage_invites' => true]);
+
+        $response = $this->actingAs($sottocapo)->post(route('admin.groups.users.store', $group), [
+            'name' => 'Nuovo Utente',
+            'email' => 'nuovo@example.com',
+            'role' => 'member',
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('users', ['email' => 'nuovo@example.com']);
+    }
+
+    public function test_sottocapo_with_invite_permission_cannot_create_a_capo(): void
+    {
+        [$capo, $group] = $this->capoWithGroup();
+        $sottocapo = User::factory()->create();
+        $group->addUser($sottocapo, Group::ROLE_SOTTOCAPO);
+        $group->update(['sottocapo_can_manage_invites' => true]);
+
+        $response = $this->actingAs($sottocapo)->post(route('admin.groups.users.store', $group), [
+            'name' => 'Nuovo Capo',
+            'email' => 'nuovocapo@example.com',
+            'role' => 'capo',
+        ]);
+
+        $response->assertForbidden();
+        $this->assertDatabaseMissing('users', ['email' => 'nuovocapo@example.com']);
+    }
 }

@@ -2,7 +2,23 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
-## [Unreleased]
+## [v1.16.0] - 2026-10-15
+
+### Added
+
+- Form "Nuovo guasto": selezionando un veicolo, un pannello mostra i suoi guasti già aperti o in lavorazione, per ridurre il rischio di segnalazioni duplicate scritte con parole diverse (il controllo duplicati esistente intercetta solo un doppio submit identico entro 5 minuti).
+
+- Pagina gruppo riorganizzata in tab "Panoramica"/"Impostazioni"; nuovo permesso per-gruppo che il capo può attivare per estendere la gestione di codice invito, inviti via email e creazione account ai sottocapi (di default riservata solo al capo).
+- Dashboard: nuova card "Veicoli in officina" che elenca quali veicoli sono attualmente in officina, presso quale fornitore e da quanti giorni (prima il KPI mostrava solo un numero).
+
+### Changed
+
+- Date di cambio gomme stagionale: mostrate come giorno/mese invece del crudo "MM-DD", e visibili in sola lettura a capo/sottocapo soltanto (prima comparivano, senza formattazione, anche a un membro semplice).
+- Card dashboard "Cambio gomme stagionale": oltre alla stagione corrente ora mostra esplicitamente la data del prossimo cambio, per evitare l'ambiguità di "gomme estive attese" letto come "sto aspettando le estive" quando il prossimo cambio reale è a invernali.
+
+### Fixed
+
+- Pannello superadmin: la casella per confermare il nome del gruppo nel dialog di eliminazione era invisibile (classe Bootstrap `form-control` mai caricata come CSS nell'app).
 
 ## [v1.15.2] - 2026-10-15
 

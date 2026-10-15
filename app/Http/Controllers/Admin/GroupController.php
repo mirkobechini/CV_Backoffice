@@ -39,13 +39,21 @@ class GroupController extends Controller
     /**
      * Dettaglio gruppo: membri, ruoli, codice invito.
      */
-    public function show(Group $group)
+    public function show(Request $request, Group $group)
     {
         $this->authorizeGroup($group);
 
         $group->load(['users', 'vehicles']);
 
-        return view('admin.groups.show', compact('group'));
+        $user = $this->currentUser();
+        $canSeeSettings = $group->userCanManageInvites($user) || $group->userCanSeeTireSeason($user);
+
+        $tab = $request->query('tab', 'panoramica');
+        if (! in_array($tab, ['panoramica', 'impostazioni'], true) || ($tab === 'impostazioni' && ! $canSeeSettings)) {
+            $tab = 'panoramica';
+        }
+
+        return view('admin.groups.show', compact('group', 'tab', 'canSeeSettings'));
     }
 
     /**
@@ -107,6 +115,23 @@ class GroupController extends Controller
     }
 
     /**
+     * Attiva/disattiva la possibilità per i sottocapi di gestire gli
+     * inviti (codice, email, creazione account diretta). Solo il capo.
+     */
+    public function updateInvitePermission(Request $request, Group $group)
+    {
+        $this->authorizeGroup($group);
+
+        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può gestire questo permesso.');
+        }
+
+        $group->update(['sottocapo_can_manage_invites' => $request->boolean('sottocapo_can_manage_invites')]);
+
+        return back()->with('status', 'Permesso aggiornato.');
+    }
+
+    /**
      * Aggiunge un utente al gruppo tramite codice invito.
      */
     public function join(Request $request)
@@ -149,8 +174,8 @@ class GroupController extends Controller
     {
         $this->authorizeGroup($group);
 
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può rigenerare il codice invito.');
+        if (! $group->userCanManageInvites($this->currentUser())) {
+            abort(403, 'Non puoi gestire il codice invito di questo gruppo.');
         }
 
         $group->update(['invite_code' => Group::generateInviteCode()]);
@@ -199,8 +224,8 @@ class GroupController extends Controller
     {
         $this->authorizeGroup($group);
 
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può inviare inviti.');
+        if (! $group->userCanManageInvites($this->currentUser())) {
+            abort(403, 'Non puoi inviare inviti per questo gruppo.');
         }
 
         $data = $request->validate([

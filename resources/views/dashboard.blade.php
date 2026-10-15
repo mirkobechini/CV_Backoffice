@@ -151,6 +151,34 @@
         </div>
     </div>
 
+    @if ($inWorkshopRecords->isNotEmpty())
+        <div class="dash-grid2">
+            <div class="dash-card" style="grid-column:1 / -1;">
+                <div class="head">
+                    <h3><span class="ic" style="background:var(--red-soft);color:var(--red)"><i
+                                class="fa-solid fa-wrench"></i></span>{{ __('Veicoli in officina') }}</h3>
+                </div>
+                <div class="body">
+                    @foreach ($inWorkshopRecords as $record)
+                        @php
+                            $daysIn = max(1, (int) $record->appointment_date->diffInDays(\Illuminate\Support\Carbon::today()));
+                        @endphp
+                        <a href="{{ route('admin.maintenance-records.show', $record->id) }}" class="dash-list-item">
+                            <div>
+                                <div class="name">{{ $record->vehicle->internal_code }}</div>
+                                <div class="meta">{{ $record->vehicle->license_plate }} ·
+                                    {{ $record->provider->name ?? __('Fornitore non indicato') }}</div>
+                            </div>
+                            <span class="badge b-amber">
+                                {{ trans_choice('da :count giorno|da :count giorni', $daysIn, ['count' => $daysIn]) }}
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Riga 2: Guasti aperti + Prossimi appuntamenti --}}
     <div class="dash-grid2">
         <div class="dash-card">
@@ -288,6 +316,7 @@
 
     @php
         $tireSeasonLabel = $tireSeasonExpected === 'winter' ? __('invernali') : __('estive');
+        $tireSeasonNextLabel = $tireSeasonNextSwitch['season'] === 'winter' ? __('invernali') : __('estive');
         $tireSeasonTotal = $tireSeasonCompliantCount + $tireSeasonPending->count();
     @endphp
     @if ($tireSeasonTotal > 0)
@@ -295,10 +324,13 @@
             <div class="dash-card" style="grid-column:1 / -1;">
                 <div class="head">
                     <h3><span class="ic" style="background:var(--green-soft);color:var(--green)"><i
-                                class="fa-solid fa-circle-dot"></i></span>{{ __('Cambio gomme stagionale') }} —
-                        {{ __('gomme :season attese', ['season' => $tireSeasonLabel]) }}</h3>
+                                class="fa-solid fa-circle-dot"></i></span>{{ __('Cambio gomme stagionale') }}</h3>
                 </div>
                 <div class="body">
+                    <div class="hint" style="margin-bottom:10px;">
+                        {{ __('In questo periodo vanno montate le gomme :season.', ['season' => $tireSeasonLabel]) }}
+                        {{ __('Prossimo cambio: gomme :season dal :date.', ['season' => $tireSeasonNextLabel, 'date' => $tireSeasonNextSwitch['date']->format('d/m')]) }}
+                    </div>
                     <div class="dash-list-item" style="align-items:flex-start;flex-direction:column;gap:6px;">
                         <div style="display:flex;align-items:baseline;gap:6px;width:100%;">
                             <span class="name" style="font-size:17px;">{{ $tireSeasonCompliantCount }}</span>

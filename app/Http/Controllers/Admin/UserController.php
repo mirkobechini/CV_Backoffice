@@ -25,7 +25,7 @@ class UserController extends Controller
      */
     public function create(Group $group)
     {
-        $this->authorizeGroupCapo($group);
+        $this->authorizeGroupInvites($group);
 
         return view('admin.users.create', compact('group'));
     }
@@ -35,7 +35,7 @@ class UserController extends Controller
      */
     public function store(Request $request, Group $group)
     {
-        $this->authorizeGroupCapo($group);
+        $this->authorizeGroupInvites($group);
 
         if (! $group->canAddUser()) {
             return back()->withErrors([
@@ -48,6 +48,12 @@ class UserController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'role' => ['required', 'in:capo,sottocapo,member'],
         ]);
+
+        // Un sottocapo con permesso di gestire inviti non può comunque
+        // creare un nuovo capo: solo il capo stesso può farlo.
+        if ($data['role'] === Group::ROLE_CAPO && auth()->user()->roleIn($group) !== Group::ROLE_CAPO) {
+            abort(403, 'Solo il capo può creare un altro capo.');
+        }
 
         // Password casuale e inutilizzabile: chi crea l'account non deve
         // conoscerla. Il nuovo utente la imposta da solo dal link che
@@ -71,9 +77,10 @@ class UserController extends Controller
     }
 
     /**
-     * L'utente deve appartenere al gruppo ed esserne il capo.
+     * L'utente deve appartenere al gruppo e poter gestire gli inviti
+     * (capo, o sottocapo se il capo lo ha abilitato).
      */
-    private function authorizeGroupCapo(Group $group): void
+    private function authorizeGroupInvites(Group $group): void
     {
         $currentUser = auth()->user();
 
@@ -81,8 +88,8 @@ class UserController extends Controller
             abort(403, 'Non appartieni a questo gruppo.');
         }
 
-        if ($currentUser->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può creare utenti.');
+        if (! $group->userCanManageInvites($currentUser)) {
+            abort(403, 'Non puoi creare utenti in questo gruppo.');
         }
     }
 }
