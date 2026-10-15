@@ -30,6 +30,7 @@ use App\Policies\VehiclePolicy;
 use App\Policies\VehicleTypePolicy;
 use App\Support\UploadsDiskGuard;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -162,6 +163,20 @@ class AppServiceProvider extends ServiceProvider
                 ->action('Imposta password', $url)
                 ->line("Questo link scade tra {$expireMinutes} minuti.")
                 ->line('Se non ti aspettavi questa email, puoi ignorarla in sicurezza.');
+        });
+
+        // Stesso motivo del reset password qui sopra: testo in italiano
+        // per l'email di verifica, ora effettivamente inviata dopo aver
+        // attivato MustVerifyEmail su User (prima il middleware 'verified'
+        // era presente su più rotte ma non faceva nulla, perché User non
+        // implementava affatto quel contratto).
+        VerifyEmail::toMailUsing(function ($notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verifica il tuo indirizzo email - '.config('app.name'))
+                ->greeting("Ciao {$notifiable->name},")
+                ->line('Clicca il pulsante qui sotto per verificare il tuo indirizzo email.')
+                ->action('Verifica email', $url)
+                ->line('Se non hai creato tu questo account, puoi ignorare questa email.');
         });
 
         Validator::extend('car_model_belongs_to_brand', function ($attribute, $value, $parameters, $validator) {

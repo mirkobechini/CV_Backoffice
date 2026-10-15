@@ -62,6 +62,10 @@ class UserController extends Controller
         $group->addUser($user, $data['role']);
 
         Password::sendResetLink(['email' => $user->email]);
+        // Inviata subito, non al primo tentativo di accesso bloccato dal
+        // middleware 'verified': il nuovo utente la trova già pronta
+        // insieme a quella per impostare la password.
+        $user->sendEmailVerificationNotification();
 
         return redirect()->route('admin.groups.show', $group)->with('status', 'Utente creato con successo. Gli è stata inviata un\'email per impostare la password.');
     }

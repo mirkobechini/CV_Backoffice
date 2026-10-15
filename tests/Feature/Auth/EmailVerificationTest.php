@@ -55,4 +55,18 @@ class EmailVerificationTest extends TestCase
 
         $this->assertFalse($user->fresh()->hasVerifiedEmail());
     }
+
+    /**
+     * Un utente che ha impostato la password dal link di reset ma non ha
+     * ancora cliccato il link di verifica email non deve poter attivare il
+     * 2FA (o toccare nient'altro sotto /profile) saltando la verifica
+     * dell'indirizzo (bug segnalato 2026-10-15).
+     */
+    public function test_unverified_user_cannot_access_profile_or_two_factor_setup(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $this->actingAs($user)->get(route('profile.edit'))->assertRedirect(route('verification.notice'));
+        $this->actingAs($user)->post(route('two-factor.store'))->assertRedirect(route('verification.notice'));
+    }
 }
