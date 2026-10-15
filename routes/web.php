@@ -231,6 +231,9 @@ Route::middleware(['auth', 'verified', 'superadmin'])
         Route::post('groups', [SuperadminGroupController::class, 'store'])->name('groups.store');
         Route::get('groups/{group}/edit', [SuperadminGroupController::class, 'edit'])->name('groups.edit');
         Route::put('groups/{group}', [SuperadminGroupController::class, 'update'])->name('groups.update');
+        Route::put('groups/{group}/capo', [SuperadminGroupController::class, 'updateCapo'])->name('groups.capo.update');
+        Route::post('groups/{group}/capo/resend-password-link', [SuperadminGroupController::class, 'resendCapoPasswordLink'])
+            ->name('groups.capo.resend-password-link');
         Route::delete('groups/{group}', [SuperadminGroupController::class, 'destroy'])->name('groups.destroy');
 
         Route::get('groups/{group}/licenses/create', [LicenseController::class, 'create'])
