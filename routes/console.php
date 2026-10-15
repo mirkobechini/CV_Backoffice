@@ -38,3 +38,9 @@ Schedule::command('app:backup-database')
 Schedule::command('app:verify-backup')
     ->dailyAt('3:15')
     ->onFailure(fn () => Log::error('Scheduler: app:verify-backup è terminato con un errore.'));
+
+// Pulizia dei backup più vecchi della soglia di conservazione (vedi
+// PruneBackups::RETENTION_DAYS), per non accumulare file su R2 all'infinito.
+Schedule::command('app:prune-backups')
+    ->dailyAt('3:30')
+    ->onFailure(fn () => Log::error('Scheduler: app:prune-backups è terminato con un errore.'));
