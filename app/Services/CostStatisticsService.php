@@ -48,9 +48,14 @@ class CostStatisticsService
     }
 
     /**
-     * Spesa totale per veicolo nel periodo, dal più costoso.
+     * Spesa totale per veicolo nel periodo, dal più costoso. Righe
+     * (vehicle_id/label/cost), non una mappa label => valore:
+     * internal_code non è univoco (solo il formato a 4 cifre è vincolato),
+     * quindi due veicoli diversi con lo stesso codice andrebbero in
+     * collisione su una singola chiave, con uno che sovrascrive
+     * silenziosamente i dati dell'altro.
      *
-     * @return Collection<string, float> veicolo => costo totale
+     * @return Collection<int, array{vehicle_id: int, label: string, cost: float}>
      */
     public function costByVehicle(?Carbon $since = null): Collection
     {
@@ -61,8 +66,13 @@ class CostStatisticsService
         $labels = Vehicle::whereIn('id', $totals->keys())->pluck('internal_code', 'id');
 
         return $totals
-            ->mapWithKeys(fn ($cost, $vehicleId) => [$labels->get($vehicleId, 'N/A') => $cost])
-            ->sortDesc();
+            ->map(fn ($cost, $vehicleId) => [
+                'vehicle_id' => $vehicleId,
+                'label' => $labels->get($vehicleId, 'N/A'),
+                'cost' => $cost,
+            ])
+            ->sortByDesc('cost')
+            ->values();
     }
 
     /**
@@ -85,17 +95,23 @@ class CostStatisticsService
      * veicolo nel periodo con i km percorsi nello stesso periodo
      * (FleetUsageStatisticsService::kmTraveledByVehicle()) — quanto costa
      * davvero tenerlo in strada, più onesto del solo costo assoluto.
+     * L'incrocio avviene per vehicle_id, non per label (internal_code non
+     * è univoco — vedi costByVehicle()).
      *
-     * @return Collection<string, float> veicolo => €/km
+     * @return Collection<int, array{vehicle_id: int, label: string, per_km: float}>
      */
     public function costPerKm(?Carbon $since = null): Collection
     {
-        $costByVehicleLabel = $this->costByVehicle($since);
-        $kmByVehicleLabel = $this->usageStatistics->kmTraveledByVehicle($since);
+        $kmByVehicleId = $this->usageStatistics->kmTraveledByVehicle($since)->keyBy('vehicle_id');
 
-        return $costByVehicleLabel
-            ->filter(fn ($cost, $label) => ($kmByVehicleLabel->get($label) ?? 0) >= self::MIN_KM_FOR_COST_PER_KM)
-            ->map(fn ($cost, $label) => round($cost / $kmByVehicleLabel->get($label), 2))
-            ->sortDesc();
+        return $this->costByVehicle($since)
+            ->filter(fn ($row) => ($kmByVehicleId->get($row['vehicle_id'])['km'] ?? 0) >= self::MIN_KM_FOR_COST_PER_KM)
+            ->map(fn ($row) => [
+                'vehicle_id' => $row['vehicle_id'],
+                'label' => $row['label'],
+                'per_km' => round($row['cost'] / $kmByVehicleId->get($row['vehicle_id'])['km'], 2),
+            ])
+            ->sortByDesc('per_km')
+            ->values();
     }
 }

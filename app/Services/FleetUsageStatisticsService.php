@@ -23,7 +23,14 @@ class FleetUsageStatisticsService
      * dati sufficienti e viene escluso (non mostrato a zero, sarebbe
      * fuorviante quanto un dato mancante).
      *
-     * @return Collection<string, int> veicolo => km percorsi
+     * Righe (vehicle_id/label/km), non una mappa label => valore:
+     * internal_code non è univoco (solo il formato a 4 cifre è vincolato),
+     * quindi due veicoli diversi con lo stesso codice — es. un mezzo
+     * dismesso sostituito con lo stesso numero di flotta — andrebbero in
+     * collisione su una singola chiave, con uno che sovrascrive
+     * silenziosamente i dati dell'altro invece di restare distinti.
+     *
+     * @return Collection<int, array{vehicle_id: int, label: string, km: int}>
      */
     public function kmTraveledByVehicle(?Carbon $since = null): Collection
     {
@@ -32,25 +39,29 @@ class FleetUsageStatisticsService
             ->selectRaw('vehicle_id, MIN(mileage) as min_mileage, MAX(mileage) as max_mileage, COUNT(*) as readings')
             ->groupBy('vehicle_id')
             ->get()
-            ->filter(fn ($row) => $row->readings >= 2 && $row->max_mileage > $row->min_mileage)
-            ->keyBy('vehicle_id');
+            ->filter(fn ($row) => $row->readings >= 2 && $row->max_mileage > $row->min_mileage);
 
-        $labels = $this->labelByVehicle($rows->keys());
+        $labels = $this->labelByVehicle($rows->pluck('vehicle_id'));
 
         return $rows
-            ->mapWithKeys(fn ($row, $vehicleId) => [
-                $labels->get($vehicleId, 'N/A') => $row->max_mileage - $row->min_mileage,
+            ->map(fn ($row) => [
+                'vehicle_id' => $row->vehicle_id,
+                'label' => $labels->get($row->vehicle_id, 'N/A'),
+                'km' => $row->max_mileage - $row->min_mileage,
             ])
-            ->sortDesc();
+            ->sortByDesc('km')
+            ->values();
     }
 
     /**
      * Classifica guasti per veicolo nel periodo (i 10 con più guasti):
      * "quale mezzo sta dando più pensieri", a differenza della matrice
      * guasti-per-parte (IssueStatisticsService::vehiclePartMatrix) qui
-     * conta ogni guasto, anche quelli senza parte assegnata.
+     * conta ogni guasto, anche quelli senza parte assegnata. Righe, non
+     * una mappa label => valore: stesso motivo di kmTraveledByVehicle()
+     * sopra (internal_code non è univoco).
      *
-     * @return Collection<string, int> veicolo => numero guasti
+     * @return Collection<int, array{vehicle_id: int, label: string, count: int}>
      */
     public function issueCountByVehicle(?Carbon $since = null): Collection
     {
@@ -62,9 +73,14 @@ class FleetUsageStatisticsService
         $labels = $this->labelByVehicle($counts->keys());
 
         return $counts
-            ->mapWithKeys(fn ($count, $vehicleId) => [$labels->get($vehicleId, 'N/A') => $count])
-            ->sortDesc()
-            ->take(10);
+            ->map(fn ($count, $vehicleId) => [
+                'vehicle_id' => $vehicleId,
+                'label' => $labels->get($vehicleId, 'N/A'),
+                'count' => $count,
+            ])
+            ->sortByDesc('count')
+            ->take(10)
+            ->values();
     }
 
     /**

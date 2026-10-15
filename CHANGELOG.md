@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.15.1] - 2026-10-15
+
+### Fixed
+
+- Statistiche per veicolo (km percorsi, guasti per veicolo, costo per veicolo, costo per km): `internal_code` non ha vincolo di unicità, quindi due veicoli diversi con lo stesso codice (es. un mezzo dismesso sostituito con lo stesso numero di flotta) potevano far sovrascrivere silenziosamente i dati di uno con quelli dell'altro.
+
 ## [v1.15.0] - 2026-10-15
 
 ### Added

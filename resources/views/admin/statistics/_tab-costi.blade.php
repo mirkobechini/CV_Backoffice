@@ -40,10 +40,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($costByVehicle as $vehicleLabel => $cost)
+                    @foreach ($costByVehicle as $row)
                         <tr>
-                            <td class="code">{{ $vehicleLabel }}</td>
-                            <td>€ {{ number_format($cost, 2, ',', '.') }}</td>
+                            <td class="code">{{ $row['label'] }}</td>
+                            <td>€ {{ number_format($row['cost'], 2, ',', '.') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -100,10 +100,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($costPerKm as $vehicleLabel => $perKm)
+                    @foreach ($costPerKm as $row)
                         <tr>
-                            <td class="code">{{ $vehicleLabel }}</td>
-                            <td>€ {{ number_format($perKm, 2, ',', '.') }}</td>
+                            <td class="code">{{ $row['label'] }}</td>
+                            <td>€ {{ number_format($row['per_km'], 2, ',', '.') }}</td>
                         </tr>
                     @endforeach
                 </tbody>
