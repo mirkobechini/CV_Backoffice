@@ -103,4 +103,37 @@ class TireSeasonServiceTest extends TestCase
         $this->assertSame(Tire::SEASON_WINTER, $service->expectedSeasonForGroup($groupA, $date));
         $this->assertSame(Tire::SEASON_SUMMER, $service->expectedSeasonForGroup($groupB, $date));
     }
+
+    public function test_next_switch_is_winter_when_summer_tires_currently_expected(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+
+        $next = $service->nextSwitch($group, Carbon::parse('2026-10-15'));
+
+        $this->assertSame(Tire::SEASON_WINTER, $next['season']);
+        $this->assertTrue($next['date']->isSameDay(Carbon::parse('2026-11-15')));
+    }
+
+    public function test_next_switch_is_summer_when_winter_tires_currently_expected(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+
+        $next = $service->nextSwitch($group, Carbon::parse('2026-12-01'));
+
+        $this->assertSame(Tire::SEASON_SUMMER, $next['season']);
+        $this->assertTrue($next['date']->isSameDay(Carbon::parse('2027-04-15')));
+    }
+
+    public function test_next_switch_rolls_over_to_next_year_right_after_the_date_passed(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+
+        $next = $service->nextSwitch($group, Carbon::parse('2026-11-16'));
+
+        $this->assertSame(Tire::SEASON_SUMMER, $next['season']);
+        $this->assertTrue($next['date']->isSameDay(Carbon::parse('2027-04-15')));
+    }
 }

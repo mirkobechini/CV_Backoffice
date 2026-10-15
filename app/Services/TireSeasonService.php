@@ -59,6 +59,32 @@ class TireSeasonService
     }
 
     /**
+     * La prossima data di cambio stagione (quella che porta alla stagione
+     * NON attualmente attesa), per rispondere senza ambiguità alla domanda
+     * "qual è il prossimo cambio da fare" — distinta dalla stagione
+     * attualmente corretta restituita da expectedSeasonForGroup().
+     *
+     * @return array{season: string, date: Carbon}
+     */
+    public function nextSwitch(?Group $group, ?Carbon $date = null): array
+    {
+        $date = $date ?? Carbon::today();
+        $currentSeason = $this->expectedSeasonForGroup($group, $date);
+        $nextSeason = $currentSeason === Tire::SEASON_WINTER ? Tire::SEASON_SUMMER : Tire::SEASON_WINTER;
+
+        $switchDateString = $nextSeason === Tire::SEASON_WINTER
+            ? ($group?->winter_switch_date ?? self::DEFAULT_WINTER_SWITCH)
+            : ($group?->summer_switch_date ?? self::DEFAULT_SUMMER_SWITCH);
+
+        $switchDate = $this->monthDayToCarbon($switchDateString, $date->year);
+        if ($switchDate->lt($date)) {
+            $switchDate = $this->monthDayToCarbon($switchDateString, $date->year + 1);
+        }
+
+        return ['season' => $nextSeason, 'date' => $switchDate];
+    }
+
+    /**
      * Veicoli del gruppo (con almeno un set di gomme tracciato) la cui
      * gomma montata corrisponde alla stagionalità attesa per quel gruppo
      * (o è quattro stagioni).

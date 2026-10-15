@@ -299,6 +299,47 @@ class IssueCrudTest extends TestCase
         $response->assertSee('Rumore al motore');
     }
 
+    public function test_create_page_includes_open_issue_of_vehicle_for_duplicate_check(): void
+    {
+        // Chi segnala un nuovo guasto deve vedere quelli già aperti sullo
+        // stesso veicolo, per non duplicare una segnalazione già nota
+        // scrivendola con parole diverse.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'part' => 'Freni',
+            'description' => 'Rumore in frenata',
+            'status' => 'open',
+            'event_date' => '2026-01-01',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.issues.create'));
+
+        $response->assertOk();
+        $response->assertSee('open-issue-item', false);
+        $response->assertSee('data-description="Rumore in frenata"', false);
+        $response->assertSee('data-vehicle-id="'.$vehicle->id.'"', false);
+    }
+
+    public function test_create_page_excludes_closed_issues_from_open_issues_panel(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'part' => 'Freni',
+            'description' => 'Problema già risolto',
+            'status' => 'closed',
+            'event_date' => '2026-01-01',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.issues.create'));
+
+        $response->assertOk();
+        $response->assertDontSee('data-description="Problema già risolto"', false);
+    }
+
     public function test_create_page_hides_tire_picker_behind_checkbox_by_default(): void
     {
         // Il selettore pneumatico non deve comparire per ogni guasto: resta

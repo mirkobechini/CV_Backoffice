@@ -385,4 +385,83 @@ class GroupControllerTest extends TestCase
         $response->assertForbidden();
         Mail::assertNothingSent();
     }
+
+    public function test_sottocapo_cannot_manage_invites_by_default(): void
+    {
+        $capo = User::factory()->create();
+        $sottocapo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($sottocapo, Group::ROLE_SOTTOCAPO);
+
+        $response = $this->actingAs($sottocapo)->patch(route('admin.groups.invite-code', $group));
+
+        $response->assertForbidden();
+    }
+
+    public function test_sottocapo_can_manage_invites_once_capo_enables_it(): void
+    {
+        $capo = User::factory()->create();
+        $sottocapo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($sottocapo, Group::ROLE_SOTTOCAPO);
+
+        $this->actingAs($capo)->patch(route('admin.groups.invite-permission.update', $group), [
+            'sottocapo_can_manage_invites' => '1',
+        ])->assertRedirect();
+
+        $response = $this->actingAs($sottocapo)->patch(route('admin.groups.invite-code', $group));
+
+        $response->assertRedirect();
+        $this->assertNotEquals('AAAA1111', $group->fresh()->invite_code);
+    }
+
+    public function test_sottocapo_cannot_toggle_invite_permission(): void
+    {
+        $capo = User::factory()->create();
+        $sottocapo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($sottocapo, Group::ROLE_SOTTOCAPO);
+
+        $response = $this->actingAs($sottocapo)->patch(route('admin.groups.invite-permission.update', $group), [
+            'sottocapo_can_manage_invites' => '1',
+        ]);
+
+        $response->assertForbidden();
+        $this->assertFalse($group->fresh()->sottocapo_can_manage_invites);
+    }
+
+    public function test_member_cannot_reach_impostazioni_tab(): void
+    {
+        $capo = User::factory()->create();
+        $member = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($member, Group::ROLE_MEMBER);
+
+        $response = $this->actingAs($member)->get(route('admin.groups.show', ['group' => $group, 'tab' => 'impostazioni']));
+
+        $response->assertOk();
+        $response->assertDontSee(__('Cambio gomme stagionale'));
+        $response->assertDontSee(__('Codice invito'));
+    }
+
+    public function test_sottocapo_sees_tire_season_in_day_month_format(): void
+    {
+        $capo = User::factory()->create();
+        $sottocapo = User::factory()->create();
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $group->addUser($sottocapo, Group::ROLE_SOTTOCAPO);
+        $group->update(['winter_switch_date' => '11-15', 'summer_switch_date' => '04-01']);
+
+        $response = $this->actingAs($sottocapo)->get(route('admin.groups.show', ['group' => $group, 'tab' => 'impostazioni']));
+
+        $response->assertOk();
+        $response->assertSee('15/11', false);
+        $response->assertSee('1/4', false);
+        $response->assertDontSee('11-15');
+    }
 }
