@@ -31,7 +31,7 @@ class MaintenanceRecordItemSyncService
         // completato: aggiorna i guasti e rinnova le scadenze marcate come
         // completate, partendo dalla data di rientro.
         if ($maintenanceRecord->return_date) {
-            $this->completionService->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds);
+            $this->completionService->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds, $data['previous_disposition'] ?? []);
         }
     }
 
@@ -55,7 +55,7 @@ class MaintenanceRecordItemSyncService
         $this->completionService->linkTireItems($maintenanceRecord, $data);
 
         if ($maintenanceRecord->return_date) {
-            $this->completionService->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds);
+            $this->completionService->processCompletedItems($maintenanceRecord, $completedIssueIds, $completedDeadlineIds, $data['previous_disposition'] ?? []);
         }
     }
 
