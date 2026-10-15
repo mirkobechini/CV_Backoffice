@@ -219,6 +219,41 @@ class DashboardTest extends TestCase
         $response->assertSee('0001');
     }
 
+    public function test_dashboard_shows_which_vehicle_is_in_workshop_and_where(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Officina Rossi', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => now()->subDays(2),
+            'return_date' => null,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Veicoli in officina');
+        $response->assertSee('0001');
+        $response->assertSee('Officina Rossi');
+    }
+
+    public function test_dashboard_hides_in_workshop_card_when_nothing_in_workshop(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertDontSee('Veicoli in officina');
+    }
+
     public function test_dashboard_hides_tire_season_widget_when_no_tires_tracked(): void
     {
         $user = User::factory()->withRole('admin')->create();
