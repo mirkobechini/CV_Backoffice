@@ -92,10 +92,13 @@ class DashboardController extends Controller
                 ->values();
 
             // Veicoli attualmente in officina: check-in avvenuto, non ancora rientrati.
-            $inWorkshopCount = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            $inWorkshopRecords = MaintenanceRecord::with(['vehicle', 'provider'])
+                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->whereNull('return_date')
                 ->where('appointment_date', '<=', Carbon::today())
-                ->count();
+                ->orderBy('appointment_date')
+                ->get();
+            $inWorkshopCount = $inWorkshopRecords->count();
 
             $tireSeasonExpected = $tireSeasonService->expectedSeasonForGroup($activeGroup);
             $tireSeasonPending = $tireSeasonService->pendingVehicles($groupId);
@@ -145,6 +148,7 @@ class DashboardController extends Controller
                 'incompleteVehicles',
                 'expiringEquipment',
                 'inWorkshopCount',
+                'inWorkshopRecords',
                 'tireSeasonExpected',
                 'tireSeasonPending',
                 'tireSeasonCompliantCount',
