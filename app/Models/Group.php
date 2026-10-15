@@ -16,6 +16,11 @@ class Group extends Model
         'public_status_token',
         'winter_switch_date',
         'summer_switch_date',
+        'sottocapo_can_manage_invites',
+    ];
+
+    protected $casts = [
+        'sottocapo_can_manage_invites' => 'boolean',
     ];
 
     public const ROLE_CAPO = 'capo';
@@ -153,5 +158,27 @@ class Group extends Model
     public function setUserRole(User $user, string $role): void
     {
         $this->users()->updateExistingPivot($user->id, ['role' => $role]);
+    }
+
+    /**
+     * Il capo può sempre gestire inviti (codice, email, creazione account);
+     * un sottocapo solo se il capo ha attivato sottocapo_can_manage_invites.
+     * Un membro semplice non può mai gestirli.
+     */
+    public function userCanManageInvites(User $user): bool
+    {
+        $role = $user->roleIn($this);
+
+        return $role === self::ROLE_CAPO
+            || ($role === self::ROLE_SOTTOCAPO && $this->sottocapo_can_manage_invites);
+    }
+
+    /**
+     * Le date di cambio gomme stagionale sono visibili solo a capo e
+     * sottocapo: un membro semplice non gestisce la flotta, non gli serve.
+     */
+    public function userCanSeeTireSeason(User $user): bool
+    {
+        return in_array($user->roleIn($this), [self::ROLE_CAPO, self::ROLE_SOTTOCAPO], true);
     }
 }
