@@ -7,7 +7,8 @@ use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 /**
  * Creazione di un nuovo account utente, aggiunto direttamente a un gruppo.
@@ -45,19 +46,24 @@ class UserController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:capo,sottocapo,member'],
         ]);
 
+        // Password casuale e inutilizzabile: chi crea l'account non deve
+        // conoscerla. Il nuovo utente la imposta da solo dal link che
+        // riceve via email (stessa notifica del "password dimenticata",
+        // vedi AppServiceProvider::boot()).
         $user = User::create([
             'name' => $data['name'],
             'email' => $data['email'],
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make(Str::random(40)),
         ]);
 
         $group->addUser($user, $data['role']);
 
-        return redirect()->route('admin.groups.show', $group)->with('status', 'Utente creato con successo.');
+        Password::sendResetLink(['email' => $user->email]);
+
+        return redirect()->route('admin.groups.show', $group)->with('status', 'Utente creato con successo. Gli è stata inviata un\'email per impostare la password.');
     }
 
     /**

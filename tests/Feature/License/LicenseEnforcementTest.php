@@ -143,8 +143,6 @@ class LicenseEnforcementTest extends TestCase
         $response = $this->actingAs($capo)->post(route('admin.groups.users.store', $group), [
             'name' => 'Nuovo Utente',
             'email' => 'nuovo@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
             'role' => 'member',
         ]);
 

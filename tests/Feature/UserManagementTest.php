@@ -33,8 +33,6 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($capo)->post(route('admin.groups.users.store', $group), [
             'name' => 'Nuovo Utente',
             'email' => 'nuovo@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
             'role' => 'member',
         ]);
 
@@ -47,6 +45,19 @@ class UserManagementTest extends TestCase
         ]);
     }
 
+    public function test_new_user_receives_a_set_password_link_the_capo_never_sees(): void
+    {
+        [$capo, $group] = $this->capoWithGroup();
+
+        $this->actingAs($capo)->post(route('admin.groups.users.store', $group), [
+            'name' => 'Nuovo Utente',
+            'email' => 'nuovo@example.com',
+            'role' => 'member',
+        ]);
+
+        $this->assertDatabaseHas('password_reset_tokens', ['email' => 'nuovo@example.com']);
+    }
+
     public function test_member_cannot_create_user(): void
     {
         [$capo, $group] = $this->capoWithGroup();
@@ -56,8 +67,6 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($member)->post(route('admin.groups.users.store', $group), [
             'name' => 'Nuovo Utente',
             'email' => 'nuovo@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
             'role' => 'member',
         ]);
 
@@ -73,8 +82,6 @@ class UserManagementTest extends TestCase
         $response = $this->actingAs($outsider)->post(route('admin.groups.users.store', $group), [
             'name' => 'Nuovo Utente',
             'email' => 'nuovo@example.com',
-            'password' => 'password',
-            'password_confirmation' => 'password',
             'role' => 'member',
         ]);
 

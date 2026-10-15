@@ -25,7 +25,7 @@
             <div class="form-section" style="margin-bottom:0;">
                 <h2><span class="num">1</span> {{ __('Dettagli utente') }}</h2>
                 <div class="hint" style="margin:0 0 12px;">
-                    {{ __('Il nuovo account verrà aggiunto al gruppo :name.', ['name' => $group->name]) }}
+                    {{ __("Il nuovo account verrà aggiunto al gruppo :name. Riceverà un'email per impostare la password da solo.", ['name' => $group->name]) }}
                 </div>
                 <div class="field">
                     <label for="name">{{ __('Nome') }} <span class="req">*</span></label>
@@ -42,27 +42,6 @@
                     @error('email')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
-                </div>
-                <div class="row2">
-                    <div class="field password-field">
-                        <label for="password">{{ __('Password') }} <span class="req">*</span></label>
-                        <input type="password" class="input @error('password') is-invalid @enderror" id="password"
-                            name="password" placeholder="••••••••" required>
-                        <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        @error('password')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="field password-field">
-                        <label for="password_confirmation">{{ __('Conferma password') }} <span class="req">*</span></label>
-                        <input type="password" class="input" id="password_confirmation" name="password_confirmation"
-                            placeholder="••••••••" required>
-                        <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                    </div>
                 </div>
                 <div class="field" style="margin-bottom:0;">
                     <label for="role">{{ __('Ruolo') }} <span class="req">*</span></label>

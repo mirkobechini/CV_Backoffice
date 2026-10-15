@@ -19,8 +19,6 @@ class GroupCreationTest extends TestCase
             'name' => 'Croce Verde Esempio',
             'capo_name' => 'Luca Verdi',
             'capo_email' => 'luca@example.com',
-            'capo_password' => 'password123',
-            'capo_password_confirmation' => 'password123',
         ]);
 
         $group = Group::where('name', 'Croce Verde Esempio')->first();
@@ -33,6 +31,23 @@ class GroupCreationTest extends TestCase
         $this->assertSame(Group::ROLE_CAPO, $capo->roleIn($group));
     }
 
+    public function test_new_capo_receives_a_set_password_link_the_superadmin_never_sees(): void
+    {
+        $superadmin = User::factory()->create(['is_superadmin' => true]);
+
+        $this->actingAs($superadmin)->post(route('superadmin.groups.store'), [
+            'name' => 'Croce Verde Esempio',
+            'capo_name' => 'Luca Verdi',
+            'capo_email' => 'luca@example.com',
+        ]);
+
+        // Password::sendResetLink() crea un token prima di inviare la
+        // notifica: la sua presenza prova che il flusso di impostazione
+        // password è partito, senza che il superadmin sia mai passato da
+        // una password in chiaro (non gliene è stata chiesta nessuna).
+        $this->assertDatabaseHas('password_reset_tokens', ['email' => 'luca@example.com']);
+    }
+
     public function test_rejects_duplicate_capo_email(): void
     {
         $superadmin = User::factory()->create(['is_superadmin' => true]);
@@ -42,8 +57,6 @@ class GroupCreationTest extends TestCase
             'name' => 'Croce Verde Esempio',
             'capo_name' => 'Luca Verdi',
             'capo_email' => 'esiste@example.com',
-            'capo_password' => 'password123',
-            'capo_password_confirmation' => 'password123',
         ]);
 
         $response->assertSessionHasErrors('capo_email');
@@ -59,8 +72,6 @@ class GroupCreationTest extends TestCase
             'name' => 'Croce Verde Esempio',
             'capo_name' => 'Luca Verdi',
             'capo_email' => 'luca@example.com',
-            'capo_password' => 'password123',
-            'capo_password_confirmation' => 'password123',
         ])->assertForbidden();
 
         $this->assertDatabaseMissing('groups', ['name' => 'Croce Verde Esempio']);

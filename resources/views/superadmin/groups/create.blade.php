@@ -42,45 +42,24 @@
 
                 <div id="capo-account-fields">
                     <div class="hint" style="margin:0 0 12px;">
-                        {{ __("L'account creato qui diventa capo del nuovo gruppo; potrà poi creare sottocapi/membri da solo.") }}
+                        {{ __("L'account creato qui diventa capo del nuovo gruppo. Riceverà un'email per impostare la sua password da solo; potrà poi creare sottocapi/membri.") }}
                     </div>
-                    <div class="field">
+                    <div class="field" style="margin-bottom:0;">
                         <label for="capo_name">{{ __('Nome') }} <span class="req">*</span></label>
-                    <input type="text" class="input @error('capo_name') is-invalid @enderror" id="capo_name"
-                        name="capo_name" value="{{ old('capo_name') }}" placeholder="{{ __('es. Luca Verdi') }}" required>
-                    @error('capo_name')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="field">
-                    <label for="capo_email">{{ __('Email') }} <span class="req">*</span></label>
-                    <input type="email" class="input @error('capo_email') is-invalid @enderror" id="capo_email"
-                        name="capo_email" value="{{ old('capo_email') }}" placeholder="{{ __('es. luca@example.com') }}" required>
-                    @error('capo_email')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
-                </div>
-                <div class="row2" style="margin-bottom:0;">
-                    <div class="field password-field">
-                        <label for="capo_password">{{ __('Password') }} <span class="req">*</span></label>
-                        <input type="password" class="input @error('capo_password') is-invalid @enderror"
-                            id="capo_password" name="capo_password" placeholder="••••••••" required>
-                        <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
-                        @error('capo_password')
+                        <input type="text" class="input @error('capo_name') is-invalid @enderror" id="capo_name"
+                            name="capo_name" value="{{ old('capo_name') }}" placeholder="{{ __('es. Luca Verdi') }}" required>
+                        @error('capo_name')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div class="field password-field">
-                        <label for="capo_password_confirmation">{{ __('Conferma password') }} <span class="req">*</span></label>
-                        <input type="password" class="input" id="capo_password_confirmation"
-                            name="capo_password_confirmation" placeholder="••••••••" required>
-                        <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                            <i class="fa-solid fa-eye"></i>
-                        </button>
+                    <div class="field" style="margin-bottom:0;">
+                        <label for="capo_email">{{ __('Email') }} <span class="req">*</span></label>
+                        <input type="email" class="input @error('capo_email') is-invalid @enderror" id="capo_email"
+                            name="capo_email" value="{{ old('capo_email') }}" placeholder="{{ __('es. luca@example.com') }}" required>
+                        @error('capo_email')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
                     </div>
-                </div>
                 </div>
             </div>
 
