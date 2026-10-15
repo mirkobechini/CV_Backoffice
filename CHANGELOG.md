@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.15.2] - 2026-10-15
+
+### Fixed
+
+- Import CSV (guasti e chilometraggi): la risoluzione del veicolo per sigla poteva importare i dati sul veicolo sbagliato senza alcun avviso se la sigla corrispondeva a più veicoli. Ora segnala l'ambiguità, chiedendo di usare la targa (univoca) per disambiguare.
+- Statistiche "Guasti per parte e veicolo": due veicoli con la stessa sigla sommavano i guasti sotto un'unica riga invece di restare distinti (stesso bug già corretto in v1.15.1 per le altre statistiche per veicolo).
+
 ## [v1.15.1] - 2026-10-15
 
 ### Fixed
