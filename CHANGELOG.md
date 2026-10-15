@@ -4,6 +4,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.13.0] - 2026-10-15
+
+### Added
+
+- Pannello superadmin: bottone per creare una nuova associazione (gruppo + primo capo, oppure se stesso come capo) direttamente da `/superadmin`; link di accesso al pannello dalla sidebar di `/admin`.
+- Eliminazione di un'associazione ora disponibile da `/superadmin` (stessa conferma a scrittura del nome).
+
+### Changed
+
+- Creazione ed eliminazione di un gruppo sono ora esclusive del pannello superadmin: rimosse da `/admin`, dove qualsiasi utente poteva creare/eliminare associazioni bypassando il sistema di licenze. `/admin/groups` resta per la gestione (rinomina, inviti, ruoli, join via codice) di gruppi già esistenti.
+
 ## [v1.12.0] - 2026-10-15
 
 ### Added
