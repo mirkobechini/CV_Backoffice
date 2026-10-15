@@ -60,15 +60,14 @@ class DashboardController extends Controller
                 ->sortBy('due_date')
                 ->values();
 
-            // appointment_date è una colonna date (senza ora): confrontarla
-            // con now() (data+ora corrente) la escludeva se l'appuntamento
-            // era oggi ma l'ora corrente aveva già superato mezzanotte, cioè
-            // sempre — un appuntamento di oggi spariva dai "prossimi" non
-            // appena passava la mezzanotte. today() confronta solo la data.
+            // Strettamente futuro (appointment_date > oggi): un appuntamento
+            // di oggi va solo nella card "In officina" sotto (che usa
+            // appointment_date <= oggi), mai in entrambe — altrimenti lo
+            // stesso veicolo/appuntamento compare due volte in dashboard.
             $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->whereNull('return_date')
-                ->where('appointment_date', '>=', Carbon::today())
+                ->where('appointment_date', '>', Carbon::today())
                 ->orderBy('appointment_date')
                 ->take(5)
                 ->get();
