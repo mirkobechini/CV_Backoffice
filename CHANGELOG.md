@@ -11,6 +11,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Changed
 
 - Date di cambio gomme stagionale: mostrate come giorno/mese invece del crudo "MM-DD", e visibili in sola lettura a capo/sottocapo soltanto (prima comparivano, senza formattazione, anche a un membro semplice).
+- Card dashboard "Cambio gomme stagionale": oltre alla stagione corrente ora mostra esplicitamente la data del prossimo cambio, per evitare l'ambiguità di "gomme estive attese" letto come "sto aspettando le estive" quando il prossimo cambio reale è a invernali.
 
 ### Fixed
 
