@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Concerns\ChecksLicenseFeature;
 use App\Http\Controllers\Controller;
 use App\Models\License;
+use App\Services\CostStatisticsService;
+use App\Services\FleetUsageStatisticsService;
 use App\Services\IssueStatisticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -14,13 +16,21 @@ class StatisticsController extends Controller
     use ChecksLicenseFeature;
 
     /**
-     * Pagina statistiche sui guasti per parte del veicolo: riservata a
-     * capi/sottocapi, non ai membri base (dato aggregato sull'intera
+     * Pagina statistiche (guasti/costi/affidabilità e utilizzo): riservata
+     * a capi/sottocapi, non ai membri base (dati aggregati sull'intera
      * flotta del gruppo, non un'azione sul singolo veicolo come il resto
      * dell'app), e inclusa solo da una licenza Pro in su (vedi ADR §16).
+     *
+     * Ogni tab è un link server-side (?tab=...), non un toggle JS: il
+     * controller calcola solo le statistiche della tab attiva, stesso
+     * principio già usato per il filtro periodo su questa stessa pagina.
      */
-    public function index(Request $request, IssueStatisticsService $statistics)
-    {
+    public function index(
+        Request $request,
+        IssueStatisticsService $issueStatistics,
+        CostStatisticsService $costStatistics,
+        FleetUsageStatisticsService $usageStatistics,
+    ) {
         if (! $request->user()->canManageData()) {
             abort(403);
         }
@@ -29,8 +39,10 @@ class StatisticsController extends Controller
 
         $validated = $request->validate([
             'period' => 'nullable|in:all,12m,6m',
+            'tab' => 'nullable|in:guasti,costi,affidabilita',
         ]);
         $period = $validated['period'] ?? 'all';
+        $tab = $validated['tab'] ?? 'guasti';
 
         $since = match ($period) {
             '12m' => Carbon::today()->subMonths(12),
@@ -38,17 +50,26 @@ class StatisticsController extends Controller
             default => null,
         };
 
-        $partCounts = $statistics->countsByPart($since);
-        $vehiclePartMatrix = $statistics->vehiclePartMatrix($since);
-        $monthlyTrend = $statistics->monthlyTrend($since);
-        $costByPart = $statistics->costByPart($since);
+        $data = match ($tab) {
+            'costi' => [
+                'costByYear' => $costStatistics->costByYear($since),
+                'costByVehicle' => $costStatistics->costByVehicle($since),
+                'costByProvider' => $costStatistics->costByProvider($since),
+                'costPerKm' => $costStatistics->costPerKm($since),
+            ],
+            'affidabilita' => [
+                'kmTraveledByVehicle' => $usageStatistics->kmTraveledByVehicle($since),
+                'issueCountByVehicle' => $usageStatistics->issueCountByVehicle($since),
+                'downtime' => $usageStatistics->averageDowntimeByProvider($since),
+            ],
+            default => [
+                'partCounts' => $issueStatistics->countsByPart($since),
+                'vehiclePartMatrix' => $issueStatistics->vehiclePartMatrix($since),
+                'monthlyTrend' => $issueStatistics->monthlyTrend($since),
+                'costByPart' => $issueStatistics->costByPart($since),
+            ],
+        };
 
-        return view('admin.statistics.index', compact(
-            'period',
-            'partCounts',
-            'vehiclePartMatrix',
-            'monthlyTrend',
-            'costByPart'
-        ));
+        return view('admin.statistics.index', ['period' => $period, 'tab' => $tab] + $data);
     }
 }
