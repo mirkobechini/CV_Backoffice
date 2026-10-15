@@ -2,6 +2,12 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Fixed
+
+- Statistiche "Km percorsi per veicolo" con filtro "Tutto": mostrava la distanza percorsa da quando il veicolo è tracciato nell'app (differenza tra prima e ultima lettura registrata), inferiore al chilometraggio reale per un mezzo che aveva già km sul contachilometri prima di adottare l'app. Ora mostra il km assoluto (ultima lettura), coerente con scheda veicolo e PDF.
+
 ## [v1.16.0] - 2026-10-15
 
 ### Added
