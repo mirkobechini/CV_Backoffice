@@ -229,6 +229,8 @@ Route::middleware(['auth', 'verified', 'superadmin'])
 
         Route::get('groups/create', [SuperadminGroupController::class, 'create'])->name('groups.create');
         Route::post('groups', [SuperadminGroupController::class, 'store'])->name('groups.store');
+        Route::get('groups/{group}/edit', [SuperadminGroupController::class, 'edit'])->name('groups.edit');
+        Route::put('groups/{group}', [SuperadminGroupController::class, 'update'])->name('groups.update');
         Route::delete('groups/{group}', [SuperadminGroupController::class, 'destroy'])->name('groups.destroy');
 
         Route::get('groups/{group}/licenses/create', [LicenseController::class, 'create'])
