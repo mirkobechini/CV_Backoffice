@@ -4,6 +4,18 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Pagina gruppo riorganizzata in tab "Panoramica"/"Impostazioni"; nuovo permesso per-gruppo che il capo può attivare per estendere la gestione di codice invito, inviti via email e creazione account ai sottocapi (di default riservata solo al capo).
+
+### Changed
+
+- Date di cambio gomme stagionale: mostrate come giorno/mese invece del crudo "MM-DD", e visibili in sola lettura a capo/sottocapo soltanto (prima comparivano, senza formattazione, anche a un membro semplice).
+
+### Fixed
+
+- Pannello superadmin: la casella per confermare il nome del gruppo nel dialog di eliminazione era invisibile (classe Bootstrap `form-control` mai caricata come CSS nell'app).
+
 ## [v1.15.2] - 2026-10-15
 
 ### Fixed
