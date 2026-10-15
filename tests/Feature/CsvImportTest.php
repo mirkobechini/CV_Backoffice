@@ -351,6 +351,53 @@ class CsvImportTest extends TestCase
         $this->assertDatabaseHas('issues', ['description' => 'Guasto B (senza appuntamento)']);
     }
 
+    /**
+     * Regressione: internal_code non è univoco (solo il formato a 4 cifre
+     * è vincolato). Se la sigla indicata nell'import corrisponde a due
+     * veicoli diversi dello stesso gruppo, prima un ->first() silenzioso
+     * importava i dati sul veicolo sbagliato senza alcun avviso.
+     */
+    public function test_preview_issue_flags_ambiguous_internal_code(): void
+    {
+        $vt = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $group = $this->defaultGroup();
+        Vehicle::create(['license_plate' => 'AA111AA', 'internal_code' => '1234', 'vehicle_type_id' => $vt->id, 'immatricolation_date' => '2024-01-01', 'group_id' => $group->id]);
+        Vehicle::create(['license_plate' => 'BB222BB', 'internal_code' => '1234', 'vehicle_type_id' => $vt->id, 'immatricolation_date' => '2024-01-01', 'group_id' => $group->id]);
+
+        $file = UploadedFile::fake()->createWithContent('test.csv', "DESCRIZIONE\nGuasto motore\n");
+        $response = $this->actingAs($this->admin())->post(route('admin.csv-import.preview'), [
+            'entity' => 'issues',
+            'csv_file' => $file,
+            'vehicle_ref' => '1234',
+        ]);
+
+        $results = $response->viewData('results');
+
+        $this->assertFalse($results[0]['valid']);
+        $this->assertStringContainsString('Più veicoli trovati', $results[0]['errors'][0]);
+    }
+
+    public function test_preview_mileage_logs_flags_ambiguous_internal_code(): void
+    {
+        $vt = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $group = $this->defaultGroup();
+        Vehicle::create(['license_plate' => 'AA111AA', 'internal_code' => '1234', 'vehicle_type_id' => $vt->id, 'immatricolation_date' => '2024-01-01', 'group_id' => $group->id]);
+        Vehicle::create(['license_plate' => 'BB222BB', 'internal_code' => '1234', 'vehicle_type_id' => $vt->id, 'immatricolation_date' => '2024-01-01', 'group_id' => $group->id]);
+
+        $csv = "veicolo,mese,chilometri\n1234,03/2025,15000\n";
+        $file = UploadedFile::fake()->createWithContent('simple.csv', $csv);
+
+        $response = $this->actingAs($this->admin())->post(route('admin.csv-import.preview'), [
+            'entity' => 'mileage-logs',
+            'csv_file' => $file,
+        ]);
+
+        $results = $response->viewData('results');
+
+        $this->assertFalse($results[0]['valid']);
+        $this->assertStringContainsString('Più veicoli trovati', $results[0]['errors'][0]);
+    }
+
     public function test_confirm_issue_with_resolved_provider_creates_maintenance_record(): void
     {
         $vehicle = $this->vehicle();

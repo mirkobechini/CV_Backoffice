@@ -16,4 +16,27 @@ abstract class AbstractCsvImporter implements CsvImporter
     {
         return Vehicle::forCurrentUser()->whereKey($vehicleId)->exists();
     }
+
+    /**
+     * Risolve un riferimento veicolo (sigla o targa) per gruppo.
+     * internal_code non è univoco (solo il formato a 4 cifre è vincolato),
+     * quindi se il riferimento è una sigla potrebbero esserci più
+     * corrispondenze: un ->first() silenzioso importerebbe i dati sul
+     * veicolo sbagliato senza che nessuno se ne accorga. license_plate è
+     * invece univoco, quindi un match su targa non è mai ambiguo.
+     *
+     * @return array{vehicle: ?Vehicle, ambiguous: bool}
+     */
+    protected function resolveVehicleByRef(string $vehicleRef): array
+    {
+        $matches = Vehicle::where(fn ($q) => $q->where('internal_code', $vehicleRef)
+            ->orWhere('license_plate', $vehicleRef))
+            ->forCurrentUser()
+            ->get();
+
+        return [
+            'vehicle' => $matches->count() === 1 ? $matches->first() : null,
+            'ambiguous' => $matches->count() > 1,
+        ];
+    }
 }

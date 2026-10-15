@@ -42,11 +42,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($vehiclePartMatrix['vehicles'] as $vehicleLabel)
+                    @foreach ($vehiclePartMatrix['vehicles'] as $vehicleRow)
                         <tr>
-                            <td class="code">{{ $vehicleLabel }}</td>
+                            <td class="code">{{ $vehicleRow['label'] }}</td>
                             @foreach ($vehiclePartMatrix['parts'] as $part)
-                                <td>{{ $vehiclePartMatrix['matrix'][$vehicleLabel][$part] ?? '—' }}</td>
+                                <td>{{ $vehiclePartMatrix['matrix'][$vehicleRow['id']][$part] ?? '—' }}</td>
                             @endforeach
                         </tr>
                     @endforeach
