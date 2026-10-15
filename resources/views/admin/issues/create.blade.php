@@ -44,6 +44,20 @@
                     </div>
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" required />
                 </div>
+
+                <div id="open-issues-panel" class="alert warning" style="display:none; margin-bottom:14px;">
+                    <strong>{{ __('Guasti già aperti per questo veicolo') }}</strong>
+                    <div id="open-issues-list" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+                    </div>
+                    @foreach ($openIssues as $issue)
+                        <a href="{{ route('admin.issues.show', $issue->id) }}" class="open-issue-item" target="_blank"
+                            data-vehicle-id="{{ $issue->vehicle_id }}" data-part="{{ $issue->part }}"
+                            data-description="{{ $issue->description }}"
+                            data-status="{{ $issue->status === 'open' ? __('Aperto') : __('In lavorazione') }}"
+                            data-date="{{ $issue->event_date?->format('d/m/Y') }}" hidden></a>
+                    @endforeach
+                </div>
+
                 <div class="row2">
                     <div class="field">
                         <label for="part">{{ __('Parte del veicolo coinvolta') }} <span class="req">*</span></label>
@@ -186,8 +200,49 @@
                 noTireMsg.style.display = (selectedVehicleId && !hasVisibleTire) ? '' : 'none';
             };
 
+            // Mostra i guasti già aperti del veicolo selezionato, per far
+            // vedere a chi sta segnalando un nuovo guasto se il problema è
+            // già noto, prima che lo scriva da capo con parole diverse.
+            const openIssuesPanel = document.getElementById('open-issues-panel');
+            const openIssuesList = document.getElementById('open-issues-list');
+            const openIssueItems = document.querySelectorAll('.open-issue-item');
+
+            const filterOpenIssuesByVehicle = () => {
+                const selectedVehicleId = vehicleSelect.value;
+                const matches = Array.from(openIssueItems).filter(el => el.dataset.vehicleId === selectedVehicleId);
+
+                openIssuesList.innerHTML = '';
+                matches.forEach(el => {
+                    const link = document.createElement('a');
+                    link.href = el.getAttribute('href');
+                    link.target = '_blank';
+                    link.className = 'dash-list-item';
+                    link.style.cssText = 'background:var(--surface-2);border-radius:8px;padding:8px 10px;';
+
+                    const info = document.createElement('div');
+                    const name = document.createElement('div');
+                    name.className = 'name';
+                    name.textContent = el.dataset.part;
+                    const meta = document.createElement('div');
+                    meta.className = 'meta';
+                    meta.textContent = `${el.dataset.description} — ${el.dataset.date}`;
+                    info.append(name, meta);
+
+                    const badge = document.createElement('span');
+                    badge.className = 'badge b-amber';
+                    badge.textContent = el.dataset.status;
+
+                    link.append(info, badge);
+                    openIssuesList.append(link);
+                });
+
+                openIssuesPanel.style.display = matches.length ? '' : 'none';
+            };
+
             isTireIssue.addEventListener('change', toggleTireField);
             vehicleSelect.addEventListener('change', filterTiresByVehicle);
+            vehicleSelect.addEventListener('change', filterOpenIssuesByVehicle);
+            filterOpenIssuesByVehicle();
             filterTiresByVehicle();
         });
 
