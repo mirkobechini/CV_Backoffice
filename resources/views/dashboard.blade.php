@@ -288,6 +288,7 @@
 
     @php
         $tireSeasonLabel = $tireSeasonExpected === 'winter' ? __('invernali') : __('estive');
+        $tireSeasonNextLabel = $tireSeasonNextSwitch['season'] === 'winter' ? __('invernali') : __('estive');
         $tireSeasonTotal = $tireSeasonCompliantCount + $tireSeasonPending->count();
     @endphp
     @if ($tireSeasonTotal > 0)
@@ -295,10 +296,13 @@
             <div class="dash-card" style="grid-column:1 / -1;">
                 <div class="head">
                     <h3><span class="ic" style="background:var(--green-soft);color:var(--green)"><i
-                                class="fa-solid fa-circle-dot"></i></span>{{ __('Cambio gomme stagionale') }} —
-                        {{ __('gomme :season attese', ['season' => $tireSeasonLabel]) }}</h3>
+                                class="fa-solid fa-circle-dot"></i></span>{{ __('Cambio gomme stagionale') }}</h3>
                 </div>
                 <div class="body">
+                    <div class="hint" style="margin-bottom:10px;">
+                        {{ __('In questo periodo vanno montate le gomme :season.', ['season' => $tireSeasonLabel]) }}
+                        {{ __('Prossimo cambio: gomme :season dal :date.', ['season' => $tireSeasonNextLabel, 'date' => $tireSeasonNextSwitch['date']->format('d/m')]) }}
+                    </div>
                     <div class="dash-list-item" style="align-items:flex-start;flex-direction:column;gap:6px;">
                         <div style="display:flex;align-items:baseline;gap:6px;width:100%;">
                             <span class="name" style="font-size:17px;">{{ $tireSeasonCompliantCount }}</span>
