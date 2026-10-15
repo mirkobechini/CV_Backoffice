@@ -11,7 +11,7 @@ class PruneBackups extends Command
 
     protected $description = 'Elimina i backup del database più vecchi della soglia di conservazione';
 
-    public const RETENTION_DAYS = 20;
+    public const RETENTION_DAYS = 30;
 
     public function handle(): int
     {
