@@ -247,6 +247,41 @@ class DashboardTest extends TestCase
         $response->assertSee('Prossimo cambio: gomme invernali dal 15/11.');
     }
 
+    public function test_dashboard_reflects_updated_tire_season_dates_immediately(): void
+    {
+        // Regressione: Group non era tra i modelli osservati da
+        // DashboardCacheObserver, quindi cambiare le date di cambio gomme
+        // non invalidava la cache dashboard — restavano visibili i valori
+        // precedenti fino alla scadenza naturale della cache (5 minuti).
+        $this->travelTo(now()->setDate(2026, 10, 15));
+
+        $user = User::factory()->withRole('admin')->create();
+        $group = $this->defaultGroup();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $group->id,
+        ]);
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        // Scalda la cache dashboard con le date di default.
+        $this->actingAs($user)->get(route('dashboard'))
+            ->assertSee('Prossimo cambio: gomme invernali dal 15/11.');
+
+        $group->update(['winter_switch_date' => '10-20']);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Prossimo cambio: gomme invernali dal 20/10.');
+    }
+
     public function test_dashboard_shows_which_vehicle_is_in_workshop_and_where(): void
     {
         $user = User::factory()->withRole('admin')->create();
