@@ -79,7 +79,7 @@
 | `php artisan app:backup-database`                | Creates a JSON database backup                                    |
 | `php artisan app:verify-backup`                  | Checks the latest backup isn't missing, stale or truncated        |
 | `php artisan app:restore-database {file?} {--force}` | **Destructive.** Restores the database from a backup (latest if no filename given). Asks for confirmation unless `--force` is passed |
-| `php artisan app:prune-backups`                  | Deletes backups older than the retention window (20 days)         |
+| `php artisan app:prune-backups`                  | Deletes backups older than the retention window (30 days)         |
 | `php artisan schedule:run`                       | Runs scheduled commands                                           |
 
 ### Disaster recovery
