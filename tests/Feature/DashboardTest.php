@@ -219,6 +219,34 @@ class DashboardTest extends TestCase
         $response->assertSee('0001');
     }
 
+    public function test_dashboard_tire_season_card_shows_next_switch_not_just_current_season(): void
+    {
+        // Regressione: la card diceva "gomme estive attese" in ottobre
+        // (stagione corretta per oggi), letto da un capo come "sto
+        // aspettando le estive" quando il prossimo cambio reale è a
+        // invernali — fonte di confusione.
+        $this->travelTo(now()->setDate(2026, 10, 15));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Prossimo cambio: gomme invernali dal 15/11.');
+    }
+
     public function test_dashboard_shows_which_vehicle_is_in_workshop_and_where(): void
     {
         $user = User::factory()->withRole('admin')->create();

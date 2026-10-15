@@ -103,6 +103,7 @@ class DashboardController extends Controller
             $tireSeasonExpected = $tireSeasonService->expectedSeasonForGroup($activeGroup);
             $tireSeasonPending = $tireSeasonService->pendingVehicles($groupId);
             $tireSeasonCompliantCount = $tireSeasonService->compliantVehicles($groupId)->count();
+            $tireSeasonNextSwitch = $tireSeasonService->nextSwitch($activeGroup);
 
             // Premio totale delle polizze attive (una per veicolo, quella
             // non ancora rinnovata): stesso raggruppamento "ultima
@@ -152,6 +153,7 @@ class DashboardController extends Controller
                 'tireSeasonExpected',
                 'tireSeasonPending',
                 'tireSeasonCompliantCount',
+                'tireSeasonNextSwitch',
                 'activeInsurancePremiumTotal',
                 'carWashRecords',
                 'carWashTotal',
