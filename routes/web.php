@@ -30,6 +30,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicFleetStatusController;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\DiscountCodeController;
+use App\Http\Controllers\Superadmin\GroupController as SuperadminGroupController;
 use App\Http\Controllers\Superadmin\LicenseController;
 use App\Http\Controllers\TelegramWebhookController;
 use App\Http\Controllers\TwoFactorAuthenticationController;
@@ -222,6 +223,9 @@ Route::middleware(['auth', 'verified', 'superadmin'])
     ->prefix('superadmin')
     ->group(function () {
         Route::get('/', [SuperadminDashboardController::class, 'index'])->name('dashboard');
+
+        Route::get('groups/create', [SuperadminGroupController::class, 'create'])->name('groups.create');
+        Route::post('groups', [SuperadminGroupController::class, 'store'])->name('groups.store');
 
         Route::get('groups/{group}/licenses/create', [LicenseController::class, 'create'])
             ->name('licenses.create');

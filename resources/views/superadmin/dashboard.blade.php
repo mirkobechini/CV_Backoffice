@@ -9,6 +9,9 @@
 @section('content')
     <div class="page-header">
         <h1>{{ __('Associazioni') }}</h1>
+        <a href="{{ route('superadmin.groups.create') }}" class="btn primary">
+            <i class="fa-solid fa-plus"></i> {{ __('Nuova associazione') }}
+        </a>
     </div>
 
     <div class="table-card">
