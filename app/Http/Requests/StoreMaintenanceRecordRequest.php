@@ -59,6 +59,8 @@ class StoreMaintenanceRecordRequest extends FormRequest
             'new_tire_brand' => 'nullable|string|max:255',
             'new_tire_model_name' => 'nullable|string|max:255',
             'new_tire_size' => ['nullable', 'string', 'max:255', 'regex:'.Tire::SIZE_REGEX],
+            'previous_disposition' => 'nullable|array',
+            'previous_disposition.*' => 'in:stored,retired',
         ];
     }
 
