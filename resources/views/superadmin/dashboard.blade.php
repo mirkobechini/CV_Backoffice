@@ -106,7 +106,7 @@
                                     {{ __('Per confermare, scrivi il nome del gruppo: ":name"', ['name' => $group->name]) }}
                                 </label>
                                 <input type="text" id="confirm-group-name-{{ $group->id }}" name="confirm_name"
-                                    class="form-control" autocomplete="off" required>
+                                    class="input" autocomplete="off" required>
                             </div>
                         </div>
                         <div class="modal-footer">
