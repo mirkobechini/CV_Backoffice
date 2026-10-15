@@ -2,6 +2,12 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Fixed
+
+- Dashboard: le date di cambio gomme stagionale aggiornate dal capo non comparivano finché non scadeva naturalmente la cache dashboard (5 minuti) — Group non era tra i modelli osservati per l'invalidazione.
+
 ## [v1.16.0] - 2026-10-15
 
 ### Added
