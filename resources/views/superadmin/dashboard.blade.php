@@ -58,6 +58,9 @@
                                 <a href="{{ route('superadmin.licenses.create', $group) }}" class="btn sm">
                                     {{ $license ? __('Rinnova') : __('Assegna licenza') }}
                                 </a>
+                                <a href="{{ route('superadmin.groups.edit', $group) }}" class="btn sm" title="{{ __('Modifica') }}">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
                                 <button type="button" class="btn danger sm" data-bs-toggle="modal"
                                     data-bs-target="#deleteGroupModal-{{ $group->id }}">
                                     <i class="fa-solid fa-trash"></i>

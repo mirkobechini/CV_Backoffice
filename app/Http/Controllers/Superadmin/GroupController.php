@@ -27,6 +27,22 @@ class GroupController extends Controller
         return view('superadmin.groups.create');
     }
 
+    public function edit(Group $group)
+    {
+        return view('superadmin.groups.edit', compact('group'));
+    }
+
+    public function update(Request $request, Group $group)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $group->update(['name' => $data['name']]);
+
+        return redirect()->route('superadmin.dashboard')->with('status', "Associazione rinominata in \"{$group->name}\".");
+    }
+
     public function store(StoreSuperadminGroupRequest $request)
     {
         $data = $request->validated();
