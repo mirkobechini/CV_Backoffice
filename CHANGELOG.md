@@ -2,6 +2,12 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Changed
+
+- Dashboard: "Veicoli in officina" affiancata a "Prossimi appuntamenti", "Cambio gomme stagionale" affiancata a "Lavaggi del mese" (prima occupavano da sole l'intera larghezza).
+
 ## [v1.16.0] - 2026-10-15
 
 ### Added
