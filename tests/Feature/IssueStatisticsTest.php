@@ -105,6 +105,45 @@ class IssueStatisticsTest extends TestCase
         $response->assertSee('2'); // conteggio nella cella della matrice
     }
 
+    /**
+     * Regressione: internal_code non è univoco. Due veicoli diversi con
+     * la stessa sigla devono restare righe separate nella matrice, non
+     * sommare i rispettivi guasti sotto un'unica riga.
+     */
+    public function test_vehicle_part_matrix_keeps_vehicles_with_same_internal_code_separate(): void
+    {
+        $user = $this->admin();
+        $group = $this->defaultGroup();
+        $vehicleA = $this->vehicle($group);
+        $brand = Brand::create(['name' => 'Ford']);
+        $model = CarModel::create(['name' => 'Transit', 'brand_id' => $brand->id]);
+        $type = VehicleType::create(['name' => 'Furgone', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $vehicleB = Vehicle::create([
+            'license_plate' => 'ZZ999ZZ',
+            'internal_code' => $vehicleA->internal_code,
+            'vehicle_type_id' => $type->id,
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $group->id,
+        ]);
+
+        Issue::create(['vehicle_id' => $vehicleA->id, 'part' => Issue::PART_FRENI, 'description' => 'a', 'status' => 'open', 'event_date' => '2026-01-01']);
+        Issue::create(['vehicle_id' => $vehicleA->id, 'part' => Issue::PART_FRENI, 'description' => 'b', 'status' => 'open', 'event_date' => '2026-01-02']);
+        Issue::create(['vehicle_id' => $vehicleB->id, 'part' => Issue::PART_FRENI, 'description' => 'c', 'status' => 'open', 'event_date' => '2026-01-03']);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index'));
+
+        $response->assertOk();
+        $matrix = $response->viewData('vehiclePartMatrix');
+
+        // Due righe distinte (una per veicolo), non una sola riga che
+        // somma i guasti di entrambi sotto l'unica sigla condivisa.
+        $this->assertCount(2, $matrix['vehicles']);
+        $this->assertSame(2, $matrix['matrix'][$vehicleA->id][Issue::PART_FRENI]);
+        $this->assertSame(1, $matrix['matrix'][$vehicleB->id][Issue::PART_FRENI]);
+    }
+
     public function test_monthly_trend_includes_months_with_zero_issues(): void
     {
         $user = $this->admin();

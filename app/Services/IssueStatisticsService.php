@@ -43,24 +43,34 @@ class IssueStatisticsService
      * un problema ricorrente su un componente, invece del solo totale di
      * flotta.
      *
-     * @return array{vehicles: array<int, string>, parts: array<int, string>, matrix: array<string, array<string, int>>}
+     * Righe tenute per vehicle_id, non per internal_code: la sigla non è
+     * univoca (solo il formato a 4 cifre è vincolato), quindi due veicoli
+     * diversi con la stessa sigla (es. un mezzo dismesso sostituito con
+     * lo stesso numero di flotta) andrebbero altrimenti sommati sotto
+     * un'unica riga, mescolando i guasti di due mezzi diversi.
+     *
+     * @return array{vehicles: array<int, array{id: int, label: string}>, parts: array<int, string>, matrix: array<int, array<string, int>>}
      */
     public function vehiclePartMatrix(?Carbon $since = null): array
     {
         $issues = $this->baseQuery($since)->with('vehicle')->get();
 
         $matrix = [];
-        $vehicles = [];
+        $vehicleLabels = [];
 
         foreach ($issues as $issue) {
-            $vehicleLabel = $issue->vehicle?->internal_code ?? 'N/A';
-            $vehicles[$vehicleLabel] = true;
-            $matrix[$vehicleLabel][$issue->part] = ($matrix[$vehicleLabel][$issue->part] ?? 0) + 1;
+            $vehicleId = $issue->vehicle_id;
+            $vehicleLabels[$vehicleId] = $issue->vehicle?->internal_code ?? 'N/A';
+            $matrix[$vehicleId][$issue->part] = ($matrix[$vehicleId][$issue->part] ?? 0) + 1;
         }
 
         $parts = $issues->pluck('part')->unique()->sort()->values()->all();
-        $vehicles = array_keys($vehicles);
-        sort($vehicles);
+
+        $vehicles = collect($vehicleLabels)
+            ->map(fn ($label, $id) => ['id' => $id, 'label' => $label])
+            ->sortBy('label')
+            ->values()
+            ->all();
 
         return compact('vehicles', 'parts', 'matrix');
     }

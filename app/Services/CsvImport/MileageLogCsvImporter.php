@@ -3,7 +3,6 @@
 namespace App\Services\CsvImport;
 
 use App\Models\MileageLog;
-use App\Models\Vehicle;
 
 class MileageLogCsvImporter extends AbstractCsvImporter
 {
@@ -130,12 +129,23 @@ class MileageLogCsvImporter extends AbstractCsvImporter
             // qui, un capo poteva importare dati su un veicolo di un altro
             // gruppo indovinandone sigla/targa).
             if (! isset($vehiclesCache[$vehicleRef])) {
-                $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('internal_code', $vehicleRef)
-                    ->orWhere('license_plate', $vehicleRef))
-                    ->forCurrentUser()
-                    ->first();
+                $vehiclesCache[$vehicleRef] = $this->resolveVehicleByRef($vehicleRef);
             }
-            $vehicle = $vehiclesCache[$vehicleRef];
+            $resolved = $vehiclesCache[$vehicleRef];
+
+            if ($resolved['ambiguous']) {
+                $results[] = [
+                    'row' => $index + 2,
+                    'data' => $row,
+                    'valid' => false,
+                    'errors' => ["Più veicoli trovati con sigla \"{$vehicleRef}\": usa la targa per indicare quale."],
+                    'warnings' => [],
+                ];
+
+                continue;
+            }
+
+            $vehicle = $resolved['vehicle'];
 
             if (! $vehicle) {
                 // Veicolo non trovato, crea record con errore
@@ -220,16 +230,17 @@ class MileageLogCsvImporter extends AbstractCsvImporter
             } else {
                 if (! isset($vehiclesCache[$vehicleRef])) {
                     // forCurrentUser(): vedi commento in validatePivot().
-                    $vehiclesCache[$vehicleRef] = Vehicle::where(fn ($q) => $q->where('license_plate', $vehicleRef)
-                        ->orWhere('internal_code', $vehicleRef))
-                        ->forCurrentUser()
-                        ->first();
+                    $vehiclesCache[$vehicleRef] = $this->resolveVehicleByRef($vehicleRef);
                 }
-                $vehicle = $vehiclesCache[$vehicleRef];
-                if (! $vehicle) {
+                $resolved = $vehiclesCache[$vehicleRef];
+                if ($resolved['ambiguous']) {
+                    $result['valid'] = false;
+                    $result['errors'][] = "Più veicoli trovati con sigla \"{$vehicleRef}\": usa la targa per indicare quale.";
+                } elseif (! $resolved['vehicle']) {
                     $result['valid'] = false;
                     $result['errors'][] = "Veicolo \"{$vehicleRef}\" non trovato.";
                 } else {
+                    $vehicle = $resolved['vehicle'];
                     $result['data']['_vehicle_id'] = $vehicle->id;
                     $result['data']['_vehicle_label'] = $vehicle->internal_code.' - '.$vehicle->license_plate;
                 }
