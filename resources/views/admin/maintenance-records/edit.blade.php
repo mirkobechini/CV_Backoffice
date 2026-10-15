@@ -171,7 +171,7 @@
         </form>
     </div>
 
-    <x-admin.maintenance-completion-modal />
+    <x-admin.maintenance-completion-modal :tire-disposition-choices="$tireDispositionChoices" />
 
     @include('admin.maintenance-records._form-script')
 @endsection

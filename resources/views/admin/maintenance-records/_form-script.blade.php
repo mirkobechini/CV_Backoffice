@@ -243,8 +243,32 @@
             completionModal.show();
         });
 
+        const tireDispositionGroups = {};
+        document.querySelectorAll('.completion-tire-disposition').forEach(radio => {
+            tireDispositionGroups[radio.dataset.tireId] = true;
+        });
+        const tireDispositionError = document.getElementById('tire-disposition-error');
+
         completionConfirmBtn.addEventListener('click', function() {
-            form.querySelectorAll('input[name="completed_issue_ids[]"], input[name="completed_deadline_ids[]"]')
+            // Ogni gomma con una domanda deve avere una risposta: a
+            // differenza di guasti/scadenze (una checkbox, opzionale) qui
+            // non c'è un default sicuro da sottintendere silenziosamente.
+            const missingDisposition = Object.keys(tireDispositionGroups).some(tireId => {
+                return !document.querySelector(`.completion-tire-disposition[data-tire-id="${tireId}"]:checked`);
+            });
+
+            if (missingDisposition) {
+                if (tireDispositionError) {
+                    tireDispositionError.style.display = '';
+                }
+
+                return;
+            }
+            if (tireDispositionError) {
+                tireDispositionError.style.display = 'none';
+            }
+
+            form.querySelectorAll('input[name="completed_issue_ids[]"], input[name="completed_deadline_ids[]"], input[name^="previous_disposition["]')
                 .forEach(el => el.remove());
 
             document.querySelectorAll('.completion-issue:checked').forEach(cb => {
@@ -259,6 +283,13 @@
                 hidden.type = 'hidden';
                 hidden.name = 'completed_deadline_ids[]';
                 hidden.value = cb.value;
+                form.appendChild(hidden);
+            });
+            document.querySelectorAll('.completion-tire-disposition:checked').forEach(radio => {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = `previous_disposition[${radio.dataset.tireId}]`;
+                hidden.value = radio.value;
                 form.appendChild(hidden);
             });
 

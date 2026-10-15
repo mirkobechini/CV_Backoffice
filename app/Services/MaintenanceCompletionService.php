@@ -217,7 +217,16 @@ class MaintenanceCompletionService
      */
     public function processCompletedItems(MaintenanceRecord $maintenanceRecord, array $completedIssueIds, array $completedDeadlineIds, array $previousDisposition = []): void
     {
-        $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
+        // load(), non loadMissing(): chiamato sempre dopo che gli item sono
+        // stati ricreati da zero (delete + re-create in
+        // syncForExistingRecord()/createForNewRecord()), quindi una
+        // relazione 'items' già in cache su questa stessa istanza — es.
+        // caricata da UpdateMaintenanceRecordRequest per calcolare quali
+        // gomme richiedono una disposizione, prima ancora che il
+        // controller le ricreasse — andrebbe aggiornata qui, non
+        // riutilizzata: altrimenti si opera sugli item vecchi (già
+        // cancellati) e quelli nuovi restano "completed" a false.
+        $maintenanceRecord->load(['items.itemable', 'vehicle.vehicleType']);
 
         // Chiudi i guasti completati (loop su modelli singoli, non query di
         // massa — vedi commento in update() sullo stesso tema).
