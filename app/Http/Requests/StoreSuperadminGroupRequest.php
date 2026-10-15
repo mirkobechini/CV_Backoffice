@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rules;
 
 class StoreSuperadminGroupRequest extends FormRequest
 {
@@ -23,7 +22,6 @@ class StoreSuperadminGroupRequest extends FormRequest
             'self_capo' => ['nullable', 'boolean'],
             'capo_name' => ['required_unless:self_capo,1', 'exclude_if:self_capo,1', 'string', 'max:255'],
             'capo_email' => ['required_unless:self_capo,1', 'exclude_if:self_capo,1', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-            'capo_password' => ['required_unless:self_capo,1', 'exclude_if:self_capo,1', 'confirmed', Rules\Password::defaults()],
         ];
     }
 
@@ -34,7 +32,6 @@ class StoreSuperadminGroupRequest extends FormRequest
             'capo_name.required' => 'Il nome del capo è obbligatorio.',
             'capo_email.required' => "L'email del capo è obbligatoria.",
             'capo_email.unique' => 'Esiste già un utente con questa email.',
-            'capo_password.required' => 'La password è obbligatoria.',
         ];
     }
 }

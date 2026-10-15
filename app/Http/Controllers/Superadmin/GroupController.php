@@ -9,6 +9,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
 
 class GroupController extends Controller
 {
@@ -28,8 +30,9 @@ class GroupController extends Controller
     public function store(StoreSuperadminGroupRequest $request)
     {
         $data = $request->validated();
+        $newCapoEmail = null;
 
-        $group = DB::transaction(function () use ($data, $request) {
+        $group = DB::transaction(function () use ($data, $request, &$newCapoEmail) {
             $group = Group::create([
                 'name' => $data['name'],
                 'invite_code' => Group::generateInviteCode(),
@@ -38,20 +41,30 @@ class GroupController extends Controller
             if ($request->boolean('self_capo')) {
                 $group->addUser($request->user(), Group::ROLE_CAPO);
             } else {
+                // Password casuale e inutilizzabile: il superadmin non deve
+                // conoscerla. Il capo la imposta lui stesso dal link che
+                // riceve via email (stessa notifica del "password
+                // dimenticata", vedi AppServiceProvider::boot()).
                 $capo = User::create([
                     'name' => $data['capo_name'],
                     'email' => $data['capo_email'],
-                    'password' => Hash::make($data['capo_password']),
+                    'password' => Hash::make(Str::random(40)),
                 ]);
 
                 $group->addUser($capo, Group::ROLE_CAPO);
+                $newCapoEmail = $capo->email;
             }
 
             return $group;
         });
 
+        if ($newCapoEmail) {
+            Password::sendResetLink(['email' => $newCapoEmail]);
+        }
+
         return redirect()->route('superadmin.licenses.create', $group)
-            ->with('status', "Associazione \"{$group->name}\" creata. Assegna ora una licenza.");
+            ->with('status', "Associazione \"{$group->name}\" creata. Assegna ora una licenza.".
+                ($newCapoEmail ? ' Email per impostare la password inviata al capo.' : ''));
     }
 
     /**
