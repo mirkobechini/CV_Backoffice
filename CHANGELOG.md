@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Modifica multipla gomme (/admin/tires): la select "misura suggerita dal veicolo" ora compare anche lì quando le gomme selezionate appartengono tutte allo stesso veicolo (prima esisteva solo in creazione/modifica singola).
+
 ### Fixed
 
 - Log attività (`/admin/activity-log`): mostrava a chiunque lo aprisse le attività di TUTTI i gruppi, non solo del proprio (nessun filtro per gruppo sulla query). Ora filtrato per gruppo attivo.
