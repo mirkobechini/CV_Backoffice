@@ -28,6 +28,17 @@
         @csrf
         @method('PATCH')
         <div id="tire-bulk-hidden-ids"></div>
+        {{-- Select nascosta: niente scelta manuale, serve solo come sorgente
+        delle misure consigliate (data-tire-sizes) quando le gomme selezionate
+        per la modifica multipla appartengono tutte allo stesso veicolo. Il
+        JS sotto ne imposta il value in automatico, mai l'utente. --}}
+        <select id="tire-bulk-vehicle-select" hidden>
+            <option value=""></option>
+            @foreach ($vehiclesForFilter as $vehicleOption)
+                <option value="{{ $vehicleOption->id }}"
+                    data-tire-sizes="{{ json_encode($vehicleOption->allowed_tire_sizes ?? []) }}"></option>
+            @endforeach
+        </select>
         <div class="bulk-edit-bar-inner">
             <span id="tire-bulk-count" class="bulk-edit-count"></span>
             <div class="field">
@@ -36,7 +47,7 @@
             <div class="field">
                 <input type="text" class="input sm" name="model_name" placeholder="{{ __('Modello') }}">
             </div>
-            <x-form.tire-size-input name="size" label="{{ __('Misura') }}" />
+            <x-form.tire-size-input name="size" label="{{ __('Misura') }}" vehicle-select="tire-bulk-vehicle-select" />
             <button type="submit" class="btn primary sm">{{ __('Applica a selezionate') }}</button>
             <button type="button" id="tire-bulk-clear" class="btn ghost sm">{{ __('Annulla selezione') }}</button>
         </div>
@@ -150,7 +161,8 @@
                 <tbody>
                     @forelse ($tires as $tire)
                         <tr>
-                            <td><input type="checkbox" class="tire-select" value="{{ $tire->id }}"></td>
+                            <td><input type="checkbox" class="tire-select" value="{{ $tire->id }}"
+                                    data-vehicle-id="{{ $tire->vehicle_id }}"></td>
                             <td>
                                 <div class="vin">
                                     <span class="thumb t{{ ($tire->id % 5) + 1 }}"><i
@@ -215,6 +227,24 @@
                 const hiddenContainer = document.getElementById('tire-bulk-hidden-ids');
                 const clearBtn = document.getElementById('tire-bulk-clear');
 
+                // Suggerimento "misura consigliata" nella modifica multipla:
+                // ha senso solo quando le gomme selezionate appartengono
+                // tutte allo stesso veicolo (misure diverse per veicoli
+                // diversi non sono combinabili in un unico suggerimento).
+                const bulkVehicleSelect = document.getElementById('tire-bulk-vehicle-select');
+
+                const updateBulkVehicleSuggestion = (selected) => {
+                    if (!bulkVehicleSelect) return;
+
+                    const vehicleIds = new Set(selected.map(c => c.dataset.vehicleId));
+                    const singleVehicleId = vehicleIds.size === 1 ? [...vehicleIds][0] : '';
+
+                    if (bulkVehicleSelect.value !== singleVehicleId) {
+                        bulkVehicleSelect.value = singleVehicleId;
+                        bulkVehicleSelect.dispatchEvent(new Event('change'));
+                    }
+                };
+
                 const updateBar = () => {
                     const selected = checkboxes().filter(c => c.checked);
                     if (selected.length > 0) {
@@ -225,6 +255,7 @@
                     } else {
                         bar.style.display = 'none';
                     }
+                    updateBulkVehicleSuggestion(selected);
                 };
 
                 checkboxes().forEach(cb => cb.addEventListener('change', updateBar));
