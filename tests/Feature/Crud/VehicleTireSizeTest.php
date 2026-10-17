@@ -115,12 +115,13 @@ class VehicleTireSizeTest extends TestCase
         ], $vehicle->fresh()->allowed_tire_sizes);
     }
 
-    public function test_vehicle_store_discards_tire_size_rows_without_both_size_and_code(): void
+    public function test_vehicle_store_discards_tire_size_rows_without_a_size(): void
     {
         // Le righe rimosse/vuote del repeater inviano comunque un campo
         // nascosto vuoto: non devono fallire la validazione né finire nel
-        // dato salvato. Misura e codice sono obbligatori insieme: una
-        // misura senza codice non è referenziabile da una combinazione.
+        // dato salvato. Una riga senza misura va scartata (non c'è nulla
+        // da salvare); una riga CON misura ma senza codice va invece
+        // mantenuta con un codice di fallback, vedi test dedicato sotto.
         $user = $this->createUser();
         $data = $this->createVehicleDependencies();
 
@@ -134,13 +135,44 @@ class VehicleTireSizeTest extends TestCase
             'has_warranty_extension' => 0,
             'allowed_tire_sizes' => [
                 ['size' => '', 'code' => 'A1'],
-                ['size' => '225/75R16C', 'code' => ''],
                 ['size' => '205/55R16', 'code' => 'A2'],
             ],
         ])->assertRedirect();
 
         $vehicle = Vehicle::first();
         $this->assertSame([['size' => '205/55R16', 'code' => 'A2']], $vehicle->fresh()->allowed_tire_sizes);
+    }
+
+    public function test_vehicle_store_assigns_fallback_code_to_tire_size_missing_one(): void
+    {
+        // Regressione: una misura con un valore reale non deve mai sparire
+        // al salvataggio solo perché il codice non è compilato (bug
+        // segnalato 2026-10-17 — un salvataggio che non toccava le misure
+        // le cancellava silenziosamente). Riceve un codice sequenziale di
+        // fallback, stesso criterio già usato dalla migrazione dati per lo
+        // storico migrato da "position" a "code".
+        $user = $this->createUser();
+        $data = $this->createVehicleDependencies();
+
+        $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => '1234',
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => ''],
+                ['size' => '205/55R16', 'code' => 'A2'],
+            ],
+        ])->assertRedirect();
+
+        $vehicle = Vehicle::first();
+        $this->assertSame([
+            ['size' => '225/75R16C', 'code' => '1'],
+            ['size' => '205/55R16', 'code' => 'A2'],
+        ], $vehicle->fresh()->allowed_tire_sizes);
     }
 
     public function test_vehicle_store_saves_allowed_tire_size_combinations(): void
@@ -196,5 +228,35 @@ class VehicleTireSizeTest extends TestCase
 
         $response->assertSessionHasErrors(['allowed_tire_size_combinations.0.rear_code']);
         $this->assertDatabaseMissing('vehicles', ['license_plate' => 'AB123CD']);
+    }
+
+    public function test_updating_vehicle_without_touching_tire_sizes_does_not_wipe_a_size_missing_its_code(): void
+    {
+        // Riproduzione esatta del bug segnalato: un veicolo con una misura
+        // già esistente ma senza codice (es. dato non ancora passato dalla
+        // migrazione "position" -> "code") non deve perdere quella misura
+        // con un salvataggio qualsiasi, anche uno che non tocca affatto la
+        // sezione misure (qui: solo il nome del veicolo).
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update(['allowed_tire_sizes' => [['size' => '225/75R16C', 'code' => null]]]);
+
+        $this->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
+            'license_plate' => $vehicle->license_plate,
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => $vehicle->internal_code,
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => ''],
+            ],
+        ])->assertRedirect(route('admin.vehicles.show', $vehicle));
+
+        $this->assertSame([
+            ['size' => '225/75R16C', 'code' => '1'],
+        ], $vehicle->fresh()->allowed_tire_sizes);
     }
 }
