@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.17.2] - 2026-10-17
+
 ### Fixed
 
 - Scheda veicolo: "misure consigliate" e "combinazioni ammesse" usavano per ogni riga due campi fratelli con nome `qualcosa[][sottocampo]` separati — non venivano accoppiati dal parser PHP di una submission reale, causando combinazioni mai salvate e codici misura (es. "A1") persi a favore del fallback numerico. Ora ogni riga usa un indice esplicito condiviso tra i suoi sottocampi.
