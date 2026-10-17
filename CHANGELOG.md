@@ -2,6 +2,12 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Fixed
+
+- Scheda veicolo: aggiungere una combinazione ammessa gomme quando ne esisteva già una la sovrascriveva silenziosamente (indice del campo in collisione tra riga esistente e riga aggiunta via "Aggiungi una combinazione").
+
 ## [v1.17.0] - 2026-10-17
 
 ### Added

@@ -197,4 +197,71 @@ class VehicleTireSizeTest extends TestCase
         $response->assertSessionHasErrors(['allowed_tire_size_combinations.0.rear_code']);
         $this->assertDatabaseMissing('vehicles', ['license_plate' => 'AB123CD']);
     }
+
+    public function test_adding_a_second_combination_preserves_the_existing_one(): void
+    {
+        // Regressione: il repeater usava un indice esplicito lato
+        // server (allowed_tire_size_combinations[$i][...]) diverso dallo
+        // schema "append automatico" ([]) usato dal JS per le righe
+        // aggiunte — una nuova riga aggiunta mentre ne esisteva già una
+        // otteneva lo stesso indice 0 di quella esistente, sovrascrivendola
+        // silenziosamente al submit (bug segnalato 2026-10-17).
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update([
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => 'A1'],
+                ['size' => '205/55R16', 'code' => 'A2'],
+            ],
+            'allowed_tire_size_combinations' => [
+                ['front_code' => 'A1', 'rear_code' => 'A1'],
+            ],
+        ]);
+
+        $this->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
+            'license_plate' => $vehicle->license_plate,
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => $vehicle->internal_code,
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => 'A1'],
+                ['size' => '205/55R16', 'code' => 'A2'],
+            ],
+            // Simula la riga esistente (sottomessa invariata) seguita da
+            // una nuova riga appena aggiunta via JS.
+            'allowed_tire_size_combinations' => [
+                ['front_code' => 'A1', 'rear_code' => 'A1'],
+                ['front_code' => 'A1', 'rear_code' => 'A2'],
+            ],
+        ])->assertRedirect(route('admin.vehicles.show', $vehicle));
+
+        $this->assertSame([
+            ['front_code' => 'A1', 'rear_code' => 'A1'],
+            ['front_code' => 'A1', 'rear_code' => 'A2'],
+        ], $vehicle->fresh()->allowed_tire_size_combinations);
+    }
+
+    public function test_edit_page_renders_combination_fields_without_explicit_index(): void
+    {
+        // Lo stesso nome "[]" su ogni riga (esistente o aggiunta via JS) è
+        // l'unico schema immune alla collisione di indice del bug sopra.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $vehicle->update([
+            'allowed_tire_size_combinations' => [
+                ['front_code' => 'A1', 'rear_code' => 'A2'],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.edit', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('name="allowed_tire_size_combinations[][front_code]"', false);
+        $response->assertSee('name="allowed_tire_size_combinations[][rear_code]"', false);
+        $response->assertDontSee('name="allowed_tire_size_combinations[0][front_code]"', false);
+    }
 }

@@ -147,21 +147,18 @@ const addTireSizeRow = (group) => {
 
 // Riga "combinazione ammessa" (codice anteriore + posteriore): solo due
 // campi testo, niente scomposizione come le misure, quindi un semplice
-// clone del <template> basta (nessun id da rendere univoco).
-let comboRowCounter = 0;
-
+// clone del <template> basta (nessun id da rendere univoco). Il nome dei
+// campi resta "[]" (append automatico, come il repeater misure sopra):
+// un indice esplicito calcolato qui (es. un contatore) andrebbe in
+// collisione con le righe già renderizzate dal server, che partono
+// anch'esse da 0 — PHP costruisce l'array nell'ordine di invio, quindi
+// "[]" ovunque è l'unico schema sicuro con righe miste server+JS.
 const addComboRow = (group) => {
     const container = group.querySelector('[data-combo-container]');
     const template = group.querySelector('[data-combo-template]');
     if (!container || !template) return;
 
-    const clone = template.content.cloneNode(true);
-    clone.querySelectorAll('input[name]').forEach((input) => {
-        input.name = input.name.replace('[]', `[${comboRowCounter}]`);
-    });
-    comboRowCounter++;
-
-    container.appendChild(clone);
+    container.appendChild(template.content.cloneNode(true));
 };
 
 document.addEventListener('DOMContentLoaded', () => {
