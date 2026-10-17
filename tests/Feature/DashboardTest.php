@@ -282,6 +282,92 @@ class DashboardTest extends TestCase
         $response->assertSee('Prossimo cambio: gomme invernali dal 20/10.');
     }
 
+    public function test_dashboard_tire_season_card_warns_30_days_before_the_switch(): void
+    {
+        // Cambio invernale di default 15/11: il 20/10 siamo dentro i 30
+        // giorni di preavviso. Un veicolo ancora con gomme estive deve
+        // comparire come "da cambiare" già ora, non il giorno esatto del
+        // cambio (segnalato da Mirko: vedeva sempre N/N fino all'ultimo).
+        $this->travelTo(now()->setDate(2026, 10, 20));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('1 veicolo da cambiare');
+        $response->assertSee('0001');
+        $response->assertDontSee(__('scaduto'));
+    }
+
+    public function test_dashboard_tire_season_card_shows_overdue_after_the_switch_date(): void
+    {
+        $this->travelTo(now()->setDate(2026, 12, 1));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('1 veicolo scaduto');
+    }
+
+    public function test_dashboard_tire_season_card_shows_compliant_outside_the_warning_window(): void
+    {
+        // A settembre, ben fuori dai 30 giorni di preavviso del cambio
+        // invernale (15/11), un veicolo con gomme ancora estive è
+        // correttamente in regola (N/N), nessun avviso prematuro.
+        $this->travelTo(now()->setDate(2026, 9, 1));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        // "da cambiare"/"scaduto" compaiono solo nel badge di conteggio dei
+        // veicoli in attesa (es. "1 veicolo da cambiare"), non nel link
+        // statico "Vedi pneumatici da cambiare" sempre presente in fondo.
+        $response->assertDontSee('veicolo da cambiare');
+        $response->assertDontSee('veicoli da cambiare');
+        $response->assertDontSee(__('scaduto'));
+    }
+
     public function test_dashboard_shows_which_vehicle_is_in_workshop_and_where(): void
     {
         $user = User::factory()->withRole('admin')->create();
