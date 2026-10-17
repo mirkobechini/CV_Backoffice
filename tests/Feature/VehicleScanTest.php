@@ -80,7 +80,7 @@ class VehicleScanTest extends TestCase
             'engine_displacement_cc' => 2287,
             'engine_power_kw' => 96,
             'vehicle_category' => 'M1',
-            'allowed_tire_sizes' => [['size' => '225/75R16C', 'position' => 'either']],
+            'allowed_tire_sizes' => [['size' => '225/75R16C']],
             'has_timing_belt_suggested' => true,
         ], $overrides);
     }
@@ -94,26 +94,27 @@ class VehicleScanTest extends TestCase
 
         $this->assertSame('AB123CD', $result['license_plate']);
         $this->assertSame('Fiat', $result['brand']);
-        $this->assertSame([['size' => '225/75R16C', 'position' => 'either']], $result['allowed_tire_sizes']);
+        $this->assertSame([['size' => '225/75R16C']], $result['allowed_tire_sizes']);
         $this->assertTrue($result['has_timing_belt_suggested']);
     }
 
-    public function test_scan_service_normalizes_allowed_tire_sizes_missing_position(): void
+    public function test_scan_service_normalizes_allowed_tire_sizes_to_size_only(): void
     {
         // Il modello a volte non rispetta lo schema richiesto (stringa
-        // semplice invece di {size, position}, o posizione omessa): deve
-        // diventare "either" invece di propagare un formato inatteso.
+        // semplice invece di {size}, o chiavi extra come un codice
+        // inventato): il risultato normalizzato ha sempre e solo "size",
+        // mai un code/position propagati dal modello.
         $this->fakeChatCompletion($this->extractedFieldsStub([
-            'allowed_tire_sizes' => ['225/75R16C', ['size' => '205/55R16'], ['size' => '195/70R15', 'position' => 'front']],
+            'allowed_tire_sizes' => ['225/75R16C', ['size' => '205/55R16'], ['size' => '195/70R15', 'code' => 'A1']],
         ]));
 
         $front = UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg');
         $result = app(VehicleScanService::class)->scan([$front->getRealPath()]);
 
         $this->assertSame([
-            ['size' => '225/75R16C', 'position' => 'either'],
-            ['size' => '205/55R16', 'position' => 'either'],
-            ['size' => '195/70R15', 'position' => 'front'],
+            ['size' => '225/75R16C'],
+            ['size' => '205/55R16'],
+            ['size' => '195/70R15'],
         ], $result['allowed_tire_sizes']);
     }
 
@@ -183,7 +184,7 @@ class VehicleScanTest extends TestCase
         $response->assertSessionHasInput('license_plate', 'AB123CD');
         $response->assertSessionHasInput('brand_id', $deps['brand']->id);
         $response->assertSessionHasInput('car_model_id', $deps['model']->id);
-        $response->assertSessionHasInput('allowed_tire_sizes', [['size' => '225/75R16C', 'position' => 'either']]);
+        $response->assertSessionHasInput('allowed_tire_sizes', [['size' => '225/75R16C']]);
     }
 
     public function test_scan_endpoint_flags_unmatched_brand_and_model(): void
@@ -442,7 +443,7 @@ class VehicleScanTest extends TestCase
             'vehicle_type_id' => $deps['type']->id,
             'immatricolation_date' => '2024-01-01',
             'group_id' => $user->activeGroup()->id,
-            'allowed_tire_sizes' => [['size' => '225/75R16C', 'position' => 'either']],
+            'allowed_tire_sizes' => [['size' => '225/75R16C', 'code' => 'A1']],
         ]);
 
         $response = $this->actingAs($user)->post(route('admin.tires.store'), [
@@ -461,6 +462,9 @@ class VehicleScanTest extends TestCase
 
     public function test_no_tire_size_warning_when_size_matches_any_of_several_allowed(): void
     {
+        // Senza combinazioni ammesse definite, il controllo per assale non
+        // si applica (permissivo): basta che la misura corrisponda a una
+        // delle misure consigliate, indipendentemente dalla posizione.
         Storage::fake('public');
         $user = $this->capo();
         $deps = $this->vehicleDeps();
@@ -473,8 +477,8 @@ class VehicleScanTest extends TestCase
             'immatricolation_date' => '2024-01-01',
             'group_id' => $user->activeGroup()->id,
             'allowed_tire_sizes' => [
-                ['size' => '225/75R16C', 'position' => 'either'],
-                ['size' => '205/55R16', 'position' => 'either'],
+                ['size' => '225/75R16C', 'code' => 'A1'],
+                ['size' => '205/55R16', 'code' => 'A2'],
             ],
         ]);
 
@@ -491,12 +495,13 @@ class VehicleScanTest extends TestCase
         $response->assertSessionMissing('tire_size_warning');
     }
 
-    public function test_tire_size_mismatch_depends_on_position(): void
+    public function test_tire_size_mismatch_depends_on_allowed_combinations(): void
     {
-        // Una misura consigliata solo per il posteriore non deve generare
+        // Un codice che nella tabella delle combinazioni ammesse compare
+        // solo come rear_code (mai come front_code) non deve generare
         // avviso per una gomma posteriore, ma deve generarlo per una
-        // anteriore — prima dell'introduzione della posizione, qualunque
-        // misura consigliata valeva per qualsiasi posizione.
+        // anteriore — derivato dalle combinazioni, non da una posizione
+        // scelta a priori sulla singola misura.
         Storage::fake('public');
         $user = $this->capo();
         $deps = $this->vehicleDeps();
@@ -508,7 +513,13 @@ class VehicleScanTest extends TestCase
             'vehicle_type_id' => $deps['type']->id,
             'immatricolation_date' => '2024-01-01',
             'group_id' => $user->activeGroup()->id,
-            'allowed_tire_sizes' => [['size' => '205/55R16', 'position' => 'rear']],
+            'allowed_tire_sizes' => [
+                ['size' => '205/55R16', 'code' => 'A1'],
+                ['size' => '225/75R16C', 'code' => 'A2'],
+            ],
+            'allowed_tire_size_combinations' => [
+                ['front_code' => 'A2', 'rear_code' => 'A1'],
+            ],
         ]);
 
         $rearResponse = $this->actingAs($user)->post(route('admin.tires.store'), [
