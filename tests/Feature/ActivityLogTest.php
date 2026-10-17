@@ -3,9 +3,16 @@
 namespace Tests\Feature;
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Models\Brand;
+use App\Models\CarModel;
+use App\Models\Equipment;
+use App\Models\EquipmentType;
+use App\Models\Group;
 use App\Models\Issue;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
+use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
 use Spatie\Activitylog\Models\Activity;
@@ -18,6 +25,34 @@ class ActivityLogTest extends TestCase
     private function admin(): User
     {
         return User::factory()->withRole('admin')->create();
+    }
+
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
+
+    private function vehicle(?Group $group = null, string $internalCode = '0001'): Vehicle
+    {
+        $brand = Brand::firstOrCreate(['name' => 'Fiat']);
+        $model = CarModel::firstOrCreate(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $type = VehicleType::firstOrCreate(
+            ['name' => 'Ambulanza'],
+            ['first_inspection_months' => 48, 'regular_inspection_months' => 24]
+        );
+
+        return Vehicle::create([
+            'license_plate' => 'AB'.$internalCode.'CD',
+            'internal_code' => $internalCode,
+            'vehicle_type_id' => $type->id,
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => ($group ?? $this->defaultGroup())->id,
+        ]);
     }
 
     public function test_activity_log_index_loads(): void
@@ -35,12 +70,14 @@ class ActivityLogTest extends TestCase
         // per tipo di elemento si basa su subject_type, non su log_name
         // (bug corretto: il filtro precedente non aveva alcun effetto).
         $user = $this->admin();
+        $vehicle = $this->vehicle($user->activeGroup());
+        $issue = Issue::create(['vehicle_id' => $vehicle->id, 'description' => 'x', 'status' => 'open', 'event_date' => '2026-01-01']);
 
         Activity::create([
             'log_name' => 'default',
             'description' => 'Vehicle activity',
             'subject_type' => Vehicle::class,
-            'subject_id' => 1,
+            'subject_id' => $vehicle->id,
             'causer_type' => User::class,
             'causer_id' => $user->id,
         ]);
@@ -48,7 +85,7 @@ class ActivityLogTest extends TestCase
             'log_name' => 'default',
             'description' => 'Issue activity',
             'subject_type' => Issue::class,
-            'subject_id' => 1,
+            'subject_id' => $issue->id,
             'causer_type' => User::class,
             'causer_id' => $user->id,
         ]);
@@ -69,6 +106,9 @@ class ActivityLogTest extends TestCase
     public function test_activity_log_search_matches_attribute_changes(): void
     {
         $user = $this->admin();
+        $group = $user->activeGroup();
+        $vehicleA = $this->vehicle($group, '0001');
+        $vehicleB = $this->vehicle($group, '0002');
 
         // Le description sono il marcatore di "quale riga è stata
         // mostrata": il termine cercato non può servire a questo scopo,
@@ -78,7 +118,7 @@ class ActivityLogTest extends TestCase
             'log_name' => 'default',
             'description' => 'riga-con-match-marker',
             'subject_type' => Vehicle::class,
-            'subject_id' => 1,
+            'subject_id' => $vehicleA->id,
             'causer_type' => User::class,
             'causer_id' => $user->id,
             'attribute_changes' => ['attributes' => ['internal_code' => 'ZZ999FINDME']],
@@ -87,7 +127,7 @@ class ActivityLogTest extends TestCase
             'log_name' => 'default',
             'description' => 'riga-senza-match-marker',
             'subject_type' => Vehicle::class,
-            'subject_id' => 2,
+            'subject_id' => $vehicleB->id,
             'causer_type' => User::class,
             'causer_id' => $user->id,
             'attribute_changes' => ['attributes' => ['internal_code' => 'UNRELATED']],
@@ -148,5 +188,142 @@ class ActivityLogTest extends TestCase
 
         $this->assertSame('flat', $result['mode']);
         $this->assertSame([], $result['rows']);
+    }
+
+    // --- Isolamento per gruppo (bug segnalato 2026-10-17) ---
+
+    public function test_vehicle_activity_from_another_group_is_hidden(): void
+    {
+        $user = $this->admin();
+        $otherGroup = Group::create(['name' => 'Altro gruppo', 'invite_code' => Group::generateInviteCode()]);
+        $otherVehicle = $this->vehicle($otherGroup);
+
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'non-mio-marker',
+            'subject_type' => Vehicle::class,
+            'subject_id' => $otherVehicle->id,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.activity-log.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('non-mio-marker');
+    }
+
+    public function test_issue_activity_from_another_groups_vehicle_is_hidden(): void
+    {
+        $user = $this->admin();
+        $otherGroup = Group::create(['name' => 'Altro gruppo', 'invite_code' => Group::generateInviteCode()]);
+        $otherVehicle = $this->vehicle($otherGroup);
+        $otherIssue = Issue::create(['vehicle_id' => $otherVehicle->id, 'description' => 'x', 'status' => 'open', 'event_date' => '2026-01-01']);
+
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'guasto-non-mio-marker',
+            'subject_type' => Issue::class,
+            'subject_id' => $otherIssue->id,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.activity-log.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('guasto-non-mio-marker');
+    }
+
+    public function test_unassigned_equipment_activity_is_visible_to_all_groups(): void
+    {
+        // Attrezzatura non ancora assegnata a un veicolo non ha un gruppo
+        // proprio: resta visibile a tutti, stesso criterio permissivo già
+        // usato ovunque nell'app (ADR §10).
+        $user = $this->admin();
+        $equipmentType = EquipmentType::firstOrCreate(['name' => 'Defibrillatore']);
+        $equipment = Equipment::create(['name' => 'Defibrillatore', 'equipment_type_id' => $equipmentType->id]);
+
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'attrezzatura-non-assegnata-marker',
+            'subject_type' => Equipment::class,
+            'subject_id' => $equipment->id,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.activity-log.index'));
+
+        $response->assertOk();
+        $response->assertSee('attrezzatura-non-assegnata-marker');
+    }
+
+    public function test_equipment_assigned_to_another_groups_vehicle_is_hidden(): void
+    {
+        $user = $this->admin();
+        $otherGroup = Group::create(['name' => 'Altro gruppo', 'invite_code' => Group::generateInviteCode()]);
+        $otherVehicle = $this->vehicle($otherGroup);
+        $equipmentType = EquipmentType::firstOrCreate(['name' => 'Defibrillatore']);
+        $equipment = Equipment::create(['name' => 'Defibrillatore', 'equipment_type_id' => $equipmentType->id, 'vehicle_id' => $otherVehicle->id]);
+
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'attrezzatura-altro-gruppo-marker',
+            'subject_type' => Equipment::class,
+            'subject_id' => $equipment->id,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.activity-log.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('attrezzatura-altro-gruppo-marker');
+    }
+
+    public function test_shared_catalog_activity_is_visible_to_all_groups(): void
+    {
+        // Provider è un catalogo condiviso, nessun gruppo proprio: lo
+        // stesso fornitore è visibile e modificabile da qualunque gruppo.
+        $user = $this->admin();
+        $provider = Provider::create(['name' => 'Officina Condivisa', 'type' => 'Meccanico']);
+
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'fornitore-condiviso-marker',
+            'subject_type' => Provider::class,
+            'subject_id' => $provider->id,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.activity-log.index'));
+
+        $response->assertOk();
+        $response->assertSee('fornitore-condiviso-marker');
+    }
+
+    public function test_user_without_active_group_sees_no_activity(): void
+    {
+        // Fail closed: nessun gruppo attivo deve mostrare nessuna
+        // attività, mai tutte quelle esistenti.
+        $user = User::factory()->create();
+        $group = $this->defaultGroup();
+        $vehicle = $this->vehicle($group);
+
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'qualunque-attivita-marker',
+            'subject_type' => Vehicle::class,
+            'subject_id' => $vehicle->id,
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.activity-log.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('qualunque-attivita-marker');
     }
 }

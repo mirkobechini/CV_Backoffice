@@ -99,7 +99,14 @@
             <div class="dl-kv">
                 <span class="k">{{ __('Prossimo cambio') }}</span>
                 <span class="v">
-                    {{ $tire->next_change_date_formatted ?? 'N/A' }}
+                    @if ($tire->next_change_date_formatted)
+                        {{ $tire->next_change_date_formatted }}
+                    @elseif ($tire->suggested_next_change_date)
+                        {{ $tire->suggested_next_change_date->format('d/m/Y') }}
+                        <span class="meta">({{ __('stimato') }})</span>
+                    @else
+                        N/A
+                    @endif
                     @if ($tire->next_change_mileage)
                         · {{ number_format($tire->next_change_mileage, 0, ',', '.') }} km
                     @endif

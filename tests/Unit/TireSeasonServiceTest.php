@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Group;
 use App\Models\Tire;
+use App\Models\Vehicle;
 use App\Services\TireSeasonService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -135,5 +136,65 @@ class TireSeasonServiceTest extends TestCase
 
         $this->assertSame(Tire::SEASON_SUMMER, $next['season']);
         $this->assertTrue($next['date']->isSameDay(Carbon::parse('2027-04-15')));
+    }
+
+    public function test_expected_season_with_warning_matches_strict_season_outside_the_window(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+
+        // Cambio invernale 15/11: a settembre siamo ben fuori dai 30 giorni
+        // di preavviso, nessuna anticipazione.
+        $this->assertSame(Tire::SEASON_SUMMER, $service->expectedSeasonWithWarning($group, Carbon::parse('2026-09-01')));
+    }
+
+    public function test_expected_season_with_warning_anticipates_the_switch_inside_the_window(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+
+        // Cambio invernale 15/11: il 20/10 siamo dentro i 30 giorni di
+        // preavviso, la stagione attesa diventa già invernale.
+        $this->assertSame(Tire::SEASON_WINTER, $service->expectedSeasonWithWarning($group, Carbon::parse('2026-10-20')));
+    }
+
+    public function test_expected_season_with_warning_respects_custom_warning_days(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+
+        $this->assertSame(Tire::SEASON_SUMMER, $service->expectedSeasonWithWarning($group, Carbon::parse('2026-10-20'), 5));
+        $this->assertSame(Tire::SEASON_WINTER, $service->expectedSeasonWithWarning($group, Carbon::parse('2026-10-20'), 60));
+    }
+
+    public function test_expected_season_with_warning_matches_strict_season_once_the_switch_has_passed(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+
+        $this->assertSame(Tire::SEASON_WINTER, $service->expectedSeasonWithWarning($group, Carbon::parse('2026-11-20')));
+    }
+
+    public function test_is_compliant_uses_expected_season_override_when_given(): void
+    {
+        $service = $this->service();
+        $group = $this->group();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $group->id,
+        ]);
+        Tire::create([
+            'vehicle_id' => $vehicle->id,
+            'season' => Tire::SEASON_SUMMER,
+            'position' => Tire::POSITION_FRONT_LEFT,
+            'status' => Tire::STATUS_MOUNTED,
+        ]);
+
+        // Gomme estive montate: senza override è conforme (stagione estiva
+        // attesa di default), con override invernale non lo è più.
+        $this->assertTrue($service->isCompliant($vehicle));
+        $this->assertFalse($service->isCompliant($vehicle, Tire::SEASON_WINTER));
     }
 }

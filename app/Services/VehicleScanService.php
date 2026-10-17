@@ -55,11 +55,11 @@ S.1=numero posti a sedere, V.9=classe ambientale (es. "Euro 6"),
 J=categoria del veicolo (es. "M1"). Le misure dei pneumatici, se presenti,
 vanno restituite nel formato canonico "LARGHEZZA/PROFILOR DIAMETROC" (es.
 "225/75R16C"), senza spazi prima di "R", con "C" solo se rinforzato: se il
-documento indica misure diverse per assale anteriore e posteriore,
-restituiscile entrambe come voci separate dell'array, ciascuna con la
-propria posizione ("front" se vale solo per l'anteriore, "rear" se vale
-solo per il posteriore, "either" se il documento non specifica un assale
-o la stessa misura vale per entrambi).
+documento indica più misure (es. diverse per assale anteriore e
+posteriore), restituiscile tutte come voci distinte dell'array, senza
+indicarne la posizione o un codice — la tabella delle combinazioni
+ammesse e i codici che le identificano (es. "A1", "A2") non sono
+affidabilmente leggibili dalla foto e vanno confermati dall'utente.
 
 Rispondi SOLO con un oggetto JSON con queste chiavi (usa null se un dato
 non è leggibile o non è presente sul documento):
@@ -77,7 +77,7 @@ non è leggibile o non è presente sul documento):
   "engine_displacement_cc": integer|null,
   "engine_power_kw": integer|null,
   "vehicle_category": string|null,
-  "allowed_tire_sizes": {"size": string, "position": "front"|"rear"|"either"}[] (array vuoto se non presenti),
+  "allowed_tire_sizes": {"size": string}[] (array vuoto se non presenti),
   "has_timing_belt_suggested": boolean|null
 }
 
@@ -161,13 +161,14 @@ PROMPT;
 
     /**
      * Il modello a volte non rispetta esattamente lo schema richiesto (es.
-     * restituisce una stringa semplice invece di {size, position}, o omette
-     * la posizione): qui si normalizza difensivamente invece di propagare
-     * un formato inatteso al form, con "either" come fallback sicuro
-     * (nessuna restrizione per assale, lo stesso comportamento di prima che
-     * questo campo esistesse).
+     * restituisce una stringa semplice invece di {size}): qui si
+     * normalizza difensivamente invece di propagare un formato inatteso al
+     * form. Niente "code": è un'etichetta specifica del veicolo (usata
+     * nella tabella delle combinazioni ammesse, vedi Vehicle::allowed_tire_size_combinations)
+     * che l'utente assegna a mano dopo lo scan, non leggibile in modo
+     * affidabile dalla foto.
      *
-     * @return array<int, array{size: string, position: string}>
+     * @return array<int, array{size: string}>
      */
     private function normalizeAllowedTireSizes(mixed $sizes): array
     {
@@ -178,16 +179,12 @@ PROMPT;
         return collect($sizes)
             ->map(function ($entry) {
                 $size = is_array($entry) ? ($entry['size'] ?? null) : $entry;
-                $position = is_array($entry) ? ($entry['position'] ?? null) : null;
 
                 if (! is_string($size) || $size === '') {
                     return null;
                 }
 
-                return [
-                    'size' => $size,
-                    'position' => in_array($position, ['front', 'rear', 'either'], true) ? $position : 'either',
-                ];
+                return ['size' => $size];
             })
             ->filter()
             ->values()

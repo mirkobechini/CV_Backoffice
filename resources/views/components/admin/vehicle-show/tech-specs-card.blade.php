@@ -27,5 +27,8 @@
         <div class="veh-kv"><span class="k">{{ __('Misure pneumatici') }}</span><span
                 class="v">{{ $vehicle->allowed_tire_sizes_label }}</span>
         </div>
+        <div class="veh-kv"><span class="k">{{ __('Combinazioni ammesse') }}</span><span
+                class="v">{{ $vehicle->allowed_tire_size_combinations_label }}</span>
+        </div>
     </div>
 </div>

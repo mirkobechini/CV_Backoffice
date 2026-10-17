@@ -57,6 +57,7 @@ class Vehicle extends Model
         'engine_power_kw',
         'vehicle_category',
         'allowed_tire_sizes',
+        'allowed_tire_size_combinations',
     ];
 
     protected $casts = [
@@ -67,6 +68,7 @@ class Vehicle extends Model
         'engine_displacement_cc' => 'integer',
         'engine_power_kw' => 'integer',
         'allowed_tire_sizes' => 'array',
+        'allowed_tire_size_combinations' => 'array',
     ];
 
     protected $searchable = ['internal_code', 'license_plate'];
@@ -120,10 +122,11 @@ class Vehicle extends Model
     }
 
     /**
-     * Elenco leggibile delle misure consigliate con la posizione tra
-     * parentesi, solo quando non è "entrambi" (il caso comune, già chiaro
-     * senza etichetta aggiuntiva). Usato nella show e nel PDF scheda
-     * veicolo, invece di duplicare la stessa logica in due viste.
+     * Elenco leggibile delle misure consigliate col relativo codice (es.
+     * "A1: 225/75R16C"), lo stesso usato dalla carta di circolazione per
+     * indicare quale misura è quale nella tabella delle combinazioni
+     * ammesse. Usato nella show e nel PDF scheda veicolo, invece di
+     * duplicare la stessa logica in due viste.
      */
     public function getAllowedTireSizesLabelAttribute(): string
     {
@@ -131,15 +134,26 @@ class Vehicle extends Model
             return 'N/A';
         }
 
-        return collect($this->allowed_tire_sizes)->map(function ($entry) {
-            $label = match ($entry['position'] ?? 'either') {
-                'front' => ' (anteriore)',
-                'rear' => ' (posteriore)',
-                default => '',
-            };
+        return collect($this->allowed_tire_sizes)
+            ->map(fn ($entry) => trim(($entry['code'] ?? '').': '.($entry['size'] ?? ''), ': '))
+            ->implode(', ');
+    }
 
-            return ($entry['size'] ?? '').$label;
-        })->implode(', ');
+    /**
+     * Elenco leggibile delle combinazioni ammesse tra asse anteriore e
+     * posteriore (es. "A1-A2, A2-A2"), la stessa tabella presente sulla
+     * carta di circolazione — determina dove può andare ciascuna misura,
+     * vedi Tire::sizeMismatchWarning().
+     */
+    public function getAllowedTireSizeCombinationsLabelAttribute(): string
+    {
+        if (empty($this->allowed_tire_size_combinations)) {
+            return 'N/A';
+        }
+
+        return collect($this->allowed_tire_size_combinations)
+            ->map(fn ($entry) => ($entry['front_code'] ?? '?').'-'.($entry['rear_code'] ?? '?'))
+            ->implode(', ');
     }
 
     public function needsTimingBeltDeadline(): bool

@@ -27,6 +27,8 @@ class TireSeasonService
 
     public const DEFAULT_SUMMER_SWITCH = '04-15';
 
+    public const DEFAULT_WARNING_DAYS = 30;
+
     public function expectedSeasonForGroup(?Group $group, ?Carbon $date = null): string
     {
         $date = $date ?? Carbon::today();
@@ -59,6 +61,27 @@ class TireSeasonService
     }
 
     /**
+     * Come expectedSeasonForGroup(), ma nella finestra di preavviso
+     * ($warningDays, default 30) prima del prossimo cambio stagione la
+     * stagione attesa diventa già quella nuova — così chi non ha ancora
+     * cambiato risulta "da cambiare" con un margine di anticipo, invece
+     * che il giorno esatto della scadenza. Usata SOLO dalla card
+     * dashboard: il filtro "Da cambiare" dell'elenco gomme e ogni altro
+     * uso restano sulla correttezza stretta di expectedSeasonForGroup().
+     */
+    public function expectedSeasonWithWarning(?Group $group, ?Carbon $date = null, int $warningDays = self::DEFAULT_WARNING_DAYS): string
+    {
+        $date = $date ?? Carbon::today();
+        $next = $this->nextSwitch($group, $date);
+
+        if ($date->gte($next['date']->copy()->subDays($warningDays))) {
+            return $next['season'];
+        }
+
+        return $this->expectedSeasonForGroup($group, $date);
+    }
+
+    /**
      * La prossima data di cambio stagione (quella che porta alla stagione
      * NON attualmente attesa), per rispondere senza ambiguità alla domanda
      * "qual è il prossimo cambio da fare" — distinta dalla stagione
@@ -87,20 +110,23 @@ class TireSeasonService
     /**
      * Veicoli del gruppo (con almeno un set di gomme tracciato) la cui
      * gomma montata corrisponde alla stagionalità attesa per quel gruppo
-     * (o è quattro stagioni).
+     * (o è quattro stagioni). $expectedSeasonOverride forza la stagione
+     * attesa invece di calcolarla per veicolo (usato dalla card dashboard
+     * con expectedSeasonWithWarning(), uguale per tutti i veicoli dello
+     * stesso gruppo).
      */
-    public function compliantVehicles(?int $groupId = null): Collection
+    public function compliantVehicles(?int $groupId = null, ?string $expectedSeasonOverride = null): Collection
     {
-        return $this->vehiclesWithTires($groupId)->filter(fn (Vehicle $vehicle) => $this->isCompliant($vehicle));
+        return $this->vehiclesWithTires($groupId)->filter(fn (Vehicle $vehicle) => $this->isCompliant($vehicle, $expectedSeasonOverride));
     }
 
     /**
      * Veicoli del gruppo (con almeno un set di gomme tracciato) non ancora
      * passati alla stagionalità attesa per quel gruppo.
      */
-    public function pendingVehicles(?int $groupId = null): Collection
+    public function pendingVehicles(?int $groupId = null, ?string $expectedSeasonOverride = null): Collection
     {
-        return $this->vehiclesWithTires($groupId)->reject(fn (Vehicle $vehicle) => $this->isCompliant($vehicle));
+        return $this->vehiclesWithTires($groupId)->reject(fn (Vehicle $vehicle) => $this->isCompliant($vehicle, $expectedSeasonOverride));
     }
 
     /**
@@ -109,7 +135,7 @@ class TireSeasonService
      * regola solo se TUTTE quelle montate corrispondono alla stagionalità
      * attesa (o sono quattro stagioni).
      */
-    public function isCompliant(Vehicle $vehicle): bool
+    public function isCompliant(Vehicle $vehicle, ?string $expectedSeasonOverride = null): bool
     {
         $mounted = $vehicle->tires->where('status', Tire::STATUS_MOUNTED);
 
@@ -117,7 +143,7 @@ class TireSeasonService
             return false;
         }
 
-        $expectedSeason = $this->expectedSeasonForVehicle($vehicle);
+        $expectedSeason = $expectedSeasonOverride ?? $this->expectedSeasonForVehicle($vehicle);
 
         return $mounted->every(fn (Tire $tire) => $tire->season === $expectedSeason || $tire->season === Tire::SEASON_ALL_SEASON);
     }

@@ -103,8 +103,8 @@ class TireCrudTest extends TestCase
     {
         $user = $this->admin();
         $allowedSizes = [
-            ['size' => '225/75R16C', 'position' => 'either'],
-            ['size' => '225/75R16', 'position' => 'front'],
+            ['size' => '225/75R16C', 'code' => 'A1'],
+            ['size' => '225/75R16', 'code' => 'A2'],
         ];
         $vehicle = $this->createVehicle(['allowed_tire_sizes' => $allowedSizes]);
         $tire = $this->createTire($vehicle);
@@ -117,6 +117,36 @@ class TireCrudTest extends TestCase
         $this->actingAs($user)->get(route('admin.tires.edit', $tire))
             ->assertStatus(200)
             ->assertSee($expected, false);
+    }
+
+    public function test_index_exposes_vehicle_allowed_tire_sizes_for_bulk_suggestion(): void
+    {
+        $user = $this->admin();
+        $allowedSizes = [
+            ['size' => '225/75R16C', 'code' => 'A1'],
+            ['size' => '225/75R16', 'code' => 'A2'],
+        ];
+        $vehicle = $this->createVehicle(['allowed_tire_sizes' => $allowedSizes]);
+        $this->createTire($vehicle);
+
+        $response = $this->actingAs($user)->get(route('admin.tires.index'));
+
+        $response->assertOk();
+        $response->assertSee('id="tire-bulk-vehicle-select"', false);
+        $response->assertSee('data-tire-sizes="'.htmlentities(json_encode($allowedSizes)).'"', false);
+    }
+
+    public function test_bulk_edit_checkbox_exposes_tire_vehicle_id(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->createVehicle();
+        $tire = $this->createTire($vehicle);
+
+        $response = $this->actingAs($user)->get(route('admin.tires.index'));
+
+        $response->assertOk();
+        $response->assertSee('value="'.$tire->id.'"', false);
+        $response->assertSee('data-vehicle-id="'.$vehicle->id.'"', false);
     }
 
     public function test_tire_can_be_stored(): void
