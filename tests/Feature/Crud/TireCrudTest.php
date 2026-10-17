@@ -103,8 +103,8 @@ class TireCrudTest extends TestCase
     {
         $user = $this->admin();
         $allowedSizes = [
-            ['size' => '225/75R16C', 'position' => 'either'],
-            ['size' => '225/75R16', 'position' => 'front'],
+            ['size' => '225/75R16C', 'code' => 'A1'],
+            ['size' => '225/75R16', 'code' => 'A2'],
         ];
         $vehicle = $this->createVehicle(['allowed_tire_sizes' => $allowedSizes]);
         $tire = $this->createTire($vehicle);
@@ -123,8 +123,8 @@ class TireCrudTest extends TestCase
     {
         $user = $this->admin();
         $allowedSizes = [
-            ['size' => '225/75R16C', 'position' => 'either'],
-            ['size' => '225/75R16', 'position' => 'front'],
+            ['size' => '225/75R16C', 'code' => 'A1'],
+            ['size' => '225/75R16', 'code' => 'A2'],
         ];
         $vehicle = $this->createVehicle(['allowed_tire_sizes' => $allowedSizes]);
         $this->createTire($vehicle);

@@ -82,6 +82,10 @@
             <span class="label">Misure pneumatici</span>
             <span class="value">{{ $vehicle->allowed_tire_sizes_label }}</span>
         </div>
+        <div class="info-row">
+            <span class="label">Combinazioni ammesse</span>
+            <span class="value">{{ $vehicle->allowed_tire_size_combinations_label }}</span>
+        </div>
     </div>
 
 </div>

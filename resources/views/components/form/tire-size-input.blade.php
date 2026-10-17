@@ -1,4 +1,4 @@
-@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false, 'removable' => false, 'vehicleSelect' => null, 'positionField' => null, 'positionValue' => null])
+@props(['name', 'label', 'model' => null, 'field' => null, 'value' => null, 'id' => null, 'required' => false, 'removable' => false, 'vehicleSelect' => null, 'codeField' => null, 'codeValue' => null])
 
 @php
     $inputId = $id ?? $name;
@@ -41,12 +41,12 @@
     @error($name)
         <div class="field-error">{{ $message }}</div>
     @enderror
-    @if ($positionField)
-        @php($rawPosition = old($positionField, $positionValue ?? 'either'))
-        <select class="select" name="{{ $positionField }}" aria-label="{{ __('Posizione di questa misura') }}">
-            <option value="either" {{ $rawPosition === 'either' ? 'selected' : '' }}>{{ __('Anteriore e posteriore') }}</option>
-            <option value="front" {{ $rawPosition === 'front' ? 'selected' : '' }}>{{ __('Solo anteriore') }}</option>
-            <option value="rear" {{ $rawPosition === 'rear' ? 'selected' : '' }}>{{ __('Solo posteriore') }}</option>
-        </select>
+    @if ($codeField)
+        <input type="text" class="input" name="{{ $codeField }}" value="{{ old($codeField, $codeValue ?? '') }}"
+            placeholder="{{ __('Codice (es. A1)') }}" maxlength="10"
+            aria-label="{{ __('Codice di questa misura, come indicato sulla carta di circolazione') }}">
+        @error($codeField)
+            <div class="field-error">{{ $message }}</div>
+        @enderror
     @endif
 </div>

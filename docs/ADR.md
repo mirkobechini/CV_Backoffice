@@ -230,6 +230,8 @@ A vehicle can be created (or an existing one updated) by uploading a photo of th
 - Rate-limited separately (`throttle:vehicle-scan`) since each call costs an LLM API request
 - The create/edit vehicle form shows the libretto code next to each technical field it can pre-fill (e.g. "VIN (E.)"), so a user filling it in by hand knows where to look on the document even without running the scan
 
+**Addendum (2026-10-17, accettata):** `allowed_tire_sizes` (`{size, position}`) assumeva che ogni misura avesse una posizione fissa decisa a priori. La vera carta di circolazione elenca invece misure numerate più una tabella di combinazioni ammesse tra assi (es. "1-1, 2-2" stessa misura davanti/dietro, "1-2" misure diverse) — è quella tabella a determinare dove può andare una misura, non un campo indipendente. Sostituito con `{size, code}` (codice breve, es. "A1") + nuova colonna `allowed_tire_size_combinations` (coppie `{front_code, rear_code}`). `Tire::sizeMismatchWarning()` deriva il vincolo per asse dalle combinazioni invece di leggerlo da un campo posizione: un codice è ammesso su un asse se compare come `front_code`/`rear_code` in almeno una combinazione. Scope deliberatamente non esteso al confronto della coppia esatta montata sui due assi (richiederebbe interrogare la gomma gemella ad ogni salvataggio) — solo "questo codice può mai andare su questo asse". `VehicleScanService` non tenta più di estrarre codice o posizione dalla foto: sono etichette specifiche del veicolo, non affidabilmente leggibili, restano manuali.
+
 ---
 
 ## 12. Equipment faults and appointments: a simpler, non-polymorphic design

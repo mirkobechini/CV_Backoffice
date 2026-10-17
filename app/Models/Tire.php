@@ -179,15 +179,24 @@ class Tire extends Model
      * al chilometraggio attuale del veicolo, se disponibile.
      */
     /**
-     * Avviso non bloccante (non una regola di validazione) quando la misura
-     * inserita non corrisponde a nessuna di quelle consigliate per il
-     * veicolo, per la posizione data: ogni misura consigliata (vedi
-     * Vehicle::allowed_tire_sizes, forma {size, position}) vale per
-     * "front", "rear" o "either" (entrambi). Senza $position, il confronto
-     * ignora l'assale (usato dove la posizione non è ancora nota). Tutte le
-     * misure passano dallo stesso componente/formato canonico, quindi un
-     * confronto diretto (case-insensitive) è affidabile. Nessun avviso se
-     * il veicolo non ha misure consigliate impostate.
+     * Avviso non bloccante (non una regola di validazione) in due casi:
+     *
+     * 1. La misura inserita non corrisponde a nessuna di quelle consigliate
+     *    per il veicolo (Vehicle::allowed_tire_sizes, forma {size, code}).
+     * 2. La misura corrisponde a un codice noto, ma quel codice non compare
+     *    mai sull'assale indicato nella tabella delle combinazioni ammesse
+     *    (Vehicle::allowed_tire_size_combinations, forma {front_code,
+     *    rear_code}) — es. un codice che sul libretto può andare solo
+     *    davanti, montato dietro. Senza $position, o senza combinazioni
+     *    definite per il veicolo, questo secondo controllo non si applica
+     *    (permissivo, come quando mancano dati).
+     *
+     * Non verifica che la coppia ESATTA montata sui due assi sia tra le
+     * combinazioni ammesse (richiederebbe interrogare la gomma sull'assale
+     * opposto ad ogni salvataggio) — solo che il codice di questa misura
+     * possa mai comparire su questo assale. Tutte le misure passano dallo
+     * stesso componente/formato canonico, quindi un confronto diretto
+     * (case-insensitive) è affidabile.
      */
     public static function sizeMismatchWarning(?string $enteredSize, ?Vehicle $vehicle, ?string $position = null): ?string
     {
@@ -198,34 +207,38 @@ class Tire extends Model
         }
 
         $enteredSize = trim($enteredSize);
-        $axle = $position ? self::axleForPosition($position) : null;
 
-        $matches = collect($allowedEntries)->contains(function ($entry) use ($enteredSize, $axle) {
-            $size = $entry['size'] ?? null;
-            $entryPosition = $entry['position'] ?? 'either';
+        $matchedEntry = collect($allowedEntries)->first(
+            fn ($entry) => filled($entry['size'] ?? null) && strcasecmp($enteredSize, trim($entry['size'])) === 0
+        );
 
-            if (! $size || strcasecmp($enteredSize, trim($size)) !== 0) {
-                return false;
-            }
+        if (! $matchedEntry) {
+            $allowedList = collect($allowedEntries)
+                ->map(fn ($entry) => trim(($entry['code'] ?? '').': '.($entry['size'] ?? ''), ': '))
+                ->implode(', ');
 
-            return $axle === null || $entryPosition === 'either' || $entryPosition === $axle;
-        });
+            return "La misura inserita ({$enteredSize}) non corrisponde a nessuna delle misure consigliate per questo veicolo ({$allowedList}).";
+        }
 
-        if ($matches) {
+        $code = $matchedEntry['code'] ?? null;
+        $combinations = $vehicle->allowed_tire_size_combinations ?? [];
+
+        if (! $position || ! $code || empty($combinations)) {
             return null;
         }
 
-        $axleLabel = fn (string $position) => match ($position) {
-            self::AXLE_FRONT => ' (anteriore)',
-            self::AXLE_REAR => ' (posteriore)',
-            default => '',
-        };
+        $axle = self::axleForPosition($position);
+        $axleKey = $axle === self::AXLE_FRONT ? 'front_code' : 'rear_code';
 
-        $allowedList = collect($allowedEntries)
-            ->map(fn ($entry) => ($entry['size'] ?? '').$axleLabel($entry['position'] ?? 'either'))
-            ->implode(', ');
+        $allowedOnAxle = collect($combinations)->contains(fn ($combo) => ($combo[$axleKey] ?? null) === $code);
 
-        return "La misura inserita ({$enteredSize}) non corrisponde a nessuna delle misure consigliate per questo veicolo ({$allowedList}).";
+        if ($allowedOnAxle) {
+            return null;
+        }
+
+        $axleLabel = $axle === self::AXLE_FRONT ? 'anteriore' : 'posteriore';
+
+        return "La misura {$enteredSize} (codice {$code}) non risulta tra le combinazioni ammesse per l'asse {$axleLabel}.";
     }
 
     public function getChangeDueAttribute(): bool

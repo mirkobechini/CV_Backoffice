@@ -80,7 +80,7 @@ class VehicleScanTest extends TestCase
             'engine_displacement_cc' => 2287,
             'engine_power_kw' => 96,
             'vehicle_category' => 'M1',
-            'allowed_tire_sizes' => [['size' => '225/75R16C', 'position' => 'either']],
+            'allowed_tire_sizes' => [['size' => '225/75R16C']],
             'has_timing_belt_suggested' => true,
         ], $overrides);
     }
@@ -94,26 +94,27 @@ class VehicleScanTest extends TestCase
 
         $this->assertSame('AB123CD', $result['license_plate']);
         $this->assertSame('Fiat', $result['brand']);
-        $this->assertSame([['size' => '225/75R16C', 'position' => 'either']], $result['allowed_tire_sizes']);
+        $this->assertSame([['size' => '225/75R16C']], $result['allowed_tire_sizes']);
         $this->assertTrue($result['has_timing_belt_suggested']);
     }
 
-    public function test_scan_service_normalizes_allowed_tire_sizes_missing_position(): void
+    public function test_scan_service_normalizes_allowed_tire_sizes_to_size_only(): void
     {
         // Il modello a volte non rispetta lo schema richiesto (stringa
-        // semplice invece di {size, position}, o posizione omessa): deve
-        // diventare "either" invece di propagare un formato inatteso.
+        // semplice invece di {size}, o chiavi extra come un codice
+        // inventato): il risultato normalizzato ha sempre e solo "size",
+        // mai un code/position propagati dal modello.
         $this->fakeChatCompletion($this->extractedFieldsStub([
-            'allowed_tire_sizes' => ['225/75R16C', ['size' => '205/55R16'], ['size' => '195/70R15', 'position' => 'front']],
+            'allowed_tire_sizes' => ['225/75R16C', ['size' => '205/55R16'], ['size' => '195/70R15', 'code' => 'A1']],
         ]));
 
         $front = UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg');
         $result = app(VehicleScanService::class)->scan([$front->getRealPath()]);
 
         $this->assertSame([
-            ['size' => '225/75R16C', 'position' => 'either'],
-            ['size' => '205/55R16', 'position' => 'either'],
-            ['size' => '195/70R15', 'position' => 'front'],
+            ['size' => '225/75R16C'],
+            ['size' => '205/55R16'],
+            ['size' => '195/70R15'],
         ], $result['allowed_tire_sizes']);
     }
 
@@ -183,7 +184,7 @@ class VehicleScanTest extends TestCase
         $response->assertSessionHasInput('license_plate', 'AB123CD');
         $response->assertSessionHasInput('brand_id', $deps['brand']->id);
         $response->assertSessionHasInput('car_model_id', $deps['model']->id);
-        $response->assertSessionHasInput('allowed_tire_sizes', [['size' => '225/75R16C', 'position' => 'either']]);
+        $response->assertSessionHasInput('allowed_tire_sizes', [['size' => '225/75R16C']]);
     }
 
     public function test_scan_endpoint_flags_unmatched_brand_and_model(): void
@@ -427,163 +428,5 @@ class VehicleScanTest extends TestCase
         $response->assertRedirect();
         $vehicle = Vehicle::where('license_plate', 'AB123CD')->first();
         $this->assertNull($vehicle->registration_card_path);
-    }
-
-    public function test_tire_size_mismatch_shows_warning_without_blocking_save(): void
-    {
-        Storage::fake('public');
-        $user = $this->capo();
-        $deps = $this->vehicleDeps();
-        $vehicle = Vehicle::create([
-            'license_plate' => 'AB123CD',
-            'internal_code' => '0001',
-            'brand_id' => $deps['brand']->id,
-            'car_model_id' => $deps['model']->id,
-            'vehicle_type_id' => $deps['type']->id,
-            'immatricolation_date' => '2024-01-01',
-            'group_id' => $user->activeGroup()->id,
-            'allowed_tire_sizes' => [['size' => '225/75R16C', 'position' => 'either']],
-        ]);
-
-        $response = $this->actingAs($user)->post(route('admin.tires.store'), [
-            'vehicle_id' => $vehicle->id,
-            'season' => 'summer',
-            'tire_group' => 'single',
-            'position' => 'front_left',
-            'size' => '205/55R16',
-            'status' => 'stored',
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionHas('tire_size_warning');
-        $this->assertDatabaseHas('tires', ['vehicle_id' => $vehicle->id, 'size' => '205/55R16']);
-    }
-
-    public function test_no_tire_size_warning_when_size_matches_any_of_several_allowed(): void
-    {
-        Storage::fake('public');
-        $user = $this->capo();
-        $deps = $this->vehicleDeps();
-        $vehicle = Vehicle::create([
-            'license_plate' => 'AB123CD',
-            'internal_code' => '0001',
-            'brand_id' => $deps['brand']->id,
-            'car_model_id' => $deps['model']->id,
-            'vehicle_type_id' => $deps['type']->id,
-            'immatricolation_date' => '2024-01-01',
-            'group_id' => $user->activeGroup()->id,
-            'allowed_tire_sizes' => [
-                ['size' => '225/75R16C', 'position' => 'either'],
-                ['size' => '205/55R16', 'position' => 'either'],
-            ],
-        ]);
-
-        $response = $this->actingAs($user)->post(route('admin.tires.store'), [
-            'vehicle_id' => $vehicle->id,
-            'season' => 'summer',
-            'tire_group' => 'single',
-            'position' => 'front_left',
-            'size' => '205/55R16',
-            'status' => 'stored',
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionMissing('tire_size_warning');
-    }
-
-    public function test_tire_size_mismatch_depends_on_position(): void
-    {
-        // Una misura consigliata solo per il posteriore non deve generare
-        // avviso per una gomma posteriore, ma deve generarlo per una
-        // anteriore — prima dell'introduzione della posizione, qualunque
-        // misura consigliata valeva per qualsiasi posizione.
-        Storage::fake('public');
-        $user = $this->capo();
-        $deps = $this->vehicleDeps();
-        $vehicle = Vehicle::create([
-            'license_plate' => 'AB123CD',
-            'internal_code' => '0001',
-            'brand_id' => $deps['brand']->id,
-            'car_model_id' => $deps['model']->id,
-            'vehicle_type_id' => $deps['type']->id,
-            'immatricolation_date' => '2024-01-01',
-            'group_id' => $user->activeGroup()->id,
-            'allowed_tire_sizes' => [['size' => '205/55R16', 'position' => 'rear']],
-        ]);
-
-        $rearResponse = $this->actingAs($user)->post(route('admin.tires.store'), [
-            'vehicle_id' => $vehicle->id,
-            'season' => 'summer',
-            'tire_group' => 'single',
-            'position' => 'rear_left',
-            'size' => '205/55R16',
-            'status' => 'stored',
-        ]);
-        $rearResponse->assertSessionMissing('tire_size_warning');
-
-        $frontResponse = $this->actingAs($user)->post(route('admin.tires.store'), [
-            'vehicle_id' => $vehicle->id,
-            'season' => 'summer',
-            'tire_group' => 'single',
-            'position' => 'front_left',
-            'size' => '205/55R16',
-            'status' => 'stored',
-        ]);
-        $frontResponse->assertSessionHas('tire_size_warning');
-    }
-
-    public function test_no_tire_size_warning_when_vehicle_has_no_allowed_size(): void
-    {
-        Storage::fake('public');
-        $user = $this->capo();
-        $deps = $this->vehicleDeps();
-        $vehicle = Vehicle::create([
-            'license_plate' => 'AB123CD',
-            'internal_code' => '0001',
-            'brand_id' => $deps['brand']->id,
-            'car_model_id' => $deps['model']->id,
-            'vehicle_type_id' => $deps['type']->id,
-            'immatricolation_date' => '2024-01-01',
-            'group_id' => $user->activeGroup()->id,
-        ]);
-
-        $response = $this->actingAs($user)->post(route('admin.tires.store'), [
-            'vehicle_id' => $vehicle->id,
-            'season' => 'summer',
-            'tire_group' => 'single',
-            'position' => 'front_left',
-            'size' => '205/55R16',
-            'status' => 'stored',
-        ]);
-
-        $response->assertRedirect();
-        $response->assertSessionMissing('tire_size_warning');
-    }
-
-    public function test_tire_size_regex_rejects_invalid_format(): void
-    {
-        Storage::fake('public');
-        $user = $this->capo();
-        $deps = $this->vehicleDeps();
-        $vehicle = Vehicle::create([
-            'license_plate' => 'AB123CD',
-            'internal_code' => '0001',
-            'brand_id' => $deps['brand']->id,
-            'car_model_id' => $deps['model']->id,
-            'vehicle_type_id' => $deps['type']->id,
-            'immatricolation_date' => '2024-01-01',
-            'group_id' => $user->activeGroup()->id,
-        ]);
-
-        $response = $this->actingAs($user)->post(route('admin.tires.store'), [
-            'vehicle_id' => $vehicle->id,
-            'season' => 'summer',
-            'tire_group' => 'single',
-            'position' => 'front_left',
-            'size' => 'not-a-tire-size',
-            'status' => 'stored',
-        ]);
-
-        $response->assertSessionHasErrors('size');
     }
 }
