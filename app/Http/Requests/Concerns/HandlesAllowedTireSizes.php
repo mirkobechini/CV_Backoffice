@@ -37,19 +37,23 @@ trait HandlesAllowedTireSizes
     /**
      * Le righe rimosse/vuote del repeater inviano comunque un campo
      * nascosto vuoto: le scartiamo prima di validare, invece di farle
-     * fallire come stringa vuota non valida. Misura e codice sono
-     * obbligatori insieme: una misura senza codice non è referenziabile
-     * dalla tabella delle combinazioni, quindi la riga viene scartata.
+     * fallire come stringa vuota non valida. Una misura senza codice
+     * riceve un codice sequenziale di fallback ("1", "2", ...) invece di
+     * essere scartata — una misura con un valore reale non deve MAI
+     * sparire al salvataggio solo perché il codice non è compilato
+     * (bug segnalato 2026-10-17: un salvataggio che non toccava le
+     * misure le cancellava silenziosamente per questo motivo). Stesso
+     * criterio di fallback già usato dalla migrazione dati per lo storico.
      */
     protected function normalizedAllowedTireSizes(): array
     {
         return collect($this->input('allowed_tire_sizes', []))
-            ->filter(fn ($entry) => filled($entry['size'] ?? null) && filled($entry['code'] ?? null))
-            ->map(fn ($entry) => [
-                'size' => $entry['size'],
-                'code' => $entry['code'],
-            ])
+            ->filter(fn ($entry) => filled($entry['size'] ?? null))
             ->values()
+            ->map(fn ($entry, $index) => [
+                'size' => $entry['size'],
+                'code' => filled($entry['code'] ?? null) ? $entry['code'] : (string) ($index + 1),
+            ])
             ->all();
     }
 

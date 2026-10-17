@@ -261,12 +261,12 @@
                             <div class="row2 combo-row">
                                 <div class="field">
                                     <label>{{ __('Codice anteriore') }}</label>
-                                    <input type="text" class="input" name="allowed_tire_size_combinations[{{ $i }}][front_code]"
+                                    <input type="text" class="input" name="allowed_tire_size_combinations[][front_code]"
                                         value="{{ $combo['front_code'] ?? '' }}" maxlength="10">
                                 </div>
                                 <div class="field">
                                     <label>{{ __('Codice posteriore') }}</label>
-                                    <input type="text" class="input" name="allowed_tire_size_combinations[{{ $i }}][rear_code]"
+                                    <input type="text" class="input" name="allowed_tire_size_combinations[][rear_code]"
                                         value="{{ $combo['rear_code'] ?? '' }}" maxlength="10">
                                     <button type="button" class="mini-btn combo-remove"
                                         aria-label="{{ __('Rimuovi questa combinazione') }}"><i
