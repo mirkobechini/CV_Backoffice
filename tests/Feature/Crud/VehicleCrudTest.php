@@ -115,6 +115,27 @@ class VehicleCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_show_page_displays_allowed_tire_sizes_and_combinations(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $vehicle->update([
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => 'A1'],
+                ['size' => '205/55R16', 'code' => 'A2'],
+            ],
+            'allowed_tire_size_combinations' => [
+                ['front_code' => 'A1', 'rear_code' => 'A2'],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('A1: 225/75R16C');
+        $response->assertSee('A1-A2');
+    }
+
     public function test_show_page_lists_appointments_history(): void
     {
         $user = $this->createUser();
