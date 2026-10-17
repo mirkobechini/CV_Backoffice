@@ -2,6 +2,12 @@
 
 Tutte le modifiche significative a questo progetto saranno documentate in questo file.
 
+## [Unreleased]
+
+### Fixed
+
+- Log attività (`/admin/activity-log`): mostrava a chiunque lo aprisse le attività di TUTTI i gruppi, non solo del proprio (nessun filtro per gruppo sulla query). Ora filtrato per gruppo attivo.
+
 ## [v1.16.1] - 2026-10-15
 
 ### Changed
