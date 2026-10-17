@@ -42,8 +42,8 @@
         <div class="field-error">{{ $message }}</div>
     @enderror
     @if ($codeField)
-        <input type="text" class="input" name="{{ $codeField }}" value="{{ old($codeField, $codeValue ?? '') }}"
-            placeholder="{{ __('Codice (es. A1)') }}" maxlength="10"
+        <input type="text" class="input tire-size-code-input" name="{{ $codeField }}"
+            value="{{ old($codeField, $codeValue ?? '') }}" placeholder="{{ __('Codice (es. A1)') }}" maxlength="10"
             aria-label="{{ __('Codice di questa misura, come indicato sulla carta di circolazione') }}">
         @error($codeField)
             <div class="field-error">{{ $message }}</div>

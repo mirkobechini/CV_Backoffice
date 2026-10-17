@@ -115,11 +115,33 @@ window.initTireSizeInputs = initializeTireSizeInputs;
 
 let tireSizeRowCounter = 0;
 
+// Sostituisce il placeholder "__INDEX__" nei name dei campi clonati con un
+// indice numerico esplicito — necessario perché "size"/"code" (o
+// "front_code"/"rear_code") sono campi fratelli della stessa riga: un
+// "[]" per ciascuno, invece, verrebbe accoppiato dal parser PHP in base
+// all'ordine globale di invio e non per riga, spaiando i due sottocampi
+// (bug segnalato 2026-10-17: misure/combinazioni perse o mescolate al
+// salvataggio). Il contatore per gruppo parte dal numero di righe già
+// renderizzate dal server (non da 0) per non entrare in collisione con
+// quelle.
+const nextRowIndex = (group, datasetKey) => {
+    const current = parseInt(group.dataset[datasetKey] ?? '0', 10);
+    group.dataset[datasetKey] = String(current + 1);
+    return current;
+};
+
+const applyIndexPlaceholder = (clone, index) => {
+    clone.querySelectorAll('[name]').forEach((el) => {
+        el.name = el.name.replace('__INDEX__', index);
+    });
+};
+
 // Aggiunge una riga "misura pneumatico" clonando il <template> del gruppo
 // (usato per l'elenco ripetibile "misure consigliate" del veicolo, dove un
 // veicolo può avere più di una misura, es. assale anteriore/posteriore
 // diversi). Gli id vengono resi unici per ogni riga clonata sostituendo il
-// suffisso "_new" usato nel template.
+// suffisso "_new" usato nel template (concetto separato dall'indice del
+// name, che invece deve essere univoco ma non arbitrario — vedi sopra).
 const addTireSizeRow = (group) => {
     const container = group.querySelector('[data-tire-size-container]');
     const template = group.querySelector('[data-tire-size-template]');
@@ -140,48 +162,93 @@ const addTireSizeRow = (group) => {
     clone.querySelectorAll('label[for]').forEach((el) => {
         el.setAttribute('for', el.getAttribute('for').replace('_new', uniqueSuffix));
     });
+    applyIndexPlaceholder(clone, nextRowIndex(group, 'tireSizeNextIndex'));
 
     container.appendChild(clone);
     initializeTireSizeInputs();
+    refreshComboCodeOptions();
 };
 
-// Riga "combinazione ammessa" (codice anteriore + posteriore): solo due
-// campi testo, niente scomposizione come le misure, quindi un semplice
-// clone del <template> basta (nessun id da rendere univoco). Il nome dei
-// campi resta "[]" (append automatico, come il repeater misure sopra):
-// un indice esplicito calcolato qui (es. un contatore) andrebbe in
-// collisione con le righe già renderizzate dal server, che partono
-// anch'esse da 0 — PHP costruisce l'array nell'ordine di invio, quindi
-// "[]" ovunque è l'unico schema sicuro con righe miste server+JS.
+// Riga "combinazione ammessa" (codice anteriore + posteriore): stesso
+// indice esplicito condiviso tra i due sottocampi della riga, vedi sopra.
 const addComboRow = (group) => {
     const container = group.querySelector('[data-combo-container]');
     const template = group.querySelector('[data-combo-template]');
     if (!container || !template) return;
 
-    container.appendChild(template.content.cloneNode(true));
+    const clone = template.content.cloneNode(true);
+    applyIndexPlaceholder(clone, nextRowIndex(group, 'comboNextIndex'));
+    container.appendChild(clone);
+    refreshComboCodeOptions();
+};
+
+// Le select "codice anteriore/posteriore" delle combinazioni ammesse sono
+// popolate dai codici attualmente scritti nella sezione misure qui sopra
+// (niente select statiche sincronizzate a mano): un codice rinominato o
+// rimosso si riflette subito, e non si può mai referenziare un codice che
+// non esiste più nel form.
+const collectTireSizeCodes = () => {
+    const codes = [];
+    document.querySelectorAll('.tire-size-code-input').forEach((input) => {
+        const code = input.value.trim();
+        if (code && !codes.includes(code)) codes.push(code);
+    });
+    return codes;
+};
+
+const refreshComboCodeOptions = () => {
+    const codes = collectTireSizeCodes();
+    document.querySelectorAll('.combo-code-select').forEach((select) => {
+        const current = select.value || select.dataset.comboSelected || '';
+        const options = current && !codes.includes(current) ? [current, ...codes] : codes;
+
+        select.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = select.dataset.placeholder || '';
+        select.appendChild(placeholder);
+        options.forEach((code) => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = code;
+            option.selected = code === current;
+            select.appendChild(option);
+        });
+        delete select.dataset.comboSelected;
+    });
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeTireSizeInputs();
 
     document.querySelectorAll('[data-tire-size-group]').forEach((group) => {
+        group.dataset.tireSizeNextIndex = group.dataset.tireSizeNextIndex || '0';
         group.querySelector('[data-tire-size-add]')?.addEventListener('click', () => addTireSizeRow(group));
     });
 
     document.querySelectorAll('[data-combo-group]').forEach((group) => {
+        group.dataset.comboNextIndex = group.dataset.comboNextIndex || '0';
         group.querySelector('[data-combo-add]')?.addEventListener('click', () => addComboRow(group));
     });
+
+    refreshComboCodeOptions();
 
     // Delegato: le righe rimovibili possono essere aggiunte dinamicamente.
     document.addEventListener('click', (event) => {
         const removeBtn = event.target.closest('.tire-size-remove');
         if (removeBtn) {
             removeBtn.closest('.tire-size-input')?.remove();
+            refreshComboCodeOptions();
         }
 
         const comboRemoveBtn = event.target.closest('.combo-remove');
         if (comboRemoveBtn) {
             comboRemoveBtn.closest('.combo-row')?.remove();
         }
+    });
+
+    // Delegato: i campi codice misura possono essere aggiunti dinamicamente.
+    document.addEventListener('input', (event) => {
+        if (event.target.matches('.tire-size-code-input')) refreshComboCodeOptions();
     });
 });
