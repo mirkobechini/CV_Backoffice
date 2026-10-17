@@ -178,7 +178,14 @@
                                 <span class="badge {{ $badgeClass($tire->status) }}">{{ $tire->status_label }}</span>
                             </td>
                             <td>
-                                {{ $tire->next_change_date_formatted ?? '—' }}
+                                @if ($tire->next_change_date_formatted)
+                                    {{ $tire->next_change_date_formatted }}
+                                @elseif ($tire->suggested_next_change_date)
+                                    {{ $tire->suggested_next_change_date->format('d/m/Y') }}
+                                    <div class="cell-sub">{{ __('stimato') }}</div>
+                                @else
+                                    —
+                                @endif
                                 @if ($tire->change_due)
                                     <div class="cell-sub">{{ __('cambio consigliato') }}</div>
                                 @endif

@@ -98,6 +98,8 @@ class TireController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        $this->attachSuggestedNextChangeDate($tires, $tireSeasonService);
+
         $vehiclesForFilter = Vehicle::forCurrentUser()->whereHas('tires')->get();
 
         return view('admin.tires.index', compact(
@@ -162,9 +164,10 @@ class TireController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Tire $tire)
+    public function show(Tire $tire, TireSeasonService $tireSeasonService)
     {
         $tire->load('vehicle.brand', 'vehicle.carModel', 'issues', 'changes.previousTire');
+        $this->attachSuggestedNextChangeDate([$tire], $tireSeasonService);
 
         return view('admin.tires.show', compact('tire'));
     }
@@ -248,5 +251,34 @@ class TireController extends Controller
         );
 
         return redirect()->route('admin.vehicles.show', $tire->vehicle_id)->with('status', 'Cambio gomme registrato con successo.');
+    }
+
+    /**
+     * Stima "prossimo cambio" per gomme montate senza una data impostata a
+     * mano: solo per quelle la cui stagione corrisponde già a quella
+     * attesa dal gruppo (compliant) — per una gomma già fuori stagione la
+     * prossima occorrenza calcolabile cadrebbe l'anno successivo
+     * (fuorviante: sembrerebbe "tra molto tempo" invece che "già scaduta",
+     * ed è comunque segnalata altrove nella UI come da cambiare). Il
+     * gruppo è lo stesso per ogni gomma di questa pagina (scoping per
+     * utente corrente): le date del prossimo cambio si calcolano una sola
+     * volta, non per ogni gomma.
+     *
+     * @param  iterable<Tire>  $tires
+     */
+    private function attachSuggestedNextChangeDate(iterable $tires, TireSeasonService $tireSeasonService): void
+    {
+        $activeGroup = auth()->user()?->activeGroup();
+        $expectedSeason = $tireSeasonService->expectedSeasonForGroup($activeGroup);
+        $nextSwitchDate = $tireSeasonService->nextSwitch($activeGroup)['date'];
+
+        foreach ($tires as $tire) {
+            $tire->suggested_next_change_date = (
+                $tire->status === Tire::STATUS_MOUNTED
+                && $tire->season !== Tire::SEASON_ALL_SEASON
+                && $tire->season === $expectedSeason
+                && ! $tire->next_change_date
+            ) ? $nextSwitchDate : null;
+        }
     }
 }
