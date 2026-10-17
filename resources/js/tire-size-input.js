@@ -52,8 +52,8 @@ const parseTireSize = (root, value) => {
 
 // Popola il select "misura suggerita dal veicolo" con le misure consigliate
 // (allowed_tire_sizes) del veicolo attualmente selezionato nel form, lette
-// dagli attributi data-tire-sizes delle <option> del select veicolo (vedi
-// vehicle-select-tire-sizes.js). Nascosto se il veicolo non ne ha nessuna.
+// dagli attributi data-tire-sizes delle <option> del select veicolo.
+// Nascosto se il veicolo non ne ha nessuna.
 const refreshTireSizeSuggestions = (root) => {
     const vehicleSelectId = root.dataset.tireSizeVehicleSelect;
     if (!vehicleSelectId) return;
@@ -70,16 +70,11 @@ const refreshTireSizeSuggestions = (root) => {
         sizes = [];
     }
 
-    const positionLabel = {
-        front: ' (anteriore)',
-        rear: ' (posteriore)',
-    };
-
     suggestSelect.innerHTML = `<option value="">${suggestSelect.dataset.placeholder || ''}</option>`;
     sizes.forEach((entry) => {
         const option = document.createElement('option');
         option.value = entry.size;
-        option.textContent = entry.size + (positionLabel[entry.position] || '');
+        option.textContent = entry.code ? `${entry.size} (${entry.code})` : entry.size;
         suggestSelect.appendChild(option);
     });
     suggestSelect.style.display = sizes.length ? '' : 'none';
@@ -150,6 +145,25 @@ const addTireSizeRow = (group) => {
     initializeTireSizeInputs();
 };
 
+// Riga "combinazione ammessa" (codice anteriore + posteriore): solo due
+// campi testo, niente scomposizione come le misure, quindi un semplice
+// clone del <template> basta (nessun id da rendere univoco).
+let comboRowCounter = 0;
+
+const addComboRow = (group) => {
+    const container = group.querySelector('[data-combo-container]');
+    const template = group.querySelector('[data-combo-template]');
+    if (!container || !template) return;
+
+    const clone = template.content.cloneNode(true);
+    clone.querySelectorAll('input[name]').forEach((input) => {
+        input.name = input.name.replace('[]', `[${comboRowCounter}]`);
+    });
+    comboRowCounter++;
+
+    container.appendChild(clone);
+};
+
 document.addEventListener('DOMContentLoaded', () => {
     initializeTireSizeInputs();
 
@@ -157,11 +171,20 @@ document.addEventListener('DOMContentLoaded', () => {
         group.querySelector('[data-tire-size-add]')?.addEventListener('click', () => addTireSizeRow(group));
     });
 
+    document.querySelectorAll('[data-combo-group]').forEach((group) => {
+        group.querySelector('[data-combo-add]')?.addEventListener('click', () => addComboRow(group));
+    });
+
     // Delegato: le righe rimovibili possono essere aggiunte dinamicamente.
     document.addEventListener('click', (event) => {
         const removeBtn = event.target.closest('.tire-size-remove');
         if (removeBtn) {
             removeBtn.closest('.tire-size-input')?.remove();
+        }
+
+        const comboRemoveBtn = event.target.closest('.combo-remove');
+        if (comboRemoveBtn) {
+            comboRemoveBtn.closest('.combo-row')?.remove();
         }
     });
 });
