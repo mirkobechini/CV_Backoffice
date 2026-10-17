@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.17.1] - 2026-10-17
+
 ### Fixed
 
 - Scheda veicolo: salvare un veicolo la cui misura gomme esistente non aveva un codice valorizzato cancellava silenziosamente quella misura, anche con un salvataggio che non toccava affatto la sezione misure. Ora riceve un codice di fallback invece di sparire.
