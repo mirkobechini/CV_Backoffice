@@ -99,9 +99,17 @@ class DashboardController extends Controller
                 ->get();
             $inWorkshopCount = $inWorkshopRecords->count();
 
-            $tireSeasonExpected = $tireSeasonService->expectedSeasonForGroup($activeGroup);
-            $tireSeasonPending = $tireSeasonService->pendingVehicles($groupId);
-            $tireSeasonCompliantCount = $tireSeasonService->compliantVehicles($groupId)->count();
+            // expectedSeasonWithWarning() anticipa la stagione attesa nei 30
+            // giorni prima del cambio, cosi un veicolo non ancora passato
+            // compare come "da cambiare" con un margine di preavviso invece
+            // che il giorno esatto della scadenza. $tireSeasonOverdue
+            // distingue i due casi per il badge: in preavviso (non ancora
+            // scaduto davvero) vs dopo la scadenza reale (scaduto).
+            $tireSeasonStrictExpected = $tireSeasonService->expectedSeasonForGroup($activeGroup);
+            $tireSeasonExpected = $tireSeasonService->expectedSeasonWithWarning($activeGroup);
+            $tireSeasonOverdue = $tireSeasonExpected === $tireSeasonStrictExpected;
+            $tireSeasonPending = $tireSeasonService->pendingVehicles($groupId, $tireSeasonExpected);
+            $tireSeasonCompliantCount = $tireSeasonService->compliantVehicles($groupId, $tireSeasonExpected)->count();
             $tireSeasonNextSwitch = $tireSeasonService->nextSwitch($activeGroup);
 
             // Premio totale delle polizze attive (una per veicolo, quella
@@ -153,6 +161,7 @@ class DashboardController extends Controller
                 'tireSeasonPending',
                 'tireSeasonCompliantCount',
                 'tireSeasonNextSwitch',
+                'tireSeasonOverdue',
                 'activeInsurancePremiumTotal',
                 'carWashRecords',
                 'carWashTotal',

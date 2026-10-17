@@ -9,6 +9,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Modifica multipla gomme (/admin/tires): la select "misura suggerita dal veicolo" ora compare anche lì quando le gomme selezionate appartengono tutte allo stesso veicolo (prima esisteva solo in creazione/modifica singola).
 - "Prossimo cambio" gomme: per le gomme montate senza una data impostata a mano, la cui stagione è già quella attesa dal gruppo, viene ora stimato automaticamente dalle date di cambio stagionale (marcato come "stimato"); una gomma già fuori stagione non riceve una stima.
 
+### Changed
+
+- Dashboard, card "Cambio gomme stagionale": un veicolo non ancora passato alla nuova stagione viene segnalato "da cambiare" già 30 giorni prima del cambio (prima restava "a posto" fino al giorno esatto); dopo la scadenza reale il badge diventa "scaduto".
+
 ### Fixed
 
 - Log attività (`/admin/activity-log`): mostrava a chiunque lo aprisse le attività di TUTTI i gruppi, non solo del proprio (nessun filtro per gruppo sulla query). Ora filtrato per gruppo attivo.
