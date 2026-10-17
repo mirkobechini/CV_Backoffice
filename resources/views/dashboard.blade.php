@@ -319,6 +319,11 @@
         $tireSeasonLabel = $tireSeasonExpected === 'winter' ? __('invernali') : __('estive');
         $tireSeasonNextLabel = $tireSeasonNextSwitch['season'] === 'winter' ? __('invernali') : __('estive');
         $tireSeasonTotal = $tireSeasonCompliantCount + $tireSeasonPending->count();
+        // Entro i 30 giorni di preavviso prima del cambio, chi non ha ancora
+        // cambiato è segnalato in anticipo ma non è ancora davvero scaduto;
+        // dopo la data di cambio reale lo è.
+        $tireSeasonPendingBadge = $tireSeasonOverdue ? __('scaduto') : __('da cambiare');
+        $tireSeasonPendingBadgeClass = $tireSeasonOverdue ? 'b-red' : 'b-amber';
     @endphp
     {{-- Cambio gomme stagionale + Lavaggi del mese, affiancate --}}
     @if ($tireSeasonTotal > 0 || $carWashTotal > 0)
@@ -339,8 +344,10 @@
                                 <span class="name" style="font-size:17px;">{{ $tireSeasonCompliantCount }}</span>
                                 <span class="meta">/ {{ $tireSeasonTotal }} {{ __('veicoli già cambiati') }}</span>
                                 @if ($tireSeasonPending->isNotEmpty())
-                                    <span class="badge b-amber" style="margin-left:auto;">
-                                        {{ trans_choice('{1} :count veicolo da cambiare|[2,*] :count veicoli da cambiare', $tireSeasonPending->count(), ['count' => $tireSeasonPending->count()]) }}
+                                    <span class="badge {{ $tireSeasonPendingBadgeClass }}" style="margin-left:auto;">
+                                        {{ $tireSeasonOverdue
+                                            ? trans_choice('{1} :count veicolo scaduto|[2,*] :count veicoli scaduti', $tireSeasonPending->count(), ['count' => $tireSeasonPending->count()])
+                                            : trans_choice('{1} :count veicolo da cambiare|[2,*] :count veicoli da cambiare', $tireSeasonPending->count(), ['count' => $tireSeasonPending->count()]) }}
                                     </span>
                                 @endif
                             </div>
@@ -355,7 +362,7 @@
                                     <div class="name">{{ $vehicle->internal_code }}</div>
                                     <div class="meta">{{ $vehicle->license_plate }}</div>
                                 </div>
-                                <span class="badge b-amber">{{ __('da cambiare') }}</span>
+                                <span class="badge {{ $tireSeasonPendingBadgeClass }}">{{ $tireSeasonPendingBadge }}</span>
                             </a>
                         @endforeach
                         <a href="{{ route('admin.tires.index', ['season_filter' => 'due']) }}"
