@@ -7,6 +7,7 @@ use App\Http\Requests\Concerns\HandlesAllowedTireSizes;
 use App\Http\Requests\Concerns\HandlesWarrantyExtension;
 use App\Models\Vehicle;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -94,6 +95,12 @@ class StoreVehicleRequest extends FormRequest
             'license_plate' => strtoupper(str_replace(' ', '', (string) $this->input('license_plate'))),
             'has_warranty_extension' => $this->boolean('has_warranty_extension'),
             'allowed_tire_sizes' => $this->normalizedAllowedTireSizes(),
+            'allowed_tire_size_combinations' => $this->normalizedAllowedTireCombinations(),
         ]);
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(fn ($validator) => $this->assertAllowedTireCombinationsReferenceKnownCodes($validator));
     }
 }
