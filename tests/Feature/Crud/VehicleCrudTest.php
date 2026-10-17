@@ -209,7 +209,7 @@ class VehicleCrudTest extends TestCase
         ]);
     }
 
-    public function test_vehicle_store_saves_allowed_tire_sizes_with_position(): void
+    public function test_vehicle_store_saves_allowed_tire_sizes_with_code(): void
     {
         $user = $this->createUser();
         $data = $this->createVehicleDependencies();
@@ -223,46 +223,25 @@ class VehicleCrudTest extends TestCase
             'immatricolation_date' => '2024-01-01',
             'has_warranty_extension' => 0,
             'allowed_tire_sizes' => [
-                ['size' => '225/75R16C', 'position' => 'front'],
-                ['size' => '205/55R16', 'position' => 'rear'],
+                ['size' => '225/75R16C', 'code' => 'A1'],
+                ['size' => '205/55R16', 'code' => 'A2'],
             ],
         ]);
 
         $vehicle = Vehicle::first();
         $response->assertRedirect(route('admin.vehicles.show', $vehicle));
         $this->assertSame([
-            ['size' => '225/75R16C', 'position' => 'front'],
-            ['size' => '205/55R16', 'position' => 'rear'],
+            ['size' => '225/75R16C', 'code' => 'A1'],
+            ['size' => '205/55R16', 'code' => 'A2'],
         ], $vehicle->fresh()->allowed_tire_sizes);
     }
 
-    public function test_vehicle_store_defaults_missing_tire_size_position_to_either(): void
-    {
-        $user = $this->createUser();
-        $data = $this->createVehicleDependencies();
-
-        $this->actingAs($user)->post(route('admin.vehicles.store'), [
-            'license_plate' => 'AB123CD',
-            'vehicle_type_id' => $data['vehicleType']->id,
-            'internal_code' => '1234',
-            'brand_id' => $data['brand']->id,
-            'car_model_id' => $data['carModel']->id,
-            'immatricolation_date' => '2024-01-01',
-            'has_warranty_extension' => 0,
-            'allowed_tire_sizes' => [
-                ['size' => '225/75R16C'],
-            ],
-        ]);
-
-        $vehicle = Vehicle::first();
-        $this->assertSame([['size' => '225/75R16C', 'position' => 'either']], $vehicle->fresh()->allowed_tire_sizes);
-    }
-
-    public function test_vehicle_store_discards_tire_size_rows_without_a_size(): void
+    public function test_vehicle_store_discards_tire_size_rows_without_both_size_and_code(): void
     {
         // Le righe rimosse/vuote del repeater inviano comunque un campo
         // nascosto vuoto: non devono fallire la validazione né finire nel
-        // dato salvato.
+        // dato salvato. Misura e codice sono obbligatori insieme: una
+        // misura senza codice non è referenziabile da una combinazione.
         $user = $this->createUser();
         $data = $this->createVehicleDependencies();
 
@@ -275,13 +254,69 @@ class VehicleCrudTest extends TestCase
             'immatricolation_date' => '2024-01-01',
             'has_warranty_extension' => 0,
             'allowed_tire_sizes' => [
-                ['size' => '', 'position' => 'front'],
-                ['size' => '225/75R16C', 'position' => 'rear'],
+                ['size' => '', 'code' => 'A1'],
+                ['size' => '225/75R16C', 'code' => ''],
+                ['size' => '205/55R16', 'code' => 'A2'],
             ],
         ])->assertRedirect();
 
         $vehicle = Vehicle::first();
-        $this->assertSame([['size' => '225/75R16C', 'position' => 'rear']], $vehicle->fresh()->allowed_tire_sizes);
+        $this->assertSame([['size' => '205/55R16', 'code' => 'A2']], $vehicle->fresh()->allowed_tire_sizes);
+    }
+
+    public function test_vehicle_store_saves_allowed_tire_size_combinations(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicleDependencies();
+
+        $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => '1234',
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => 'A1'],
+                ['size' => '205/55R16', 'code' => 'A2'],
+            ],
+            'allowed_tire_size_combinations' => [
+                ['front_code' => 'A1', 'rear_code' => 'A2'],
+                ['front_code' => 'A2', 'rear_code' => 'A2'],
+            ],
+        ])->assertRedirect();
+
+        $vehicle = Vehicle::first();
+        $this->assertSame([
+            ['front_code' => 'A1', 'rear_code' => 'A2'],
+            ['front_code' => 'A2', 'rear_code' => 'A2'],
+        ], $vehicle->fresh()->allowed_tire_size_combinations);
+    }
+
+    public function test_vehicle_store_rejects_combination_referencing_unknown_code(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicleDependencies();
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => '1234',
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => 'A1'],
+            ],
+            'allowed_tire_size_combinations' => [
+                ['front_code' => 'A1', 'rear_code' => 'A3'],
+            ],
+        ]);
+
+        $response->assertSessionHasErrors(['allowed_tire_size_combinations.0.rear_code']);
+        $this->assertDatabaseMissing('vehicles', ['license_plate' => 'AB123CD']);
     }
 
     public function test_vehicle_can_be_updated(): void
