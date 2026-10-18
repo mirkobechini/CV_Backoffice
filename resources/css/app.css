@@ -1631,6 +1631,14 @@ body {
     color: var(--red);
 }
 
+.veh-kv-top {
+    align-items: flex-start;
+}
+
+.veh-kv .v .line {
+    display: block;
+}
+
 .veh-dl-item {
     display: flex;
     align-items: center;
