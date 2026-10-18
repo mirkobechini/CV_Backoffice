@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Scheda veicolo: le misure pneumatici consigliate sono ora elencate una per riga, invece che tutte su una riga sola separate da virgola.
+- Form veicolo: il placeholder "Seleziona codice..." nelle select delle combinazioni ammesse resta visibile ma non è più selezionabile dal menu a tendina.
+
 ## [v1.17.2] - 2026-10-17
 
 ### Fixed
