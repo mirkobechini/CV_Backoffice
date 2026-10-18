@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Scheda veicolo: la scadenza assicurazione compariva sempre nella card "Scadenze", anche lontana nel tempo, in contraddizione con "Nessuna scadenza attiva" mostrato sopra. Ora segue lo stesso filtro delle altre scadenze (vicina/scaduta).
+
 ## [v1.17.2] - 2026-10-17
 
 ### Fixed
