@@ -2,6 +2,72 @@
 
 > Raccolta di feature proposte durante l'audit del 2026-10-04, non ancora implementate. Ordine di priorità deciso da Mirko il 2026-10-04 (vedi sezione "Ordine di lavoro concordato").
 
+## Audit 2026-10-19 — tabella di marcia
+
+> Audit completo (codice/architettura, sicurezza/privacy, accessibilità/responsive) + proposte feature. Stato da aggiornare via via che si procede. Legenda: ⬜ da fare · 🔄 in corso · ✅ fatto · ❌ scartato.
+
+### Qualità del codice e architettura
+
+| # | Area | Descrizione | Riferimento | Priorità | Stato |
+|---|------|-------------|-------------|----------|-------|
+| C1 | Bug | `complete()` applica un unico stato risolto/non-risolto a TUTTI i guasti/scadenze collegati, invece che per-item come `processCompletedItems()` | `app/Services/MaintenanceCompletionService.php:122-149` | Media | ⬜ |
+| C2 | Bug | `catch(\Throwable)` avvolge anche la validazione, inghiottendo `ValidationException` in un messaggio generico invece dei campi | `app/Http/Controllers/CsvImportController.php:22-46` | Media | ⬜ |
+| C3 | Bug/DRY | Calcolo giorni residui duplicato in due accessor | `app/Models/Deadline.php:267-293` | Bassa | ⬜ |
+| C4 | Errore silenziato | `catch(\Throwable)` senza alcun `Log::`, in violazione della regola AGENTS.md | `app/Http/Controllers/CsvImportController.php:44-46` | Media | ⬜ |
+| C5 | Performance | Dedup notifiche con `LIKE "%marker%"` non indicizzabile | `app/Console/Commands/GenerateNotifications.php:311-317` | Bassa | ⬜ |
+| C6 | Performance | Scadenze scadute filtrate in PHP invece che in SQL | `app/Http/Controllers/DashboardController.php:55-61` | Bassa | ⬜ |
+| C7 | Performance | Veicoli ri-interrogati due volte per lo stesso conteggio | `app/Http/Controllers/DashboardController.php:144-146` | Bassa | ⬜ |
+| C8 | Performance | Manca indice su `is_renewed`, filtrato quasi ovunque nelle query scadenze | migrazione DB | Bassa | ⬜ |
+| C9 | Complessità | 3 livelli di closure annidate per esprimere la condizione orario officina | `app/Models/MaintenanceRecord.php:89-126` | Bassa | ⬜ |
+| C10 | Duplicazione | Logica di rinnovo tagliando/cinghia reimplementata in due service diversi | `MaintenanceCompletionService.php` vs `DeadlineManualRenewalService.php` | Media | ⬜ |
+| C11 | Design pattern | Strategy map per tipo scadenza invece di match/if ripetuti in 3 service | più file | Bassa | ⬜ |
+| C12 | File da spezzare | `Deadline.php` (464 righe), `EquipmentController.php` (401), `MaintenanceCompletionService.php` (395), `VehicleController.php` (392), `Vehicle.php` (379), `DeadlineService.php` (360) + viste `vehicles/edit.blade.php` (443), `dashboard.blade.php` (429), `vehicles/create.blade.php` (428) e altre | vedi dettaglio audit | Bassa | ⬜ |
+
+### Sicurezza e privacy
+
+| # | Area | Descrizione | Riferimento | Priorità | Stato |
+|---|------|-------------|-------------|----------|-------|
+| S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | ⬜ |
+| S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ⬜ |
+| S3 | Hygiene | 3 advisory Composer ignorate senza un commento sul motivo | `composer.json:76-82` | Bassa | ⬜ |
+| S4 | Fragilità futura | `group_id` fillable su `Vehicle` ma nessuna request lo valida oggi — aggiungere un test che pinni l'invariante (nessuna richiesta futura deve poterlo scrivere da payload) | `app/Models/Vehicle.php` | Bassa | ⬜ |
+
+### Accessibilità
+
+| # | Area | Descrizione | Riferimento | Priorità | Stato |
+|---|------|-------------|-------------|----------|-------|
+| A1 | ARIA | Bottoni icona-only (visualizza/modifica/elimina) con solo `title`, serve `aria-label` | varie card scheda veicolo | Media | ⬜ |
+| A2 | Contrasto | Badge ambra/verde in tema chiaro sotto soglia WCAG AA (4.5:1) | `resources/css/app.css:1146-1159,1093-1096` | Media | ⬜ |
+| A3 | Form | Messaggi di errore non collegati via `aria-describedby` | tutte le `@error` nei form create/edit | Media | ⬜ |
+| A4 | Tastiera | Righe raggruppabili (tabelle scadenze/guasti) rispondono solo al click, non da tastiera | `resources/js/app.js:116-127` | Media | ⬜ |
+| A5 | Struttura | Manca `<h1>` su alcune pagine indice | pagine indice | Bassa | ⬜ |
+| A6 | Focus | Focus visibile mancante su `.search input` e `.role-select` | `resources/css/app.css:819-826,3306-3315` | Bassa | ⬜ |
+| A7 | ARIA | Pulsanti tema/notifiche senza `aria-label` (incoerente con l'hamburger che ce l'ha già) | `resources/views/layouts/app.blade.php:63-68` | Bassa | ⬜ |
+
+### Responsive / mobile
+
+| # | Area | Descrizione | Riferimento | Priorità | Stato |
+|---|------|-------------|-------------|----------|-------|
+| R1 | Touch target | Pulsanti icona `.mini-btn` (26×26px) sotto la soglia comodamente toccabile (44px) — il problema pratico più sentito per i volontari sul campo | `resources/css/app.css:1188-1200` | Alta | ⬜ |
+| R2 | Layout | Repeater "misure pneumatici" si impila in modo disordinato su schermi stretti (<480px) | `resources/css/app.css:1941-1959` | Bassa | ⬜ |
+
+### Feature proposte
+
+| # | Feature | Descrizione | Priorità | Stato |
+|---|---------|-------------|----------|-------|
+| F1 | Centro notifiche in-app | Pannello con lo storico notifiche generate da `app:generate-notifications`, non solo l'invio esterno Telegram | Da definire | ⬜ |
+| F2 | Check-in/check-out attrezzatura via QR | Estendere il QR già generato (idea #7) a uno scan-to-assign da telefono per equipaggiamento/gomme | Da definire | ⬜ |
+| F3 | Autocompilazione dati veicolo | Approccio ibrido deciso il 2026-10-19: lo scan AI del libretto resta la fonte per i dati specifici del singolo veicolo (targa, VIN, data immatricolazione, colore — non ricavabili da un catalogo), ma per i dati di omologazione (carburante, cilindrata, potenza, massa — dove l'AI oggi sbaglia, es. carburante sempre "benzina") si incrocia il risultato con il catalogo di Mirko (openvehicle-data), cercando la variante per codice di omologazione letto dalla foto; l'AI resta fallback solo se non si trova un riscontro nel catalogo | Media | ⬜ |
+| F4 | Log carburante/consumi | Tracciamento consumi nel tempo (oggi solo `fuel_type` statico, nessuno storico) | Da definire | ⬜ |
+| F5 | Export conformità enti pubblici | PDF/CSV riassuntivo "stato flotta" per rendicontazione a Regione/Protezione Civile | Da definire | ⬜ |
+| F6 | PWA installabile | Manifest + service worker per "aggiungi a home", in sinergia col redesign | Da definire | ⬜ |
+
+**Scartata**: assegnazione turno/autista per appuntamento — non la facciamo.
+
+**Nota**: il redesign complessivo resta pianificato per dopo; i punti di accessibilità/responsive (A1-A7, R1-R2) sono comunque più rapidi da sistemare ora che da portarsi dietro nel redesign.
+
+---
+
 ## Ordine di lavoro concordato (2026-10-04) — TUTTE COMPLETATE (rilasciate in v1.5.0/v1.5.1)
 
 1. ✅ Costo manutenzioni (campo opzionale, non obbligatorio)
