@@ -104,6 +104,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('deadlines.insurances');
         Route::get('documents', [DocumentStatusController::class, 'index'])
             ->name('documents.index');
+        Route::get('documents/export/pdf', [DocumentStatusController::class, 'exportPdf'])
+            ->name('documents.export-pdf');
+        Route::get('documents/export/csv', [DocumentStatusController::class, 'exportCsv'])
+            ->name('documents.export-csv');
         Route::get('statistics', [StatisticsController::class, 'index'])
             ->name('statistics.index');
         Route::resource('deadlines', DeadlineController::class);

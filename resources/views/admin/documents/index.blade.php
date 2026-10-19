@@ -30,6 +30,14 @@
             <div class="toolbar-left">
                 <h2>{{ __('Stato documenti — Veicoli') }}</h2>
             </div>
+            <div class="filters">
+                <a href="{{ route('admin.documents.export-csv') }}" class="btn" title="{{ __('Scarica CSV') }}">
+                    <i class="fa-solid fa-download"></i> CSV
+                </a>
+                <a href="{{ route('admin.documents.export-pdf') }}" class="btn" title="{{ __('Scarica PDF') }}">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </a>
+            </div>
         </div>
 
         <div class="table-responsive">
