@@ -11,6 +11,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Accessibilità: contrasto colori badge in tema chiaro portato sopra la soglia WCAG AA; `aria-label` sui pulsanti icona-only (visualizza/modifica/elimina/aggiungi); focus visibile su ricerca e select ruolo; righe di gruppo pieghevoli operabili da tastiera; `<h1>` nascosto su tutte le pagine (via breadcrumb); `aria-describedby` sui messaggi di errore dei componenti form condivisi.
 - Responsive: pulsanti icona (`.mini-btn`/`.detail-btn`) ingranditi a 34×34px, target touch più comodo su telefono; campi misura pneumatico raggruppati su schermi stretti invece di andare a capo uno per uno.
 - Notifiche: il testo mostrato all'utente non termina più con un marker tecnico illeggibile (es. "#deadline-42").
+- Completamento intervento: un appuntamento con più guasti/scadenze collegati chiedeva un unico sì/no per tutti, impossibile risolverne uno sì e uno no. Ora una domanda per ciascuno.
 
 ### Changed
 

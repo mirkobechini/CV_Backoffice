@@ -7,14 +7,19 @@
     // (primo montaggio in una posizione = nessuna gomma precedente =
     // nessuna scelta da fare per quella), con l'identità della gomma
     // sostituita così l'utente sa a cosa si riferisce ogni scelta.
+    $completionService = app(\App\Services\MaintenanceCompletionService::class);
     $tireDispositionChoices = $maintenanceRecord
-        ? app(\App\Services\MaintenanceCompletionService::class)
-            ->tireItemsRequiringDisposition($maintenanceRecord)
+        ? $completionService->tireItemsRequiringDisposition($maintenanceRecord)
             ->map(fn ($item) => [
                 'item' => $item,
                 'previousTire' => app(\App\Services\TireChangeService::class)->findPreviousMountedTire($item->itemable),
             ])
         : collect();
+    // Un sì/no indipendente per ciascun guasto/scadenza collegati, non più
+    // un'unica scelta valida per tutti (bug segnalato nell'audit 2026-10-19).
+    $linkedIssues = $maintenanceRecord ? $completionService->linkedIssues($maintenanceRecord) : collect();
+    $linkedDeadlines = $maintenanceRecord ? $completionService->linkedDeadlines($maintenanceRecord) : collect();
+    $isTimingBeltAppointment = $maintenanceRecord?->activity_type === \App\Models\MaintenanceRecord::ACTIVITY_TIMING_BELT;
     $tirePositionLabels = [
         'front_left' => 'Anteriore sinistra',
         'front_right' => 'Anteriore destra',
@@ -50,22 +55,60 @@
 
                     <div class="modal-body">
                         <p class="mb-3">Confermi il completamento in data odierna?</p>
-                        <p class="mb-2"><strong>Il guasto è stato aggiustato?</strong></p>
 
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="issue_resolved"
-                                id="issue_resolved_yes_{{ $modalIdSuffix }}" value="1" required>
-                            <label class="form-check-label" for="issue_resolved_yes_{{ $modalIdSuffix }}">
-                                Sì
-                            </label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="issue_resolved"
-                                id="issue_resolved_no_{{ $modalIdSuffix }}" value="0" required>
-                            <label class="form-check-label" for="issue_resolved_no_{{ $modalIdSuffix }}">
-                                No
-                            </label>
-                        </div>
+                        @foreach ($linkedIssues as $issue)
+                            <p class="mb-2 mt-3"><strong>Il guasto "{{ $issue->description }}" è stato aggiustato?</strong></p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="resolved_issues[{{ $issue->id }}]"
+                                    id="resolved_issue_{{ $issue->id }}_yes_{{ $modalIdSuffix }}" value="1" required>
+                                <label class="form-check-label" for="resolved_issue_{{ $issue->id }}_yes_{{ $modalIdSuffix }}">
+                                    Sì
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="resolved_issues[{{ $issue->id }}]"
+                                    id="resolved_issue_{{ $issue->id }}_no_{{ $modalIdSuffix }}" value="0" required>
+                                <label class="form-check-label" for="resolved_issue_{{ $issue->id }}_no_{{ $modalIdSuffix }}">
+                                    No
+                                </label>
+                            </div>
+                        @endforeach
+
+                        @foreach ($linkedDeadlines as $deadline)
+                            <p class="mb-2 mt-3"><strong>La scadenza "{{ $deadline->type }}" è stata rinnovata?</strong></p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="resolved_deadlines[{{ $deadline->id }}]"
+                                    id="resolved_deadline_{{ $deadline->id }}_yes_{{ $modalIdSuffix }}" value="1" required>
+                                <label class="form-check-label" for="resolved_deadline_{{ $deadline->id }}_yes_{{ $modalIdSuffix }}">
+                                    Sì
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="resolved_deadlines[{{ $deadline->id }}]"
+                                    id="resolved_deadline_{{ $deadline->id }}_no_{{ $modalIdSuffix }}" value="0" required>
+                                <label class="form-check-label" for="resolved_deadline_{{ $deadline->id }}_no_{{ $modalIdSuffix }}">
+                                    No
+                                </label>
+                            </div>
+                        @endforeach
+
+                        @if ($isTimingBeltAppointment)
+                            <p class="mb-2 mt-3"><strong>La cinghia di distribuzione è stata sostituita?</strong></p>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="timing_belt_completed"
+                                    id="timing_belt_completed_yes_{{ $modalIdSuffix }}" value="1" required>
+                                <label class="form-check-label" for="timing_belt_completed_yes_{{ $modalIdSuffix }}">
+                                    Sì
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="timing_belt_completed"
+                                    id="timing_belt_completed_no_{{ $modalIdSuffix }}" value="0" required>
+                                <label class="form-check-label" for="timing_belt_completed_no_{{ $modalIdSuffix }}">
+                                    No
+                                </label>
+                            </div>
+                        @endif
 
                         @if ($tireDispositionChoices->isNotEmpty())
                             <p class="mb-2 mt-3"><strong>Le gomme sostituite:</strong></p>

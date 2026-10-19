@@ -128,7 +128,7 @@ class AuthorizationTest extends TestCase
     {
         $record = MaintenanceRecord::create(['vehicle_id' => $this->vehicle()->id, 'provider_id' => $this->provider()->id, 'appointment_date' => '2025-02-01']);
         $this->actingAs($this->worker())
-            ->patch(route('admin.maintenance-records.complete', $record), ['issue_resolved' => true])
+            ->patch(route('admin.maintenance-records.complete', $record), [])
             ->assertForbidden();
     }
 

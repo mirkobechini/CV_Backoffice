@@ -10,7 +10,7 @@
 
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
-| C1 | Bug | `complete()` applica un unico stato risolto/non-risolto a TUTTI i guasti/scadenze collegati, invece che per-item come `processCompletedItems()` | `app/Services/MaintenanceCompletionService.php:122-149` | Media | ⬜ |
+| C1 | Bug | `complete()` applica un unico stato risolto/non-risolto a TUTTI i guasti/scadenze collegati, invece che per-item come `processCompletedItems()` | `app/Services/MaintenanceCompletionService.php:122-149` | Media | ✅ (issue-378) |
 | C2 | Bug | `catch(\Throwable)` avvolge anche la validazione, inghiottendo `ValidationException` in un messaggio generico invece dei campi | `app/Http/Controllers/CsvImportController.php:22-46` | Media | ✅ |
 | C3 | Bug/DRY | Calcolo giorni residui duplicato in due accessor | `app/Models/Deadline.php:267-293` | Bassa | ✅ |
 | C4 | Errore silenziato | `catch(\Throwable)` senza alcun `Log::`, in violazione della regola AGENTS.md | `app/Http/Controllers/CsvImportController.php:44-46` | Media | ✅ |
