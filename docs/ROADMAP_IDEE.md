@@ -11,9 +11,9 @@
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
 | C1 | Bug | `complete()` applica un unico stato risolto/non-risolto a TUTTI i guasti/scadenze collegati, invece che per-item come `processCompletedItems()` | `app/Services/MaintenanceCompletionService.php:122-149` | Media | ⬜ |
-| C2 | Bug | `catch(\Throwable)` avvolge anche la validazione, inghiottendo `ValidationException` in un messaggio generico invece dei campi | `app/Http/Controllers/CsvImportController.php:22-46` | Media | ⬜ |
-| C3 | Bug/DRY | Calcolo giorni residui duplicato in due accessor | `app/Models/Deadline.php:267-293` | Bassa | ⬜ |
-| C4 | Errore silenziato | `catch(\Throwable)` senza alcun `Log::`, in violazione della regola AGENTS.md | `app/Http/Controllers/CsvImportController.php:44-46` | Media | ⬜ |
+| C2 | Bug | `catch(\Throwable)` avvolge anche la validazione, inghiottendo `ValidationException` in un messaggio generico invece dei campi | `app/Http/Controllers/CsvImportController.php:22-46` | Media | ✅ |
+| C3 | Bug/DRY | Calcolo giorni residui duplicato in due accessor | `app/Models/Deadline.php:267-293` | Bassa | ✅ |
+| C4 | Errore silenziato | `catch(\Throwable)` senza alcun `Log::`, in violazione della regola AGENTS.md | `app/Http/Controllers/CsvImportController.php:44-46` | Media | ✅ |
 | C5 | Performance | Dedup notifiche con `LIKE "%marker%"` non indicizzabile | `app/Console/Commands/GenerateNotifications.php:311-317` | Bassa | ⬜ |
 | C6 | Performance | Scadenze scadute filtrate in PHP invece che in SQL | `app/Http/Controllers/DashboardController.php:55-61` | Bassa | ⬜ |
 | C7 | Performance | Veicoli ri-interrogati due volte per lo stesso conteggio | `app/Http/Controllers/DashboardController.php:144-146` | Bassa | ⬜ |
@@ -22,6 +22,7 @@
 | C10 | Duplicazione | Logica di rinnovo tagliando/cinghia reimplementata in due service diversi | `MaintenanceCompletionService.php` vs `DeadlineManualRenewalService.php` | Media | ⬜ |
 | C11 | Design pattern | Strategy map per tipo scadenza invece di match/if ripetuti in 3 service | più file | Bassa | ⬜ |
 | C12 | File da spezzare | `Deadline.php` (464 righe), `EquipmentController.php` (401), `MaintenanceCompletionService.php` (395), `VehicleController.php` (392), `Vehicle.php` (379), `DeadlineService.php` (360) + viste `vehicles/edit.blade.php` (443), `dashboard.blade.php` (429), `vehicles/create.blade.php` (428) e altre | vedi dettaglio audit | Bassa | ⬜ |
+| C13 | Test flaky | `VehicleScanTest::test_store_promotes_pending_scanned_photo_into_registration_card` fallisce in modo intermittente (~2/5 run) solo girando la suite completa, mai isolato né in combinazioni mirate — causa non individuata, non correlata a nessuna modifica di produzione di questo audit | `tests/Feature/VehicleScanTest.php:304` | Bassa | ⬜ |
 
 ### Sicurezza e privacy
 
@@ -29,26 +30,26 @@
 |---|------|-------------|-------------|----------|-------|
 | S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | ⬜ |
 | S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ⬜ |
-| S3 | Hygiene | 3 advisory Composer ignorate senza un commento sul motivo | `composer.json:76-82` | Bassa | ⬜ |
-| S4 | Fragilità futura | `group_id` fillable su `Vehicle` ma nessuna request lo valida oggi — aggiungere un test che pinni l'invariante (nessuna richiesta futura deve poterlo scrivere da payload) | `app/Models/Vehicle.php` | Bassa | ⬜ |
+| S3 | Hygiene | 3 advisory Composer ignorate senza un commento sul motivo | `composer.json:76-82` | Bassa | ✅ |
+| S4 | Fragilità futura | `group_id` fillable su `Vehicle` ma nessuna request lo valida oggi — aggiungere un test che pinni l'invariante (nessuna richiesta futura deve poterlo scrivere da payload) | `app/Models/Vehicle.php` | Bassa | ✅ |
 
 ### Accessibilità
 
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
-| A1 | ARIA | Bottoni icona-only (visualizza/modifica/elimina) con solo `title`, serve `aria-label` | varie card scheda veicolo | Media | ⬜ |
-| A2 | Contrasto | Badge ambra/verde in tema chiaro sotto soglia WCAG AA (4.5:1) | `resources/css/app.css:1146-1159,1093-1096` | Media | ⬜ |
-| A3 | Form | Messaggi di errore non collegati via `aria-describedby` | tutte le `@error` nei form create/edit | Media | ⬜ |
-| A4 | Tastiera | Righe raggruppabili (tabelle scadenze/guasti) rispondono solo al click, non da tastiera | `resources/js/app.js:116-127` | Media | ⬜ |
-| A5 | Struttura | Manca `<h1>` su alcune pagine indice | pagine indice | Bassa | ⬜ |
-| A6 | Focus | Focus visibile mancante su `.search input` e `.role-select` | `resources/css/app.css:819-826,3306-3315` | Bassa | ⬜ |
-| A7 | ARIA | Pulsanti tema/notifiche senza `aria-label` (incoerente con l'hamburger che ce l'ha già) | `resources/views/layouts/app.blade.php:63-68` | Bassa | ⬜ |
+| A1 | ARIA | Bottoni icona-only (visualizza/modifica/elimina) con solo `title`, serve `aria-label` | varie card scheda veicolo | Media | ✅ |
+| A2 | Contrasto | Badge ambra/verde in tema chiaro sotto soglia WCAG AA (4.5:1) | `resources/css/app.css:1146-1159,1093-1096` | Media | ✅ |
+| A3 | Form | Messaggi di errore non collegati via `aria-describedby` | tutte le `@error` nei form create/edit | Media | 🔄 fatto per i componenti condivisi (date/month/time/tire-size-input); restano i form con `<input>` semplice (sweep più ampio, ~50 file) |
+| A4 | Tastiera | Righe raggruppabili (tabelle scadenze/guasti) rispondono solo al click, non da tastiera | `resources/js/app.js:116-127` | Media | ✅ |
+| A5 | Struttura | Manca `<h1>` su alcune pagine indice | pagine indice | Bassa | ✅ |
+| A6 | Focus | Focus visibile mancante su `.search input` e `.role-select` | `resources/css/app.css:819-826,3306-3315` | Bassa | ✅ |
+| A7 | ARIA | Pulsanti tema/notifiche senza `aria-label` (incoerente con l'hamburger che ce l'ha già) | `resources/views/layouts/app.blade.php:63-68` | Bassa | ✅ |
 
 ### Responsive / mobile
 
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
-| R1 | Touch target | Pulsanti icona `.mini-btn` (26×26px) sotto la soglia comodamente toccabile (44px) — il problema pratico più sentito per i volontari sul campo | `resources/css/app.css:1188-1200` | Alta | ⬜ |
+| R1 | Touch target | Pulsanti icona `.mini-btn` (26×26px) sotto la soglia comodamente toccabile (44px) — il problema pratico più sentito per i volontari sul campo | `resources/css/app.css:1188-1200` | Alta | ✅ (portati a 34×34px, incluso `.detail-btn`) |
 | R2 | Layout | Repeater "misure pneumatici" si impila in modo disordinato su schermi stretti (<480px) | `resources/css/app.css:1941-1959` | Bassa | ⬜ |
 
 ### Feature proposte
