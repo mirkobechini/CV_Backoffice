@@ -60,14 +60,14 @@ class DashboardController extends Controller
                 ->sortBy('due_date')
                 ->values();
 
-            // Strettamente futuro (appointment_date > oggi): un appuntamento
-            // di oggi va solo nella card "In officina" sotto (che usa
-            // appointment_date <= oggi), mai in entrambe — altrimenti lo
-            // stesso veicolo/appuntamento compare due volte in dashboard.
+            // Un appuntamento non ancora iniziato (scopeNotYetStarted) va
+            // solo qui, mai anche in "In officina" sotto (scopeCurrentlyInWorkshop,
+            // il suo esatto complemento) — altrimenti lo stesso
+            // veicolo/appuntamento comparirebbe due volte in dashboard.
             $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->whereNull('return_date')
-                ->where('appointment_date', '>', Carbon::today())
+                ->notYetStarted()
                 ->orderBy('appointment_date')
                 ->take(5)
                 ->get();
@@ -93,8 +93,7 @@ class DashboardController extends Controller
             // Veicoli attualmente in officina: check-in avvenuto, non ancora rientrati.
             $inWorkshopRecords = MaintenanceRecord::with(['vehicle', 'provider'])
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
-                ->whereNull('return_date')
-                ->where('appointment_date', '<=', Carbon::today())
+                ->currentlyInWorkshop()
                 ->orderBy('appointment_date')
                 ->get();
             $inWorkshopCount = $inWorkshopRecords->count();
