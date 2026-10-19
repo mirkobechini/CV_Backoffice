@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\Searchable;
 use App\Services\DeadlineDueDateCalculator;
 use App\Services\DeadlineStatusCalculator;
+use App\Services\DeadlineStatusSyncService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -346,93 +347,20 @@ class Deadline extends Model
 
     /**
      * Sincronizza lo stato di più scadenze in un'unica passata.
-     *
-     * Pre-carica le relazioni necessarie una sola volta e raggruppa gli
-     * aggiornamenti di stato in un unico UPDATE bulk, evitando N query di
-     * loadMissing + N query di save() per ogni scadenza.
+     * Logica in DeadlineStatusSyncService (estratta per tenere questo
+     * model sotto le 400 righe), nome/firma invariati per non toccare i
+     * chiamanti esistenti.
      *
      * @param  Collection<int, Deadline>|iterable  $deadlines
      */
     public static function syncStatusesFromRules(iterable $deadlines): void
     {
-        // Mantieni il tipo originale: Eloquent\Collection ha loadMissing/load,
-        // una Collection generica no. Se non è una collection Eloquent,
-        // la convertiamo in una per poter usare l'eager loading in una sola query.
-        if (! $deadlines instanceof \Illuminate\Database\Eloquent\Collection) {
-            $deadlines = new \Illuminate\Database\Eloquent\Collection($deadlines);
-        }
-
-        if ($deadlines->isEmpty()) {
-            return;
-        }
-
-        // Pre-carica veicolo + ultimo km per tutte le scadenze in una sola query.
-        $deadlines->loadMissing('vehicle.latestMileageLog');
-
-        $warningMonths = max(0, (int) config('deadlines.warning_months', 3));
-
-        $updates = [];
-
-        foreach ($deadlines as $deadline) {
-            // Le scadenze marcate manualmente come rinnovate restano invariate.
-            if ($deadline->is_renewed) {
-                continue;
-            }
-
-            $newStatus = DeadlineStatusCalculator::calculateSyncedStatus(
-                $deadline->due_date,
-                $deadline->interval_km,
-                $deadline->last_mileage,
-                $deadline->vehicle?->mileage,
-                $warningMonths,
-            );
-
-            if ($deadline->status !== $newStatus) {
-                $updates[$deadline->id] = $newStatus;
-            }
-        }
-
-        if (! empty($updates)) {
-            // Raggruppa per stato e aggiorna in blocco: al massimo 4 query
-            // UPDATE (una per stato) invece di N query save().
-            $grouped = [];
-            foreach ($updates as $id => $status) {
-                $grouped[$status][] = $id;
-            }
-
-            foreach ($grouped as $status => $ids) {
-                self::query()
-                    ->whereIn('id', $ids)
-                    ->update(['status' => $status]);
-            }
-        }
+        DeadlineStatusSyncService::syncMany($deadlines);
     }
 
     public function syncStatusFromRules(): void
     {
-        // Sincronizza lo stato persistito con le regole temporali/km correnti.
-        if ($this->is_renewed) {
-            return;
-        }
-
-        $currentMileage = null;
-        if ($this->interval_km !== null && $this->last_mileage !== null) {
-            $this->loadMissing('vehicle.latestMileageLog');
-            $currentMileage = $this->vehicle?->mileage;
-        }
-
-        $newStatus = DeadlineStatusCalculator::calculateSyncedStatus(
-            $this->due_date,
-            $this->interval_km,
-            $this->last_mileage,
-            $currentMileage,
-            max(0, (int) config('deadlines.warning_months', 3)),
-        );
-
-        if ($this->status !== $newStatus) {
-            $this->status = $newStatus;
-            $this->save();
-        }
+        DeadlineStatusSyncService::syncOne($this);
     }
 
     // Wrapper statici: logica in DeadlineDueDateCalculator (estratta per

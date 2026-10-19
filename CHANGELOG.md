@@ -21,6 +21,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - `composer.json`: motivate le advisory di sicurezza ignorate.
 - Scadenze: calcolo di rinnovo (tagliando/cinghia/ministeriale/ossigeno) unificato in un solo punto, prima duplicato tra due servizi.
 - Gomme: logica di collegamento/disposizione/montaggio estratta in un servizio dedicato; il montaggio (prima duplicato) è ora un solo punto.
+- Scadenze: sincronizzazione dello stato estratta in un servizio dedicato (nessun cambio di comportamento).
+- Attrezzature: azioni di revisione/collaudo estratte in un controller dedicato (nessun cambio di comportamento).
 
 ## [v1.17.3] - 2026-10-19
 

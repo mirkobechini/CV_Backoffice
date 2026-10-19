@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\DocumentStatusController;
+use App\Http\Controllers\Admin\EquipmentCollaudoController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\EquipmentIssueController;
 use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
@@ -108,9 +109,9 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::patch('deadlines/{deadline}/renew', [DeadlineController::class, 'renew'])
             ->name('deadlines.renew');
         Route::resource('equipments', EquipmentController::class);
-        Route::post('equipments/{equipment}/record-revision', [EquipmentController::class, 'recordRevision'])
+        Route::post('equipments/{equipment}/record-revision', [EquipmentCollaudoController::class, 'recordRevision'])
             ->name('equipments.record-revision');
-        Route::post('equipments/bulk-record-revision', [EquipmentController::class, 'bulkRecordRevision'])
+        Route::post('equipments/bulk-record-revision', [EquipmentCollaudoController::class, 'bulkRecordRevision'])
             ->name('equipments.bulk-record-revision');
         Route::resource('equipment-issues', EquipmentIssueController::class)
             ->parameters(['equipment-issues' => 'equipmentIssue']);

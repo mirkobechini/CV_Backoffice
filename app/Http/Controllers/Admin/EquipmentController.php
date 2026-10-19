@@ -4,20 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\BulkRecordEquipmentRevisionRequest;
 use App\Http\Requests\StoreEquipmentRequest;
-use App\Http\Requests\StoreEquipmentRevisionRequest;
 use App\Http\Requests\UpdateEquipmentRequest;
 use App\Models\Equipment;
-use App\Models\EquipmentRevision;
 use App\Models\EquipmentType;
 use App\Models\Vehicle;
+use App\Services\EquipmentRevisionDateCalculator;
 use App\Services\QrCodeGenerator;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class EquipmentController extends Controller
 {
@@ -156,8 +153,8 @@ class EquipmentController extends Controller
     {
         $validatedData = $request->validated();
         $validatedData = $this->normalizeMonthlyDates($validatedData);
-        $validatedData = $this->resolveExpirationDate($validatedData);
-        $validatedData = $this->resolveNextCollaudoDate($validatedData);
+        $validatedData = EquipmentRevisionDateCalculator::resolveExpirationDate($validatedData);
+        $validatedData = EquipmentRevisionDateCalculator::resolveNextCollaudoDate($validatedData);
 
         $newEquipment = Equipment::create($validatedData);
 
@@ -213,8 +210,8 @@ class EquipmentController extends Controller
     {
         $validatedData = $request->validated();
         $validatedData = $this->normalizeMonthlyDates($validatedData);
-        $validatedData = $this->resolveExpirationDate($validatedData);
-        $validatedData = $this->resolveNextCollaudoDate($validatedData);
+        $validatedData = EquipmentRevisionDateCalculator::resolveExpirationDate($validatedData);
+        $validatedData = EquipmentRevisionDateCalculator::resolveNextCollaudoDate($validatedData);
 
         $equipment->update($validatedData);
 
@@ -246,146 +243,6 @@ class EquipmentController extends Controller
         }
 
         return $data;
-    }
-
-    /**
-     * Calcola automaticamente la data di scadenza se non fornita, in base
-     * all'intervallo di revisione periodica del tipo di attrezzatura.
-     */
-    private function resolveExpirationDate(array $data): array
-    {
-        // Se l'utente ha già fornito una data di scadenza, la rispettiamo.
-        if (! empty($data['expiration_date'])) {
-            return $data;
-        }
-
-        // Serve una data di revisione e un tipo con intervallo periodico.
-        if (empty($data['revision_date']) || empty($data['equipment_type_id'])) {
-            return $data;
-        }
-
-        $equipmentType = EquipmentType::find($data['equipment_type_id']);
-        $regularMonths = $equipmentType?->regular_inspection_months;
-
-        if (! $regularMonths || $regularMonths <= 0) {
-            return $data;
-        }
-
-        $data['expiration_date'] = Carbon::parse($data['revision_date'])
-            ->addMonthsNoOverflow((int) $regularMonths)
-            ->toDateString();
-
-        return $data;
-    }
-
-    /**
-     * Calcola automaticamente la data del prossimo collaudo se non fornita,
-     * in base all'intervallo di collaudo del tipo di attrezzatura
-     * (rilevante solo per gli estintori).
-     */
-    private function resolveNextCollaudoDate(array $data): array
-    {
-        if (! empty($data['next_collaudo_date'])) {
-            return $data;
-        }
-
-        if (empty($data['collaudo_date']) || empty($data['equipment_type_id'])) {
-            return $data;
-        }
-
-        $equipmentType = EquipmentType::find($data['equipment_type_id']);
-        $collaudoMonths = $equipmentType?->collaudo_interval_months;
-
-        if (! $collaudoMonths || $collaudoMonths <= 0) {
-            return $data;
-        }
-
-        $data['next_collaudo_date'] = Carbon::parse($data['collaudo_date'])
-            ->addMonthsNoOverflow((int) $collaudoMonths)
-            ->toDateString();
-
-        return $data;
-    }
-
-    /**
-     * Registra una revisione o un collaudo effettuato: crea una voce di
-     * storico e aggiorna la data corrente (+ la relativa scadenza) di
-     * quel tipo di controllo sull'attrezzatura.
-     */
-    public function recordRevision(StoreEquipmentRevisionRequest $request, Equipment $equipment)
-    {
-        $this->authorize('update', $equipment);
-
-        $data = $request->validated();
-        $this->applyRevision($equipment, $data);
-
-        $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
-            ? 'Collaudo registrato con successo.'
-            : 'Revisione registrata con successo.';
-
-        return redirect()->route('admin.equipments.show', $equipment)->with('status', $message);
-    }
-
-    /**
-     * Come recordRevision(), ma per più attrezzature insieme con la stessa
-     * data: utile quando un gruppo di attrezzature (es. tutti gli estintori,
-     * o tutte le barelle/sedie) viene revisionato lo stesso giorno, invece
-     * di ripetere la stessa data un'attrezzatura alla volta.
-     */
-    public function bulkRecordRevision(BulkRecordEquipmentRevisionRequest $request)
-    {
-        $data = $request->validated();
-
-        $equipments = Equipment::whereIn('id', $data['equipment_ids'])->get();
-
-        // Transazione unica: un fallimento a metà lascerebbe altrimenti
-        // alcune attrezzature selezionate aggiornate e altre no, nella
-        // stessa richiesta.
-        DB::transaction(function () use ($equipments, $data) {
-            foreach ($equipments as $equipment) {
-                $this->applyRevision($equipment, $data);
-            }
-        });
-
-        $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
-            ? count($equipments).' collaudi registrati con successo.'
-            : count($equipments).' revisioni registrate con successo.';
-
-        return redirect()->route('admin.equipments.index')->with('status', $message);
-    }
-
-    /**
-     * Crea la voce di storico e aggiorna la data corrente (+ la relativa
-     * scadenza) di quel tipo di controllo sull'attrezzatura. Condivisa da
-     * recordRevision() e bulkRecordRevision().
-     */
-    private function applyRevision(Equipment $equipment, array $data): void
-    {
-        $equipment->revisions()->create([
-            'kind' => $data['kind'],
-            'performed_date' => $data['performed_date'],
-            'notes' => $data['notes'] ?? null,
-        ]);
-
-        if ($data['kind'] === EquipmentRevision::KIND_COLLAUDO) {
-            $update = $this->resolveNextCollaudoDate([
-                'collaudo_date' => $data['performed_date'],
-                'equipment_type_id' => $equipment->equipment_type_id,
-            ]);
-            $equipment->update([
-                'collaudo_date' => $data['performed_date'],
-                'next_collaudo_date' => $update['next_collaudo_date'] ?? null,
-            ]);
-        } else {
-            $update = $this->resolveExpirationDate([
-                'revision_date' => $data['performed_date'],
-                'equipment_type_id' => $equipment->equipment_type_id,
-            ]);
-            $equipment->update([
-                'revision_date' => $data['performed_date'],
-                'expiration_date' => $update['expiration_date'] ?? null,
-            ]);
-        }
     }
 
     /**
