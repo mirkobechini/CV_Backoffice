@@ -10,7 +10,7 @@
         "axios": "^1.20.0",
         "concurrently": "^10.0.6",
         "laravel-vite-plugin": "^3.2.0",
-        "postcss": "^8.5.28",
+        "postcss": "^8.5.30",
         "sass": "^1.93.3",
         "tailwindcss": "^4.3.3",
         "vite": "^8.3.4"
