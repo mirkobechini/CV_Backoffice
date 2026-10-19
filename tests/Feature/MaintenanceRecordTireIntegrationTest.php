@@ -294,7 +294,6 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         $maintenance->items()->create(['itemable_id' => $newFrontRight->id, 'itemable_type' => Tire::class]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
             'previous_disposition' => [
                 $newFrontLeft->id => 'stored',
                 $newFrontRight->id => 'stored',
@@ -342,7 +341,6 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
             'previous_disposition' => [$newTire->id => 'stored'],
         ]);
 
@@ -385,7 +383,6 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
             'previous_disposition' => [$newTire->id => 'retired'],
         ]);
 
@@ -420,7 +417,6 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         }
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
             'previous_disposition' => [
                 $newFrontLeft->id => 'retired',
                 $newFrontRight->id => 'stored',
@@ -460,7 +456,6 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
         ]);
 
         $response->assertSessionHasErrors(['previous_disposition']);
@@ -489,7 +484,6 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
         ]);
 
         $response->assertSessionDoesntHaveErrors(['previous_disposition']);
@@ -598,7 +592,6 @@ class MaintenanceRecordTireIntegrationTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
         ]);
 
         $response->assertRedirect();
