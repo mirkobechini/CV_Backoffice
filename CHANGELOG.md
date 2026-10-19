@@ -8,6 +8,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 - PWA: app installabile ("aggiungi a home") via manifest.json + service worker minimale (nessuna cache di pagine/dati, solo asset statici).
 - Carburante: nuova entità per tracciare i rifornimenti (litri, costo, km), con consumo (km/L) calcolato rispetto al rifornimento precedente dello stesso veicolo.
+- Export conformità flotta: PDF/CSV con stato operativo (disponibile/in officina) e stato scadenze per veicolo, per rendicontazione a enti pubblici (Regione/Protezione Civile), dalla pagina "Stato documenti".
 
 ### Fixed
 
@@ -32,6 +33,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Dashboard: vista divisa in componenti per card (nessun cambio di comportamento).
 - Scadenze: pre-filtro SQL sulle scadenze potenzialmente scadute, prima del filtro esatto in PHP (riduce le righe caricate da dashboard e report; nessun cambio di comportamento).
 - Scadenze: rinnovo via form unificato sullo stesso calcolatore degli altri due percorsi di rinnovo (prima duplicato, con una divergenza reale: il tagliando rinnovato da form non ereditava km/intervallo).
+- Export CSV: streaming e neutralizzazione iniezione formule estratti in un trait condiviso tra i due controller che esportano CSV (nessun cambio di comportamento).
 
 ## [v1.17.3] - 2026-10-19
 

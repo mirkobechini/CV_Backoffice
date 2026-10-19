@@ -23,6 +23,7 @@
 - **Interactive dashboard**: stats, upcoming deadlines (with remaining time/mileage and status), open faults, incomplete equipment
 - **Appointment calendar**: month/week view with color-coding by activity type
 - **PDF and CSV export**: vehicle info sheet as PDF, a fleet-wide overview PDF (next deadlines and last mileage for every vehicle, one page), CSV export for every entity
+- **Compliance export**: a PDF/CSV fleet-status report (operational status + deadline compliance per vehicle) for reporting to public bodies (Region/Civil Protection)
 - **REST API**: 12 token-protected endpoints (Sanctum), built for a future mobile app
 - **Audit log**: full tracking of every change
 - **In-app notifications**: bell icon with badge, notification list, mark as read
@@ -251,6 +252,7 @@ erDiagram
 - [x] Database backup
 - [x] Installable PWA (manifest + service worker)
 - [x] Fuel log / consumption tracking
+- [x] Compliance export for public bodies
 - [ ] Native mobile app (via REST API)
 
 ---
