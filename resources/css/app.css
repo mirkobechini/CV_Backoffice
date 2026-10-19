@@ -31,6 +31,21 @@
   --color-accent-soft: var(--purple-soft);
 }
 
+/* Contenuto letto dagli screen reader ma non mostrato visivamente (es. un
+   <h1> di pagina quando il titolo visibile è già reso da un altro
+   elemento, come il breadcrumb — vedi components/admin/breadcrumb.blade.php). */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 /*
   The default border color has changed to `currentcolor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
@@ -68,11 +83,14 @@
     --border: #dbe0e8;
     --primary: #4f46e5;
     --primary-soft: #eef0ff;
-    --green: #059669;
+    /* Scurite rispetto alle versioni originali (#059669/#dc2626/#d97706):
+       testo su sfondo "-soft" (badge, pillole, valori countdown) era sotto
+       la soglia WCAG AA 4.5:1 in tema chiaro (audit 2026-10-19). */
+    --green: #166534;
     --green-soft: #e7f5ef;
-    --red: #dc2626;
+    --red: #b91c1c;
     --red-soft: #fdecec;
-    --amber: #d97706;
+    --amber: #92400e;
     --amber-soft: #fdf3e3;
     --gray-soft: #eef0f4;
     --blue: #2563eb;
@@ -825,6 +843,11 @@ body {
     font-size: 12.5px;
 }
 
+.search:focus-within {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
 .search .clear-search {
     color: var(--text-muted);
     text-decoration: none;
@@ -1186,8 +1209,9 @@ body {
 }
 
 .mini-btn {
-    width: 26px;
-    height: 26px;
+    /* 34px invece di 26px: target touch comodo su telefono (audit 2026-10-19) */
+    width: 34px;
+    height: 34px;
     border-radius: 4px;
     border: 1px solid var(--border);
     background: transparent;
@@ -2325,6 +2349,10 @@ textarea.input {
     filter: brightness(1.05);
 }
 
+.group-row[data-group-row]:focus-visible td:first-child {
+    box-shadow: inset 0 0 0 2px var(--primary);
+}
+
 .group-chevron {
     display: inline-block;
     width: 10px;
@@ -3314,6 +3342,11 @@ td .email {
     outline: none;
 }
 
+.role-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-soft);
+}
+
 /* Card generica con intestazione (impostazioni, dettaglio gruppo) */
 .admin-card {
     background: var(--surface);
@@ -3616,8 +3649,8 @@ td .email {
 
 /* Registro attività */
 .detail-btn {
-    width: 26px;
-    height: 26px;
+    width: 34px;
+    height: 34px;
     border-radius: 4px;
     border: 1px solid var(--border);
     background: transparent;
