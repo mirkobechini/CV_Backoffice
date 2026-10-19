@@ -1969,6 +1969,13 @@ body {
     flex-wrap: wrap;
 }
 
+.tire-size-main-group,
+.tire-size-extra-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .tire-size-fields .tire-size-width,
 .tire-size-fields .tire-size-ratio {
     width: 64px;
@@ -1980,6 +1987,16 @@ body {
 
 .tire-size-fields .tire-size-index {
     width: 100px;
+}
+
+/* Su schermi stretti i due gruppi vanno a capo insieme (larghezza/profilo/
+   cerchio da una parte, rinforzato/indice/rimuovi dall'altra), non campo
+   per campo come con un flex-wrap piatto (audit 2026-10-19). */
+@media (max-width: 480px) {
+    .tire-size-main-group,
+    .tire-size-extra-group {
+        flex-wrap: wrap;
+    }
 }
 
 .tire-size-sep {
