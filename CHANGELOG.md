@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- PWA: app installabile ("aggiungi a home") via manifest.json + service worker minimale (nessuna cache di pagine/dati, solo asset statici).
+
 ### Fixed
 
 - Import CSV: un errore di validazione finiva in un messaggio generico invece dei messaggi per campo; gli errori imprevisti ora vengono anche loggati.

@@ -36,6 +36,7 @@
 - **Database backup**: automatic daily backup + restorability verification (alerts lead/deputy if the latest backup is missing, invalid or truncated), plus a manual button on the settings page
 - **Rate limiting**: protection on login, admin routes and API
 - **Light/dark theme**: persisted in localStorage
+- **Installable (PWA)**: web app manifest + service worker, "add to home screen" on phone/desktop
 - **Vehicle registration document scan**: create a vehicle by uploading a photo of the front of the registration document, with an LLM vision provider (configurable, OpenRouter by default) pre-filling license plate, brand/model, technical data and tire size — always reviewed by the user before saving; technical fields also show the corresponding registration document code as a hint (e.g. "VIN (E.)")
 
 ---
@@ -246,6 +247,7 @@ erDiagram
 - [x] API token management in the profile
 - [x] Privacy/GDPR (privacy page, cookie banner, data export)
 - [x] Database backup
+- [x] Installable PWA (manifest + service worker)
 - [ ] Native mobile app (via REST API)
 
 ---
