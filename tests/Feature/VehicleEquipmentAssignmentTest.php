@@ -126,4 +126,66 @@ class VehicleEquipmentAssignmentTest extends TestCase
         $response->assertSee('SN-FREE');
         $response->assertSee('SN-OTHER');
     }
+
+    public function test_equipment_scan_page_is_reachable(): void
+    {
+        $group = $this->group('Gruppo A');
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group, '0001');
+
+        $response = $this->actingAs($capo)->get(route('admin.vehicles.equipment.scan', $vehicle));
+
+        $response->assertOk();
+    }
+
+    public function test_member_cannot_reach_equipment_scan_page(): void
+    {
+        $group = $this->group('Gruppo A');
+        $member = User::factory()->create();
+        $group->addUser($member, Group::ROLE_MEMBER);
+        $vehicle = $this->vehicle($group, '0001');
+
+        $response = $this->actingAs($member)->get(route('admin.vehicles.equipment.scan', $vehicle));
+
+        $response->assertForbidden();
+    }
+
+    public function test_capo_can_unassign_equipment_from_vehicle(): void
+    {
+        $group = $this->group('Gruppo A');
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group, '0001');
+        $type = EquipmentType::create(['name' => 'Estintore']);
+        $equipment = Equipment::create([
+            'equipment_type_id' => $type->id,
+            'name' => 'Estintore 5kg',
+            'vehicle_id' => $vehicle->id,
+        ]);
+
+        $response = $this->actingAs($capo)->patch(route('admin.equipments.unassign', $equipment));
+
+        $response->assertRedirect();
+        $this->assertNull($equipment->fresh()->vehicle_id);
+    }
+
+    public function test_member_cannot_unassign_equipment(): void
+    {
+        $group = $this->group('Gruppo A');
+        $member = User::factory()->create();
+        $group->addUser($member, Group::ROLE_MEMBER);
+        $vehicle = $this->vehicle($group, '0001');
+        $type = EquipmentType::create(['name' => 'Estintore']);
+        $equipment = Equipment::create([
+            'equipment_type_id' => $type->id,
+            'name' => 'Estintore 5kg',
+            'vehicle_id' => $vehicle->id,
+        ]);
+
+        $response = $this->actingAs($member)->patch(route('admin.equipments.unassign', $equipment));
+
+        $response->assertForbidden();
+        $this->assertSame($vehicle->id, $equipment->fresh()->vehicle_id);
+    }
 }
