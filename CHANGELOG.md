@@ -18,6 +18,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Dashboard: eliminata una query veicoli duplicata; aggiunto indice su `is_renewed` nelle scadenze.
 
 - `composer.json`: motivate le advisory di sicurezza ignorate.
+- Scadenze: calcolo di rinnovo (tagliando/cinghia/ministeriale/ossigeno) unificato in un solo punto, prima duplicato tra due servizi.
 
 ## [v1.17.3] - 2026-10-19
 
