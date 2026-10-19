@@ -130,13 +130,18 @@ class Vehicle extends Model
      */
     public function getAllowedTireSizesLabelAttribute(): string
     {
-        if (empty($this->allowed_tire_sizes)) {
-            return 'N/A';
-        }
+        return $this->allowedTireSizeLines()->implode(', ') ?: 'N/A';
+    }
 
+    /**
+     * Righe "codice: misura" condivise tra l'accessor sopra (inline, per il
+     * PDF) e la scheda veicolo (una per riga) — vedi
+     * resources/views/components/admin/vehicle-show/tech-specs-card.blade.php.
+     */
+    public function allowedTireSizeLines(): Collection
+    {
         return collect($this->allowed_tire_sizes)
-            ->map(fn ($entry) => trim(($entry['code'] ?? '').': '.($entry['size'] ?? ''), ': '))
-            ->implode(', ');
+            ->map(fn ($entry) => trim(($entry['code'] ?? '').': '.($entry['size'] ?? ''), ': '));
     }
 
     /**

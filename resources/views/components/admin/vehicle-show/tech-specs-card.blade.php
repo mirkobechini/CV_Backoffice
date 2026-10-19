@@ -24,8 +24,14 @@
         <div class="veh-kv"><span class="k">{{ __('Potenza') }}</span><span
                 class="v">{{ $vehicle->engine_power_kw ? $vehicle->engine_power_kw . ' kW' : 'N/A' }}</span>
         </div>
-        <div class="veh-kv"><span class="k">{{ __('Misure pneumatici') }}</span><span
-                class="v">{{ $vehicle->allowed_tire_sizes_label }}</span>
+        <div class="veh-kv veh-kv-top"><span class="k">{{ __('Misure pneumatici') }}</span>
+            <span class="v">
+                @forelse ($vehicle->allowedTireSizeLines() as $line)
+                    <span class="line">{{ $line }}</span>
+                @empty
+                    N/A
+                @endforelse
+            </span>
         </div>
         <div class="veh-kv"><span class="k">{{ __('Combinazioni ammesse') }}</span><span
                 class="v">{{ $vehicle->allowed_tire_size_combinations_label }}</span>
