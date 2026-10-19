@@ -210,6 +210,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         Route::post('vehicles/{vehicle}/equipment/assign', [VehicleController::class, 'assignEquipment'])
             ->name('vehicles.equipment.assign');
+        Route::get('vehicles/{vehicle}/equipment/scan', [VehicleController::class, 'equipmentScan'])
+            ->name('vehicles.equipment.scan');
+        Route::patch('equipments/{equipment}/unassign', [EquipmentController::class, 'unassign'])
+            ->name('equipments.unassign');
 
         Route::get('activity-log', [ActivityLogController::class, 'index'])
             ->name('activity-log.index');
