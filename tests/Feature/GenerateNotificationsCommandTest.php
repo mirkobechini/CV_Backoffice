@@ -152,6 +152,28 @@ class GenerateNotificationsCommandTest extends TestCase
         $this->assertDatabaseCount('notifications', 1);
     }
 
+    public function test_notification_message_does_not_contain_the_dedup_marker(): void
+    {
+        // Il marker (es. "#deadline-42") serve solo per alreadyNotified(),
+        // ora in colonna propria — non deve più comparire nel testo
+        // mostrato all'utente (bug segnalato nell'audit 2026-10-19).
+        $this->admin();
+        $vehicle = $this->vehicle();
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => Carbon::today()->addDays(5),
+            'status' => Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $notification = Notification::first();
+        $this->assertStringNotContainsString('#', $notification->message);
+        $this->assertSame("#deadline-{$deadline->id}", $notification->marker);
+    }
+
     public function test_generates_notification_for_open_issue(): void
     {
         $this->admin();
