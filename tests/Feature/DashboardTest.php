@@ -125,6 +125,62 @@ class DashboardTest extends TestCase
         $response->assertSee('Nessun appuntamento imminente');
     }
 
+    public function test_dashboard_does_not_show_vehicle_in_workshop_before_the_appointment_time(): void
+    {
+        // Appuntamento di oggi con orario non ancora raggiunto: il veicolo
+        // non è ancora "in officina", resta tra i prossimi appuntamenti
+        // (bug segnalato 2026-10-19: appuntamento delle 15 segnato in
+        // officina già dalla mezzanotte).
+        $this->travelTo(now()->setTime(10, 0));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+            'appointment_time' => '15:00',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertDontSee('Veicoli in officina');
+        $response->assertSee('Prossimi appuntamenti');
+    }
+
+    public function test_dashboard_shows_vehicle_in_workshop_once_the_appointment_time_has_passed(): void
+    {
+        $this->travelTo(now()->setTime(16, 0));
+
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+            'appointment_time' => '15:00',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Veicoli in officina');
+        $response->assertSee('Nessun appuntamento imminente');
+    }
+
     public function test_dashboard_reflects_deadline_renewal_immediately(): void
     {
         // Riproduce il bug: la dashboard è cachata 5 minuti per gruppo

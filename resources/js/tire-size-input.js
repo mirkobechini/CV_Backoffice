@@ -206,6 +206,8 @@ const refreshComboCodeOptions = () => {
         const placeholder = document.createElement('option');
         placeholder.value = '';
         placeholder.textContent = select.dataset.placeholder || '';
+        placeholder.disabled = true;
+        placeholder.hidden = true;
         select.appendChild(placeholder);
         options.forEach((code) => {
             const option = document.createElement('option');

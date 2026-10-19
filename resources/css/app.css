@@ -83,6 +83,7 @@
     --cinghia: #7c3aed;
     --ministeriale: #0891b2;
     --ossigeno: #16a34a;
+    --assicurazione: #ea580c;
     --guasto: #dc2626;
     --sidebar-bg: #111827;
     --radius: 6px;
@@ -115,6 +116,7 @@
     --cinghia: #a78bfa;
     --ministeriale: #22d3ee;
     --ossigeno: #34d399;
+    --assicurazione: #fb923c;
     --guasto: #f87171;
     --sidebar-bg: #0d1117;
     --radius: 6px;
@@ -920,6 +922,10 @@ body {
     background: var(--ossigeno);
 }
 
+.leg-assicurazione {
+    background: var(--assicurazione);
+}
+
 /* Tabella */
 .table-card table,
 .admin-card table {
@@ -1629,6 +1635,14 @@ body {
 
 .veh-kv .v .no {
     color: var(--red);
+}
+
+.veh-kv-top {
+    align-items: flex-start;
+}
+
+.veh-kv .v .line {
+    display: block;
 }
 
 .veh-dl-item {

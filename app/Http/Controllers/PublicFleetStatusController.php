@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Group;
 use App\Models\MaintenanceRecord;
-use Illuminate\Support\Carbon;
 
 /**
  * Pagina pubblica (nessuna autenticazione) di sola disponibilità flotta,
@@ -19,8 +18,7 @@ class PublicFleetStatusController extends Controller
         $group = Group::where('public_status_token', $token)->firstOrFail();
 
         $vehiclesInWorkshop = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forGroup($group->id))
-            ->whereNull('return_date')
-            ->where('appointment_date', '<=', Carbon::today())
+            ->currentlyInWorkshop()
             ->pluck('vehicle_id')
             ->unique();
 

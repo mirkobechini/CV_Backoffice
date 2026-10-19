@@ -114,6 +114,30 @@ class PublicFleetStatusTest extends TestCase
         $response->assertDontSee('XY987ZZ');
     }
 
+    public function test_public_page_shows_vehicle_available_before_todays_appointment_time(): void
+    {
+        $this->travelTo(now()->setTime(10, 0));
+
+        [, $group] = $this->groupWithCapo();
+        $group->update(['public_status_token' => Group::generatePublicStatusToken()]);
+
+        $vehicle = $this->createVehicle($group, ['internal_code' => '0001']);
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+            'appointment_time' => '15:00',
+        ]);
+
+        $response = $this->get(route('public.fleet-status', $group->public_status_token));
+
+        $response->assertOk();
+        $response->assertSee('0001');
+        $response->assertSee('Disponibile');
+        $response->assertDontSee('In officina');
+    }
+
     public function test_public_page_returns_404_for_invalid_token(): void
     {
         $response = $this->get(route('public.fleet-status', 'not-a-real-token'));

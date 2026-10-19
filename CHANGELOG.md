@@ -4,6 +4,15 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.17.3] - 2026-10-19
+
+### Fixed
+
+- Scheda veicolo: le misure pneumatici consigliate sono ora elencate una per riga, invece che tutte su una riga sola separate da virgola.
+- Form veicolo: il placeholder "Seleziona codice..." nelle select delle combinazioni ammesse resta visibile ma non è più selezionabile dal menu a tendina.
+- Scheda veicolo: la scadenza assicurazione compariva sempre nella card "Scadenze", anche lontana nel tempo, in contraddizione con "Nessuna scadenza attiva" mostrato sopra. Ora segue lo stesso filtro delle altre scadenze (vicina/scaduta).
+- Dashboard: un appuntamento di oggi con un orario impostato (es. 15:00) segnava il veicolo "in officina" già dalla mezzanotte, invece che da quell'ora. Senza orario il comportamento resta invariato (in officina da mezzanotte).
+
 ## [v1.17.2] - 2026-10-17
 
 ### Fixed

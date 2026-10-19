@@ -88,6 +88,24 @@ class VehicleTireSizeTest extends TestCase
         $response->assertSee('A1-A2');
     }
 
+    public function test_show_page_lists_each_tire_size_on_its_own_line(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $vehicle->update([
+            'allowed_tire_sizes' => [
+                ['size' => '225/75R16C', 'code' => 'A1'],
+                ['size' => '205/55R16', 'code' => 'A2'],
+            ],
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('<span class="line">A1: 225/75R16C</span>', false);
+        $response->assertSee('<span class="line">A2: 205/55R16</span>', false);
+    }
+
     public function test_vehicle_store_saves_allowed_tire_sizes_with_code(): void
     {
         $user = $this->createUser();
