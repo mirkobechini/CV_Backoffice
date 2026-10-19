@@ -121,6 +121,29 @@ class Deadline extends Model
             ->orderBy('due_date');
     }
 
+    /**
+     * Pre-filtro SQL sicuro (sovrainsieme) per le scadenze che POTREBBERO
+     * essere scadute secondo automatic_status: riduce le righe da
+     * caricare prima del filtro PHP esatto (che resta l'unica fonte di
+     * verità, serve il chilometraggio attuale del veicolo), invece di
+     * caricare sempre tutte le scadenze non rinnovate del gruppo (audit
+     * 2026-10-19, C6). Una scadenza scaduta ha sempre o una data passata,
+     * o un tracciamento a km (l'unico caso che questo scope non può
+     * escludere con certezza senza il km del veicolo) — non esclude mai
+     * una scadenza che risulterebbe davvero scaduta.
+     */
+    public function scopePossiblyExpired(Builder $query): Builder
+    {
+        $today = Carbon::today()->toDateString();
+
+        return $query->where(function (Builder $q) use ($today) {
+            $q->whereDate('due_date', '<', $today)
+                ->orWhere(function (Builder $q2) {
+                    $q2->whereNotNull('interval_km')->whereNotNull('last_mileage');
+                });
+        });
+    }
+
     public function maintenanceRecordItems()
     {
         return $this->morphMany(MaintenanceRecordItem::class, 'itemable');
