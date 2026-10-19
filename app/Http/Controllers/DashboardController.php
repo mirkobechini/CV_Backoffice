@@ -58,6 +58,7 @@ class DashboardController extends Controller
             $expiredDeadlines = Deadline::with('vehicle.latestMileageLog')
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
                 ->where('is_renewed', false)
+                ->possiblyExpired()
                 ->get()
                 ->filter(fn (Deadline $d) => $d->automatic_status === Deadline::STATUS_EXPIRED)
                 ->sortBy('due_date')

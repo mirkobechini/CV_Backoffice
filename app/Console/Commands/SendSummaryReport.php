@@ -137,6 +137,7 @@ class SendSummaryReport extends Command
                         'expiredDeadlines' => Deadline::with('vehicle.latestMileageLog')
                             ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
                             ->where('is_renewed', false)
+                            ->possiblyExpired()
                             ->get()
                             ->filter(fn (Deadline $d) => $d->automatic_status === Deadline::STATUS_EXPIRED)
                             ->sortBy('due_date')
