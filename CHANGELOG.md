@@ -4,6 +4,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Import CSV: un errore di validazione finiva in un messaggio generico invece dei messaggi per campo; gli errori imprevisti ora vengono anche loggati.
+- Scadenze: calcolo giorni residui deduplicato tra due accessor.
+- Accessibilità: contrasto colori badge in tema chiaro portato sopra la soglia WCAG AA; `aria-label` sui pulsanti icona-only (visualizza/modifica/elimina/aggiungi); focus visibile su ricerca e select ruolo; righe di gruppo pieghevoli operabili da tastiera; `<h1>` nascosto su tutte le pagine (via breadcrumb); `aria-describedby` sui messaggi di errore dei componenti form condivisi.
+- Responsive: pulsanti icona (`.mini-btn`/`.detail-btn`) ingranditi a 34×34px, target touch più comodo su telefono.
+
+### Changed
+
+- `composer.json`: motivate le advisory di sicurezza ignorate.
+
 ## [v1.17.3] - 2026-10-19
 
 ### Fixed
