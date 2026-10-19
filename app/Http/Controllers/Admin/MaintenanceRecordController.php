@@ -299,14 +299,26 @@ class MaintenanceRecordController extends Controller
         $maintenanceRecord->loadMissing(['items.itemable', 'vehicle.vehicleType']);
 
         $tireItemsNeedingDisposition = $this->completionService->tireItemsRequiringDisposition($maintenanceRecord);
+        $linkedIssues = $this->completionService->linkedIssues($maintenanceRecord);
+        $linkedDeadlines = $this->completionService->linkedDeadlines($maintenanceRecord);
 
-        $rules = [
-            'issue_resolved' => 'required|boolean',
-        ];
-        $messages = [
-            'issue_resolved.required' => 'Seleziona se il guasto è stato risolto o meno.',
-            'issue_resolved.boolean' => 'Il valore selezionato non è valido.',
-        ];
+        // Un sì/no indipendente per ciascun guasto/scadenza collegati,
+        // come già per previous_disposition sotto — non più un'unica
+        // scelta valida per tutti (bug segnalato nell'audit 2026-10-19).
+        $rules = [];
+        $messages = [];
+        foreach ($linkedIssues as $issue) {
+            $rules["resolved_issues.{$issue->id}"] = 'required|boolean';
+            $messages["resolved_issues.{$issue->id}.required"] = 'Seleziona se il guasto è stato risolto o meno.';
+        }
+        foreach ($linkedDeadlines as $deadline) {
+            $rules["resolved_deadlines.{$deadline->id}"] = 'required|boolean';
+            $messages["resolved_deadlines.{$deadline->id}.required"] = 'Seleziona se la scadenza è stata rinnovata o meno.';
+        }
+        if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT) {
+            $rules['timing_belt_completed'] = 'required|boolean';
+            $messages['timing_belt_completed.required'] = 'Seleziona se la cinghia è stata sostituita o meno.';
+        }
 
         if ($tireItemsNeedingDisposition->isNotEmpty()) {
             // Una scelta indipendente per ogni gomma sostituita (es. 1
@@ -329,7 +341,7 @@ class MaintenanceRecordController extends Controller
         if (! $maintenanceRecord->return_date && $maintenanceRecord->appointment_date && Carbon::today()->lt($maintenanceRecord->appointment_date)) {
             return redirect()
                 ->back()
-                ->withErrors(['issue_resolved' => 'Non puoi completare un appuntamento la cui data non è ancora arrivata ('.$maintenanceRecord->appointment_date_formatted.').']);
+                ->withErrors(['completion' => 'Non puoi completare un appuntamento la cui data non è ancora arrivata ('.$maintenanceRecord->appointment_date_formatted.').']);
         }
 
         $this->completionService->complete($maintenanceRecord, $data);

@@ -94,6 +94,46 @@ class MaintenanceCompletionService
     }
 
     /**
+     * Guasti collegati a questo appuntamento, per cui complete() chiederà
+     * un sì/no di risoluzione indipendente per ciascuno — non più un'unica
+     * scelta valida per tutti (bug segnalato nell'audit 2026-10-19). Usata
+     * sia per costruire le regole di validazione in complete() sia per il
+     * form del modale di completamento.
+     *
+     * @return Collection<int, Issue>
+     */
+    public function linkedIssues(MaintenanceRecord $maintenanceRecord): Collection
+    {
+        $maintenanceRecord->loadMissing('items.itemable');
+
+        return $maintenanceRecord->items
+            ->where('itemable_type', Issue::class)
+            ->map(fn ($item) => $item->itemable)
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * Scadenze collegate a questo appuntamento per cui esiste una logica di
+     * rinnovo (la cinghia non è mai collegata come item, vedi complete()):
+     * stesso sì/no indipendente per ciascuna di linkedIssues() sopra.
+     *
+     * @return Collection<int, Deadline>
+     */
+    public function linkedDeadlines(MaintenanceRecord $maintenanceRecord): Collection
+    {
+        $maintenanceRecord->loadMissing('items.itemable');
+
+        return $maintenanceRecord->items
+            ->where('itemable_type', Deadline::class)
+            ->map(fn ($item) => $item->itemable)
+            ->filter(fn (?Deadline $deadline) => $deadline && in_array($deadline->type, [
+                Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO,
+            ], true))
+            ->values();
+    }
+
+    /**
      * Completa un appuntamento: chiude/mantiene in lavorazione il guasto
      * collegato, rinnova le scadenze marcate come risolte (inclusa
      * l'eventuale cinghia di distribuzione) e monta le gomme collegate non
@@ -119,11 +159,13 @@ class MaintenanceCompletionService
             }
             $maintenanceRecord->save();
 
-            // 2) update issues
+            // 2) update issues — un sì/no indipendente per ciascuno
+            // (data['resolved_issues'][$issue->id]), non più un'unica
+            // scelta per tutti (bug segnalato nell'audit 2026-10-19).
             foreach ($issues as $item) {
                 $issue = $item->itemable;
                 if ($issue) {
-                    if ((bool) $data['issue_resolved']) {
+                    if ((bool) ($data['resolved_issues'][$issue->id] ?? false)) {
                         $issue->status = 'closed';
                         $issue->save();
                     } else {
@@ -133,14 +175,15 @@ class MaintenanceCompletionService
                 }
             }
 
-            // 3) update deadlines + create next ones
+            // 3) update deadlines + create next ones — stesso sì/no
+            // indipendente per ciascuna (data['resolved_deadlines'][$id]).
             foreach ($deadlines as $item) {
                 $deadline = $item->itemable;
                 if (! $deadline || ! in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
                     continue;
                 }
 
-                if ((bool) $data['issue_resolved']) {
+                if ((bool) ($data['resolved_deadlines'][$deadline->id] ?? false)) {
                     $this->renewDeadline($maintenanceRecord, $deadline);
                 } else {
                     $deadline->status = 'pending';
@@ -151,8 +194,11 @@ class MaintenanceCompletionService
             // 4) Cambio cinghia distribuzione: riparte la scadenza dalla data
             //    e dal chilometraggio del cambio effettuato. Non è collegata
             //    come MaintenanceRecordItem (il passo 3 sopra esclude apposta
-            //    TYPE_CINGHIA), quindi va trovata qui sul veicolo.
-            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) $data['issue_resolved']) {
+            //    TYPE_CINGHIA), quindi va trovata qui sul veicolo. Domanda
+            //    dedicata (data['timing_belt_completed']), indipendente dal
+            //    sì/no degli eventuali guasti/scadenze collegati allo stesso
+            //    appuntamento.
+            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) ($data['timing_belt_completed'] ?? false)) {
                 $timingBeltDeadline = $maintenanceRecord->vehicle->deadlines()
                     ->where('type', Deadline::TYPE_CINGHIA)
                     ->where('is_renewed', false)
