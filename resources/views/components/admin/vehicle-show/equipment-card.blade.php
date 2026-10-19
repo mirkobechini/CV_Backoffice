@@ -4,7 +4,7 @@
     <div class="head">
         <h3>{{ __('Equipaggiamento') }}</h3>
         <div class="dropdown">
-            <button type="button" class="veh-btn-add" title="{{ __('Aggiungi attrezzatura') }}"
+            <button type="button" class="veh-btn-add" title="{{ __('Aggiungi attrezzatura') }}" aria-label="{{ __('Aggiungi attrezzatura') }}"
                 data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                 <i class="fa-solid fa-plus"></i>
             </button>
@@ -58,7 +58,7 @@
                     <span class="exp c-red">{{ __('Mancante') }}</span>
                     <div class="row-actions">
                         <div class="dropdown">
-                            <button type="button" class="mini-btn" title="{{ __('Aggiungi') }}"
+                            <button type="button" class="mini-btn" title="{{ __('Aggiungi') }}" aria-label="{{ __('Aggiungi') }}"
                                 data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
@@ -117,10 +117,10 @@
                     } }}">{{ $equipment->status_label }}</span>
                 <div class="row-actions">
                     <a href="{{ route('admin.equipments.show', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                     <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" data-bs-toggle="modal"
+                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}" data-bs-toggle="modal"
                         data-bs-target="#confirmDeleteModal-{{ $equipment->id }}"><i
                             class="fa-solid fa-trash"></i></button>
                 </div>

@@ -60,11 +60,13 @@
                 <div class="topbar-actions">
                     <div class="theme-switch" id="theme-switch" role="group" aria-label="{{ __('Cambia tema') }}">
                         <button type="button" data-theme="auto" class="on">{{ __('Auto') }}</button>
-                        <button type="button" data-theme="light" title="{{ __('Chiaro') }}">☀️</button>
-                        <button type="button" data-theme="dark" title="{{ __('Scuro') }}">🌙</button>
+                        <button type="button" data-theme="light" title="{{ __('Chiaro') }}"
+                            aria-label="{{ __('Chiaro') }}">☀️</button>
+                        <button type="button" data-theme="dark" title="{{ __('Scuro') }}"
+                            aria-label="{{ __('Scuro') }}">🌙</button>
                     </div>
                     <a href="{{ route('notifications.index') }}" class="topbar-btn position-relative"
-                        title="{{ __('Notifiche') }}">
+                        title="{{ __('Notifiche') }}" aria-label="{{ __('Notifiche') }}">
                         <i class="fa-solid fa-bell"></i>
                         @if (auth()->user()?->notifications()->where('is_read', false)->count() > 0)
                             <span

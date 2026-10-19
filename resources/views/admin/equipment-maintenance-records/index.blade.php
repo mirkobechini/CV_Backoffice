@@ -84,10 +84,10 @@
                             <td>
                                 <div class="row-actions">
                                     <a href="{{ route('admin.equipment-maintenance-records.show', $record->id) }}"
-                                        class="mini-btn" title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                                     <a href="{{ route('admin.equipment-maintenance-records.edit', $record->id) }}"
-                                        class="mini-btn" title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}"
+                                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
                                         data-bs-toggle="modal" data-bs-target="#confirmDeleteModal-{{ $record->id }}">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>

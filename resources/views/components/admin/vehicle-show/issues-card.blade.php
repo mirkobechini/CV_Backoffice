@@ -11,7 +11,7 @@
             @endif
         </h3>
         <a href="{{ route('admin.issues.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
-            class="veh-btn-add" title="{{ __('Nuovo guasto') }}"><i class="fa-solid fa-plus"></i></a>
+            class="veh-btn-add" title="{{ __('Nuovo guasto') }}" aria-label="{{ __('Nuovo guasto') }}"><i class="fa-solid fa-plus"></i></a>
     </div>
     <div class="body">
         @php
@@ -51,10 +51,10 @@
                     } }}">{{ $issue->status_label }}</span>
                 <div class="row-actions">
                     <a href="{{ route('admin.issues.show', ['issue' => $issue->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                     <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" data-bs-toggle="modal"
+                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}" data-bs-toggle="modal"
                         data-bs-target="#confirmDeleteModal-{{ $issue->id }}"><i
                             class="fa-solid fa-trash"></i></button>
                 </div>

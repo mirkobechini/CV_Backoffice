@@ -171,7 +171,7 @@
                     <div class="veh-issue-item {{ $issue->status === 'closed' ? 'done' : '' }}">
                         <span class="desc">{{ $issue->description }}</span>
                         <a href="{{ route('admin.issues.show', $issue->id) }}" class="mini-btn"
-                            title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                            title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                     </div>
                 @endforeach
             </div>

@@ -30,7 +30,7 @@
                         </td>
                         <td>
                             <a href="{{ route('admin.maintenance-records.show', $record->id) }}" class="mini-btn"
-                                title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                                title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                         </td>
                     </tr>
                 @empty

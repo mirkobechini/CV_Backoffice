@@ -5,10 +5,10 @@
         <h3>{{ __('Pneumatici') }}</h3>
         <div style="display:flex; gap:6px;">
             <a href="{{ route('admin.maintenance-records.create', ['vehicle_id' => $vehicle->id, 'activity_type' => 'Cambio Gomme', 'back' => url()->full()]) }}"
-                class="veh-btn-add" title="{{ __('Registra cambio gomme') }}"><i
+                class="veh-btn-add" title="{{ __('Registra cambio gomme') }}" aria-label="{{ __('Registra cambio gomme') }}"><i
                     class="fa-solid fa-arrows-rotate"></i></a>
             <a href="{{ route('admin.tires.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
-                class="veh-btn-add" title="{{ __('Nuovo set di gomme') }}"><i class="fa-solid fa-plus"></i></a>
+                class="veh-btn-add" title="{{ __('Nuovo set di gomme') }}" aria-label="{{ __('Nuovo set di gomme') }}"><i class="fa-solid fa-plus"></i></a>
         </div>
     </div>
     <div class="body">
@@ -32,10 +32,10 @@
                     } }}">{{ $tire->status_label }}</span>
                 <div class="row-actions">
                     <a href="{{ route('admin.tires.show', ['tire' => $tire->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                     <a href="{{ route('admin.tires.edit', ['tire' => $tire->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" data-bs-toggle="modal"
+                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}" data-bs-toggle="modal"
                         data-bs-target="#confirmDeleteModal-{{ $tire->id }}"><i
                             class="fa-solid fa-trash"></i></button>
                 </div>
