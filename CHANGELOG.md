@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.17.3] - 2026-10-19
+
 ### Fixed
 
 - Scheda veicolo: le misure pneumatici consigliate sono ora elencate una per riga, invece che tutte su una riga sola separate da virgola.
