@@ -45,27 +45,15 @@ class DeadlineManualRenewalService
         }
 
         if ($deadline->type === Deadline::TYPE_TAGLIANDO) {
-            $dueDate = $renewedDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
-            $intervalKm = (int) ($vehicle->vehicleType?->regular_tagliando_km ?? 20000);
-
-            DeadlineOccurrenceCreator::create($deadline, $vehicle, $dueDate, [
-                'last_mileage' => $mileage,
-                'interval_km' => $intervalKm,
-                'interval_days' => Deadline::TAGLIANDO_INTERVAL_MONTHS * 30,
-            ]);
+            [$dueDate, $extra] = DeadlineRenewalCalculator::tagliando($renewedDate, $vehicle, $mileage);
+            DeadlineOccurrenceCreator::create($deadline, $vehicle, $dueDate, $extra);
 
             return $deadline;
         }
 
         if ($deadline->type === Deadline::TYPE_CINGHIA) {
-            $intervalDays = $vehicle->timingBeltIntervalDays();
-            $nextDueDate = $intervalDays ? $renewedDate->copy()->addDays($intervalDays) : null;
-
-            DeadlineOccurrenceCreator::create($deadline, $vehicle, $nextDueDate, [
-                'last_mileage' => $mileage ?? 0,
-                'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
-                'interval_days' => $intervalDays,
-            ]);
+            [$nextDueDate, $extra] = DeadlineRenewalCalculator::cinghia($renewedDate, $vehicle, $mileage);
+            DeadlineOccurrenceCreator::create($deadline, $vehicle, $nextDueDate, $extra);
 
             return $deadline;
         }
@@ -99,12 +87,11 @@ class DeadlineManualRenewalService
             return $deadline;
         }
 
-        $nextDueDate = null;
-        if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
-            $nextDueDate = $renewedDate->copy()->addMonthsNoOverflow((int) $vehicle->vehicleType->regular_inspection_months);
-        } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($vehicle)) {
-            $nextDueDate = $renewedDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
-        }
+        $nextDueDate = match ($deadline->type) {
+            Deadline::TYPE_MINISTERIAL => DeadlineRenewalCalculator::ministerial($renewedDate, $vehicle),
+            Deadline::TYPE_OXYGEN => DeadlineRenewalCalculator::oxygen($renewedDate, $vehicle),
+            default => null,
+        };
 
         if ($nextDueDate) {
             DeadlineOccurrenceCreator::create($deadline, $vehicle, $nextDueDate);
