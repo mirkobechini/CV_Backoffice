@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -75,6 +77,52 @@ class MaintenanceRecord extends Model
     public function items()
     {
         return $this->hasMany(MaintenanceRecordItem::class);
+    }
+
+    /**
+     * Veicoli "attualmente in officina" (dashboard, stato flotta pubblico):
+     * non ancora rientrati, e il cui appuntamento è già iniziato — oggi
+     * senza un orario specifico vale da mezzanotte (come prima), ma con un
+     * orario impostato (es. 15:00) il veicolo risulta in officina solo da
+     * quell'ora, non dall'inizio della giornata (bug segnalato 2026-10-19).
+     */
+    public function scopeCurrentlyInWorkshop(Builder $query): Builder
+    {
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now()->format('H:i');
+
+        return $query->whereNull('return_date')
+            ->where(function (Builder $q) use ($today, $now) {
+                $q->whereDate('appointment_date', '<', $today)
+                    ->orWhere(function (Builder $q2) use ($today, $now) {
+                        $q2->whereDate('appointment_date', $today)
+                            ->where(function (Builder $q3) use ($now) {
+                                $q3->whereNull('appointment_time')
+                                    ->orWhere('appointment_time', '<=', $now);
+                            });
+                    });
+            });
+    }
+
+    /**
+     * Complemento esatto di scopeCurrentlyInWorkshop() sopra: un appuntamento
+     * di oggi con un orario non ancora raggiunto resta "prossimo" invece che
+     * "in officina" — le due card dashboard non devono mai sovrapporsi né
+     * lasciare un appuntamento fuori da entrambe.
+     */
+    public function scopeNotYetStarted(Builder $query): Builder
+    {
+        $today = Carbon::today()->toDateString();
+        $now = Carbon::now()->format('H:i');
+
+        return $query->where(function (Builder $q) use ($today, $now) {
+            $q->whereDate('appointment_date', '>', $today)
+                ->orWhere(function (Builder $q2) use ($today, $now) {
+                    $q2->whereDate('appointment_date', $today)
+                        ->whereNotNull('appointment_time')
+                        ->where('appointment_time', '>', $now);
+                });
+        });
     }
 
     public function tires()
