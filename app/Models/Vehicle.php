@@ -261,6 +261,11 @@ class Vehicle extends Model
         return $this->hasOne(MileageLog::class)->latest('log_date');
     }
 
+    public function fuelLogs()
+    {
+        return $this->hasMany(FuelLog::class);
+    }
+
     public function equipment()
     {
         return $this->hasMany(Equipment::class);

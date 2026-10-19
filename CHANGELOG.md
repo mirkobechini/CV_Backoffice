@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Added
 
 - PWA: app installabile ("aggiungi a home") via manifest.json + service worker minimale (nessuna cache di pagine/dati, solo asset statici).
+- Carburante: nuova entità per tracciare i rifornimenti (litri, costo, km), con consumo (km/L) calcolato rispetto al rifornimento precedente dello stesso veicolo.
 
 ### Fixed
 

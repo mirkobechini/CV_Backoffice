@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\EquipmentIssueController;
 use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
+use App\Http\Controllers\Admin\FuelLogController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\IssuePartBackfillController;
@@ -159,6 +160,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->parameters(['mileage-logs' => 'mileageLog']);
         Route::delete('mileage-logs/bulk/delete', [MileageLogController::class, 'bulkDelete'])
             ->name('mileage-logs.bulk-delete');
+        Route::resource('fuel-logs', FuelLogController::class)
+            ->parameters(['fuel-logs' => 'fuelLog']);
 
         // Route statiche PRIMA del resource: altrimenti {maintenanceRecord}
         // catturerebbe /calendar e /events come parametro (404).
@@ -214,7 +217,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])
             ->name('csv.export')
-            ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'providers']);
+            ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'fuel-logs', 'providers']);
 
         // Import CSV
         Route::get('csv-import', [CsvImportController::class, 'index'])
