@@ -30,7 +30,10 @@ class DashboardController extends Controller
         $cacheKey = DashboardCache::key($groupId);
 
         $data = Cache::remember($cacheKey, 300, function () use ($groupId, $activeGroup, $tireSeasonService) {
-            $totalVehicles = Vehicle::forCurrentUser()->count();
+            // Riusata anche per carWashMissingVehicles sotto: evita una
+            // seconda query identica per lo stesso insieme di veicoli.
+            $groupVehicles = Vehicle::forCurrentUser()->get(['id', 'internal_code', 'license_plate']);
+            $totalVehicles = $groupVehicles->count();
 
             $openIssues = Issue::with('vehicle')
                 ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
@@ -141,7 +144,7 @@ class DashboardController extends Controller
 
             $carWashTotal = $totalVehicles;
             $carWashedVehicleIds = $carWashRecords->pluck('vehicle_id');
-            $carWashMissingVehicles = Vehicle::forCurrentUser()->get()
+            $carWashMissingVehicles = $groupVehicles
                 ->reject(fn (Vehicle $v) => $carWashedVehicleIds->contains($v->id))
                 ->values();
             $carWashWashedCount = $carWashedVehicleIds->count();
