@@ -31,6 +31,7 @@
 - **Telegram notifications**: optional, link a Telegram account from the notification settings to receive the same events there alongside email
 - **Two-factor authentication**: optional TOTP (Google Authenticator/Authy/1Password-compatible), with recovery codes; recommended via a dashboard banner for lead/deputy roles
 - **Printable QR labels**: a QR code sticker for any vehicle or piece of equipment, opening its detail page directly from a phone browser
+- **QR check-in/check-out**: scan an equipment's existing QR label from a vehicle's page to assign it on the spot, instead of scrolling a dropdown; one-tap removal (check-out) from a vehicle
 - **Group-based multi-tenancy**: every user belongs to a group (lead/deputy/member), invite via code; data isolation between groups is applied consistently across every surface — admin pages, Policies, mobile API, CSV/PDF export, cache, notifications and scheduled emails
 - **User management**: create and manage roles from the backoffice (lead role only)
 - **API tokens**: create and revoke from the profile page
@@ -57,6 +58,7 @@
 | **FullCalendar**                 | Appointment calendar                |
 | **OpenRouter (LLM vision)**      | Vehicle registration document scan  |
 | **pragmarx/google2fa + bacon/bacon-qr-code** | Two-factor authentication + QR rendering |
+| **html5-qrcode**                 | Camera QR scanning (equipment check-in/check-out) |
 | **Telegram Bot API**             | Optional notification channel       |
 
 ---
@@ -253,6 +255,7 @@ erDiagram
 - [x] Installable PWA (manifest + service worker)
 - [x] Fuel log / consumption tracking
 - [x] Compliance export for public bodies
+- [x] QR check-in/check-out for equipment
 - [ ] Native mobile app (via REST API)
 
 ---

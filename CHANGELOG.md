@@ -9,6 +9,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - PWA: app installabile ("aggiungi a home") via manifest.json + service worker minimale (nessuna cache di pagine/dati, solo asset statici).
 - Carburante: nuova entità per tracciare i rifornimenti (litri, costo, km), con consumo (km/L) calcolato rispetto al rifornimento precedente dello stesso veicolo.
 - Export conformità flotta: PDF/CSV con stato operativo (disponibile/in officina) e stato scadenze per veicolo, per rendicontazione a enti pubblici (Regione/Protezione Civile), dalla pagina "Stato documenti".
+- Attrezzatura: assegnazione a un veicolo scansionando il QR già stampato sull'etichetta (invece di scorrere una tendina), più rimozione (check-out) in un tap dalla scheda veicolo.
 
 ### Fixed
 
