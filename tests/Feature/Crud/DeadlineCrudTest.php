@@ -685,6 +685,43 @@ class DeadlineCrudTest extends TestCase
         $this->assertEquals(2, Deadline::where('vehicle_id', $vehicle->id)->count());
     }
 
+    public function test_marking_tagliando_deadline_as_renewed_via_update_sets_km_interval_on_next_occurrence(): void
+    {
+        // Stesso calcolo già verificato per il rinnovo senza appuntamento
+        // (DeadlineRenewWithoutAppointmentTest): qui passa dal form di
+        // modifica di una scadenza esistente (DeadlineService::createNextDeadlineAfterRenewal),
+        // che prima di C11 non impostava interval_km/last_mileage sulla
+        // nuova scadenza.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        Deadline::where('vehicle_id', $vehicle->id)->forceDelete();
+
+        $current = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'status' => 'pending',
+            'due_date' => '2025-06-30',
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.deadlines.update', $current), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'due_date' => '2025-06',
+            'is_renewed' => '1',
+            'last_mileage' => 50000,
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Tagliando',
+            'renews_deadline_id' => $current->id,
+            'last_mileage' => 50000,
+            'interval_km' => 20000,
+        ]);
+    }
+
     public function test_editing_an_already_renewed_deadline_does_not_duplicate_next_occurrence(): void
     {
         // Bug reale: riaprire in modifica una scadenza GIÀ rinnovata (es.

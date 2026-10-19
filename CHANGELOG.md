@@ -26,6 +26,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Veicoli: eliminata la duplicazione tra form di creazione e modifica (script e sezione misure pneumatici condivisi).
 - Dashboard: vista divisa in componenti per card (nessun cambio di comportamento).
 - Scadenze: pre-filtro SQL sulle scadenze potenzialmente scadute, prima del filtro esatto in PHP (riduce le righe caricate da dashboard e report; nessun cambio di comportamento).
+- Scadenze: rinnovo via form unificato sullo stesso calcolatore degli altri due percorsi di rinnovo (prima duplicato, con una divergenza reale: il tagliando rinnovato da form non ereditava km/intervallo).
 
 ## [v1.17.3] - 2026-10-19
 

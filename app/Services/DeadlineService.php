@@ -278,6 +278,16 @@ class DeadlineService
      * doveva partire, facendo ripiegare il calcolo sulla data di
      * immatricolazione (o su un rinnovo ancora precedente) invece che su
      * quella appena effettuata.
+     *
+     * Delega a DeadlineRenewalCalculator (audit 2026-10-19, C11): prima
+     * duplicava qui lo stesso calcolo già presente in
+     * MaintenanceCompletionService/DeadlineManualRenewalService, con una
+     * divergenza reale — la nuova scadenza tagliando non ereditava
+     * interval_km/last_mileage, a differenza degli altri due percorsi di
+     * rinnovo — corretta unificando sul calcolatore condiviso. (La guardia
+     * supportsOxygenCheckForVehicle() dentro DeadlineRenewalCalculator::oxygen()
+     * era già ridondante qui: DeadlineDueDateResolver::validateOxygenForVehicle()
+     * la impedisce più a monte, in updateDeadline().)
      */
     private function createNextDeadlineAfterRenewal(Deadline $renewedDeadline, Vehicle $vehicle): void
     {
@@ -285,20 +295,24 @@ class DeadlineService
             return;
         }
 
-        $nextDueDate = match ($renewedDeadline->type) {
-            Deadline::TYPE_MINISTERIAL => $vehicle->vehicleType
-                ? $renewedDeadline->due_date->copy()->addMonthsNoOverflow((int) $vehicle->vehicleType->regular_inspection_months)
-                : null,
-            Deadline::TYPE_OXYGEN => $renewedDeadline->due_date->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS),
-            Deadline::TYPE_TAGLIANDO => $renewedDeadline->due_date->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS),
-            default => null,
-        };
+        $baseDate = $renewedDeadline->due_date;
+        $extra = [];
+
+        if ($renewedDeadline->type === Deadline::TYPE_TAGLIANDO) {
+            [$nextDueDate, $extra] = DeadlineRenewalCalculator::tagliando($baseDate, $vehicle, $renewedDeadline->last_mileage);
+        } else {
+            $nextDueDate = match ($renewedDeadline->type) {
+                Deadline::TYPE_MINISTERIAL => DeadlineRenewalCalculator::ministerial($baseDate, $vehicle),
+                Deadline::TYPE_OXYGEN => DeadlineRenewalCalculator::oxygen($baseDate, $vehicle),
+                default => null,
+            };
+        }
 
         if (! $nextDueDate) {
             return;
         }
 
-        $this->createNextOccurrence($renewedDeadline, $vehicle, $nextDueDate);
+        $this->createNextOccurrence($renewedDeadline, $vehicle, $nextDueDate, $extra);
     }
 
     /**
