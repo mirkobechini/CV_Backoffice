@@ -8,6 +8,7 @@ use App\Services\CsvImport\IssueCsvImporter;
 use App\Services\CsvImport\MileageLogCsvImporter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CsvImportController extends Controller
 {
@@ -19,16 +20,21 @@ class CsvImportController extends Controller
     public function preview(Request $request)
     {
         $this->authorize('create', Issue::class);
-        try {
-            $request->validate([
-                'entity' => 'required|in:issues,mileage-logs',
-                'csv_file' => 'required|file|mimes:csv,txt|max:5120',
-                'vehicle_ref' => 'nullable|string|max:20',
-                'import_year' => 'nullable|integer|min:2000|max:2100',
-            ]);
 
-            $entity = $request->entity;
-            $importYear = $request->import_year ?? (int) date('Y');
+        // Validazione fuori dal try/catch: una ValidationException va gestita
+        // dall'handler di default di Laravel (redirect con errori per campo),
+        // non inghiottita in un messaggio generico (bug segnalato 2026-10-19).
+        $request->validate([
+            'entity' => 'required|in:issues,mileage-logs',
+            'csv_file' => 'required|file|mimes:csv,txt|max:5120',
+            'vehicle_ref' => 'nullable|string|max:20',
+            'import_year' => 'nullable|integer|min:2000|max:2100',
+        ]);
+
+        $entity = $request->entity;
+        $importYear = $request->import_year ?? (int) date('Y');
+
+        try {
             $rows = $this->parseCsv($request->file('csv_file'));
 
             if (empty($rows)) {
@@ -42,6 +48,8 @@ class CsvImportController extends Controller
 
             return view('admin.csv-import.preview', compact('entity', 'results', 'rows'));
         } catch (\Throwable $e) {
+            Log::error('Errore durante l\'importazione CSV', ['entity' => $entity, 'exception' => $e]);
+
             return back()->with('status_error', 'Errore nella validazione: '.$e->getMessage());
         }
     }
