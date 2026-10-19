@@ -48,7 +48,7 @@
                             <form action="{{ route('notifications.read', $notification) }}" method="POST">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="mini-btn" title="{{ __('Segna come letta') }}">
+                                <button type="submit" class="mini-btn" title="{{ __('Segna come letta') }}" aria-label="{{ __('Segna come letta') }}">
                                     <i class="fa-solid fa-check"></i>
                                 </button>
                             </form>

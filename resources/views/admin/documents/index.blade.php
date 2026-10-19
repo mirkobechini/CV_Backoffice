@@ -146,7 +146,7 @@
                         </tr>
                     @elseif ($groupedEquipment !== null)
                         @foreach ($groupedEquipment as $groupLabel => $groupItems)
-                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}" tabindex="0" role="button" aria-expanded="true">
                                 <td colspan="4"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupItems->count() }})</td>
                             </tr>
                             @foreach ($groupItems as $item)

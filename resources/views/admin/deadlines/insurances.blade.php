@@ -98,9 +98,9 @@
                                 <td>
                                     <div class="row-actions">
                                         <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="mini-btn"
-                                            title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                                            title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                                         <a href="{{ route('admin.deadlines.edit', $deadline->id) }}" class="mini-btn"
-                                            title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                                            title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
                                     </div>
                                 </td>
                             </tr>

@@ -21,7 +21,7 @@
                             default => 'gray',
                         } }}">{{ $deadline->status_label }}</span>
                     <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="mini-btn"
-                        title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                        title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                 </div>
             </div>
         @empty

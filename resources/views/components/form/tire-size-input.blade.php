@@ -44,9 +44,10 @@
     @if ($codeField)
         <input type="text" class="input tire-size-code-input" name="{{ $codeField }}"
             value="{{ old($codeField, $codeValue ?? '') }}" placeholder="{{ __('Codice (es. A1)') }}" maxlength="10"
-            aria-label="{{ __('Codice di questa misura, come indicato sulla carta di circolazione') }}">
+            aria-label="{{ __('Codice di questa misura, come indicato sulla carta di circolazione') }}"
+            aria-describedby="{{ $inputId }}-code-error">
         @error($codeField)
-            <div class="field-error">{{ $message }}</div>
+            <div class="field-error" id="{{ $inputId }}-code-error">{{ $message }}</div>
         @enderror
     @endif
 </div>
