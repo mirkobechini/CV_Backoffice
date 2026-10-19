@@ -34,7 +34,7 @@
         $tagliando = $deadlines->get($deadlinesTypes['tagliando']);
         $cinghia = $deadlines->get($deadlinesTypes['cinghia']);
         $assicurazione = $deadlines->get('Assicurazione');
-        $activeDeadlines = collect([$revisione, $ossigeno, $tagliando, $cinghia])
+        $activeDeadlines = collect([$revisione, $ossigeno, $tagliando, $cinghia, $assicurazione])
             ->filter()
             ->filter(fn($d) => in_array($d->automatic_status, ['pending', 'expired']));
         $missingEquipment = $vehicle->missingRequiredEquipment();
@@ -83,8 +83,7 @@
         <x-admin.vehicle-show.registry-card :vehicle="$vehicle" />
         <x-admin.vehicle-show.tech-specs-card :vehicle="$vehicle" />
         <x-admin.vehicle-show.documents-card :vehicle="$vehicle" />
-        <x-admin.vehicle-show.deadlines-active-card :vehicle="$vehicle" :active-deadlines="$activeDeadlines"
-            :assicurazione="$assicurazione" />
+        <x-admin.vehicle-show.deadlines-active-card :vehicle="$vehicle" :active-deadlines="$activeDeadlines" />
     </div>
 
     {{-- Stato Scadenze (ultima per tipo), Guasti, Equipaggiamento, Pneumatici --}}

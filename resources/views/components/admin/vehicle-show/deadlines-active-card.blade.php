@@ -1,4 +1,4 @@
-@props(['vehicle', 'activeDeadlines', 'assicurazione'])
+@props(['vehicle', 'activeDeadlines'])
 
 <div class="veh-card">
     <div class="head">
@@ -42,19 +42,5 @@
                 <div><div class="name">{{ __('Nessuna scadenza attiva') }}</div></div>
             </div>
         @endforelse
-        @if ($assicurazione)
-            <div class="veh-dl-item">
-                <div style="min-width:0;">
-                    <div class="name">{{ __('Assicurazione') }}</div>
-                    <div class="date">{{ __('scad.') }} {{ $assicurazione->due_date_formatted ?? '—' }}</div>
-                </div>
-                <div class="veh-dl-badges">
-                    <a href="{{ route('admin.deadlines.show', $assicurazione->id) }}" class="mini-btn"
-                        title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                    <a href="{{ route('admin.deadlines.edit', $assicurazione->id) }}" class="mini-btn"
-                        title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                </div>
-            </div>
-        @endif
     </div>
 </div>
