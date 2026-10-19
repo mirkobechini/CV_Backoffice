@@ -109,14 +109,13 @@ document.addEventListener('DOMContentLoaded', () => {
             row.style.display = groups.some((g) => collapsedGroups.has(g)) ? 'none' : '';
         });
         document.querySelectorAll('.group-row[data-group-row]').forEach((header) => {
-            header.classList.toggle('is-collapsed', collapsedGroups.has(header.dataset.groupRow));
+            const isCollapsed = collapsedGroups.has(header.dataset.groupRow);
+            header.classList.toggle('is-collapsed', isCollapsed);
+            header.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
         });
     };
 
-    document.addEventListener('click', (event) => {
-        const header = event.target.closest('.group-row[data-group-row]');
-        if (!header) return;
-
+    const toggleGroupRow = (header) => {
         const id = header.dataset.groupRow;
         if (collapsedGroups.has(id)) {
             collapsedGroups.delete(id);
@@ -124,6 +123,26 @@ document.addEventListener('DOMContentLoaded', () => {
             collapsedGroups.add(id);
         }
         applyGroupCollapse();
+    };
+
+    document.addEventListener('click', (event) => {
+        const header = event.target.closest('.group-row[data-group-row]');
+        if (!header) return;
+
+        toggleGroupRow(header);
+    });
+
+    // Tastiera: le righe di gruppo sono <tr role="button" tabindex="0">,
+    // non elementi nativamente interattivi — serve il binding esplicito
+    // di Invio/Spazio per essere operabili senza mouse (audit 2026-10-19).
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+
+        const header = event.target.closest('.group-row[data-group-row]');
+        if (!header) return;
+
+        event.preventDefault();
+        toggleGroupRow(header);
     });
 
     document.querySelectorAll('form[data-single-submit="true"]').forEach((form) => {
