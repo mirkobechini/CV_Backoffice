@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\FuelLog;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
@@ -24,6 +25,7 @@ class CsvExportController extends Controller
             'equipments' => $this->exportEquipments(),
             'maintenance-records' => $this->exportMaintenanceRecords(),
             'mileage-logs' => $this->exportMileageLogs(),
+            'fuel-logs' => $this->exportFuelLogs(),
             'providers' => $this->exportProviders(),
             default => abort(404, 'Entità non trovata.'),
         };
@@ -139,6 +141,22 @@ class CsvExportController extends Controller
         ]);
 
         return $this->downloadCsv('chilometraggi.csv', $headers, $rows);
+    }
+
+    private function exportFuelLogs()
+    {
+        $logs = FuelLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+
+        $headers = ['Veicolo', 'Data', 'Litri', 'Costo totale', 'Chilometri'];
+        $rows = $logs->map(fn ($l) => [
+            $l->vehicle?->internal_code ?? '',
+            $l->log_date_formatted ?? '',
+            $l->liters,
+            $l->cost_total ?? '',
+            $l->mileage ?? '',
+        ]);
+
+        return $this->downloadCsv('rifornimenti.csv', $headers, $rows);
     }
 
     private function exportProviders()
