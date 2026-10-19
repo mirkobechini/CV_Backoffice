@@ -255,4 +255,16 @@ class EquipmentController extends Controller
 
         return redirect()->route('admin.equipments.index')->with('status', 'Attrezzatura eliminata con successo.');
     }
+
+    /**
+     * Rimuove l'attrezzatura dal veicolo a cui è assegnata (check-out), senza
+     * eliminarla: resta in anagrafica, libera per una nuova assegnazione.
+     */
+    public function unassign(Equipment $equipment)
+    {
+        $this->authorize('update', $equipment);
+        $equipment->update(['vehicle_id' => null]);
+
+        return back()->with('status', 'Attrezzatura rimossa dal veicolo con successo.');
+    }
 }
