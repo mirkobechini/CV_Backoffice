@@ -18,14 +18,20 @@ class NotificationService
 {
     /**
      * Crea una notifica in-app per un utente.
+     *
+     * $marker identifica univocamente la risorsa per utente/tipo, usato da
+     * GenerateNotifications::alreadyNotified() per evitare duplicati —
+     * mai mostrato all'utente, solo in colonna propria (non più accodato
+     * al testo del messaggio, vedi audit 2026-10-19).
      */
-    public function notifyUser(User $user, string $type, string $title, ?string $message = null, ?string $url = null): Notification
+    public function notifyUser(User $user, string $type, string $title, ?string $message = null, ?string $url = null, ?string $marker = null): Notification
     {
         return Notification::create([
             'user_id' => $user->id,
             'type' => $type,
             'title' => $title,
             'message' => $message,
+            'marker' => $marker,
             'url' => $url,
             'is_read' => false,
         ]);
