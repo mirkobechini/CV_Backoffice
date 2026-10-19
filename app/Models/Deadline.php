@@ -265,12 +265,7 @@ class Deadline extends Model
 
         // Scadenze per data: mostra i giorni alla scadenza
         if ($this->due_date) {
-            $days = Carbon::today()->diffInDays($this->due_date, false);
-            if ($days < 0) {
-                return '+'.abs($days).' gg';
-            }
-
-            return $days.' gg';
+            return $this->formatDaysRemaining($this->due_date);
         }
 
         return '—';
@@ -283,11 +278,17 @@ class Deadline extends Model
      */
     public function getDateRemainingLabelAttribute(): ?string
     {
-        if (! $this->due_date) {
-            return null;
-        }
+        return $this->due_date ? $this->formatDaysRemaining($this->due_date) : null;
+    }
 
-        $days = Carbon::today()->diffInDays($this->due_date, false);
+    /**
+     * "+N gg" se la data è già passata (scaduta da N giorni), "N gg"
+     * altrimenti — condiviso tra days_label e date_remaining_label, che
+     * prima duplicavano lo stesso calcolo (bug/DRY segnalato 2026-10-19).
+     */
+    private function formatDaysRemaining(Carbon $date): string
+    {
+        $days = Carbon::today()->diffInDays($date, false);
 
         return $days < 0 ? '+'.abs($days).' gg' : $days.' gg';
     }
