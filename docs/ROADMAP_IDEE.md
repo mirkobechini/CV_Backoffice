@@ -14,11 +14,11 @@
 | C2 | Bug | `catch(\Throwable)` avvolge anche la validazione, inghiottendo `ValidationException` in un messaggio generico invece dei campi | `app/Http/Controllers/CsvImportController.php:22-46` | Media | ✅ |
 | C3 | Bug/DRY | Calcolo giorni residui duplicato in due accessor | `app/Models/Deadline.php:267-293` | Bassa | ✅ |
 | C4 | Errore silenziato | `catch(\Throwable)` senza alcun `Log::`, in violazione della regola AGENTS.md | `app/Http/Controllers/CsvImportController.php:44-46` | Media | ✅ |
-| C5 | Performance | Dedup notifiche con `LIKE "%marker%"` non indicizzabile | `app/Console/Commands/GenerateNotifications.php:311-317` | Bassa | ⬜ |
-| C6 | Performance | Scadenze scadute filtrate in PHP invece che in SQL | `app/Http/Controllers/DashboardController.php:55-61` | Bassa | ⬜ |
-| C7 | Performance | Veicoli ri-interrogati due volte per lo stesso conteggio | `app/Http/Controllers/DashboardController.php:144-146` | Bassa | ⬜ |
-| C8 | Performance | Manca indice su `is_renewed`, filtrato quasi ovunque nelle query scadenze | migrazione DB | Bassa | ⬜ |
-| C9 | Complessità | 3 livelli di closure annidate per esprimere la condizione orario officina | `app/Models/MaintenanceRecord.php:89-126` | Bassa | ⬜ |
+| C5 | Performance | Dedup notifiche con `LIKE "%marker%"` non indicizzabile | `app/Console/Commands/GenerateNotifications.php:311-317` | Bassa | ✅ |
+| C6 | Performance | Scadenze scadute filtrate in PHP invece che in SQL | `app/Http/Controllers/DashboardController.php:55-61` | Bassa | ⬜ valutato: lo stato "scaduta" dipende anche dal km (richiede il chilometraggio del veicolo, non solo colonne della tabella) — una riscrittura SQL rischierebbe di divergere dalla logica canonica di `automatic_status`; da rifare con più tempo, non rimandato per pigrizia |
+| C7 | Performance | Veicoli ri-interrogati due volte per lo stesso conteggio | `app/Http/Controllers/DashboardController.php:144-146` | Bassa | ✅ |
+| C8 | Performance | Manca indice su `is_renewed`, filtrato quasi ovunque nelle query scadenze | migrazione DB | Bassa | ✅ |
+| C9 | Complessità | 3 livelli di closure annidate per esprimere la condizione orario officina | `app/Models/MaintenanceRecord.php:89-126` | Bassa | ❌ i due scope sono complementi logici esatti (< vs >, null-handling opposto): un helper condiviso richiederebbe parametri per direzione/null che lo renderebbero meno leggero, non più |
 | C10 | Duplicazione | Logica di rinnovo tagliando/cinghia reimplementata in due service diversi | `MaintenanceCompletionService.php` vs `DeadlineManualRenewalService.php` | Media | ⬜ |
 | C11 | Design pattern | Strategy map per tipo scadenza invece di match/if ripetuti in 3 service | più file | Bassa | ⬜ |
 | C12 | File da spezzare | `Deadline.php` (464 righe), `EquipmentController.php` (401), `MaintenanceCompletionService.php` (395), `VehicleController.php` (392), `Vehicle.php` (379), `DeadlineService.php` (360) + viste `vehicles/edit.blade.php` (443), `dashboard.blade.php` (429), `vehicles/create.blade.php` (428) e altre | vedi dettaglio audit | Bassa | ⬜ |
@@ -50,7 +50,7 @@
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
 | R1 | Touch target | Pulsanti icona `.mini-btn` (26×26px) sotto la soglia comodamente toccabile (44px) — il problema pratico più sentito per i volontari sul campo | `resources/css/app.css:1188-1200` | Alta | ✅ (portati a 34×34px, incluso `.detail-btn`) |
-| R2 | Layout | Repeater "misure pneumatici" si impila in modo disordinato su schermi stretti (<480px) | `resources/css/app.css:1941-1959` | Bassa | ⬜ |
+| R2 | Layout | Repeater "misure pneumatici" si impila in modo disordinato su schermi stretti (<480px) | `resources/css/app.css:1941-1959` | Bassa | ✅ |
 
 ### Feature proposte
 

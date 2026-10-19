@@ -9,9 +9,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Import CSV: un errore di validazione finiva in un messaggio generico invece dei messaggi per campo; gli errori imprevisti ora vengono anche loggati.
 - Scadenze: calcolo giorni residui deduplicato tra due accessor.
 - Accessibilità: contrasto colori badge in tema chiaro portato sopra la soglia WCAG AA; `aria-label` sui pulsanti icona-only (visualizza/modifica/elimina/aggiungi); focus visibile su ricerca e select ruolo; righe di gruppo pieghevoli operabili da tastiera; `<h1>` nascosto su tutte le pagine (via breadcrumb); `aria-describedby` sui messaggi di errore dei componenti form condivisi.
-- Responsive: pulsanti icona (`.mini-btn`/`.detail-btn`) ingranditi a 34×34px, target touch più comodo su telefono.
+- Responsive: pulsanti icona (`.mini-btn`/`.detail-btn`) ingranditi a 34×34px, target touch più comodo su telefono; campi misura pneumatico raggruppati su schermi stretti invece di andare a capo uno per uno.
+- Notifiche: il testo mostrato all'utente non termina più con un marker tecnico illeggibile (es. "#deadline-42").
 
 ### Changed
+
+- Notifiche: deduplicazione via colonna indicizzata invece di una ricerca `LIKE` sul testo del messaggio.
+- Dashboard: eliminata una query veicoli duplicata; aggiunto indice su `is_renewed` nelle scadenze.
 
 - `composer.json`: motivate le advisory di sicurezza ignorate.
 
