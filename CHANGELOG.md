@@ -23,6 +23,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Gomme: logica di collegamento/disposizione/montaggio estratta in un servizio dedicato; il montaggio (prima duplicato) è ora un solo punto.
 - Scadenze: sincronizzazione dello stato estratta in un servizio dedicato (nessun cambio di comportamento).
 - Attrezzature: azioni di revisione/collaudo estratte in un controller dedicato (nessun cambio di comportamento).
+- Veicoli: eliminata la duplicazione tra form di creazione e modifica (script e sezione misure pneumatici condivisi).
+- Dashboard: vista divisa in componenti per card (nessun cambio di comportamento).
 
 ## [v1.17.3] - 2026-10-19
 
