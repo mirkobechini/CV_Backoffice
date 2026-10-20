@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.18.1] - 2026-10-20
+
 ### Added
 
 - Favicon con logo personale (scimmia arancione con occhiali </>) al posto dell'icona generica, su tutti i layout.
