@@ -29,6 +29,10 @@
             href="{{ route('admin.tires.index') }}" title="{{ __('Pneumatici') }}">
             <i class="fa-solid fa-circle-dot"></i><span>{{ __('Pneumatici') }}</span>
         </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.fuel-logs.*') ? 'active' : '' }}"
+            href="{{ route('admin.fuel-logs.index') }}" title="{{ __('Carburante') }}">
+            <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante') }}</span>
+        </a>
     </nav>
 
     {{-- Sezione: Report --}}

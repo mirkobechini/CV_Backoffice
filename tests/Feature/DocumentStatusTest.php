@@ -8,6 +8,8 @@ use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Group;
+use App\Models\MaintenanceRecord;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -173,5 +175,64 @@ class DocumentStatusTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeInOrder(['Estintore', 'Estintore cabina', 'Sedia', 'Sedia principale']);
+    }
+
+    public function test_export_pdf_is_downloadable(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+        $this->vehicle('AB123CD', '0001', $group);
+
+        $response = $this->actingAs($user)->get(route('admin.documents.export-pdf'));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+    }
+
+    public function test_export_csv_flags_expired_deadline_and_workshop_status(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle('AB123CD', '0001', $group);
+
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => now()->subDays(10),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+        $provider = Provider::create(['name' => 'Officina Test', 'type' => 'Meccanico']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.documents.export-csv'));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('0001', $content);
+        $this->assertStringContainsString('In officina', $content);
+        $this->assertStringContainsString('Non in regola', $content);
+        $this->assertStringContainsString(Deadline::TYPE_TAGLIANDO, $content);
+    }
+
+    public function test_export_csv_shows_available_and_compliant_vehicle(): void
+    {
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+        $this->vehicle('AB123CD', '0001', $group);
+
+        $response = $this->actingAs($user)->get(route('admin.documents.export-csv'));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Disponibile', $content);
+        $this->assertStringContainsString('In regola', $content);
     }
 }

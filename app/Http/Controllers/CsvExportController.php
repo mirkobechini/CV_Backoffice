@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\StreamsCsv;
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\FuelLog;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
@@ -12,6 +14,8 @@ use App\Models\Vehicle;
 
 class CsvExportController extends Controller
 {
+    use StreamsCsv;
+
     /**
      * Scarica CSV di tutte le entità del modulo specificato.
      */
@@ -24,6 +28,7 @@ class CsvExportController extends Controller
             'equipments' => $this->exportEquipments(),
             'maintenance-records' => $this->exportMaintenanceRecords(),
             'mileage-logs' => $this->exportMileageLogs(),
+            'fuel-logs' => $this->exportFuelLogs(),
             'providers' => $this->exportProviders(),
             default => abort(404, 'Entità non trovata.'),
         };
@@ -141,6 +146,22 @@ class CsvExportController extends Controller
         return $this->downloadCsv('chilometraggi.csv', $headers, $rows);
     }
 
+    private function exportFuelLogs()
+    {
+        $logs = FuelLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+
+        $headers = ['Veicolo', 'Data', 'Litri', 'Costo totale', 'Chilometri'];
+        $rows = $logs->map(fn ($l) => [
+            $l->vehicle?->internal_code ?? '',
+            $l->log_date_formatted ?? '',
+            $l->liters,
+            $l->cost_total ?? '',
+            $l->mileage ?? '',
+        ]);
+
+        return $this->downloadCsv('rifornimenti.csv', $headers, $rows);
+    }
+
     private function exportProviders()
     {
         $providers = Provider::all();
@@ -154,48 +175,5 @@ class CsvExportController extends Controller
         ]);
 
         return $this->downloadCsv('fornitori.csv', $headers, $rows);
-    }
-
-    private function downloadCsv(string $filename, array $headers, iterable $rows)
-    {
-        $callback = function () use ($headers, $rows) {
-            $file = fopen('php://output', 'w');
-
-            // BOM per supporto Excel UTF-8
-            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
-
-            fputcsv($file, $headers, ';');
-
-            foreach ($rows as $row) {
-                fputcsv($file, array_map([$this, 'escapeCsvFormula'], $row), ';');
-            }
-
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, [
-            'Content-Type' => 'text/csv; charset=utf-8',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-        ]);
-    }
-
-    /**
-     * Neutralizza l'iniezione di formule CSV (Excel/Sheets/LibreOffice
-     * interpretano come formula qualunque cella che inizia con =, +, -, @,
-     * tab o ritorno a capo): un campo testo libero come descrizione guasto
-     * o nome fornitore, scritto da un membro qualunque del gruppo, poteva
-     * eseguire una formula quando il CSV veniva riaperto da qualcun altro.
-     * Anteponendo un apice, il programma di fogli di calcolo lo tratta
-     * come testo letterale invece che come formula.
-     */
-    private function escapeCsvFormula(mixed $value): mixed
-    {
-        if (! is_string($value) || $value === '') {
-            return $value;
-        }
-
-        return in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)
-            ? "'".$value
-            : $value;
     }
 }

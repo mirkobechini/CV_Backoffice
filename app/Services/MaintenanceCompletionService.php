@@ -6,7 +6,6 @@ use App\Models\Deadline;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\MaintenanceRecordItem;
-use App\Models\Tire;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -16,81 +15,65 @@ class MaintenanceCompletionService
     public function __construct(
         private readonly DeadlineService $deadlineService,
         private readonly MileageLogService $mileageLogService,
-        private readonly TireChangeService $tireChangeService,
+        private readonly TireDispositionService $tireDispositionService,
     ) {}
 
     /**
-     * Per un appuntamento "Cambio Gomme", collega le gomme da montare: una
-     * o più esistenti (in magazzino, 1/2/4, validate in
-     * ValidatesTireSelection) e/o di nuove appena descritte. Il montaggio
-     * vero e proprio (con la scelta di cosa fare delle gomme sostituite)
-     * avviene solo al completamento dell'appuntamento (vedi complete()),
-     * non qui.
+     * @see TireDispositionService::linkTireItems()
      */
     public function linkTireItems(MaintenanceRecord $maintenanceRecord, array $data): void
     {
-        if (($data['activity_type'] ?? null) !== MaintenanceRecord::ACTIVITY_TIRE_CHANGE) {
-            return;
-        }
-
-        $tires = collect();
-
-        if (! empty($data['target_tire_ids'])) {
-            $tires = Tire::whereIn('id', $data['target_tire_ids'])
-                ->where('vehicle_id', $data['vehicle_id'])
-                ->get();
-        }
-
-        if (! empty($data['new_tire_season'])) {
-            $vehicle = $maintenanceRecord->vehicle;
-            $warning = null;
-
-            foreach (Tire::positionsForGroup($data['new_tire_group'] ?? null, $data['new_tire_position'] ?? null) as $position) {
-                $tires->push(Tire::create([
-                    'vehicle_id' => $data['vehicle_id'],
-                    'season' => $data['new_tire_season'],
-                    'position' => $position,
-                    'brand' => $data['new_tire_brand'] ?? null,
-                    'model_name' => $data['new_tire_model_name'] ?? null,
-                    'size' => $data['new_tire_size'] ?? null,
-                    'status' => Tire::STATUS_STORED,
-                ]));
-
-                $warning ??= Tire::sizeMismatchWarning($data['new_tire_size'] ?? null, $vehicle, $position);
-            }
-
-            if ($warning) {
-                session()->flash('tire_size_warning', $warning);
-            }
-        }
-
-        foreach ($tires as $tire) {
-            $maintenanceRecord->items()->create([
-                'itemable_id' => $tire->id,
-                'itemable_type' => Tire::class,
-                'completed' => false,
-            ]);
-        }
+        $this->tireDispositionService->linkTireItems($maintenanceRecord, $data);
     }
 
     /**
-     * Item gomma di questo appuntamento per cui il completamento chiederà
-     * una disposizione (stored/retired): solo quelli non ancora completati
-     * e per cui c'è davvero una gomma montata nella stessa posizione da
-     * sostituire (altrimenti è un primo montaggio, nessuna scelta da fare).
-     * Usata sia per costruire le regole di validazione in complete() sia
-     * per il form del modale di completamento.
+     * @see TireDispositionService::tireItemsRequiringDisposition()
      *
      * @return Collection<int, MaintenanceRecordItem>
      */
     public function tireItemsRequiringDisposition(MaintenanceRecord $maintenanceRecord): Collection
     {
+        return $this->tireDispositionService->tireItemsRequiringDisposition($maintenanceRecord);
+    }
+
+    /**
+     * Guasti collegati a questo appuntamento, per cui complete() chiederà
+     * un sì/no di risoluzione indipendente per ciascuno — non più un'unica
+     * scelta valida per tutti (bug segnalato nell'audit 2026-10-19). Usata
+     * sia per costruire le regole di validazione in complete() sia per il
+     * form del modale di completamento.
+     *
+     * @return Collection<int, Issue>
+     */
+    public function linkedIssues(MaintenanceRecord $maintenanceRecord): Collection
+    {
         $maintenanceRecord->loadMissing('items.itemable');
 
         return $maintenanceRecord->items
-            ->where('itemable_type', Tire::class)
-            ->where('completed', false)
-            ->filter(fn ($item) => $item->itemable && $this->tireChangeService->findPreviousMountedTire($item->itemable));
+            ->where('itemable_type', Issue::class)
+            ->map(fn ($item) => $item->itemable)
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * Scadenze collegate a questo appuntamento per cui esiste una logica di
+     * rinnovo (la cinghia non è mai collegata come item, vedi complete()):
+     * stesso sì/no indipendente per ciascuna di linkedIssues() sopra.
+     *
+     * @return Collection<int, Deadline>
+     */
+    public function linkedDeadlines(MaintenanceRecord $maintenanceRecord): Collection
+    {
+        $maintenanceRecord->loadMissing('items.itemable');
+
+        return $maintenanceRecord->items
+            ->where('itemable_type', Deadline::class)
+            ->map(fn ($item) => $item->itemable)
+            ->filter(fn (?Deadline $deadline) => $deadline && in_array($deadline->type, [
+                Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO,
+            ], true))
+            ->values();
     }
 
     /**
@@ -108,9 +91,8 @@ class MaintenanceCompletionService
 
         $issues = $maintenanceRecord->items->where('itemable_type', Issue::class);
         $deadlines = $maintenanceRecord->items->where('itemable_type', Deadline::class);
-        $tireItems = $maintenanceRecord->items->where('itemable_type', Tire::class);
 
-        DB::transaction(function () use ($maintenanceRecord, $data, $issues, $deadlines, $tireItems) {
+        DB::transaction(function () use ($maintenanceRecord, $data, $issues, $deadlines) {
             // 1) complete maintenance
             // Se l'utente ha già indicato una data di rientro (es. un tagliando
             // registrato retroattivamente), la rispettiamo. Altrimenti usiamo oggi.
@@ -119,11 +101,13 @@ class MaintenanceCompletionService
             }
             $maintenanceRecord->save();
 
-            // 2) update issues
+            // 2) update issues — un sì/no indipendente per ciascuno
+            // (data['resolved_issues'][$issue->id]), non più un'unica
+            // scelta per tutti (bug segnalato nell'audit 2026-10-19).
             foreach ($issues as $item) {
                 $issue = $item->itemable;
                 if ($issue) {
-                    if ((bool) $data['issue_resolved']) {
+                    if ((bool) ($data['resolved_issues'][$issue->id] ?? false)) {
                         $issue->status = 'closed';
                         $issue->save();
                     } else {
@@ -133,14 +117,15 @@ class MaintenanceCompletionService
                 }
             }
 
-            // 3) update deadlines + create next ones
+            // 3) update deadlines + create next ones — stesso sì/no
+            // indipendente per ciascuna (data['resolved_deadlines'][$id]).
             foreach ($deadlines as $item) {
                 $deadline = $item->itemable;
                 if (! $deadline || ! in_array($deadline->type, [Deadline::TYPE_MINISTERIAL, Deadline::TYPE_OXYGEN, Deadline::TYPE_TAGLIANDO], true)) {
                     continue;
                 }
 
-                if ((bool) $data['issue_resolved']) {
+                if ((bool) ($data['resolved_deadlines'][$deadline->id] ?? false)) {
                     $this->renewDeadline($maintenanceRecord, $deadline);
                 } else {
                     $deadline->status = 'pending';
@@ -151,8 +136,11 @@ class MaintenanceCompletionService
             // 4) Cambio cinghia distribuzione: riparte la scadenza dalla data
             //    e dal chilometraggio del cambio effettuato. Non è collegata
             //    come MaintenanceRecordItem (il passo 3 sopra esclude apposta
-            //    TYPE_CINGHIA), quindi va trovata qui sul veicolo.
-            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) $data['issue_resolved']) {
+            //    TYPE_CINGHIA), quindi va trovata qui sul veicolo. Domanda
+            //    dedicata (data['timing_belt_completed']), indipendente dal
+            //    sì/no degli eventuali guasti/scadenze collegati allo stesso
+            //    appuntamento.
+            if ($maintenanceRecord->activity_type === MaintenanceRecord::ACTIVITY_TIMING_BELT && (bool) ($data['timing_belt_completed'] ?? false)) {
                 $timingBeltDeadline = $maintenanceRecord->vehicle->deadlines()
                     ->where('type', Deadline::TYPE_CINGHIA)
                     ->where('is_renewed', false)
@@ -176,34 +164,8 @@ class MaintenanceCompletionService
                 }
             }
 
-            // 5) Cambio gomme: monta i set collegati (uno o più, es. anteriori
-            // + posteriori insieme), applicando alle gomme sostituite la
-            // disposizione scelta (magazzino o dismesse). Le chiamate in
-            // sequenza si compongono correttamente anche quando un set
-            // "full" già montato va diviso tra i due nuovi assi montati
-            // (vedi TireChangeService).
-            foreach ($tireItems as $tireItem) {
-                if ($tireItem->completed) {
-                    continue;
-                }
-
-                // Disposizione scelta indipendentemente per ogni gomma
-                // sostituita (es. 1 dismessa e 3 in magazzino nello stesso
-                // cambio): 'stored' come default innocuo quando non c'è
-                // nulla da smontare in quella posizione (primo montaggio),
-                // perché in quel caso non viene comunque applicato (vedi
-                // TireChangeService::findPreviousMountedTire()).
-                $previousDisposition = $data['previous_disposition'][$tireItem->itemable_id] ?? Tire::STATUS_STORED;
-
-                $this->tireChangeService->recordChange(
-                    $tireItem->itemable,
-                    $maintenanceRecord->return_date,
-                    $maintenanceRecord->mileage_at_service,
-                    $previousDisposition,
-                    "Appuntamento del {$maintenanceRecord->appointment_date_formatted}",
-                );
-                $tireItem->update(['completed' => true]);
-            }
+            // 5) Cambio gomme: monta le gomme collegate non ancora completate.
+            $this->tireDispositionService->mountLinkedTires($maintenanceRecord, $data['previous_disposition'] ?? []);
         });
     }
 
@@ -249,25 +211,7 @@ class MaintenanceCompletionService
             }
         }
 
-        $tireItems = $maintenanceRecord->items->where('itemable_type', Tire::class);
-        foreach ($tireItems as $tireItem) {
-            if ($tireItem->completed || ! $tireItem->itemable) {
-                continue;
-            }
-
-            // 'stored' come default innocuo quando non è stata indicata una
-            // disposizione (stesso default di complete()).
-            $disposition = $previousDisposition[$tireItem->itemable_id] ?? Tire::STATUS_STORED;
-
-            $this->tireChangeService->recordChange(
-                $tireItem->itemable,
-                $maintenanceRecord->return_date,
-                $maintenanceRecord->mileage_at_service,
-                $disposition,
-                "Appuntamento del {$maintenanceRecord->appointment_date_formatted}",
-            );
-            $tireItem->update(['completed' => true]);
-        }
+        $this->tireDispositionService->mountLinkedTires($maintenanceRecord, $previousDisposition);
     }
 
     /**
@@ -318,13 +262,11 @@ class MaintenanceCompletionService
 
         // Tutte le scadenze partono dalla data di RIENTRO.
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
-        $nextDueDate = null;
-        if ($deadline->type === Deadline::TYPE_MINISTERIAL && ($maintenanceRecord->vehicle->vehicleType?->regular_inspection_months ?? 0) > 0) {
-            $monthsToAdd = (int) $maintenanceRecord->vehicle->vehicleType?->regular_inspection_months;
-            $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($monthsToAdd);
-        } elseif ($deadline->type === Deadline::TYPE_OXYGEN && Deadline::supportsOxygenCheckForVehicle($maintenanceRecord->vehicle)) {
-            $nextDueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS);
-        }
+        $nextDueDate = match ($deadline->type) {
+            Deadline::TYPE_MINISTERIAL => DeadlineRenewalCalculator::ministerial($baseDate, $maintenanceRecord->vehicle),
+            Deadline::TYPE_OXYGEN => DeadlineRenewalCalculator::oxygen($baseDate, $maintenanceRecord->vehicle),
+            default => null,
+        };
         if ($nextDueDate) {
             // Stessa guardia anti-duplicati del rinnovo via form di
             // modifica (renews_deadline_id): prima questo controller aveva
@@ -346,20 +288,9 @@ class MaintenanceCompletionService
     {
         $vehicle = $maintenanceRecord->vehicle;
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
-        $baseKm = $maintenanceRecord->mileage_at_service ?? 0;
-        $intervalDays = $vehicle->timingBeltIntervalDays();
-        $nextDueDate = $intervalDays ? $baseDate->copy()->addDays($intervalDays) : null;
+        [$nextDueDate, $extra] = DeadlineRenewalCalculator::cinghia($baseDate, $vehicle, $maintenanceRecord->mileage_at_service);
 
-        $this->deadlineService->createNextOccurrence(
-            $deadline,
-            $vehicle,
-            $nextDueDate,
-            [
-                'last_mileage' => $baseKm,
-                'interval_km' => Deadline::TIMING_BELT_INTERVAL_KM,
-                'interval_days' => $intervalDays,
-            ]
-        );
+        $this->deadlineService->createNextOccurrence($deadline, $vehicle, $nextDueDate, $extra);
     }
 
     /**
@@ -373,23 +304,9 @@ class MaintenanceCompletionService
      */
     private function renewTagliandoDeadline(MaintenanceRecord $maintenanceRecord, Deadline $deadline): void
     {
-        // Base temporale: data di rientro
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
-        $dueDate = $baseDate->copy()->addMonthsNoOverflow(Deadline::TAGLIANDO_INTERVAL_MONTHS);
+        [$dueDate, $extra] = DeadlineRenewalCalculator::tagliando($baseDate, $maintenanceRecord->vehicle, $maintenanceRecord->mileage_at_service);
 
-        // Base km: km inseriti all'appuntamento + intervallo del tipo veicolo
-        $baseKm = $maintenanceRecord->mileage_at_service;
-        $intervalKm = (int) ($maintenanceRecord->vehicle->vehicleType?->regular_tagliando_km ?? 20000);
-
-        $this->deadlineService->createNextOccurrence(
-            $deadline,
-            $maintenanceRecord->vehicle,
-            $dueDate,
-            [
-                'last_mileage' => $baseKm,
-                'interval_km' => $intervalKm,
-                'interval_days' => Deadline::TAGLIANDO_INTERVAL_MONTHS * 30,
-            ]
-        );
+        $this->deadlineService->createNextOccurrence($deadline, $maintenanceRecord->vehicle, $dueDate, $extra);
     }
 }

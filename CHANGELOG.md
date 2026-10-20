@@ -4,6 +4,40 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.18.0] - 2026-10-20
+
+### Added
+
+- PWA: app installabile ("aggiungi a home") via manifest.json + service worker minimale (nessuna cache di pagine/dati, solo asset statici).
+- Carburante: nuova entità per tracciare i rifornimenti (litri, costo, km), con consumo (km/L) calcolato rispetto al rifornimento precedente dello stesso veicolo.
+- Export conformità flotta: PDF/CSV con stato operativo (disponibile/in officina) e stato scadenze per veicolo, per rendicontazione a enti pubblici (Regione/Protezione Civile), dalla pagina "Stato documenti".
+- Attrezzatura: assegnazione a un veicolo scansionando il QR già stampato sull'etichetta (invece di scorrere una tendina), più rimozione (check-out) in un tap dalla scheda veicolo.
+
+### Fixed
+
+- Import CSV: un errore di validazione finiva in un messaggio generico invece dei messaggi per campo; gli errori imprevisti ora vengono anche loggati.
+- Scadenze: calcolo giorni residui deduplicato tra due accessor.
+- Accessibilità: contrasto colori badge in tema chiaro portato sopra la soglia WCAG AA; `aria-label` sui pulsanti icona-only (visualizza/modifica/elimina/aggiungi); focus visibile su ricerca e select ruolo; righe di gruppo pieghevoli operabili da tastiera; `<h1>` nascosto su tutte le pagine (via breadcrumb); `aria-describedby` sui messaggi di errore dei componenti form condivisi.
+- Responsive: pulsanti icona (`.mini-btn`/`.detail-btn`) ingranditi a 34×34px, target touch più comodo su telefono; campi misura pneumatico raggruppati su schermi stretti invece di andare a capo uno per uno.
+- Notifiche: il testo mostrato all'utente non termina più con un marker tecnico illeggibile (es. "#deadline-42").
+- Completamento intervento: un appuntamento con più guasti/scadenze collegati chiedeva un unico sì/no per tutti, impossibile risolverne uno sì e uno no. Ora una domanda per ciascuno.
+
+### Changed
+
+- Notifiche: deduplicazione via colonna indicizzata invece di una ricerca `LIKE` sul testo del messaggio.
+- Dashboard: eliminata una query veicoli duplicata; aggiunto indice su `is_renewed` nelle scadenze.
+
+- `composer.json`: motivate le advisory di sicurezza ignorate.
+- Scadenze: calcolo di rinnovo (tagliando/cinghia/ministeriale/ossigeno) unificato in un solo punto, prima duplicato tra due servizi.
+- Gomme: logica di collegamento/disposizione/montaggio estratta in un servizio dedicato; il montaggio (prima duplicato) è ora un solo punto.
+- Scadenze: sincronizzazione dello stato estratta in un servizio dedicato (nessun cambio di comportamento).
+- Attrezzature: azioni di revisione/collaudo estratte in un controller dedicato (nessun cambio di comportamento).
+- Veicoli: eliminata la duplicazione tra form di creazione e modifica (script e sezione misure pneumatici condivisi).
+- Dashboard: vista divisa in componenti per card (nessun cambio di comportamento).
+- Scadenze: pre-filtro SQL sulle scadenze potenzialmente scadute, prima del filtro esatto in PHP (riduce le righe caricate da dashboard e report; nessun cambio di comportamento).
+- Scadenze: rinnovo via form unificato sullo stesso calcolatore degli altri due percorsi di rinnovo (prima duplicato, con una divergenza reale: il tagliando rinnovato da form non ereditava km/intervallo).
+- Export CSV: streaming e neutralizzazione iniezione formule estratti in un trait condiviso tra i due controller che esportano CSV (nessun cambio di comportamento).
+
 ## [v1.17.3] - 2026-10-19
 
 ### Fixed

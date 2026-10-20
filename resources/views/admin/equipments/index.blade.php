@@ -130,7 +130,7 @@
                 <tbody>
                     @if ($groupedEquipments !== null)
                         @forelse ($groupedEquipments as $groupLabel => $groupEquipments)
-                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}" tabindex="0" role="button" aria-expanded="true">
                                 <td colspan="9"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupEquipments->count() }})</td>
                             </tr>
                             @foreach ($groupEquipments as $equipment)

@@ -97,7 +97,7 @@
 
                     @forelse ($groups as $groupLabel => $groupIssues)
                         @if ($groupBy !== null)
-                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}" tabindex="0" role="button" aria-expanded="true">
                                 <td colspan="5"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupIssues->count() }})</td>
                             </tr>
                         @endif
@@ -122,10 +122,10 @@
                                 <td>
                                     <div class="row-actions">
                                         <a href="{{ route('admin.equipment-issues.show', $issue->id) }}" class="mini-btn"
-                                            title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                                            title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                                         <a href="{{ route('admin.equipment-issues.edit', $issue->id) }}" class="mini-btn"
-                                            title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}"
+                                            title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
                                             data-bs-toggle="modal" data-bs-target="#confirmDeleteModal-{{ $issue->id }}">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>

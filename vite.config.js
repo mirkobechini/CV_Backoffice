@@ -7,7 +7,7 @@ import path from 'path'; // <-- require path from node
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/equipment-qr-scan.js'],
             refresh: true,
         }),
     ],

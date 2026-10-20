@@ -4,7 +4,7 @@
     <div class="head">
         <h3>{{ __('Equipaggiamento') }}</h3>
         <div class="dropdown">
-            <button type="button" class="veh-btn-add" title="{{ __('Aggiungi attrezzatura') }}"
+            <button type="button" class="veh-btn-add" title="{{ __('Aggiungi attrezzatura') }}" aria-label="{{ __('Aggiungi attrezzatura') }}"
                 data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                 <i class="fa-solid fa-plus"></i>
             </button>
@@ -35,6 +35,11 @@
                     <hr class="dropdown-divider">
                 </li>
                 <li>
+                    <a class="dropdown-item" href="{{ route('admin.vehicles.equipment.scan', $vehicle) }}">
+                        <i class="fa-solid fa-qrcode"></i> {{ __('Scansiona QR') }}
+                    </a>
+                </li>
+                <li>
                     <a class="dropdown-item"
                         href="{{ route('admin.equipments.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}">
                         <i class="fa-solid fa-plus"></i> {{ __('Nuova attrezzatura') }}
@@ -58,7 +63,7 @@
                     <span class="exp c-red">{{ __('Mancante') }}</span>
                     <div class="row-actions">
                         <div class="dropdown">
-                            <button type="button" class="mini-btn" title="{{ __('Aggiungi') }}"
+                            <button type="button" class="mini-btn" title="{{ __('Aggiungi') }}" aria-label="{{ __('Aggiungi') }}"
                                 data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false">
                                 <i class="fa-solid fa-plus"></i>
                             </button>
@@ -117,10 +122,17 @@
                     } }}">{{ $equipment->status_label }}</span>
                 <div class="row-actions">
                     <a href="{{ route('admin.equipments.show', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                     <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" data-bs-toggle="modal"
+                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                    <form method="POST" action="{{ route('admin.equipments.unassign', $equipment) }}"
+                        onsubmit="return confirm('{{ __('Rimuovere questa attrezzatura dal veicolo?') }}');">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="mini-btn" title="{{ __('Rimuovi dal veicolo') }}"
+                            aria-label="{{ __('Rimuovi dal veicolo') }}"><i class="fa-solid fa-link-slash"></i></button>
+                    </form>
+                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}" data-bs-toggle="modal"
                         data-bs-target="#confirmDeleteModal-{{ $equipment->id }}"><i
                             class="fa-solid fa-trash"></i></button>
                 </div>

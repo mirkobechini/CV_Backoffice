@@ -3,10 +3,12 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\DeadlineController;
 use App\Http\Controllers\Admin\DocumentStatusController;
+use App\Http\Controllers\Admin\EquipmentCollaudoController;
 use App\Http\Controllers\Admin\EquipmentController;
 use App\Http\Controllers\Admin\EquipmentIssueController;
 use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
+use App\Http\Controllers\Admin\FuelLogController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\IssuePartBackfillController;
@@ -102,15 +104,19 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('deadlines.insurances');
         Route::get('documents', [DocumentStatusController::class, 'index'])
             ->name('documents.index');
+        Route::get('documents/export/pdf', [DocumentStatusController::class, 'exportPdf'])
+            ->name('documents.export-pdf');
+        Route::get('documents/export/csv', [DocumentStatusController::class, 'exportCsv'])
+            ->name('documents.export-csv');
         Route::get('statistics', [StatisticsController::class, 'index'])
             ->name('statistics.index');
         Route::resource('deadlines', DeadlineController::class);
         Route::patch('deadlines/{deadline}/renew', [DeadlineController::class, 'renew'])
             ->name('deadlines.renew');
         Route::resource('equipments', EquipmentController::class);
-        Route::post('equipments/{equipment}/record-revision', [EquipmentController::class, 'recordRevision'])
+        Route::post('equipments/{equipment}/record-revision', [EquipmentCollaudoController::class, 'recordRevision'])
             ->name('equipments.record-revision');
-        Route::post('equipments/bulk-record-revision', [EquipmentController::class, 'bulkRecordRevision'])
+        Route::post('equipments/bulk-record-revision', [EquipmentCollaudoController::class, 'bulkRecordRevision'])
             ->name('equipments.bulk-record-revision');
         Route::resource('equipment-issues', EquipmentIssueController::class)
             ->parameters(['equipment-issues' => 'equipmentIssue']);
@@ -158,6 +164,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->parameters(['mileage-logs' => 'mileageLog']);
         Route::delete('mileage-logs/bulk/delete', [MileageLogController::class, 'bulkDelete'])
             ->name('mileage-logs.bulk-delete');
+        Route::resource('fuel-logs', FuelLogController::class)
+            ->parameters(['fuel-logs' => 'fuelLog']);
 
         // Route statiche PRIMA del resource: altrimenti {maintenanceRecord}
         // catturerebbe /calendar e /events come parametro (404).
@@ -202,6 +210,10 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
 
         Route::post('vehicles/{vehicle}/equipment/assign', [VehicleController::class, 'assignEquipment'])
             ->name('vehicles.equipment.assign');
+        Route::get('vehicles/{vehicle}/equipment/scan', [VehicleController::class, 'equipmentScan'])
+            ->name('vehicles.equipment.scan');
+        Route::patch('equipments/{equipment}/unassign', [EquipmentController::class, 'unassign'])
+            ->name('equipments.unassign');
 
         Route::get('activity-log', [ActivityLogController::class, 'index'])
             ->name('activity-log.index');
@@ -213,7 +225,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])
             ->name('csv.export')
-            ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'providers']);
+            ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'fuel-logs', 'providers']);
 
         // Import CSV
         Route::get('csv-import', [CsvImportController::class, 'index'])

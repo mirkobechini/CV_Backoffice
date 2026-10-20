@@ -92,7 +92,8 @@
                     <span class="v">
                         <a class="mini-btn"
                             href="{{ route('admin.maintenance-records.show', ['maintenanceRecord' => $record->id, 'back' => url()->full()]) }}"
-                            title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                            title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i
+                                class="fa-solid fa-eye"></i></a>
                     </span>
                 </div>
             @empty

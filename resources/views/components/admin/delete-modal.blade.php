@@ -39,6 +39,11 @@
             'route' => 'admin.mileage-logs.destroy',
             'parameter' => 'mileageLog',
         ],
+        'fuellog' => [
+            'label' => 'rifornimento',
+            'route' => 'admin.fuel-logs.destroy',
+            'parameter' => 'fuelLog',
+        ],
     ];
 
     $config = $resourceConfig[$normalizedType] ?? [

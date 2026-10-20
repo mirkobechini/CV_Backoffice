@@ -15,6 +15,7 @@
 - **Deadline and equipment tracking**: ministerial inspections, oxygen check, service, timing belt, insurance — with automatic status based on date and mileage; equipment with a separate inspection cycle (e.g. fire extinguisher collaudo) tracks both expiries independently, surfacing whichever is more urgent
 - **Automatic deadline generation**: timing belt (chain: none; dry belt: 100,000 km only; oil bath belt: 100,000 km or 10 years), service (1 year or configurable mileage), automatic renewal on intervention completion
 - **Mileage tracking**: bulk monthly entry, history, integration with mileage-based deadlines
+- **Fuel log**: liters/cost/mileage per refueling, consumption (km/L) computed against the previous refueling of the same vehicle
 - **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set; a single fault report can also link several tires at once (e.g. all four punctured together); brand/model/size can be bulk-edited across several tires from the same batch in one go; the tire size can be picked from the vehicle's recommended sizes instead of retyped; on completion of a multi-tire change, each replaced tire's disposition (storage/retired) is chosen independently, not one choice for all
 - **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle); record a revision or collaudo for several pieces of equipment at once with one shared date (e.g. all fire extinguishers checked the same day); list grouping/sorting by type, status and vehicle
 - **Equipment faults and appointments**: a separate workflow mirroring the vehicle one — equipment can have faults reported and workshop appointments with a provider, with the difference that one appointment can involve several pieces of equipment together (e.g. several fire extinguishers checked by the same provider on the same day)
@@ -22,6 +23,7 @@
 - **Interactive dashboard**: stats, upcoming deadlines (with remaining time/mileage and status), open faults, incomplete equipment
 - **Appointment calendar**: month/week view with color-coding by activity type
 - **PDF and CSV export**: vehicle info sheet as PDF, a fleet-wide overview PDF (next deadlines and last mileage for every vehicle, one page), CSV export for every entity
+- **Compliance export**: a PDF/CSV fleet-status report (operational status + deadline compliance per vehicle) for reporting to public bodies (Region/Civil Protection)
 - **REST API**: 12 token-protected endpoints (Sanctum), built for a future mobile app
 - **Audit log**: full tracking of every change
 - **In-app notifications**: bell icon with badge, notification list, mark as read
@@ -29,6 +31,7 @@
 - **Telegram notifications**: optional, link a Telegram account from the notification settings to receive the same events there alongside email
 - **Two-factor authentication**: optional TOTP (Google Authenticator/Authy/1Password-compatible), with recovery codes; recommended via a dashboard banner for lead/deputy roles
 - **Printable QR labels**: a QR code sticker for any vehicle or piece of equipment, opening its detail page directly from a phone browser
+- **QR check-in/check-out**: scan an equipment's existing QR label from a vehicle's page to assign it on the spot, instead of scrolling a dropdown; one-tap removal (check-out) from a vehicle
 - **Group-based multi-tenancy**: every user belongs to a group (lead/deputy/member), invite via code; data isolation between groups is applied consistently across every surface — admin pages, Policies, mobile API, CSV/PDF export, cache, notifications and scheduled emails
 - **User management**: create and manage roles from the backoffice (lead role only)
 - **API tokens**: create and revoke from the profile page
@@ -36,6 +39,7 @@
 - **Database backup**: automatic daily backup + restorability verification (alerts lead/deputy if the latest backup is missing, invalid or truncated), plus a manual button on the settings page
 - **Rate limiting**: protection on login, admin routes and API
 - **Light/dark theme**: persisted in localStorage
+- **Installable (PWA)**: web app manifest + service worker, "add to home screen" on phone/desktop
 - **Vehicle registration document scan**: create a vehicle by uploading a photo of the front of the registration document, with an LLM vision provider (configurable, OpenRouter by default) pre-filling license plate, brand/model, technical data and tire size — always reviewed by the user before saving; technical fields also show the corresponding registration document code as a hint (e.g. "VIN (E.)")
 
 ---
@@ -54,6 +58,7 @@
 | **FullCalendar**                 | Appointment calendar                |
 | **OpenRouter (LLM vision)**      | Vehicle registration document scan  |
 | **pragmarx/google2fa + bacon/bacon-qr-code** | Two-factor authentication + QR rendering |
+| **html5-qrcode**                 | Camera QR scanning (equipment check-in/check-out) |
 | **Telegram Bot API**             | Optional notification channel       |
 
 ---
@@ -219,6 +224,7 @@ erDiagram
 | `maintenance_records`                 | Workshop appointments                                                     |
 | `maintenance_record_items`            | Polymorphic join between faults/deadlines ↔ appointment                    |
 | `mileage_logs`                        | Mileage history                                                            |
+| `fuel_logs`                           | Fuel log (liters, cost, mileage at refueling)                              |
 | `tires`                               | Tires (one row per physical tire: season, position, status)                |
 | `tire_changes`                        | Tire mounting/change history                                              |
 | `issue_tire`                          | Faults ↔ tires pivot (a fault can cover several tires)                     |
@@ -246,6 +252,10 @@ erDiagram
 - [x] API token management in the profile
 - [x] Privacy/GDPR (privacy page, cookie banner, data export)
 - [x] Database backup
+- [x] Installable PWA (manifest + service worker)
+- [x] Fuel log / consumption tracking
+- [x] Compliance export for public bodies
+- [x] QR check-in/check-out for equipment
 - [ ] Native mobile app (via REST API)
 
 ---

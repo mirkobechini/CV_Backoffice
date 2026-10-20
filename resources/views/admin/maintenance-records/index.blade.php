@@ -138,7 +138,7 @@
 
                     @forelse ($groups as $groupLabel => $groupRecords)
                         @if ($groupBy !== null)
-                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}" tabindex="0" role="button" aria-expanded="true">
                                 <td colspan="4"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupRecords->count() }})</td>
                             </tr>
                         @endif
@@ -197,12 +197,12 @@
                                 <td>
                                     <div class="row-actions">
                                         <a href="{{ route('admin.maintenance-records.show', $record->id) }}"
-                                            class="mini-btn" title="{{ __('Visualizza') }}"><i
+                                            class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i
                                                 class="fa-solid fa-eye"></i></a>
                                         <a href="{{ route('admin.maintenance-records.edit', $record->id) }}"
-                                            class="mini-btn" title="{{ __('Modifica') }}"><i
+                                            class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i
                                                 class="fa-solid fa-pen"></i></a>
-                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}"
+                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
                                             data-bs-toggle="modal"
                                             data-bs-target="#confirmDeleteModal-{{ $record->id }}">
                                             <i class="fa-solid fa-trash"></i>

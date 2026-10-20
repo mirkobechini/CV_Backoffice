@@ -146,6 +146,48 @@ class GroupScopingTest extends TestCase
         ]);
     }
 
+    /**
+     * `group_id` non è tra le regole di validazione di StoreVehicleRequest,
+     * quindi `$request->validated()` non può mai includerlo — il
+     * controller lo imposta sempre a parte dal gruppo attivo dell'utente.
+     * Nessun test rompe se in futuro `group_id` finisse per errore tra le
+     * regole di validazione: questo test lo pin-na esplicitamente (audit
+     * 2026-10-19).
+     */
+    public function test_vehicle_creation_ignores_spoofed_group_id(): void
+    {
+        $ownGroup = Group::create(['name' => 'Gruppo proprio', 'invite_code' => 'BBBB2222']);
+        $otherGroup = Group::create(['name' => 'Gruppo altrui', 'invite_code' => 'CCCC3333']);
+        $user = User::factory()->create();
+        $ownGroup->addUser($user, Group::ROLE_CAPO);
+
+        $this->actingAs($user);
+
+        $brand = Brand::create(['name' => 'Fiat Spoof']);
+        $model = CarModel::create(['name' => 'Ducato Spoof', 'brand_id' => $brand->id]);
+        $type = VehicleType::create(['name' => 'Ambulanza Spoof', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+
+        $response = $this->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB999ZZ',
+            'internal_code' => '0002',
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'vehicle_type_id' => $type->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $otherGroup->id,
+        ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('vehicles', [
+            'license_plate' => 'AB999ZZ',
+            'group_id' => $ownGroup->id,
+        ]);
+        $this->assertDatabaseMissing('vehicles', [
+            'license_plate' => 'AB999ZZ',
+            'group_id' => $otherGroup->id,
+        ]);
+    }
+
     // Le liste (Vehicle::forCurrentUser()) erano già filtrate per gruppo,
     // ma l'autorizzazione sul singolo record no: prima di questo fix un
     // utente autenticato in un gruppo poteva vedere, e se capo/sottocapo

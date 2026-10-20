@@ -30,6 +30,14 @@
             <div class="toolbar-left">
                 <h2>{{ __('Stato documenti — Veicoli') }}</h2>
             </div>
+            <div class="filters">
+                <a href="{{ route('admin.documents.export-csv') }}" class="btn" title="{{ __('Scarica CSV') }}">
+                    <i class="fa-solid fa-download"></i> CSV
+                </a>
+                <a href="{{ route('admin.documents.export-pdf') }}" class="btn" title="{{ __('Scarica PDF') }}">
+                    <i class="fa-solid fa-file-pdf"></i> PDF
+                </a>
+            </div>
         </div>
 
         <div class="table-responsive">
@@ -146,7 +154,7 @@
                         </tr>
                     @elseif ($groupedEquipment !== null)
                         @foreach ($groupedEquipment as $groupLabel => $groupItems)
-                            <tr class="group-row" data-group-row="g{{ $loop->index }}">
+                            <tr class="group-row" data-group-row="g{{ $loop->index }}" tabindex="0" role="button" aria-expanded="true">
                                 <td colspan="4"><i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupItems->count() }})</td>
                             </tr>
                             @foreach ($groupItems as $item)

@@ -290,6 +290,19 @@ class VehicleController extends Controller
     }
 
     /**
+     * Pagina di scansione QR da telefono: invece di scorrere la tendina con
+     * tutta l'attrezzatura assegnabile, si inquadra l'etichetta QR già
+     * stampata sull'attrezzatura (la stessa che apre la sua scheda) per
+     * assegnarla a questo veicolo in un tocco.
+     */
+    public function equipmentScan(Vehicle $vehicle)
+    {
+        $this->authorize('update', $vehicle);
+
+        return view('admin.vehicles.equipment-scan', compact('vehicle'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Vehicle $vehicle)

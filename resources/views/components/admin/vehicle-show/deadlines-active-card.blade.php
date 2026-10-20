@@ -4,7 +4,7 @@
     <div class="head">
         <h3>{{ __('Scadenze') }}</h3>
         <a href="{{ route('admin.deadlines.create', ['vehicle_id' => $vehicle->id, 'back' => url()->full()]) }}"
-            class="veh-btn-add" title="{{ __('Nuova scadenza') }}"><i class="fa-solid fa-plus"></i></a>
+            class="veh-btn-add" title="{{ __('Nuova scadenza') }}" aria-label="{{ __('Nuova scadenza') }}"><i class="fa-solid fa-plus"></i></a>
     </div>
     <div class="body">
         @forelse ($activeDeadlines as $deadline)
@@ -32,9 +32,9 @@
                             default => 'gray',
                         } }}">{{ $deadline->days_label }}</span>
                     <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="mini-btn"
-                        title="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
+                        title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
                     <a href="{{ route('admin.deadlines.edit', $deadline->id) }}" class="mini-btn"
-                        title="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                        title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
                 </div>
             </div>
         @empty

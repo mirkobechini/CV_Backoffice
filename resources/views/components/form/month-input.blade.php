@@ -19,10 +19,10 @@
     <label for="{{ $inputId }}" id="{{ $inputId }}-label">{{ $label }} @if ($required)<span
             class="req">*</span>@endif</label>
     <input type="text" class="flatpickr-month-input" id="{{ $inputId }}" name="{{ $name }}" value="{{ $inputValue }}"
-        placeholder="mm/aaaa" autocomplete="off" data-alt-class="input @error($name) is-invalid @enderror"
-        @if ($required) required @endif>
+        placeholder="mm/aaaa" autocomplete="off" aria-describedby="{{ $inputId }}-error"
+        data-alt-class="input @error($name) is-invalid @enderror" @if ($required) required @endif>
     @error($name)
-        <div class="field-error">{{ $message }}</div>
+        <div class="field-error" id="{{ $inputId }}-error">{{ $message }}</div>
     @enderror
     @if ($hint)
         <div class="hint">{{ $hint }}</div>

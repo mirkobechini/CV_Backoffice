@@ -347,6 +347,27 @@ A new `is_superadmin` boolean flag on `User` (settable only via `php artisan mak
 
 ---
 
+## 17. Equipment check-in/check-out via camera QR scan
+
+### Decision
+
+Vehicles and equipment already had a printable QR label (`QrCodeGenerator`, server-side SVG via `bacon/bacon-qr-code`) that opens the item's detail page when scanned by any camera app. This decision adds the other direction: **scanning from inside the app** to assign equipment to a vehicle without typing anything, via **html5-qrcode** (new frontend dependency, loaded only on the scan page), which wraps `getUserMedia` camera access and decoding behind a ready-made start/stop UI.
+
+### Rationale
+
+- Considered the native `BarcodeDetector` API (zero dependency): rejected because it only ships on iOS Safari 17+ (Sept 2023) and would silently fail or need a manual fallback path on older phones — this app's volunteer users are not guaranteed to have a recent-enough device, and the fleet itself spans many years of equipment
+- Considered `jsQR` (decode-only, no camera UI): rejected because it requires writing the video-frame capture loop by hand for the same outcome `html5-qrcode` gives out of the box
+- `html5-qrcode` is loaded only on the dedicated scan page, not globally, keeping its ~100KB (min+gzip) out of every other page's bundle
+- The existing QR payload (the item's detail page URL) is reused as-is for scanning too — the equipment id is parsed from the scanned URL, no second QR format to generate or print
+
+### Consequences
+
+- A new "Assegna attrezzatura (scansiona QR)" entry point from the vehicle page opens the camera, and a successful decode of an equipment QR calls the existing `VehicleController::assignEquipment()` action — no new assignment logic, only a new way to trigger it
+- Requires HTTPS (camera access is blocked on plain HTTP by browsers) — already the case in production (Cloudflare)
+- No offline/queued scanning: each scan is a direct, synchronous assignment call while online
+
+---
+
 ## References
 
 - [Laravel SoftDeletes documentation](https://laravel.com/docs/11/eloquent#soft-deleting)

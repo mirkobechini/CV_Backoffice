@@ -134,7 +134,7 @@ class GenerateNotifications extends Command
             return;
         }
 
-        $notifications->notifyUser($user, $type, $title, "{$message} {$marker}", $url);
+        $notifications->notifyUser($user, $type, $title, $message, $url, $marker);
         $emailsByUser[$user->id][] = new EventNotificationMail($type, $title, $message, $url);
         $telegramEventsByUser[$user->id][] = [$title, $message];
         $created++;
@@ -306,13 +306,15 @@ class GenerateNotifications extends Command
 
     /**
      * Evita notifiche duplicate per la stessa risorsa e lo stesso utente.
-     * Usa un marker nel messaggio per tracciare la risorsa notificata.
+     * Confronto esatto su una colonna indicizzata (user_id, type, marker)
+     * invece di un LIKE sul testo del messaggio, non indicizzabile
+     * (audit 2026-10-19).
      */
     private function alreadyNotified(int $userId, string $type, string $marker): bool
     {
         return Notification::where('user_id', $userId)
             ->where('type', $type)
-            ->where('message', 'like', "%{$marker}%")
+            ->where('marker', $marker)
             ->exists();
     }
 }

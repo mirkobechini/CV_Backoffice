@@ -217,7 +217,8 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'resolved_issues' => [$issue->id => '1'],
+            'resolved_deadlines' => [$deadline->id => '1'],
         ]);
 
         // L'issue deve essere chiuso
@@ -243,6 +244,73 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $maintenance->refresh();
         $this->assertNotNull($maintenance->return_date);
         $this->assertEquals(Carbon::today()->toDateString(), $maintenance->return_date->toDateString());
+    }
+
+    public function test_complete_resolves_each_linked_issue_and_deadline_independently(): void
+    {
+        // Bug segnalato nell'audit 2026-10-19: complete() applicava un
+        // unico sì/no a TUTTI i guasti/scadenze collegati allo stesso
+        // appuntamento, impossibile risolverne uno sì e uno no.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $fixedIssue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto risolto',
+            'status' => 'in_progress',
+            'event_date' => '2025-01-02',
+        ]);
+        $unfixedIssue = Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Guasto non risolto',
+            'status' => 'in_progress',
+            'event_date' => '2025-01-02',
+        ]);
+        $renewedDeadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'status' => 'pending',
+            'due_date' => today()->addDays(10),
+        ]);
+        $notRenewedDeadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_OXYGEN,
+            'status' => 'pending',
+            'due_date' => today()->addDays(10),
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $maintenance->items()->create(['itemable_id' => $fixedIssue->id, 'itemable_type' => Issue::class]);
+        $maintenance->items()->create(['itemable_id' => $unfixedIssue->id, 'itemable_type' => Issue::class]);
+        $maintenance->items()->create(['itemable_id' => $renewedDeadline->id, 'itemable_type' => Deadline::class]);
+        $maintenance->items()->create(['itemable_id' => $notRenewedDeadline->id, 'itemable_type' => Deadline::class]);
+
+        $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
+            'resolved_issues' => [$fixedIssue->id => '1', $unfixedIssue->id => '0'],
+            'resolved_deadlines' => [$renewedDeadline->id => '1', $notRenewedDeadline->id => '0'],
+        ]);
+
+        $this->assertDatabaseHas('issues', ['id' => $fixedIssue->id, 'status' => 'closed']);
+        $this->assertDatabaseHas('issues', ['id' => $unfixedIssue->id, 'status' => 'in_progress']);
+        $this->assertDatabaseHas('deadlines', ['id' => $renewedDeadline->id, 'status' => 'renewed']);
+        $this->assertDatabaseHas('deadlines', ['id' => $notRenewedDeadline->id, 'status' => 'pending']);
+        // Solo la scadenza rinnovata genera la successiva occorrenza.
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'status' => 'pending',
+            'renews_deadline_id' => $renewedDeadline->id,
+        ]);
+        $this->assertDatabaseMissing('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_OXYGEN,
+            'renews_deadline_id' => $notRenewedDeadline->id,
+        ]);
     }
 
     public function test_completing_appointment_logs_issue_closure_in_activity_log(): void
@@ -273,7 +341,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'resolved_issues' => [$issue->id => '1'],
         ]);
 
         $this->assertTrue(
@@ -308,7 +376,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '0',
+            'resolved_issues' => [$issue->id => '0'],
         ]);
 
         // L'issue resta in_progress
@@ -343,7 +411,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'resolved_issues' => [$issue->id => '1'],
         ]);
 
         // Il completamento va rifiutato: nessuna modifica al record o al guasto.
@@ -647,7 +715,8 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'resolved_issues' => [$issue->id => '1'],
+            'resolved_deadlines' => [$deadline->id => '1'],
         ]);
 
         // Il tagliando deve essere rinnovato
@@ -782,7 +851,8 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         $maintenance->items()->create(['itemable_id' => $revision->id, 'itemable_type' => Deadline::class]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'resolved_issues' => [$issue->id => '1'],
+            'resolved_deadlines' => [$tagliando->id => '1', $revision->id => '1'],
         ]);
 
         // Il guasto è chiuso
@@ -1159,7 +1229,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'timing_belt_completed' => '1',
         ]);
 
         $response->assertRedirect();
@@ -1210,7 +1280,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'timing_belt_completed' => '1',
         ]);
 
         $response->assertRedirect();
@@ -1341,7 +1411,7 @@ class MaintenanceRecordBusinessLogicTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('admin.maintenance-records.complete', $maintenance), [
-            'issue_resolved' => '1',
+            'resolved_deadlines' => [$deadline->id => '1'],
         ]);
 
         $next = Deadline::where('renews_deadline_id', $deadline->id)->first();
