@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.18.0] - 2026-10-20
+
 ### Added
 
 - PWA: app installabile ("aggiungi a home") via manifest.json + service worker minimale (nessuna cache di pagine/dati, solo asset statici).
