@@ -4,6 +4,7 @@ namespace Tests\Feature\Crud;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\FuelCard;
 use App\Models\FuelLog;
 use App\Models\Group;
 use App\Models\User;
@@ -128,6 +129,31 @@ class FuelLogCrudTest extends TestCase
             'liters' => 45.50,
             'cost_total' => 68.90,
             'mileage' => 50000,
+        ]);
+    }
+
+    public function test_fuel_log_can_be_stored_with_a_fuel_card(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $fuelCard = FuelCard::create([
+            'card_number' => 'FC-001',
+            'status' => FuelCard::STATUS_JOLLY,
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-01-25',
+            'liters' => '45.50',
+            'fuel_card_id' => $fuelCard->id,
+        ]);
+
+        $fuelLog = FuelLog::first();
+        $response->assertRedirect(route('admin.fuel-logs.show', $fuelLog));
+        $this->assertDatabaseHas('fuel_logs', [
+            'id' => $fuelLog->id,
+            'fuel_card_id' => $fuelCard->id,
         ]);
     }
 

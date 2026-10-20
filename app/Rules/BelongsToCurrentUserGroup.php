@@ -24,14 +24,22 @@ class BelongsToCurrentUserGroup implements ValidationRule
         private readonly string $modelClass,
         private readonly string $vehicleRelation = 'vehicle',
         private readonly ?string $message = null,
+        /**
+         * Per i modelli con un group_id proprio (es. FleetDevice, FuelCard:
+         * possono esistere senza un veicolo collegato — jolly, non ancora
+         * assegnati — e whereHas('vehicle', ...) li escluderebbe sempre,
+         * anche quando appartengono correttamente al gruppo attivo).
+         */
+        private readonly bool $byOwnGroupColumn = false,
     ) {}
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         $query = $this->modelClass::query();
 
-        if (is_a($this->modelClass, Vehicle::class, true)) {
-            $query->forCurrentUser();
+        if (is_a($this->modelClass, Vehicle::class, true) || $this->byOwnGroupColumn) {
+            $groupId = auth()->user()?->activeGroup()?->id;
+            $query->where('group_id', $groupId);
         } else {
             $query->whereHas($this->vehicleRelation, fn ($q) => $q->forCurrentUser());
         }

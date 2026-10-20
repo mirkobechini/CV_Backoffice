@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\AdminOnlyAccess;
+use App\Models\FuelCard;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -19,6 +20,7 @@ class UpdateFuelLogRequest extends FormRequest
     {
         return [
             'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
+            'fuel_card_id' => ['nullable', new BelongsToCurrentUserGroup(FuelCard::class, message: 'La tessera selezionata non esiste o non appartiene al tuo gruppo.', byOwnGroupColumn: true)],
             'log_date' => ['required', 'date'],
             'liters' => ['required', 'numeric', 'min:0.01'],
             'cost_total' => ['nullable', 'numeric', 'min:0'],

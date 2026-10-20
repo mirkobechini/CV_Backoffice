@@ -19,6 +19,7 @@ class FuelLog extends Model
 
     protected $fillable = [
         'vehicle_id',
+        'fuel_card_id',
         'log_date',
         'liters',
         'cost_total',
@@ -34,6 +35,11 @@ class FuelLog extends Model
     public function vehicle()
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function fuelCard()
+    {
+        return $this->belongsTo(FuelCard::class);
     }
 
     public function getLogDateFormattedAttribute(): ?string

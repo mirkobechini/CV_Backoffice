@@ -33,6 +33,14 @@
             href="{{ route('admin.fuel-logs.index') }}" title="{{ __('Carburante') }}">
             <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante') }}</span>
         </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.fleet-devices.*') ? 'active' : '' }}"
+            href="{{ route('admin.fleet-devices.index') }}" title="{{ __('Dispositivi pedaggio') }}">
+            <i class="fa-solid fa-road-barrier"></i><span>{{ __('Pedaggi') }}</span>
+        </a>
+        <a class="sidebar-link {{ request()->routeIs('admin.fuel-cards.*') ? 'active' : '' }}"
+            href="{{ route('admin.fuel-cards.index') }}" title="{{ __('Tessere carburante') }}">
+            <i class="fa-solid fa-credit-card"></i><span>{{ __('Tessere') }}</span>
+        </a>
     </nav>
 
     {{-- Sezione: Report --}}
