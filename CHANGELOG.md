@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Dispositivi pedaggio (Telepass/UnipolMove): nuova entità con storico completo delle riassegnazioni tra veicoli (stesso pattern dei cambi gomme), codice dispositivo libero, CSV export.
+
 ## [v1.18.1] - 2026-10-20
 
 ### Added

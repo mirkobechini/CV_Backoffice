@@ -16,6 +16,7 @@
 - **Automatic deadline generation**: timing belt (chain: none; dry belt: 100,000 km only; oil bath belt: 100,000 km or 10 years), service (1 year or configurable mileage), automatic renewal on intervention completion
 - **Mileage tracking**: bulk monthly entry, history, integration with mileage-based deadlines
 - **Fuel log**: liters/cost/mileage per refueling, consumption (km/L) computed against the previous refueling of the same vehicle
+- **Toll devices (Telepass/UnipolMove)**: one device per vehicle, movable between vehicles over time with a full reassignment history (previous vehicle, plate at the time, date)
 - **Tire management**: each tire is its own record with a position (front/rear, left/right); a workshop change can involve 1, 2 or 4 tires, not just a full set; a single fault report can also link several tires at once (e.g. all four punctured together); brand/model/size can be bulk-edited across several tires from the same batch in one go; the tire size can be picked from the vehicle's recommended sizes instead of retyped; on completion of a multi-tire change, each replaced tire's disposition (storage/retired) is chosen independently, not one choice for all
 - **Equipment**: assign existing equipment records to a vehicle (including moving them from another vehicle); record a revision or collaudo for several pieces of equipment at once with one shared date (e.g. all fire extinguishers checked the same day); list grouping/sorting by type, status and vehicle
 - **Equipment faults and appointments**: a separate workflow mirroring the vehicle one — equipment can have faults reported and workshop appointments with a provider, with the difference that one appointment can involve several pieces of equipment together (e.g. several fire extinguishers checked by the same provider on the same day)
@@ -225,6 +226,8 @@ erDiagram
 | `maintenance_record_items`            | Polymorphic join between faults/deadlines ↔ appointment                    |
 | `mileage_logs`                        | Mileage history                                                            |
 | `fuel_logs`                           | Fuel log (liters, cost, mileage at refueling)                              |
+| `fleet_devices`                       | Toll devices (Telepass/UnipolMove), current vehicle                       |
+| `fleet_device_assignments`            | Toll device reassignment history                                         |
 | `tires`                               | Tires (one row per physical tire: season, position, status)                |
 | `tire_changes`                        | Tire mounting/change history                                              |
 | `issue_tire`                          | Faults ↔ tires pivot (a fault can cover several tires)                     |

@@ -66,6 +66,8 @@
 | F4 | Log carburante/consumi | Tracciamento consumi nel tempo (oggi solo `fuel_type` statico, nessuno storico) | Da definire | ✅ (issue-393) CRUD `FuelLog` (litri, costo opzionale, km opzionale), consumo km/L calcolato rispetto al rifornimento precedente dello stesso veicolo, export CSV |
 | F5 | Export conformità enti pubblici | PDF/CSV riassuntivo "stato flotta" per rendicontazione a Regione/Protezione Civile | Da definire | ✅ (issue-395) PDF/CSV da "Stato documenti": stato operativo (disponibile/in officina) + stato scadenze per veicolo, riusa la logica già esistente (matrice scadenze, scope `currentlyInWorkshop`) |
 | F6 | PWA installabile | Manifest + service worker per "aggiungi a home", in sinergia col redesign | Da definire | ✅ (issue-391) manifest.json + sw.js minimale (nessuna cache di pagine/dati, solo asset statici in /build/), icone generate, meta Apple per iOS |
+| F7 | Dispositivi pedaggio (Telepass/UnipolMove) | Richiesto da Mirko il 2026-10-20: dispositivi di telepedaggio, uno per veicolo ma spostabili nel tempo (storico completo) | Media | ✅ (issue-409) entità `FleetDevice` + `fleet_device_assignments` (storico, stesso pattern di `Tire`/`tire_changes`); `group_id` proprio (non dedotto dal veicolo, a differenza di `Equipment`) per isolare correttamente dispositivi non assegnati tra associazioni diverse |
+| F8 | Tessere carburante | Richiesto da Mirko il 2026-10-20: anagrafica tessere (una per veicolo, più una "jolly" condivisa da distinguere da una non ancora assegnata), collegamento opzionale ai rifornimenti (F4) | Media | ⬜ in corso |
 
 **Scartata**: assegnazione turno/autista per appuntamento — non la facciamo.
 
