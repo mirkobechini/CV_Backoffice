@@ -80,6 +80,12 @@
                 <span class="k">{{ __('Chilometraggio') }}</span>
                 <span class="v">{{ $fuelLog->mileage ? number_format($fuelLog->mileage, 0, ',', '.').' km' : 'N/A' }}</span>
             </div>
+            @if ($fuelLog->fuelCard)
+                <div class="dl-kv">
+                    <span class="k">{{ __('Tessera usata') }}</span>
+                    <span class="v">{{ $fuelLog->fuelCard->card_number }}</span>
+                </div>
+            @endif
         </div>
     </div>
 

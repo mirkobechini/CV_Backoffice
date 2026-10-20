@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\EquipmentIssueController;
 use App\Http\Controllers\Admin\EquipmentMaintenanceRecordController;
 use App\Http\Controllers\Admin\EquipmentTypeController;
 use App\Http\Controllers\Admin\FleetDeviceController;
+use App\Http\Controllers\Admin\FuelCardController;
 use App\Http\Controllers\Admin\FuelLogController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
@@ -171,6 +172,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('fleet-devices.reassign');
         Route::resource('fleet-devices', FleetDeviceController::class)
             ->parameters(['fleet-devices' => 'fleetDevice']);
+        Route::resource('fuel-cards', FuelCardController::class)
+            ->parameters(['fuel-cards' => 'fuelCard']);
 
         // Route statiche PRIMA del resource: altrimenti {maintenanceRecord}
         // catturerebbe /calendar e /events come parametro (404).
@@ -230,7 +233,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         // Export CSV
         Route::get('csv/{entity}', [CsvExportController::class, 'export'])
             ->name('csv.export')
-            ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'fuel-logs', 'fleet-devices', 'providers']);
+            ->whereIn('entity', ['vehicles', 'issues', 'deadlines', 'equipments', 'maintenance-records', 'mileage-logs', 'fuel-logs', 'fleet-devices', 'fuel-cards', 'providers']);
 
         // Import CSV
         Route::get('csv-import', [CsvImportController::class, 'index'])
