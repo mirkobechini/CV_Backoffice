@@ -3,7 +3,6 @@
 namespace App\Policies\Concerns;
 
 use App\Models\User;
-use App\Models\Vehicle;
 
 /**
  * Come HasRoleBasedAccess (capo/sottocapo gestiscono, i membri solo
@@ -102,7 +101,14 @@ trait HasGroupScopedAccess
             return false;
         }
 
-        if ($model instanceof Vehicle) {
+        // Un modello con una colonna group_id propria (Vehicle, e ora
+        // FleetDevice/FuelCard) la verifica direttamente, invece di
+        // dedurla da un veicolo collegato che potrebbe non esserci
+        // (dispositivo non assegnato, tessera jolly): a differenza di
+        // Equipment, queste risorse appartengono comunque a UN gruppo
+        // preciso anche senza veicolo, e non vanno rese visibili ad altri
+        // gruppi solo perché momentaneamente non assegnate.
+        if (isset($model->group_id)) {
             return $model->group_id === $groupId;
         }
 

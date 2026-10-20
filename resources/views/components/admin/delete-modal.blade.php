@@ -44,6 +44,11 @@
             'route' => 'admin.fuel-logs.destroy',
             'parameter' => 'fuelLog',
         ],
+        'fleetdevice' => [
+            'label' => 'dispositivo',
+            'route' => 'admin.fleet-devices.destroy',
+            'parameter' => 'fleetDevice',
+        ],
     ];
 
     $config = $resourceConfig[$normalizedType] ?? [

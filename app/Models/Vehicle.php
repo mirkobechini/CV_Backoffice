@@ -266,6 +266,11 @@ class Vehicle extends Model
         return $this->hasMany(FuelLog::class);
     }
 
+    public function fleetDevices()
+    {
+        return $this->hasMany(FleetDevice::class);
+    }
+
     public function equipment()
     {
         return $this->hasMany(Equipment::class);
