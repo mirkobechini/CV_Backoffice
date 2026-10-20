@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Added
 
 - Dispositivi pedaggio (Telepass/UnipolMove): nuova entità con storico completo delle riassegnazioni tra veicoli (stesso pattern dei cambi gomme), codice dispositivo libero, CSV export.
+- Tessere carburante: anagrafica con tre stati (assegnata/jolly/non assegnata), collegamento opzionale ai rifornimenti per riconciliare l'estratto conto, CSV export.
 
 ## [v1.18.1] - 2026-10-20
 
