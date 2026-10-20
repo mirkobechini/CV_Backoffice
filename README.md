@@ -1,6 +1,6 @@
-# 🚀 CV Backoffice
+# 🚀 Gestione Flotta
 
-> Web application for centralized management of a public-assistance vehicle fleet.
+> Web application for centralized management of a public-assistance vehicle fleet (repo: CV_Backoffice).
 > Faults, maintenance, deadlines, mileage and onboard equipment in a single panel.
 
 ![GitHub license](https://img.shields.io/github/license/mirkobechini/CV_Backoffice)

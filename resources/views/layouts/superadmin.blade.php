@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Superadmin — {{ config('app.name', 'CV Backoffice') }}</title>
+    <title>Superadmin — {{ config('app.name', 'Gestione Flotta') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">

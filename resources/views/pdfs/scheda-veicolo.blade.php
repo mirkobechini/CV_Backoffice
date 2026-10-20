@@ -20,5 +20,5 @@
 
 <!-- FOOTER -->
 <div class="footer">
-    <p>Documento generato automaticamente da CV Backoffice — Dati aggiornati al {{ now()->format('d/m/Y H:i') }}</p>
+    <p>Documento generato automaticamente da {{ config('app.name') }} — Dati aggiornati al {{ now()->format('d/m/Y H:i') }}</p>
 </div>

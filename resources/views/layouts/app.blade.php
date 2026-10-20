@@ -8,7 +8,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'CV Backoffice') }}</title>
+    <title>{{ config('app.name', 'Gestione Flotta') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -21,7 +21,7 @@
     <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="CV Backoffice">
+    <meta name="apple-mobile-web-app-title" content="{{ config('app.name', 'Gestione Flotta') }}">
 
     <script>
         if ('serviceWorker' in navigator) {

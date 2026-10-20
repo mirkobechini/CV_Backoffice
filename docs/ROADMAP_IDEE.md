@@ -1,4 +1,4 @@
-# Idee future — CV Backoffice
+# Idee future — Gestione Flotta
 
 > Raccolta di feature proposte durante l'audit del 2026-10-04, non ancora implementate. Ordine di priorità deciso da Mirko il 2026-10-04 (vedi sezione "Ordine di lavoro concordato").
 

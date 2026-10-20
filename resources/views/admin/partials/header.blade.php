@@ -2,7 +2,7 @@
     {{-- Brand --}}
     <a class="sidebar-brand" href="{{ route('dashboard') }}">
         <span class="sidebar-logo"><i class="fa-solid fa-car"></i></span>
-        <span class="brand-text">{{ config('app.name', 'CV Backoffice') }}</span>
+        <span class="brand-text">{{ config('app.name', 'Gestione Flotta') }}</span>
         <span class="badge text-bg-secondary ms-auto small" style="font-size: 0.6rem;">{{ config('app.version') }}</span>
     </a>
 

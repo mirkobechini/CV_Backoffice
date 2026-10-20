@@ -88,7 +88,7 @@
             @endif
         </div>
         <div class="footer">
-            <p>Documento generato automaticamente da CV Backoffice</p>
+            <p>Documento generato automaticamente da {{ config('app.name') }}</p>
         </div>
     </div>
 </body>

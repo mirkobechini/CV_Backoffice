@@ -32,7 +32,7 @@ class GroupInviteMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Invito a entrare nel gruppo {$this->groupName} - CV Backoffice",
+            subject: "Invito a entrare nel gruppo {$this->groupName} - ".config('app.name'),
         );
     }
 

@@ -38,7 +38,7 @@ class EventNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "🔔 {$this->title} - CV Backoffice",
+            subject: "🔔 {$this->title} - ".config('app.name'),
         );
     }
 

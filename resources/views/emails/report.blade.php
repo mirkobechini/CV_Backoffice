@@ -355,6 +355,6 @@
 
     <!-- FOOTER -->
     <div class="footer">
-        <p>Questa mail è generata automaticamente da CV Backoffice.</p>
+        <p>Questa mail è generata automaticamente da {{ config('app.name') }}.</p>
     </div>
 </div>

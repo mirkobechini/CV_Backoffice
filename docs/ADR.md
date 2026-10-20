@@ -1,4 +1,4 @@
-# ADR — CV Backoffice Architecture Decisions
+# ADR — Gestione Flotta Architecture Decisions
 
 ## Status
 
@@ -6,7 +6,7 @@
 
 ## Context
 
-CV Backoffice is a web application for the centralized management of a public-assistance vehicle fleet. Several architectural decisions were made during development that are worth documenting in a single reference document.
+Gestione Flotta (repo: CV_Backoffice) is a web application for the centralized management of a public-assistance vehicle fleet. Several architectural decisions were made during development that are worth documenting in a single reference document.
 
 ---
 
