@@ -15,7 +15,9 @@ use App\Services\NotificationService;
 use App\Services\TelegramNotifier;
 use App\Services\TireSeasonService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 
 class GenerateNotifications extends Command
 {
@@ -85,11 +87,24 @@ class GenerateNotifications extends Command
             foreach ($emailsByUser as $userId => $mails) {
                 $recipient = NotificationSetting::where('user_id', $userId)->where('key', 'report_email')->value('value');
 
-                if ($recipient) {
+                if (! $recipient) {
+                    continue;
+                }
+
+                // Un errore nell'invio di UNA email (es. SMTP non configurato,
+                // crash nella vista) non deve bloccare le email agli altri
+                // destinatari né, soprattutto, impedire al ciclo Telegram sotto
+                // di girare: prima di questo try/catch, un'eccezione qui
+                // interrompeva l'intero comando, quindi nessun messaggio
+                // Telegram veniva mai inviato nello stesso run.
+                try {
                     foreach ($mails as $mail) {
                         Mail::to($recipient)->send($mail);
                     }
                     $this->info('Sent '.count($mails)." email(s) to {$recipient}.");
+                } catch (Throwable $e) {
+                    $this->error("Errore nell'invio email a {$recipient}: {$e->getMessage()}");
+                    Log::error("app:generate-notifications: invio email fallito per user_id {$userId} ({$recipient}): {$e->getMessage()}", ['exception' => $e]);
                 }
             }
 

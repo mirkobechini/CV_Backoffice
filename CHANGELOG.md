@@ -4,6 +4,20 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.18.1] - 2026-10-20
+
+### Added
+
+- Favicon con logo personale (scimmia arancione con occhiali </>) al posto dell'icona generica, su tutti i layout.
+
+### Fixed
+
+- Notifiche: nessuna notifica Telegram veniva inviata ogni volta che c'era anche una sola email da mandare nello stesso giro di `app:generate-notifications` — una proprietà riservata (`$message`) su `EventNotificationMail` causava un crash che interrompeva il comando prima del ciclo Telegram.
+
+### Changed
+
+- Rinominato il prodotto da "CV Backoffice" a "Gestione Flotta" (nome visibile: titolo pagina, PWA, email, PDF, privacy policy) in vista di un futuro SaaS multi-settore, non più legato esplicitamente alla pubblica assistenza. Nessun cambio al repository, al dominio o ai pacchetti.
+
 ## [v1.18.0] - 2026-10-20
 
 ### Added

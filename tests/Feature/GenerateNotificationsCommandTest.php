@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -331,6 +332,52 @@ class GenerateNotificationsCommandTest extends TestCase
         Mail::assertSent(EventNotificationMail::class, function ($mail) {
             return $mail->hasTo('admin@example.com');
         });
+    }
+
+    public function test_event_notification_email_renders_without_error_with_the_real_body_text(): void
+    {
+        // Mail::fake() (usato dal test sopra) non renderizza mai davvero la
+        // vista: non avrebbe mai scoperto il bug reale in produzione, dove
+        // la proprietà pubblica $message del Mailable veniva sovrascritta
+        // da Laravel con l'istanza Illuminate\Mail\Message (riservata per
+        // gli allegati inline), e {{ $message }} nella vista crashava con
+        // "htmlspecialchars(): ... Message given" invece di mostrare il
+        // testo della notifica. Qui si chiama davvero render(), come
+        // succede quando il comando prova a inviare l'email sul serio.
+        $mail = new EventNotificationMail('deadline', 'Titolo di prova', 'Corpo del messaggio di prova', 'https://example.com');
+
+        $html = $mail->render();
+
+        $this->assertStringContainsString('Corpo del messaggio di prova', $html);
+    }
+
+    public function test_email_failure_does_not_block_telegram_notifications(): void
+    {
+        // Bug reale: il ciclo email (senza try/catch) girava PRIMA di
+        // quello Telegram nello stesso metodo — un'eccezione lì
+        // interrompeva l'intero comando, impedendo per sempre al ciclo
+        // Telegram sotto di eseguire, anche per destinatari senza alcun
+        // problema di configurazione email.
+        config(['services.telegram.bot_token' => 'fake-token']);
+        Http::fake();
+        Mail::shouldReceive('to->send')->andThrow(new \RuntimeException('SMTP non raggiungibile'));
+
+        $admin = $this->admin();
+        $vehicle = $this->vehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => Carbon::today()->addDays(5),
+            'status' => Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+        NotificationSetting::create(['user_id' => $admin->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+        NotificationSetting::create(['user_id' => $admin->id, 'key' => 'telegram_chat_id', 'value' => '999']);
+
+        $this->artisan('app:generate-notifications --email');
+
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'fake-token/sendMessage')
+            && str_contains($request->body(), '999'));
     }
 
     public function test_does_not_send_email_without_email_option(): void

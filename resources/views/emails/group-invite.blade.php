@@ -74,17 +74,17 @@
         </div>
         <div class="body">
             <div class="message">
-                Sei stato invitato a entrare nel gruppo <strong>{{ $groupName }}</strong> su CV Backoffice.
+                Sei stato invitato a entrare nel gruppo <strong>{{ $groupName }}</strong> su {{ config('app.name') }}.
                 <br><br>
                 Usa questo codice per entrare nel gruppo:
             </div>
             <div class="code-box">{{ $inviteCode }}</div>
             <div class="message">
-                Accedi a CV Backoffice, vai nella sezione <strong>Gruppi</strong> e inserisci il codice per entrare.
+                Accedi a {{ config('app.name') }}, vai nella sezione <strong>Gruppi</strong> e inserisci il codice per entrare.
             </div>
         </div>
         <div class="footer">
-            <p>Documento generato automaticamente da CV Backoffice</p>
+            <p>Documento generato automaticamente da {{ config('app.name') }}</p>
         </div>
     </div>
 </body>

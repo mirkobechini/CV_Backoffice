@@ -195,7 +195,7 @@ class SendSummaryReport extends Command
                         $user,
                         'report-'.$today->format('Y-m-d').'.pdf',
                         $report->renderPdf(),
-                        '📋 Report riassuntivo - CV Backoffice'
+                        '📋 Report riassuntivo - '.config('app.name')
                     );
                 } catch (Throwable $e) {
                     Log::error("app:send-summary-report: invio Telegram fallito per user_id {$userId}: {$e->getMessage()}", ['exception' => $e]);

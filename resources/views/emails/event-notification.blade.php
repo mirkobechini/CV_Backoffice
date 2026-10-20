@@ -80,7 +80,7 @@
             <div class="icon">
                 {{ $type === 'deadline' ? '📅' : ($type === 'issue' ? '⚠️' : ($type === 'equipment' ? '🧯' : '🔔')) }}
             </div>
-            <div class="message">{{ $message }}</div>
+            <div class="message">{{ $body }}</div>
             @if ($url)
                 <div style="text-align: center;">
                     <a class="btn" href="{{ $url }}">Visualizza nel backoffice</a>
@@ -88,7 +88,7 @@
             @endif
         </div>
         <div class="footer">
-            <p>Documento generato automaticamente da CV Backoffice</p>
+            <p>Documento generato automaticamente da {{ config('app.name') }}</p>
         </div>
     </div>
 </body>

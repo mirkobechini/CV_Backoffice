@@ -17,18 +17,27 @@ class EventNotificationMail extends Mailable
 
     public $title;
 
-    public $message;
+    /**
+     * Testo della notifica. NON chiamarla $message: Laravel riserva quel
+     * nome nei dati passati alla vista (lo sovrascrive sempre con
+     * l'istanza Illuminate\Mail\Message usata per gli allegati inline),
+     * quindi il contenuto vero non arrivava mai alla vista — causa di un
+     * crash in produzione ("htmlspecialchars(): ... Message given") ogni
+     * volta che il comando generate-notifications provava a inviare
+     * un'email di questo tipo.
+     */
+    public $body;
 
     public $url;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(string $type, string $title, string $message, ?string $url = null)
+    public function __construct(string $type, string $title, string $body, ?string $url = null)
     {
         $this->type = $type;
         $this->title = $title;
-        $this->message = $message;
+        $this->body = $body;
         $this->url = $url;
     }
 
@@ -38,7 +47,7 @@ class EventNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "🔔 {$this->title} - CV Backoffice",
+            subject: "🔔 {$this->title} - ".config('app.name'),
         );
     }
 
@@ -52,7 +61,7 @@ class EventNotificationMail extends Mailable
             with: [
                 'type' => $this->type,
                 'title' => $this->title,
-                'message' => $this->message,
+                'body' => $this->body,
                 'url' => $this->url,
             ],
         );

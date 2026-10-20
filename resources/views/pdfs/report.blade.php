@@ -128,7 +128,7 @@
 </style>
 
 <div class="header">
-    <h1>📋 Report riassuntivo - CV Backoffice</h1>
+    <h1>📋 Report riassuntivo - {{ config('app.name') }}</h1>
     <div class="date">Generato il {{ now()->format('d/m/Y H:i') }}</div>
 </div>
 
@@ -270,5 +270,5 @@
 </div>
 
 <div class="footer">
-    <p>Documento generato automaticamente da CV Backoffice</p>
+    <p>Documento generato automaticamente da {{ config('app.name') }}</p>
 </div>
