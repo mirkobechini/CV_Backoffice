@@ -8,7 +8,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'CV Backoffice') }}</title>
+    <title>{{ config('app.name', 'Gestione Flotta') }}</title>
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
@@ -39,7 +39,7 @@
     <div class="guest-wrap">
         <a href="{{ route('welcome') }}" class="guest-brand">
             <span class="guest-logo"><i class="fa-solid fa-car"></i></span>
-            {{ config('app.name', 'CV Backoffice') }}
+            {{ config('app.name', 'Gestione Flotta') }}
         </a>
 
         <div class="guest-card">

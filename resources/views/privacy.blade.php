@@ -8,8 +8,8 @@
 
             <h2 class="mt-4 fs-5">1. Titolare del trattamento</h2>
             <p>
-                Il Titolare del trattamento dei dati è {{ config('app.name', 'CV Backoffice') }}, gestito da
-                {{ config('app.name', 'CV Backoffice') }}. Per qualsiasi richiesta relativa ai tuoi dati personali,
+                Il Titolare del trattamento dei dati è {{ config('app.name', 'Gestione Flotta') }}, gestito da
+                {{ config('app.name', 'Gestione Flotta') }}. Per qualsiasi richiesta relativa ai tuoi dati personali,
                 contattaci tramite i canali indicati nell'applicazione.
             </p>
 

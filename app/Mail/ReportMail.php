@@ -30,7 +30,7 @@ class ReportMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: '📋 Report giornaliero - CV Backoffice',
+            subject: '📋 Report giornaliero - '.config('app.name'),
         );
     }
 

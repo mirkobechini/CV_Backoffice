@@ -81,7 +81,7 @@ class TelegramNotifier
     private function handleStart(string $chatId, string $token): void
     {
         if ($token === '') {
-            $this->sendRaw($chatId, 'Per collegare questo account, genera un codice dalla pagina del tuo profilo su CV Backoffice e invialo qui con /start CODICE.');
+            $this->sendRaw($chatId, 'Per collegare questo account, genera un codice dalla pagina del tuo profilo su '.config('app.name').' e invialo qui con /start CODICE.');
 
             return;
         }
@@ -113,7 +113,7 @@ class TelegramNotifier
             ['value' => $chatId]
         );
 
-        $this->sendRaw($chatId, 'Account collegato. Riceverai qui le notifiche di CV Backoffice. Invia /stop per disattivarle.');
+        $this->sendRaw($chatId, 'Account collegato. Riceverai qui le notifiche di '.config('app.name').'. Invia /stop per disattivarle.');
     }
 
     private function handleStop(string $chatId): void

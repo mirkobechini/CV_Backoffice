@@ -1,6 +1,6 @@
 {
-    "name": "CV Backoffice",
-    "short_name": "CV Backoffice",
+    "name": "Gestione Flotta",
+    "short_name": "Gestione Flotta",
     "description": "Gestione flotta veicoli di pubblica assistenza",
     "start_url": "/dashboard",
     "scope": "/",
