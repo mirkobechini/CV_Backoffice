@@ -10,6 +10,11 @@
 
     <title>{{ config('app.name', 'CV Backoffice') }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('pwa/favicon-32.png') }}">
+    <link rel="alternate icon" href="{{ asset('favicon.ico') }}">
+
     <!-- PWA -->
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <meta name="theme-color" content="#4f46e5">
