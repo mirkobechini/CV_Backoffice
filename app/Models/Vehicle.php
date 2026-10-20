@@ -271,6 +271,11 @@ class Vehicle extends Model
         return $this->hasMany(FleetDevice::class);
     }
 
+    public function fuelCards()
+    {
+        return $this->hasMany(FuelCard::class);
+    }
+
     public function equipment()
     {
         return $this->hasMany(Equipment::class);

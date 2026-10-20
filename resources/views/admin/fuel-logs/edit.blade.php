@@ -75,6 +75,24 @@
                         @enderror
                     </div>
                 </div>
+                @if ($fuelCards->isNotEmpty())
+                    <div class="field">
+                        <label for="fuel_card_id">{{ __('Tessera usata (opzionale)') }}</label>
+                        <select class="select @error('fuel_card_id') is-invalid @enderror" id="fuel_card_id"
+                            name="fuel_card_id">
+                            <option value="">{{ __('Nessuna') }}</option>
+                            @foreach ($fuelCards as $fuelCard)
+                                <option value="{{ $fuelCard->id }}"
+                                    {{ old('fuel_card_id', $fuelLog->fuel_card_id) == $fuelCard->id ? 'selected' : '' }}>
+                                    {{ $fuelCard->card_number }} ({{ $fuelCard->status_label }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('fuel_card_id')
+                            <div class="field-error">{{ $message }}</div>
+                        @enderror
+                    </div>
+                @endif
             </div>
 
             <div class="form-actions">

@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\SortableAndGroupable;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreFuelLogRequest;
 use App\Http\Requests\UpdateFuelLogRequest;
+use App\Models\FuelCard;
 use App\Models\FuelLog;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
@@ -71,8 +72,9 @@ class FuelLogController extends Controller
     public function create()
     {
         $vehicles = Vehicle::forCurrentUser()->get();
+        $fuelCards = FuelCard::where('group_id', request()->user()->activeGroup()?->id)->get();
 
-        return view('admin.fuel-logs.create', compact('vehicles'));
+        return view('admin.fuel-logs.create', compact('vehicles', 'fuelCards'));
     }
 
     /**
@@ -90,7 +92,7 @@ class FuelLogController extends Controller
      */
     public function show(FuelLog $fuelLog)
     {
-        $fuelLog->load('vehicle');
+        $fuelLog->load('vehicle', 'fuelCard');
 
         return view('admin.fuel-logs.show', compact('fuelLog'));
     }
@@ -101,8 +103,9 @@ class FuelLogController extends Controller
     public function edit(FuelLog $fuelLog)
     {
         $vehicles = Vehicle::forCurrentUser()->get();
+        $fuelCards = FuelCard::where('group_id', request()->user()->activeGroup()?->id)->get();
 
-        return view('admin.fuel-logs.edit', compact('fuelLog', 'vehicles'));
+        return view('admin.fuel-logs.edit', compact('fuelLog', 'vehicles', 'fuelCards'));
     }
 
     /**

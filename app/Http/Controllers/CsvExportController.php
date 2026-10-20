@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\StreamsCsv;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\FleetDevice;
+use App\Models\FuelCard;
 use App\Models\FuelLog;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
@@ -31,6 +32,7 @@ class CsvExportController extends Controller
             'mileage-logs' => $this->exportMileageLogs(),
             'fuel-logs' => $this->exportFuelLogs(),
             'fleet-devices' => $this->exportFleetDevices(),
+            'fuel-cards' => $this->exportFuelCards(),
             'providers' => $this->exportProviders(),
             default => abort(404, 'Entità non trovata.'),
         };
@@ -150,15 +152,16 @@ class CsvExportController extends Controller
 
     private function exportFuelLogs()
     {
-        $logs = FuelLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+        $logs = FuelLog::with('vehicle', 'fuelCard')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
 
-        $headers = ['Veicolo', 'Data', 'Litri', 'Costo totale', 'Chilometri'];
+        $headers = ['Veicolo', 'Data', 'Litri', 'Costo totale', 'Chilometri', 'Tessera'];
         $rows = $logs->map(fn ($l) => [
             $l->vehicle?->internal_code ?? '',
             $l->log_date_formatted ?? '',
             $l->liters,
             $l->cost_total ?? '',
             $l->mileage ?? '',
+            $l->fuelCard?->card_number ?? '',
         ]);
 
         return $this->downloadCsv('rifornimenti.csv', $headers, $rows);
@@ -182,6 +185,23 @@ class CsvExportController extends Controller
         ]);
 
         return $this->downloadCsv('dispositivi.csv', $headers, $rows);
+    }
+
+    private function exportFuelCards()
+    {
+        $groupId = auth()->user()?->activeGroup()?->id;
+
+        $cards = FuelCard::with('vehicle')->where('group_id', $groupId)->get();
+
+        $headers = ['Numero tessera', 'Fornitore', 'Stato', 'Veicolo'];
+        $rows = $cards->map(fn ($c) => [
+            $c->card_number,
+            $c->provider ?? '',
+            $c->status_label,
+            $c->vehicle?->internal_code ?? '',
+        ]);
+
+        return $this->downloadCsv('tessere-carburante.csv', $headers, $rows);
     }
 
     private function exportProviders()
