@@ -26,6 +26,7 @@ class UpdateFuelCardRequest extends FormRequest
                 FuelCard::STATUS_ASSIGNED,
                 FuelCard::STATUS_JOLLY,
                 FuelCard::STATUS_UNASSIGNED,
+                FuelCard::STATUS_RETIRED,
             ])],
             'vehicle_id' => ['nullable', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'notes' => ['nullable', 'string'],
@@ -41,6 +42,11 @@ class UpdateFuelCardRequest extends FormRequest
         ];
     }
 
+    /**
+     * Il veicolo è obbligatorio solo per "assegnata" e vietato per jolly/non
+     * assegnata. "Vecchia (sostituita)" fa eccezione: il veicolo è
+     * facoltativo, per mantenere il legame con chi la usava.
+     */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
@@ -51,7 +57,7 @@ class UpdateFuelCardRequest extends FormRequest
                 $validator->errors()->add('vehicle_id', 'Seleziona il veicolo a cui assegnare la tessera.');
             }
 
-            if ($status !== FuelCard::STATUS_ASSIGNED && $vehicleId) {
+            if (in_array($status, [FuelCard::STATUS_JOLLY, FuelCard::STATUS_UNASSIGNED], true) && $vehicleId) {
                 $validator->errors()->add('vehicle_id', 'Una tessera jolly o non assegnata non può avere un veicolo.');
             }
         });
