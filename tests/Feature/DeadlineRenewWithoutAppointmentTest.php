@@ -155,7 +155,7 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
         $deadline->insuranceCoverages()->create(['coverage_type' => 'Kasko', 'cost' => 200]);
 
         $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
-            'renewed_date' => '2026-06',
+            'renewed_date' => '2026-06-15',
         ])->assertRedirect();
 
         $deadline->refresh();
@@ -164,7 +164,10 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
 
         $next = Deadline::where('renews_deadline_id', $deadline->id)->first();
         $this->assertNotNull($next);
-        $this->assertSame('2027-06-30', $next->due_date->toDateString());
+        // Il giorno esatto va preservato (non più sempre fine mese): il
+        // rinnovo assicurazione ora accetta una data completa, coerente
+        // con la data di scadenza (StoreDeadlineRequest/UpdateDeadlineRequest).
+        $this->assertSame('2027-06-15', $next->due_date->toDateString());
         $this->assertSame('Generali', $next->insurance_company);
         $this->assertSame('POL-123', $next->insurance_policy_number);
         $this->assertSame('5000000.00', $next->insurance_coverage_limit);
@@ -202,13 +205,63 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
         $deadline->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 850.50]);
 
         $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
-            'renewed_date' => '2026-06',
+            'renewed_date' => '2026-06-15',
         ])->assertRedirect();
 
         $next = Deadline::where('renews_deadline_id', $deadline->id)->first();
         $this->assertNotNull($next);
-        $this->assertSame('2026-12-30', $next->due_date->toDateString());
+        $this->assertSame('2026-12-15', $next->due_date->toDateString());
         $this->assertSame(6, $next->insurance_renewal_months);
+    }
+
+    public function test_renewing_insurance_rejects_a_month_only_date(): void
+    {
+        // Prima di questo fix, il modale di rinnovo accettava solo mese/anno
+        // anche per le assicurazioni e il giorno esatto di rinnovo andava
+        // perso (sempre fine mese): ora una data senza giorno viene
+        // rifiutata invece di essere silenziosamente arrotondata.
+        $group = $this->group();
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group);
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_ASSICURAZIONE,
+            'due_date' => now()->subDays(5),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
+            'renewed_date' => '2026-06',
+        ]);
+
+        $response->assertSessionHasErrors('renewed_date');
+        $deadline->refresh();
+        $this->assertFalse($deadline->is_renewed);
+    }
+
+    public function test_renewing_ministerial_still_requires_month_only_date(): void
+    {
+        // Le tipologie non assicurative restano a livello mese/anno come
+        // prima: una data completa (con giorno) viene rifiutata.
+        $group = $this->group();
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group);
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'due_date' => now()->subDays(5),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
+            'renewed_date' => '2026-06-15',
+        ]);
+
+        $response->assertSessionHasErrors('renewed_date');
     }
 
     public function test_member_cannot_renew_deadline(): void
@@ -283,5 +336,39 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
         $this->actingAs($capo)->get(route('admin.deadlines.show', $alreadyRenewed))
             ->assertOk()
             ->assertDontSee('Rinnova adesso');
+    }
+
+    public function test_show_and_edit_pages_flag_which_deadline_is_old_vs_renewed(): void
+    {
+        // Segnalato da Mirko: dopo un rinnovo esistono DUE record (quello
+        // vecchio, rinnovato, e quello nuovo) — corretto, ma senza
+        // un'indicazione chiara sembrava di aver perso quello vecchio
+        // aprendo per errore la modifica di quello sbagliato.
+        $group = $this->group();
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group);
+        $old = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_ASSICURAZIONE,
+            'due_date' => now()->subDays(5),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        $this->actingAs($capo)->patch(route('admin.deadlines.renew', $old), [
+            'renewed_date' => '2026-06-15',
+        ])->assertRedirect();
+
+        $new = Deadline::where('renews_deadline_id', $old->id)->firstOrFail();
+
+        $this->actingAs($capo)->get(route('admin.deadlines.show', $old))
+            ->assertOk()->assertSee('VECCHIA, già rinnovata', false);
+        $this->actingAs($capo)->get(route('admin.deadlines.edit', $old))
+            ->assertOk()->assertSee('VECCHIA, già rinnovata', false);
+        $this->actingAs($capo)->get(route('admin.deadlines.show', $new))
+            ->assertOk()->assertSee('RINNOVO di quella precedente', false);
+        $this->actingAs($capo)->get(route('admin.deadlines.edit', $new))
+            ->assertOk()->assertSee('RINNOVO di quella precedente', false);
     }
 }
