@@ -279,17 +279,28 @@ class DeadlineController extends Controller
             abort(400, 'Questa tipologia di scadenza non supporta il rinnovo automatico.');
         }
 
+        // Solo le assicurazioni hanno un giorno di rinnovo preciso (polizza
+        // che rinnova a una data esatta): le altre tipologie restano a
+        // livello di mese/anno, come già per la data di scadenza in
+        // StoreDeadlineRequest/UpdateDeadlineRequest.
+        $isInsurance = $deadline->type === Deadline::TYPE_ASSICURAZIONE;
+        $dateFormat = $isInsurance ? 'Y-m-d' : 'Y-m';
+
         $data = $request->validate([
-            'renewed_date' => 'required|date_format:Y-m',
+            'renewed_date' => ['required', 'date_format:'.$dateFormat],
             'mileage' => 'nullable|integer|min:0',
         ], [
             'renewed_date.required' => 'La data di rinnovo è obbligatoria.',
-            'renewed_date.date_format' => 'La data di rinnovo deve essere nel formato mese/anno valido.',
+            'renewed_date.date_format' => $isInsurance
+                ? 'La data di rinnovo deve essere una data valida (giorno/mese/anno).'
+                : 'La data di rinnovo deve essere nel formato mese/anno valido.',
             'mileage.integer' => 'Il chilometraggio deve essere un numero intero.',
             'mileage.min' => 'Il chilometraggio non può essere negativo.',
         ]);
 
-        $renewedDate = Carbon::createFromFormat('Y-m', $data['renewed_date'])->endOfMonth();
+        $renewedDate = $isInsurance
+            ? Carbon::createFromFormat('Y-m-d', $data['renewed_date'])
+            : Carbon::createFromFormat('Y-m', $data['renewed_date'])->endOfMonth();
         $vehicle = $deadline->vehicle;
 
         $this->deadlineService->renewWithoutAppointment($deadline, $vehicle, $renewedDate, $data['mileage'] ?? null);
