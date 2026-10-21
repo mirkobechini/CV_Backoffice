@@ -52,6 +52,8 @@
                             {{ __('Jolly (condivisa tra tutti i veicoli)') }}</option>
                         <option value="unassigned" {{ old('status') == 'unassigned' ? 'selected' : '' }}>
                             {{ __('Non ancora assegnata') }}</option>
+                        <option value="retired" {{ old('status') == 'retired' ? 'selected' : '' }}>
+                            {{ __('Vecchia (sostituita)') }}</option>
                     </select>
                     @error('status')
                         <div class="field-error">{{ $message }}</div>
@@ -97,9 +99,13 @@
             const vehicleSelect = document.getElementById('vehicle_id');
 
             function toggleVehicleField() {
-                const isAssigned = statusSelect.value === 'assigned';
-                vehicleField.style.display = isAssigned ? '' : 'none';
-                if (!isAssigned) vehicleSelect.value = '';
+                // "retired" mostra il campo come "assigned" (serve a
+                // mantenere il legame con chi la usava) ma senza svuotarlo
+                // o renderlo obbligatorio: solo jolly/non assegnata lo
+                // nascondono e lo azzerano.
+                const showsVehicle = statusSelect.value === 'assigned' || statusSelect.value === 'retired';
+                vehicleField.style.display = showsVehicle ? '' : 'none';
+                if (!showsVehicle) vehicleSelect.value = '';
             }
 
             statusSelect.addEventListener('change', toggleVehicleField);

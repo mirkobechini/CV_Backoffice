@@ -18,6 +18,20 @@
         </a>
     </div>
 
+    @if ($deadline->is_renewed && $deadline->renewedByDeadline)
+        <div class="alert warning" style="margin-bottom:16px;">
+            {{ __('Stai modificando la scadenza VECCHIA, già rinnovata (:d).', ['d' => $deadline->due_date_formatted ?? __('senza data')]) }}
+            <a href="{{ route('admin.deadlines.edit', $deadline->renewedByDeadline) }}">{{ __('Modifica invece quella nuova') }}
+                ›</a>
+        </div>
+    @elseif ($deadline->renewsDeadline)
+        <div class="alert info" style="margin-bottom:16px;">
+            {{ __('Stai modificando la scadenza di RINNOVO di quella precedente (:d).', ['d' => $deadline->renewsDeadline->due_date_formatted ?? __('senza data')]) }}
+            <a href="{{ route('admin.deadlines.edit', $deadline->renewsDeadline) }}">{{ __('Modifica invece quella vecchia') }}
+                ›</a>
+        </div>
+    @endif
+
     <div class="form-card">
         <form id="deadline-form" method="POST" action="{{ route('admin.deadlines.update', $deadline) }}"
             enctype="multipart/form-data" data-single-submit="true">

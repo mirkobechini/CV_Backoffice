@@ -37,6 +37,20 @@
             && in_array($deadline->type, \App\Services\DeadlineService::RENEWABLE_TYPES, true);
     @endphp
 
+    @if ($deadline->is_renewed && $deadline->renewedByDeadline)
+        <div class="alert warning" style="margin-bottom:16px;">
+            {{ __('Questa è la scadenza VECCHIA, già rinnovata.') }}
+            <a href="{{ route('admin.deadlines.show', $deadline->renewedByDeadline) }}">{{ __('Vedi quella nuova') }}
+                ›</a>
+        </div>
+    @elseif ($deadline->renewsDeadline)
+        <div class="alert info" style="margin-bottom:16px;">
+            {{ __('Questa è la scadenza di RINNOVO di quella precedente.') }}
+            <a href="{{ route('admin.deadlines.show', $deadline->renewsDeadline) }}">{{ __('Vedi quella vecchia') }}
+                ›</a>
+        </div>
+    @endif
+
     <div class="page-actions">
         <a href="{{ request('back', route('admin.deadlines.index')) }}" class="btn ghost">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}
@@ -80,7 +94,11 @@
                                     {{ __('Per un veicolo usato la cui ultima revisione è già stata fatta dal precedente proprietario: indica quando è avvenuta, senza dover registrare un intervento in officina.') }}
                                 @endif
                             </div>
-                            <x-form.month-input name="renewed_date" label="{{ __('Data di rinnovo') }}" required />
+                            @if ($deadline->type === \App\Models\Deadline::TYPE_ASSICURAZIONE)
+                                <x-form.date-input name="renewed_date" label="{{ __('Data di rinnovo') }}" required />
+                            @else
+                                <x-form.month-input name="renewed_date" label="{{ __('Data di rinnovo') }}" required />
+                            @endif
                             @unless ($deadline->type === \App\Models\Deadline::TYPE_ASSICURAZIONE)
                                 <div class="field" style="margin-bottom:0;">
                                     <label for="mileage_{{ $deadline->id }}">{{ __('Km al rinnovo (facoltativo)') }}</label>
