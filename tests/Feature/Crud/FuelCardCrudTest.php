@@ -145,6 +145,50 @@ class FuelCardCrudTest extends TestCase
         $response->assertSessionHasErrors('vehicle_id');
     }
 
+    public function test_retired_status_keeps_the_vehicle(): void
+    {
+        // Segnalato da Mirko: quando una tessera viene sostituita deve
+        // restare traccia del veicolo a cui era assegnata, a differenza di
+        // jolly/non assegnata (che non hanno mai un veicolo).
+        $group = $this->group();
+        $user = $this->capo($group);
+        $vehicle = $this->vehicle($group);
+        $card = FuelCard::create([
+            'card_number' => 'FC-001',
+            'status' => FuelCard::STATUS_ASSIGNED,
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $group->id,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.fuel-cards.update', $card), [
+            'card_number' => 'FC-001',
+            'status' => FuelCard::STATUS_RETIRED,
+            'vehicle_id' => $vehicle->id,
+        ]);
+
+        $response->assertRedirect(route('admin.fuel-cards.show', $card));
+        $this->assertDatabaseHas('fuel_cards', [
+            'id' => $card->id,
+            'status' => FuelCard::STATUS_RETIRED,
+            'vehicle_id' => $vehicle->id,
+        ]);
+    }
+
+    public function test_retired_status_does_not_require_a_vehicle(): void
+    {
+        $group = $this->group();
+        $user = $this->capo($group);
+
+        $response = $this->actingAs($user)->post(route('admin.fuel-cards.store'), [
+            'card_number' => 'FC-OLD',
+            'status' => FuelCard::STATUS_RETIRED,
+        ]);
+
+        $card = FuelCard::first();
+        $response->assertRedirect(route('admin.fuel-cards.show', $card));
+        $this->assertDatabaseHas('fuel_cards', ['id' => $card->id, 'status' => FuelCard::STATUS_RETIRED, 'vehicle_id' => null]);
+    }
+
     public function test_unassigned_card_is_not_visible_to_another_group(): void
     {
         $groupA = $this->group('Gruppo A');

@@ -26,6 +26,7 @@ class StoreFuelCardRequest extends FormRequest
                 FuelCard::STATUS_ASSIGNED,
                 FuelCard::STATUS_JOLLY,
                 FuelCard::STATUS_UNASSIGNED,
+                FuelCard::STATUS_RETIRED,
             ])],
             'vehicle_id' => ['nullable', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'notes' => ['nullable', 'string'],
@@ -42,10 +43,11 @@ class StoreFuelCardRequest extends FormRequest
     }
 
     /**
-     * Il veicolo ha senso solo per lo stato "assegnata": una tessera jolly o
-     * non assegnata non deve averne uno, altrimenti la distinzione tra i
-     * tre stati (il punto centrale di questa feature) collasserebbe su un
-     * semplice vehicle_id nullable.
+     * Il veicolo è obbligatorio solo per "assegnata" e vietato per jolly/non
+     * assegnata (altrimenti la distinzione tra questi stati collasserebbe
+     * su un semplice vehicle_id nullable). "Vecchia (sostituita)" fa
+     * eccezione: il veicolo è facoltativo, per mantenere il legame con chi
+     * la usava invece di perderlo quando la tessera va in pensione.
      */
     public function withValidator(Validator $validator): void
     {
@@ -57,7 +59,7 @@ class StoreFuelCardRequest extends FormRequest
                 $validator->errors()->add('vehicle_id', 'Seleziona il veicolo a cui assegnare la tessera.');
             }
 
-            if ($status !== FuelCard::STATUS_ASSIGNED && $vehicleId) {
+            if (in_array($status, [FuelCard::STATUS_JOLLY, FuelCard::STATUS_UNASSIGNED], true) && $vehicleId) {
                 $validator->errors()->add('vehicle_id', 'Una tessera jolly o non assegnata non può avere un veicolo.');
             }
         });

@@ -23,6 +23,15 @@ class FuelCard extends Model
 
     public const STATUS_UNASSIGNED = 'unassigned';
 
+    /**
+     * Tessera sostituita da una nuova: a differenza di jolly/unassigned,
+     * mantiene il vehicle_id (non obbligatorio né vietato, a differenza di
+     * "assigned" dove è richiesto) per restare traccia di quale veicolo la
+     * usava, invece di perdere quel legame una volta tolta dalla
+     * circolazione.
+     */
+    public const STATUS_RETIRED = 'retired';
+
     protected $fillable = [
         'card_number',
         'provider',
@@ -52,6 +61,7 @@ class FuelCard extends Model
         return match ($this->status) {
             self::STATUS_ASSIGNED => 'Assegnata',
             self::STATUS_JOLLY => 'Jolly (condivisa)',
+            self::STATUS_RETIRED => 'Vecchia (sostituita)',
             default => 'Non assegnata',
         };
     }

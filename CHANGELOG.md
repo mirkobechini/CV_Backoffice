@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Tessere carburante: nuovo stato "Vecchia (sostituita)", a differenza di jolly/non assegnata mantiene il legame con il veicolo a cui era assegnata invece di perderlo.
+
 ### Fixed
 
 - Assicurazioni: il rinnovo senza appuntamento ("Rinnova adesso") ora chiede il giorno esatto, non solo mese/anno — prima veniva sempre arrotondato a fine mese, incoerente con la data di scadenza (che per le assicurazioni richiede già il giorno esatto in creazione/modifica).
