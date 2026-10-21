@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.20.0] - 2026-10-21
+
 ### Added
 
 - Tessere carburante: nuovo stato "Vecchia (sostituita)", a differenza di jolly/non assegnata mantiene il legame con il veicolo a cui era assegnata invece di perderlo.
