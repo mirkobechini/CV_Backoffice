@@ -15,6 +15,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Sicurezza (alto, SH7)**: il token di collegamento Telegram era verificato con `LIKE` sul testo del messaggio (input dell'attaccante) non escapato — `%`/`_` permettevano di far corrispondere il token pendente di un ALTRO utente con pochi tentativi. Ora confronto esatto in PHP.
 - **Bug (B2)**: rinnovare un'assicurazione (o una cinghia di distribuzione) dalla pagina di modifica, invece che dal pulsante "Rinnova adesso", segnava la vecchia scadenza come rinnovata ma non creava mai la successiva — veicolo silenziosamente senza assicurazione attiva.
 - **Bug (B3)**: l'export "conformità flotta" (per rendicontazione a enti pubblici) segnava "In regola" un veicolo a cui mancava del tutto una scadenza obbligatoria (nessun record), invece di segnalarla come mancante — solo le scadenze scadute venivano contate.
+- **Bug (B4)**: `FleetDeviceController::store()`/`reassign()` eseguivano due scritture correlate (dispositivo + storico assegnazioni) senza transazione, rischiando un disallineamento in caso di errore a metà. Ora avvolte in `DB::transaction()`.
 
 ## [v1.20.1] - 2026-10-22
 
