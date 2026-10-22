@@ -243,4 +243,54 @@ class ProviderCrudTest extends TestCase
         $allResponse = $this->actingAs($user)->get(route('admin.providers.index'));
         $allResponse->assertSee('Non usato');
     }
+
+    public function test_show_page_does_not_leak_maintenance_records_of_other_groups(): void
+    {
+        // Audit sicurezza 2026-10-22 (SH4): il fornitore è condiviso tra
+        // gruppi, ma i suoi interventi sui veicoli no — la pagina mostrava
+        // anche interventi su mezzi di ALTRE associazioni.
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+
+        $brand = Brand::create(['name' => 'Fiat']);
+        $model = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $vehicleType = VehicleType::create(['name' => 'Amb', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+
+        $ownVehicle = Vehicle::create([
+            'license_plate' => 'AA111AA',
+            'internal_code' => 'OWN',
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'vehicle_type_id' => $vehicleType->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        MaintenanceRecord::create([
+            'vehicle_id' => $ownVehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+
+        $otherGroup = Group::create(['name' => 'Altro Gruppo', 'invite_code' => 'ZZZZ9999']);
+        $otherVehicle = Vehicle::create([
+            'license_plate' => 'BB222BB',
+            'internal_code' => 'OTHER',
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'vehicle_type_id' => $vehicleType->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $otherGroup->id,
+        ]);
+        MaintenanceRecord::create([
+            'vehicle_id' => $otherVehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.providers.show', $provider));
+
+        $response->assertOk();
+        $response->assertSee('OWN');
+        $response->assertDontSee('OTHER');
+    }
 }
