@@ -13,6 +13,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Sicurezza (alto, SH5)**: `/api/issues/suggestions` (autocomplete descrizioni guasti) non filtrava per gruppo. Inoltre le descrizioni finivano in `innerHTML` con solo l'apice escapato — XSS salvato. Ora l'endpoint è filtrato per gruppo e l'autocomplete costruisce il DOM senza interpretare mai il testo come HTML.
 - **Sicurezza (alto, SH6)**: `completed_issue_ids` negli appuntamenti attrezzature non era validato — permetteva di chiudere un guasto di un'attrezzatura di un ALTRO gruppo (IDOR) passando un id arbitrario nel form. Ora deve essere un sottoinsieme dei guasti già collegati e validati sull'appuntamento.
 - **Sicurezza (alto, SH7)**: il token di collegamento Telegram era verificato con `LIKE` sul testo del messaggio (input dell'attaccante) non escapato — `%`/`_` permettevano di far corrispondere il token pendente di un ALTRO utente con pochi tentativi. Ora confronto esatto in PHP.
+- **Bug (B2)**: rinnovare un'assicurazione (o una cinghia di distribuzione) dalla pagina di modifica, invece che dal pulsante "Rinnova adesso", segnava la vecchia scadenza come rinnovata ma non creava mai la successiva — veicolo silenziosamente senza assicurazione attiva.
 
 ## [v1.20.1] - 2026-10-22
 
