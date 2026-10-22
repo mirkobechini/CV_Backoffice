@@ -214,6 +214,33 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
         $response->assertSessionHasErrors(['issue_ids']);
     }
 
+    public function test_rejects_completed_issue_id_not_belonging_to_the_appointment(): void
+    {
+        // Audit sicurezza 2026-10-22 (SH6): completed_issue_ids non era
+        // validato affatto — un id arbitrario (anche di un'attrezzatura
+        // completamente estranea) veniva chiuso senza alcun controllo.
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $equipmentA = $this->createEquipment('A');
+        $equipmentB = $this->createEquipment('B');
+        $issueOfB = EquipmentIssue::create([
+            'equipment_id' => $equipmentB->id,
+            'description' => 'Guasto B',
+            'status' => 'open',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('admin.equipment-maintenance-records.store'), [
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-01-15',
+            'return_date' => '2026-01-16',
+            'equipment_ids' => [$equipmentA->id],
+            'completed_issue_ids' => [$issueOfB->id],
+        ]);
+
+        $response->assertSessionHasErrors(['completed_issue_ids']);
+        $this->assertSame('open', $issueOfB->fresh()->status);
+    }
+
     public function test_complete_closes_linked_issues_when_resolved(): void
     {
         $user = $this->createUser();
