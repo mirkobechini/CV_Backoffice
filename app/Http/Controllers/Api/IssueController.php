@@ -38,13 +38,14 @@ class IssueController extends Controller
     }
 
     /**
-     * Suggerimenti descrizioni per autocomplete (tutti i veicoli).
+     * Suggerimenti descrizioni per autocomplete (veicoli del gruppo attivo).
      */
     public function suggestions(Request $request)
     {
         $request->validate(['q' => 'required|string|min:2']);
 
         $results = Issue::selectRaw('description, COUNT(*) as total')
+            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->where('description', 'like', '%'.$request->q.'%')
             ->groupBy('description')
             ->orderByDesc('total')
