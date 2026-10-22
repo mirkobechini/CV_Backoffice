@@ -429,4 +429,36 @@ class VehicleScanTest extends TestCase
         $vehicle = Vehicle::where('license_plate', 'AB123CD')->first();
         $this->assertNull($vehicle->registration_card_path);
     }
+
+    public function test_store_rejects_path_traversal_disguised_as_a_pending_scan(): void
+    {
+        // Falla di sicurezza critica corretta nell'audit 2026-10-22: a
+        // differenza del test sopra (prefisso ovviamente sbagliato), questo
+        // path PASSA il controllo startsWith('registration_cards/pending/')
+        // che c'era prima — Flysystem normalizza ".." restando comunque
+        // dentro la root del disco, quindi risolveva a un file fuori dalla
+        // cartella pending (qui: un backup dell'intero database
+        // multi-tenant), "promuovendolo" sul veicolo e rendendolo
+        // scaricabile tramite l'URL firmato della carta di circolazione.
+        Storage::fake('public');
+        Storage::disk('public')->put('backups/backup-2026-10-22.json', '{"secret":"all tenants data"}');
+        $user = $this->capo();
+        $deps = $this->vehicleDeps();
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'scanned_registration_card_path' => 'registration_cards/pending/../../backups/backup-2026-10-22.json',
+        ]);
+
+        $response->assertRedirect();
+        $vehicle = Vehicle::where('license_plate', 'AB123CD')->first();
+        $this->assertNull($vehicle->registration_card_path);
+        // Il backup non deve essere stato spostato/rinominato.
+        Storage::disk('public')->assertExists('backups/backup-2026-10-22.json');
+    }
 }

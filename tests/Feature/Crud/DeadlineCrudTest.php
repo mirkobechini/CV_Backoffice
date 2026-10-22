@@ -10,6 +10,7 @@ use App\Models\MileageLog;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -499,6 +500,29 @@ class DeadlineCrudTest extends TestCase
     {
         // Prima del fix, per i tipi a calcolo automatico il campo due_date
         // veniva ignorato: qualunque valore inviato non aveva alcun effetto.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.deadlines.store'), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione Ministeriale',
+            'due_date' => '2030-06',
+        ]);
+
+        $deadline = Deadline::latest('id')->first();
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertEquals('2030-06-30', $deadline->due_date->toDateString());
+    }
+
+    public function test_month_only_due_date_does_not_roll_over_when_today_is_the_31st(): void
+    {
+        // Bug reale: Carbon::createFromFormat('Y-m', ...) senza il giorno
+        // esplicito lascia il giorno al valore di "oggi" (es. 31), che per
+        // un mese con meno giorni trabocca al mese successivo PRIMA di
+        // endOfMonth() — "2030-06" diventava 2030-07-31 se eseguito il 31
+        // di un mese qualunque, invece di restare giugno.
+        $this->travelTo(Carbon::parse('2026-10-31'));
         $user = $this->createUser();
         $vehicle = $this->createVehicle();
 
