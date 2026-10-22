@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.20.1] - 2026-10-22
+
 ### Fixed
 
 - **Sicurezza (critico)**: la "promozione" della foto del libretto scansionato accettava un percorso dal client validato solo con un controllo di prefisso, aggirabile con `..` (Flysystem normalizza il path restando comunque dentro la root del disco): permetteva di far scaricare a un veicolo un file arbitrario del disco (es. un backup del database multi-tenant) tramite l'URL firmato della carta di circolazione. Il percorso ora è validato con un'espressione regolare rigida sul formato esatto generato dal sistema.
