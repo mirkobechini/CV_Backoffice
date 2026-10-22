@@ -32,6 +32,19 @@ class PwaTest extends TestCase
         $this->assertFileExists(public_path('sw.js'));
     }
 
+    public function test_service_worker_does_not_cache_error_responses_and_prunes_old_caches(): void
+    {
+        // Audit 2026-10-22 (B5): metteva in cache anche risposte di errore
+        // (es. 404 transitorio su un asset durante un deploy, reso così
+        // permanentemente rotto) e non ripuliva mai le cache delle versioni
+        // precedenti. Stesso motivo di PwaTest sopra per verificare il
+        // contenuto sul filesystem invece che via richiesta HTTP.
+        $sw = file_get_contents(public_path('sw.js'));
+
+        $this->assertStringContainsString('response.ok', $sw);
+        $this->assertStringContainsString('caches.delete', $sw);
+    }
+
     public function test_dashboard_links_manifest_and_registers_service_worker(): void
     {
         $user = User::factory()->withRole('admin')->create();
