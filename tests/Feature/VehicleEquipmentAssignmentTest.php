@@ -170,6 +170,28 @@ class VehicleEquipmentAssignmentTest extends TestCase
         $this->assertNull($equipment->fresh()->vehicle_id);
     }
 
+    public function test_vehicle_show_warns_that_unassigning_exposes_equipment_to_other_groups(): void
+    {
+        // Audit 2026-10-22 (B6): il check-out one-tap rendeva più frequente
+        // un comportamento già noto (attrezzatura non assegnata visibile/
+        // assegnabile da QUALSIASI gruppo) senza avvisare l'utente.
+        $group = $this->group('Gruppo A');
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group, '0001');
+        $type = EquipmentType::create(['name' => 'Estintore']);
+        Equipment::create([
+            'equipment_type_id' => $type->id,
+            'name' => 'Estintore 5kg',
+            'vehicle_id' => $vehicle->id,
+        ]);
+
+        $response = $this->actingAs($capo)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('visibile e assegnabile anche da altre associazioni');
+    }
+
     public function test_member_cannot_unassign_equipment(): void
     {
         $group = $this->group('Gruppo A');
