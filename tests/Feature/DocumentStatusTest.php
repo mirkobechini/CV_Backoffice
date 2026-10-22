@@ -226,7 +226,20 @@ class DocumentStatusTest extends TestCase
         $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
         $user = User::factory()->create();
         $group->addUser($user, Group::ROLE_CAPO);
-        $this->vehicle('AB123CD', '0001', $group);
+        $vehicle = $this->vehicle('AB123CD', '0001', $group);
+
+        // Audit 2026-10-22 (B3): "in regola" richiede ora un record non
+        // scaduto per OGNUNA delle scadenze obbligatorie, non più la sola
+        // assenza di scadenze scadute.
+        foreach ([Deadline::TYPE_ASSICURAZIONE, Deadline::TYPE_MINISTERIAL, Deadline::TYPE_TAGLIANDO] as $type) {
+            Deadline::create([
+                'vehicle_id' => $vehicle->id,
+                'type' => $type,
+                'due_date' => now()->addMonths(6),
+                'status' => Deadline::STATUS_PENDING,
+                'is_renewed' => false,
+            ]);
+        }
 
         $response = $this->actingAs($user)->get(route('admin.documents.export-csv'));
 
@@ -234,5 +247,50 @@ class DocumentStatusTest extends TestCase
         $content = $response->streamedContent();
         $this->assertStringContainsString('Disponibile', $content);
         $this->assertStringContainsString('In regola', $content);
+    }
+
+    public function test_export_csv_flags_vehicle_with_no_deadline_record_as_non_compliant(): void
+    {
+        // Audit 2026-10-22 (B3): un veicolo a cui manca del tutto una
+        // scadenza obbligatoria (nessun record, non solo una scaduta)
+        // risultava "In regola" per assenza di dati.
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+        $this->vehicle('AB123CD', '0001', $group);
+
+        $response = $this->actingAs($user)->get(route('admin.documents.export-csv'));
+
+        $response->assertOk();
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Non in regola', $content);
+        $this->assertStringContainsString(Deadline::TYPE_ASSICURAZIONE, $content);
+    }
+
+    public function test_export_csv_does_not_require_oxygen_or_timing_belt_when_not_applicable(): void
+    {
+        // Revisione Ossigeno e Cinghia non si applicano a tutti i veicoli
+        // (vedi needsTimingBeltDeadline()/supportsOxygenCheckForVehicle()):
+        // la loro assenza non deve rendere "non in regola" un veicolo per
+        // cui semplicemente non si applicano.
+        $group = Group::create(['name' => 'Gruppo A', 'invite_code' => 'AAAA1111']);
+        $user = User::factory()->create();
+        $group->addUser($user, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle('AB123CD', '0001', $group);
+
+        foreach ([Deadline::TYPE_ASSICURAZIONE, Deadline::TYPE_MINISTERIAL, Deadline::TYPE_TAGLIANDO] as $type) {
+            Deadline::create([
+                'vehicle_id' => $vehicle->id,
+                'type' => $type,
+                'due_date' => now()->addMonths(6),
+                'status' => Deadline::STATUS_PENDING,
+                'is_renewed' => false,
+            ]);
+        }
+
+        $response = $this->actingAs($user)->get(route('admin.documents.export-csv'));
+
+        $response->assertOk();
+        $this->assertStringContainsString('In regola', $response->streamedContent());
     }
 }
