@@ -84,6 +84,17 @@ class StoreEquipmentMaintenanceRecordRequest extends FormRequest
                     $validator->errors()->add('issue_ids', 'Uno o più guasti selezionati non appartengono alle attrezzature scelte.');
                 }
             }
+
+            // completed_issue_ids non era validato affatto: un utente
+            // poteva chiudere un guasto di un'attrezzatura di un ALTRO
+            // gruppo passando un id arbitrario, senza che comparisse tra
+            // gli issue_ids selezionati (IDOR, audit sicurezza 2026-10-22,
+            // SH6). Deve essere un sottoinsieme di issue_ids, già validati
+            // sopra contro le attrezzature del gruppo.
+            $completedIssueIds = $this->input('completed_issue_ids', []);
+            if (! empty($completedIssueIds) && array_diff($completedIssueIds, $issueIds)) {
+                $validator->errors()->add('completed_issue_ids', 'Uno o più guasti da completare non appartengono a questo appuntamento.');
+            }
         });
     }
 }
