@@ -20,6 +20,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Bug (B6)**: il check-out one-tap di un'attrezzatura dal veicolo non avvisava che, una volta non assegnata, resta visibile e assegnabile da QUALSIASI altra associazione (comportamento deliberato, pool condiviso) — il testo di conferma ora lo specifica.
 - **Bug (B7)**: il calcolo del consumo (km/l) ordinava i rifornimenti solo per data, senza chiave secondaria — con due rifornimenti nello stesso giorno l'ordine tra loro non era deterministico, calcolando a volte un consumo errato. Aggiunto `id` come tiebreaker.
 - **Bug (B8)**: nessun modo per sganciare un FleetDevice dal veicolo senza assegnarlo a uno nuovo; un veicolo eliminato lasciava FleetDevice/FuelCard con un riferimento morto (Vehicle usa SoftDeletes, quindi `nullOnDelete` non scattava mai). Aggiunta un'azione dedicata e un hook che sgancia entrambi i modelli quando il veicolo viene eliminato.
+- **Bug (B9)**: un PATCH su una tessera carburante che omettesse del tutto `vehicle_id` (invece di inviarlo vuoto, come fa sempre il form) lasciava invariato il veicolo esistente anche passando a jolly/non assegnata. Ora azzerato esplicitamente prima della validazione quando assente.
 
 ## [v1.20.1] - 2026-10-22
 
