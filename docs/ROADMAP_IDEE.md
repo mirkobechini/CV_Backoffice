@@ -93,7 +93,7 @@
 | SH4 | High | Isolamento gruppi | Pagina fornitore mostra interventi/guasti di veicoli di altri gruppi (i fornitori sono condivisi, i loro interventi no) | `app/Http/Controllers/Admin/ProviderController.php:90` | ✅ (issue-428) relazione filtrata con `forCurrentUser()` |
 | SH5 | High | Isolamento gruppi + XSS | `/api/issues/suggestions` non filtrato per gruppo, LIKE non escapato; le descrizioni finiscono in `innerHTML`/`onclick` nell'autocomplete guasti con solo `'` escapato — XSS salvato cross-tenant combinando i due | `app/Http/Controllers/Api/IssueController.php:43-55`, `resources/views/admin/issues/create.blade.php:~283` + `edit.blade.php:~240` | ✅ (issue-430) filtro per gruppo + autocomplete via DOM diretto (no innerHTML) |
 | SH6 | High | IDOR | `completed_issue_ids` non valida che gli ID appartengano al gruppo corrente — un capo può chiudere guasti attrezzatura di altri gruppi per ID | `app/Http/Requests/StoreEquipmentMaintenanceRecordRequest.php:34`, `UpdateEquipmentMaintenanceRecordRequest.php:30` | ✅ (issue-432) deve essere sottoinsieme di `issue_ids` già validato |
-| SH7 | High | Auth | Token di collegamento Telegram confrontato con `LIKE` invece che uguaglianza esatta — in teoria dirottabile (`/start %`) | `app/Services/TelegramNotifier.php:90` | ⬜ |
+| SH7 | High | Auth | Token di collegamento Telegram confrontato con `LIKE` invece che uguaglianza esatta — in teoria dirottabile (`/start %`) | `app/Services/TelegramNotifier.php:90` | ✅ (issue-434) confronto esatto in PHP |
 
 ### Sicurezza — Medium/Low
 
