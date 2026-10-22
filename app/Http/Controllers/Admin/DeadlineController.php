@@ -298,9 +298,15 @@ class DeadlineController extends Controller
             'mileage.min' => 'Il chilometraggio non può essere negativo.',
         ]);
 
+        // Formato esplicito con giorno fissato a 1 per il ramo mese/anno:
+        // createFromFormat('Y-m', ...) da solo lascia il giorno al valore
+        // corrente (es. 30 se oggi è il 30), e per mesi più corti quel
+        // giorno trabocca già al mese successivo PRIMA di endOfMonth(),
+        // dando il risultato sbagliato (stesso bug già corretto in
+        // EquipmentController::normalizeMonthlyDates()).
         $renewedDate = $isInsurance
             ? Carbon::createFromFormat('Y-m-d', $data['renewed_date'])
-            : Carbon::createFromFormat('Y-m', $data['renewed_date'])->endOfMonth();
+            : Carbon::createFromFormat('Y-m-d', $data['renewed_date'].'-01')->endOfMonth();
         $vehicle = $deadline->vehicle;
 
         $this->deadlineService->renewWithoutAppointment($deadline, $vehicle, $renewedDate, $data['mileage'] ?? null);
