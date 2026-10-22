@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- **Sicurezza (critico)**: la "promozione" della foto del libretto scansionato accettava un percorso dal client validato solo con un controllo di prefisso, aggirabile con `..` (Flysystem normalizza il path restando comunque dentro la root del disco): permetteva di far scaricare a un veicolo un file arbitrario del disco (es. un backup del database multi-tenant) tramite l'URL firmato della carta di circolazione. Il percorso ora è validato con un'espressione regolare rigida sul formato esatto generato dal sistema.
+- **Sicurezza (critico)**: creare/elencare i backup del database (dump dell'intero database multi-tenant, non del solo gruppo di chi lo richiede) era permesso a qualunque capo/sottocapo — bastava essere amministratore di UNA associazione per vedere ed eseguire i backup di tutte le altre. Ora riservato al superadmin.
+- Scadenze: `Carbon::createFromFormat('Y-m', ...)` senza il giorno esplicito lasciava il giorno al valore corrente, che negli ultimi giorni di un mese più corto del mese di destinazione faceva traboccare la data al mese successivo (es. "giugno" salvato come luglio se eseguito il 31 di un altro mese) — riguardava sia il rinnovo scadenze sia la data di scadenza mese/anno in creazione/modifica.
+
 ## [v1.20.0] - 2026-10-21
 
 ### Added
