@@ -19,7 +19,12 @@ class SettingsController extends Controller
      */
     public function index()
     {
-        $canManageBackups = auth()->user()->canManageData();
+        // Riservato al superadmin (audit sicurezza 2026-10-22): il backup
+        // creato da app:backup-database è un unico dump dell'INTERO
+        // database multi-tenant, non del solo gruppo di chi lo richiede —
+        // prima bastava essere capo/sottocapo di una QUALSIASI associazione
+        // per vedere ed eseguire i backup di tutte le altre.
+        $canManageBackups = auth()->user()->isSuperadmin();
 
         // L'elenco dei backup è un dettaglio della sezione backup, visibile
         // solo a chi può effettivamente gestirli.
@@ -42,13 +47,15 @@ class SettingsController extends Controller
     /**
      * Crea un backup del database.
      *
-     * Azione di sistema riservata a capo/sottocapo: prima non aveva alcun
-     * controllo di autorizzazione, quindi qualunque utente autenticato
-     * (anche un membro base) poteva lanciarla direttamente sulla route.
+     * Riservato al superadmin (audit sicurezza 2026-10-22, vedi index()):
+     * dump dell'intero database multi-tenant, non del solo gruppo di chi
+     * lo richiede. Prima era riservata a capo/sottocapo (già una
+     * correzione rispetto a "qualunque utente autenticato"), ma restava
+     * troppo ampia per un'azione che tocca i dati di TUTTE le associazioni.
      */
     public function backup()
     {
-        if (! auth()->user()->canManageData()) {
+        if (! auth()->user()->isSuperadmin()) {
             abort(403);
         }
 
