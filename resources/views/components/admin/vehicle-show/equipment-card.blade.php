@@ -126,7 +126,7 @@
                     <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
                         class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
                     <form method="POST" action="{{ route('admin.equipments.unassign', $equipment) }}"
-                        onsubmit="return confirm('{{ __('Rimuovere questa attrezzatura dal veicolo?') }}');">
+                        onsubmit="return confirm('{{ __('Rimuovere questa attrezzatura dal veicolo? Finché non viene riassegnata resterà visibile e assegnabile anche da altre associazioni.') }}');">
                         @csrf
                         @method('PATCH')
                         <button type="submit" class="mini-btn" title="{{ __('Rimuovi dal veicolo') }}"
