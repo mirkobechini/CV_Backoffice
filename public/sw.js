@@ -10,7 +10,14 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(self.clients.claim());
+    // Ripulisce le cache delle versioni precedenti (audit 2026-10-22, B5):
+    // senza, ogni bump di CACHE lasciava la vecchia orfana per sempre,
+    // occupando spazio senza mai essere letta.
+    event.waitUntil(
+        caches.keys().then((keys) =>
+            Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
+        ).then(() => self.clients.claim())
+    );
 });
 
 self.addEventListener('fetch', (event) => {
@@ -26,7 +33,14 @@ self.addEventListener('fetch', (event) => {
                 (cached) =>
                     cached ||
                     fetch(event.request).then((response) => {
-                        cache.put(event.request, response.clone());
+                        // Mai in cache una risposta di errore (audit
+                        // 2026-10-22, B5): durante un deploy un asset con
+                        // hash cambiato può dare un 404/500 transitorio —
+                        // cacharlo lo renderebbe permanentemente rotto fino
+                        // al prossimo deploy che rigenera lo stesso path.
+                        if (response.ok) {
+                            cache.put(event.request, response.clone());
+                        }
                         return response;
                     })
             )
