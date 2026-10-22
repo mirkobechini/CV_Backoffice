@@ -746,6 +746,58 @@ class DeadlineCrudTest extends TestCase
         ]);
     }
 
+    public function test_marking_insurance_deadline_as_renewed_via_update_creates_next_occurrence(): void
+    {
+        // Audit 2026-10-22 (B2): rinnovare un'assicurazione dalla pagina di
+        // modifica (invece che da "Rinnova adesso") segnava la vecchia come
+        // rinnovata ma non creava mai la successiva — il veicolo restava
+        // silenziosamente senza assicurazione attiva.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        Deadline::where('vehicle_id', $vehicle->id)->forceDelete();
+
+        $current = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'status' => 'pending',
+            'due_date' => '2025-06-30',
+            'is_renewed' => false,
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_renewal_months' => 12,
+        ]);
+        $current->insuranceCoverages()->create(['coverage_type' => 'RCA', 'cost' => 850.50]);
+
+        $response = $this->actingAs($user)->put(route('admin.deadlines.update', $current), [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2025-06-30',
+            'is_renewed' => '1',
+            'insurance_company' => 'Generali',
+            'insurance_policy_number' => 'POL-123',
+            'insurance_renewal_months' => 12,
+            'coverages' => ['RCA' => ['cost' => '850.50']],
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $this->assertDatabaseHas('deadlines', [
+            'id' => $current->id,
+            'is_renewed' => true,
+            'status' => 'renewed',
+        ]);
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Assicurazione',
+            'due_date' => '2026-06-30 00:00:00',
+            'renews_deadline_id' => $current->id,
+            'insurance_company' => 'Generali',
+        ]);
+        $this->assertEquals(2, Deadline::where('vehicle_id', $vehicle->id)->count());
+
+        $next = Deadline::where('renews_deadline_id', $current->id)->first();
+        $this->assertSame('RCA', $next->insuranceCoverages->first()->coverage_type);
+    }
+
     public function test_editing_an_already_renewed_deadline_does_not_duplicate_next_occurrence(): void
     {
         // Bug reale: riaprire in modifica una scadenza GIÀ rinnovata (es.
