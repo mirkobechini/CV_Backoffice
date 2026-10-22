@@ -11,6 +11,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Sicurezza (alto, SH3)**: il feed JSON del calendario manutenzioni (`MaintenanceCalendarController::events()`) non filtrava per gruppo — ogni utente vedeva gli appuntamenti di manutenzione di tutte le associazioni, non solo della propria.
 - **Sicurezza (alto, SH4)**: la pagina di dettaglio di un fornitore mostrava anche gli interventi su veicoli di ALTRE associazioni — i fornitori sono condivisi tra gruppi, ma i loro interventi no.
 - **Sicurezza (alto, SH5)**: `/api/issues/suggestions` (autocomplete descrizioni guasti) non filtrava per gruppo. Inoltre le descrizioni finivano in `innerHTML` con solo l'apice escapato — XSS salvato. Ora l'endpoint è filtrato per gruppo e l'autocomplete costruisce il DOM senza interpretare mai il testo come HTML.
+- **Sicurezza (alto, SH6)**: `completed_issue_ids` negli appuntamenti attrezzature non era validato — permetteva di chiudere un guasto di un'attrezzatura di un ALTRO gruppo (IDOR) passando un id arbitrario nel form. Ora deve essere un sottoinsieme dei guasti già collegati e validati sull'appuntamento.
 
 ## [v1.20.1] - 2026-10-22
 
