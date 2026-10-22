@@ -170,6 +170,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->parameters(['fuel-logs' => 'fuelLog']);
         Route::post('fleet-devices/{fleetDevice}/reassign', [FleetDeviceController::class, 'reassign'])
             ->name('fleet-devices.reassign');
+        Route::patch('fleet-devices/{fleetDevice}/unassign', [FleetDeviceController::class, 'unassign'])
+            ->name('fleet-devices.unassign');
         Route::resource('fleet-devices', FleetDeviceController::class)
             ->parameters(['fleet-devices' => 'fleetDevice']);
         Route::resource('fuel-cards', FuelCardController::class)
