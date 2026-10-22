@@ -47,13 +47,30 @@ class SettingsTest extends TestCase
     public function test_backup_creates_file(): void
     {
         Storage::fake('public');
-        [$capo] = $this->capoWithGroup();
+        $superadmin = User::factory()->create(['is_superadmin' => true]);
 
-        $response = $this->actingAs($capo)->post(route('admin.settings.backup'));
+        $response = $this->actingAs($superadmin)->post(route('admin.settings.backup'));
 
         $response->assertRedirect();
         $files = Storage::disk('public')->files('backups');
         $this->assertNotEmpty($files);
+    }
+
+    public function test_capo_cannot_trigger_backup(): void
+    {
+        // Falla di sicurezza corretta nell'audit 2026-10-22: il backup
+        // creato da app:backup-database è un unico dump dell'INTERO
+        // database multi-tenant, non del solo gruppo di chi lo richiede —
+        // prima bastava essere capo/sottocapo di UNA QUALSIASI associazione
+        // per vedere ed eseguire i backup (quindi i dati) di tutte le
+        // altre. Ora è riservato al superadmin.
+        Storage::fake('public');
+        [$capo] = $this->capoWithGroup();
+
+        $response = $this->actingAs($capo)->post(route('admin.settings.backup'));
+
+        $response->assertForbidden();
+        $this->assertEmpty(Storage::disk('public')->files('backups'));
     }
 
     public function test_member_cannot_trigger_backup(): void
@@ -79,6 +96,19 @@ class SettingsTest extends TestCase
         $group->addUser($member, Group::ROLE_MEMBER);
 
         $response = $this->actingAs($member)->get(route('admin.settings.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('Crea backup');
+    }
+
+    public function test_capo_does_not_see_backup_section(): void
+    {
+        // Stessa falla di test_capo_cannot_trigger_backup: la sezione
+        // backup ora non è visibile nemmeno a chi è capo del proprio
+        // gruppo, solo al superadmin.
+        [$capo] = $this->capoWithGroup();
+
+        $response = $this->actingAs($capo)->get(route('admin.settings.index'));
 
         $response->assertOk();
         $response->assertDontSee('Crea backup');
