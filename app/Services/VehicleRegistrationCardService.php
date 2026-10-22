@@ -58,12 +58,22 @@ class VehicleRegistrationCardService
      * Sposta la foto scansionata (posizione "pending", non ancora legata a
      * nessun veicolo) nella posizione definitiva delle carte di
      * circolazione, così l'utente non deve ricaricarla dopo averla già
-     * fornita per la scansione. Verifica che il percorso sia davvero uno
-     * "pending" esistente, per non fidarsi ciecamente di un valore POST.
+     * fornita per la scansione. Il percorso arriva da un campo POST
+     * (scanned_registration_card_path): un semplice startsWith() non basta,
+     * perché i driver Flysystem normalizzano ".." restando comunque dentro
+     * la root del disco — "registration_cards/pending/../../backups/x.json"
+     * passava il controllo e veniva "promosso" su un veicolo, rendendolo
+     * scaricabile tramite l'URL firmato della carta di circolazione
+     * (falla di sicurezza critica, audit 2026-10-22: in produzione questo
+     * permetteva di esfiltrare i backup di TUTTI i gruppi, non solo il
+     * proprio). Il nome file è sempre generato da noi stessi
+     * (Str::random(40) + estensione, vedi VehicleController::scanRegistrationCard()):
+     * verificare che corrisponda esattamente a quel formato, in un unico
+     * segmento senza separatori di percorso, esclude ogni traversal.
      */
     public function promoteScanned(string $pendingPath): ?string
     {
-        if (! Str::startsWith($pendingPath, 'registration_cards/pending/')) {
+        if (! preg_match('/^registration_cards\/pending\/([A-Za-z0-9]{1,100}\.(?:jpe?g|png|heic|heif))$/', $pendingPath, $matches)) {
             return null;
         }
 

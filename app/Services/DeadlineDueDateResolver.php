@@ -69,7 +69,11 @@ class DeadlineDueDateResolver
             return Carbon::createFromFormat('Y-m-d', $dueDate) ?: null;
         }
 
-        $parsedDate = Carbon::createFromFormat('Y-m', $dueDate);
+        // Giorno fissato a 1 esplicitamente: createFromFormat('Y-m', ...) da
+        // solo lascia il giorno al valore corrente (es. 30 se oggi è il 30),
+        // e per mesi più corti trabocca già al mese successivo PRIMA di
+        // endOfMonth(), dando il risultato sbagliato.
+        $parsedDate = Carbon::createFromFormat('Y-m-d', $dueDate.'-01');
 
         if (! $parsedDate) {
             return null;

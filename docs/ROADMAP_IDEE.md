@@ -75,6 +75,80 @@
 
 ---
 
+## Audit 2026-10-22 — tabella di marcia
+
+> Audit completo via 3 agenti paralleli (sicurezza/privacy con focus sul sistema gruppi, qualità codice/pattern/dimensioni file, bug hunting sulle feature degli ultimi 3 giorni). Stato da aggiornare via via. Legenda: ⬜ da fare · 🔄 in corso · ✅ fatto · ❌ scartato. ID riusano le iniziali già in uso in altre tabelle di questo file ma sono scoped a questa sezione (es. questo S1 ≠ l'S1 dell'audit 2026-10-19).
+
+**Sistema gruppi (richiesto esplicitamente)**: creazione gruppo confermata impossibile fuori da `/superadmin` — nessuna route, nessun `Group::create()` raggiungibile, `join` attacca solo come member a un gruppo esistente. ✅ Nessuna azione necessaria su questo punto specifico. Trovato però un problema collegato (vedi H1 sotto): `canManageData()`/`activeGroup()` non garantiscono che i permessi di scrittura siano quelli del gruppo giusto per un utente con ruoli diversi in più gruppi.
+
+### Sicurezza — Critical/High (priorità massima)
+
+| # | Severità | Area | Descrizione | Riferimento | Stato |
+|---|----------|------|-------------|-------------|-------|
+| SC1 | Critical | Path traversal | `promoteScanned()` validava il path solo con `startsWith()`; Flysystem normalizza `..` restando nella root del disco, permettendo di "promuovere" su un veicolo un file arbitrario (es. un backup) invece di una foto scansionata | `app/Services/VehicleRegistrationCardService.php:74` | ✅ (issue-TBD) regex rigida sul formato esatto generato dal sistema |
+| SC2 | Critical | Autorizzazione | Backup database (dump dell'INTERO multi-tenant) creabile/elencabile da qualunque capo/sottocapo di qualunque gruppo, non solo dal superadmin — combinato con SC1 permetteva l'esfiltrazione dei dati di tutte le associazioni | `app/Http/Controllers/Admin/SettingsController.php` | ✅ ristretto a `isSuperadmin()`, vedi ADR §16 addendum 2026-10-22 |
+| SH1 | High | Sistema gruppi | `canManageData()`/`isManager()` sono true se capo/sottocapo in QUALUNQUE gruppo, non nel gruppo attivo; `activeGroup()` è `groups()->first()` senza `ORDER BY`, quindi non deterministico — un utente capo in A e membro in B può ottenere diritti di scrittura in B | `app/Models/User.php:163-165,222-236` | ⬜ |
+| SH2 | High | API | Login API bypassa 2FA e verifica email (basta password), token Sanctum senza scadenza | `app/Http/Controllers/Api/AuthController.php:16-32`, `config/sanctum.php:53` | ⬜ |
+| SH3 | High | Isolamento gruppi | Calendario manutenzioni non filtrato per gruppo — ogni utente vede gli appuntamenti di tutte le associazioni | `app/Http/Controllers/Admin/MaintenanceCalendarController.php:29` | ⬜ |
+| SH4 | High | Isolamento gruppi | Pagina fornitore mostra interventi/guasti di veicoli di altri gruppi (i fornitori sono condivisi, i loro interventi no) | `app/Http/Controllers/Admin/ProviderController.php:90` | ⬜ |
+| SH5 | High | Isolamento gruppi + XSS | `/api/issues/suggestions` non filtrato per gruppo, LIKE non escapato; le descrizioni finiscono in `innerHTML`/`onclick` nell'autocomplete guasti con solo `'` escapato — XSS salvato cross-tenant combinando i due | `app/Http/Controllers/Api/IssueController.php:43-55`, `resources/views/admin/issues/create.blade.php:~283` + `edit.blade.php:~240` | ⬜ |
+| SH6 | High | IDOR | `completed_issue_ids` non valida che gli ID appartengano al gruppo corrente — un capo può chiudere guasti attrezzatura di altri gruppi per ID | `app/Http/Requests/StoreEquipmentMaintenanceRecordRequest.php:34`, `UpdateEquipmentMaintenanceRecordRequest.php:30` | ⬜ |
+| SH7 | High | Auth | Token di collegamento Telegram confrontato con `LIKE` invece che uguaglianza esatta — in teoria dirottabile (`/start %`) | `app/Services/TelegramNotifier.php:90` | ⬜ |
+
+### Sicurezza — Medium/Low
+
+| # | Area | Descrizione | Riferimento | Stato |
+|---|------|-------------|-------------|-------|
+| SM1 | Isolamento gruppi | Record attrezzatura-manutenzione con equipaggiamento su più veicoli di gruppi diversi: nessun controllo di gruppo (caso diverso dall'attrezzatura "non assegnata" già accettato) | `app/Models/EquipmentMaintenanceRecord.php:86-91` | ⬜ |
+| SM2 | Isolamento gruppi | Righe con `group_id` NULL (dopo delete gruppo o riga legacy) cadono nel ramo "nessuna restrizione" di `HasGroupScopedAccess` | `app/Policies/Concerns/HasGroupScopedAccess.php:111` | ⬜ |
+| SM3 | XSS | Sink DOM stored-XSS nell'autocomplete guasti (`innerHTML` con solo `'` escapato) — non sfruttabile oggi da browser per via di SH5, ma da correggere comunque | `admin/issues/create.blade.php:283-287`, `edit.blade.php:240-244` | ⬜ |
+| SM4 | Open redirect / XSS | `redirect($request->input('back'))` non validato in 3 controller; 75 viste stampano `request('back')` in `href` senza whitelist di schema | `Admin/DeadlineController.php:338-340` e altri 2 | ⬜ |
+| SM5 | Isolamento gruppi | `Superadmin\GroupController::destroy` elimina solo i veicoli del gruppo, lascia FleetDevice/FuelCard/Equipment orfani (poi soggetti a SM2) | `app/Http/Controllers/Superadmin/GroupController.php` | ⬜ |
+| SM6 | Privacy | Note di tessere/dispositivi (dove Mirko mette il PIN) in chiaro: visibili a ogni membro, salvate per sempre nell'activity log, incluse nei backup | `FuelCard.php`/`FleetDevice.php` | ⬜ |
+| SM7 | DoS | `per_page` API senza tetto massimo | `Api/VehicleController.php:15` e altri 3 | ⬜ |
+| SL1 | CSRF | Webhook Telegram senza eccezione CSRF esplicita (verificare se arriva davvero un 419 in produzione) | `routes/web.php:55` | ⬜ |
+| SL2 | Upload | Estensione file presa dal nome client (`getClientOriginalExtension()`) invece che dal contenuto reale; `registration_card` senza `max:` dimensione | `VehicleRegistrationCardService.php:45`, `StoreVehicleRequest.php:33` | ⬜ |
+| SL3 | 2FA | Codice TOTP riusabile nella finestra di validità (no `verifyKeyNewer`) | `TwoFactorChallengeController.php:47` | ⬜ |
+| SL4 | Sessione | Reset/cambio password non revoca i token Sanctum esistenti | — | ⬜ |
+| SL5 | Headers | Nessun CSP, nessun X-Frame-Options | — | ⬜ |
+| SL6 | GDPR | Export dati personali omette impostazioni Telegram, token API, voci activity-log, stato 2FA | `ProfileController::exportData` | ⬜ |
+| SL7 | `.gitignore` | `PROJECT_RULES.md`/`GIT_WORKFLOW.md` non ignorati (linea guida 7 di Mirko) | `.gitignore` | ⬜ |
+
+### Bug funzionali
+
+| # | Severità | Descrizione | Riferimento | Stato |
+|---|----------|-------------|-------------|-------|
+| B1 | Critical (scade il 31/10) | `Carbon::createFromFormat('Y-m', ...)` senza giorno esplicito trabocca al mese successivo se eseguito l'ultimo giorno di un mese più lungo del mese di destinazione | `DeadlineController.php:303`, `DeadlineDueDateResolver.php:72` | ✅ corretto con lo stesso pattern già usato in `EquipmentController::normalizeMonthlyDates()` |
+| B2 | Medium | Rinnovare un'assicurazione dalla pagina di MODIFICA (non dal pulsante "Rinnova adesso") segna la vecchia come rinnovata ma non crea la nuova scadenza — veicolo silenziosamente senza assicurazione attiva | `app/Services/DeadlineService.php`, `createNextDeadlineAfterRenewal()` | ⬜ |
+| B3 | Medium | Export conformità segna "In regola" un veicolo a cui manca del tutto una scadenza obbligatoria (nessun record), invece di segnalarla come mancante | `DocumentStatusController::buildComplianceRows()` | ⬜ |
+| B4 | Medium | Scritture multi-step su FleetDevice (`reassign()`, `store()`) non in una transazione — un errore a metà disallinea lo storico dal veicolo attuale | `FleetDeviceController.php:77-87,134-143` | ⬜ |
+| B5 | Medium | Service worker mette in cache anche le risposte di errore (404/500 durante un deploy) senza controllare `response.ok`, e non ripulisce mai le cache delle versioni precedenti | `public/sw.js` | ⬜ |
+| B6 | Medium | Attrezzatura non assegnata (incluso il nuovo check-out one-tap) resta visibile/rivendicabile da QUALSIASI gruppo — comportamento già noto ma il nuovo pulsante di check-out lo rende una fuga di isolamento più frequente | `Equipment` (nessun `group_id` proprio) | ⬜ |
+| B7 | Low | Km/L sbagliato con due rifornimenti nello stesso giorno (ordine di lettura non deterministico) | `FuelLogController::index` | ⬜ |
+| B8 | Low | Nessuna via per "sganciare" un FleetDevice (tornare a non assegnato) dopo averlo assegnato una volta; veicolo eliminato lascia un link morto su FleetDevice/FuelCard (SoftDeletes, `nullOnDelete` mai attivato) | `FleetDeviceController.php`, `UpdateFleetDeviceRequest.php` | ⬜ |
+| B9 | Low | `UpdateFuelCardRequest`: un PATCH che omette `vehicle_id` lascia il valore esistente invariato anche se lo stato diventa jolly/non assegnata (il form reale non lo permette, ma l'endpoint sì) | `UpdateFuelCardRequest.php::withValidator()` | ⬜ |
+| B10 | Nitpick | "Successo" (flash `session('status')`/`'success'`) probabilmente non mostrato nella maggior parte delle pagine admin — `layouts/app.blade.php` non lo renderizza, solo ~8 viste lo fanno da sole | `resources/views/layouts/app.blade.php` | ⬜ da verificare nel browser |
+
+### Qualità del codice
+
+| # | Area | Descrizione | Riferimento | Stato |
+|---|------|-------------|-------------|-------|
+| Q1 | File da spezzare | `Deadline.php` (416), `deadlines/edit.blade.php` (406, quasi identico a create.blade.php), `VehicleController.php` (405) | vedi dettaglio audit | ⬜ |
+| Q2 | File da spezzare (test) | `MaintenanceRecordBusinessLogicTest.php` (1462!), `DeadlineCrudTest.php` (1042+), `DashboardTest.php`, `MaintenanceRecordTireIntegrationTest.php`, `VehicleCrudTest.php` | `tests/Feature/` | ⬜ |
+| Q3 | Design pattern | Manca una `GroupPolicy`: `GroupController` ha ~15 `abort(403)` manuali, lo stesso controllo ripetuto 7 volte | `app/Http/Controllers/Admin/GroupController.php` | ⬜ |
+| Q4 | Design pattern | `DeadlineRenewalCalculator` non fa dispatch per tipo da solo: lo stesso match/if è reimplementato in 3 punti (`DeadlineManualRenewalService`, `DeadlineService`, `MaintenanceCompletionService`) | più file | ⬜ |
+| Q5 | DRY | Manca un trait di group-scoping per i modelli legati a un veicolo: `whereHas('vehicle', fn($q)=>$q->forCurrentUser())` copiato ~60 volte in 26 file | più file | ⬜ |
+| Q6 | DRY | Coppie Store/Update Request quasi identiche in ~15 casi (nessuna estende l'altra) | più file | ⬜ |
+| Q7 | DRY | Badge colore stato (`status_color` → `b-red/b-amber/b-green`) copiato in 10 viste; componente `x-admin.row-actions` esiste ma non è mai usato nonostante lo stesso markup duplicato in 19 viste | più viste | ⬜ |
+| Q8 | Drift nuovo codice | FleetDevice/FuelCard: `destroy()` richiama `authorize('delete')` già coperto da `authorizeResource`; nessun `scopeForCurrentUser()` sul modello (query `where('group_id', ...)` ripetuta 6 volte); tipo/stato hardcoded in 4 punti ciascuno invece di una label map; le label non passano da `__()` | `FleetDeviceController.php`, `FuelCardController.php`, modelli e viste | ⬜ |
+| Q9 | Codice morto | Componenti Blade mai usati: `create-button`, `index-table`, `row-actions`, `application-logo` | `resources/views/components/` | ⬜ |
+| Q10 | Commento obsoleto (bug nascosto) | Due commenti dicono ancora "senza gruppo attivo, nessuna restrizione" mentre il codice ora nega l'accesso — fuorviante per chi legge dopo il fix sicurezza del 2026-10-09 | `Vehicle.php:~195`, `HasGroupScopedAccess.php:69-76` | ⬜ |
+| Q11 | Nesting | Alcuni blocchi a 4-5 livelli (parsing CSV mensile, query overlap manutenzioni duplicata in 2 file, resolver vendite CSV ripetuto 3 volte) | `MileageLogCsvImporter.php`, `Store/UpdateMaintenanceRecordRequest.php`, `IssueCsvImporter.php` | ⬜ |
+
+**Nota per il redesign**: nessun finding di questo audit lo riguarda direttamente; resta un lavoro a parte quando deciso di affrontarlo.
+
+---
+
 ## Ordine di lavoro concordato (2026-10-04) — TUTTE COMPLETATE (rilasciate in v1.5.0/v1.5.1)
 
 1. ✅ Costo manutenzioni (campo opzionale, non obbligatorio)

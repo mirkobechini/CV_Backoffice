@@ -7,6 +7,7 @@ use App\Models\Group;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -68,6 +69,33 @@ class DeadlineRenewWithoutAppointmentTest extends TestCase
         $deadline->refresh();
         $this->assertTrue($deadline->is_renewed);
         $this->assertSame(Deadline::STATUS_RENEWED, $deadline->status);
+
+        $next = Deadline::where('renews_deadline_id', $deadline->id)->first();
+        $this->assertNotNull($next);
+        $this->assertSame('2028-06-30', $next->due_date->toDateString());
+    }
+
+    public function test_renewing_month_only_type_does_not_roll_over_when_today_is_the_31st(): void
+    {
+        // Stesso bug del test gemello in DeadlineCrudTest, qui sul flusso di
+        // rinnovo invece che di creazione/modifica: eseguito il 31 del
+        // mese, "2026-06" diventava 2026-07-31 invece di restare giugno.
+        $this->travelTo(Carbon::parse('2026-10-31'));
+        $group = $this->group();
+        $capo = User::factory()->create();
+        $group->addUser($capo, Group::ROLE_CAPO);
+        $vehicle = $this->vehicle($group);
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_MINISTERIAL,
+            'due_date' => now()->subDays(5),
+            'status' => Deadline::STATUS_EXPIRED,
+            'is_renewed' => false,
+        ]);
+
+        $this->actingAs($capo)->patch(route('admin.deadlines.renew', $deadline), [
+            'renewed_date' => '2026-06',
+        ])->assertRedirect();
 
         $next = Deadline::where('renews_deadline_id', $deadline->id)->first();
         $this->assertNotNull($next);
