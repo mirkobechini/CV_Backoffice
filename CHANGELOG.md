@@ -17,6 +17,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Bug (B3)**: l'export "conformità flotta" (per rendicontazione a enti pubblici) segnava "In regola" un veicolo a cui mancava del tutto una scadenza obbligatoria (nessun record), invece di segnalarla come mancante — solo le scadenze scadute venivano contate.
 - **Bug (B4)**: `FleetDeviceController::store()`/`reassign()` eseguivano due scritture correlate (dispositivo + storico assegnazioni) senza transazione, rischiando un disallineamento in caso di errore a metà. Ora avvolte in `DB::transaction()`.
 - **Bug (B5)**: il service worker metteva in cache anche risposte di errore (404/500 transitori durante un deploy), restando poi rotto fino al deploy successivo; non ripuliva mai le cache delle versioni precedenti. Ora cache solo per risposte `ok`, e le cache obsolete vengono eliminate all'attivazione.
+- **Bug (B6)**: il check-out one-tap di un'attrezzatura dal veicolo non avvisava che, una volta non assegnata, resta visibile e assegnabile da QUALSIASI altra associazione (comportamento deliberato, pool condiviso) — il testo di conferma ora lo specifica.
 
 ## [v1.20.1] - 2026-10-22
 
