@@ -18,6 +18,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Bug (B4)**: `FleetDeviceController::store()`/`reassign()` eseguivano due scritture correlate (dispositivo + storico assegnazioni) senza transazione, rischiando un disallineamento in caso di errore a metà. Ora avvolte in `DB::transaction()`.
 - **Bug (B5)**: il service worker metteva in cache anche risposte di errore (404/500 transitori durante un deploy), restando poi rotto fino al deploy successivo; non ripuliva mai le cache delle versioni precedenti. Ora cache solo per risposte `ok`, e le cache obsolete vengono eliminate all'attivazione.
 - **Bug (B6)**: il check-out one-tap di un'attrezzatura dal veicolo non avvisava che, una volta non assegnata, resta visibile e assegnabile da QUALSIASI altra associazione (comportamento deliberato, pool condiviso) — il testo di conferma ora lo specifica.
+- **Bug (B7)**: il calcolo del consumo (km/l) ordinava i rifornimenti solo per data, senza chiave secondaria — con due rifornimenti nello stesso giorno l'ordine tra loro non era deterministico, calcolando a volte un consumo errato. Aggiunto `id` come tiebreaker.
 
 ## [v1.20.1] - 2026-10-22
 

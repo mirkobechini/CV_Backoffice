@@ -272,6 +272,36 @@ class FuelLogCrudTest extends TestCase
         $this->assertSame(15.0, $consumption);
     }
 
+    public function test_index_computes_consumption_correctly_for_two_refuels_on_the_same_day(): void
+    {
+        // Audit 2026-10-22 (B7): l'ordinamento del controller usava solo
+        // log_date, senza chiave secondaria — con due rifornimenti nello
+        // stesso giorno l'ordine tra loro non era deterministico, quindi
+        // "precedente" poteva risultare quello sbagliato (km negativi,
+        // consumo scartato o calcolato al contrario).
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $first = FuelLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-06-10',
+            'liters' => '40.00',
+            'mileage' => 50000,
+        ]);
+        $second = FuelLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-06-10',
+            'liters' => '40.00',
+            'mileage' => 50600,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.fuel-logs.index'));
+
+        $response->assertOk();
+        $response->assertSee('15,00 km/L');
+        $this->assertTrue($first->id < $second->id);
+    }
+
     public function test_consumption_is_null_when_mileage_missing(): void
     {
         $vehicle = $this->createVehicle();
