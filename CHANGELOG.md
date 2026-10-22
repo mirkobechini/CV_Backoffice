@@ -10,6 +10,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Sicurezza (alto, SH2)**: il login API (`/api/login`) verificava solo email+password, bypassando sia il 2FA che la verifica email già imposti dal login web. Ora richiede il codice 2FA quando attivo e rifiuta email non verificate. I token Sanctum, prima senza scadenza, ora scadono (default 30 giorni, configurabile via `SANCTUM_TOKEN_EXPIRATION`).
 - **Sicurezza (alto, SH3)**: il feed JSON del calendario manutenzioni (`MaintenanceCalendarController::events()`) non filtrava per gruppo — ogni utente vedeva gli appuntamenti di manutenzione di tutte le associazioni, non solo della propria.
 - **Sicurezza (alto, SH4)**: la pagina di dettaglio di un fornitore mostrava anche gli interventi su veicoli di ALTRE associazioni — i fornitori sono condivisi tra gruppi, ma i loro interventi no.
+- **Sicurezza (alto, SH5)**: `/api/issues/suggestions` (autocomplete descrizioni guasti) non filtrava per gruppo. Inoltre le descrizioni finivano in `innerHTML` con solo l'apice escapato — XSS salvato. Ora l'endpoint è filtrato per gruppo e l'autocomplete costruisce il DOM senza interpretare mai il testo come HTML.
 
 ## [v1.20.1] - 2026-10-22
 

@@ -237,12 +237,21 @@
                                 results.style.display = 'none';
                                 return;
                             }
-                            results.innerHTML = data.map(item =>
-                                `<button type="button" class="autocomplete-item" onclick="selectDescription('${item.description.replace(/'/g, "\\'")}', this)">
-                            ${item.description}
-                            <small>(${item.total}x)</small>
-                        </button>`
-                            ).join('');
+                            // Costruzione DOM diretta invece di innerHTML/onclick con
+                            // stringa interpolata (falla XSS, audit 2026-10-22, SH5):
+                            // item.description viene da altri utenti, mai eseguita
+                            // come HTML.
+                            results.replaceChildren(...data.map(item => {
+                                const btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className = 'autocomplete-item';
+                                btn.append(document.createTextNode(item.description + ' '));
+                                const small = document.createElement('small');
+                                small.textContent = `(${item.total}x)`;
+                                btn.appendChild(small);
+                                btn.addEventListener('click', () => selectDescription(item.description));
+                                return btn;
+                            }));
                             results.style.display = 'block';
                         });
                 }, 300);
@@ -253,7 +262,7 @@
                 if (results.children.length) results.style.display = 'block';
             });
 
-            window.selectDescription = function(val, el) {
+            window.selectDescription = function(val) {
                 input.value = val;
                 results.style.display = 'none';
             };

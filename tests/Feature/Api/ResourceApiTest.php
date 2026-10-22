@@ -102,6 +102,27 @@ class ResourceApiTest extends TestCase
             ->assertJsonPath('0.total', 2);
     }
 
+    public function test_issues_suggestions_does_not_leak_other_groups_descriptions(): void
+    {
+        // Audit sicurezza 2026-10-22 (SH5): l'endpoint non filtrava per
+        // gruppo, mostrando suggerimenti basati su descrizioni di
+        // qualunque associazione.
+        $vehicle = $this->vehicle();
+        Issue::create(['vehicle_id' => $vehicle->id, 'description' => 'Guasto motore', 'event_date' => '2025-01-01']);
+
+        $otherGroup = Group::create(['name' => 'Altro Gruppo', 'invite_code' => 'ZZZZ9999']);
+        $otherVehicle = $vehicle->replicate();
+        $otherVehicle->license_plate = 'ZZ999ZZ';
+        $otherVehicle->internal_code = '9999';
+        $otherVehicle->group_id = $otherGroup->id;
+        $otherVehicle->save();
+        Issue::create(['vehicle_id' => $otherVehicle->id, 'description' => 'Guasto freni altro gruppo', 'event_date' => '2025-01-01']);
+
+        $response = $this->withToken($this->authToken())->getJson('/api/issues/suggestions?q=Guasto');
+
+        $response->assertOk()->assertJsonCount(1)->assertJsonPath('0.description', 'Guasto motore');
+    }
+
     public function test_deadlines_index_returns_list(): void
     {
         $vehicle = $this->vehicle();
