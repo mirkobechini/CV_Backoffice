@@ -157,6 +157,24 @@ class FleetDeviceController extends Controller
     }
 
     /**
+     * Sgancia il dispositivo dal veicolo attuale, senza assegnarlo a uno
+     * nuovo (audit 2026-10-22, B8): prima l'unico modo per cambiare veicolo
+     * era reassign(), che ne richiede sempre uno nuovo — non c'era alcuna
+     * via per tornare a "non assegnato" dopo una prima assegnazione.
+     * Nessuna riga di storico: fleet_device_assignments.vehicle_id non è
+     * nullable (ogni riga rappresenta un'assegnazione A un veicolo, non la
+     * sua assenza), stesso limite già accettato per l'equivalente su
+     * Equipment::unassign().
+     */
+    public function unassign(FleetDevice $fleetDevice)
+    {
+        $this->authorize('update', $fleetDevice);
+        $fleetDevice->update(['vehicle_id' => null]);
+
+        return redirect()->route('admin.fleet-devices.show', $fleetDevice)->with('status', 'Dispositivo sganciato dal veicolo con successo.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy(FleetDevice $fleetDevice)

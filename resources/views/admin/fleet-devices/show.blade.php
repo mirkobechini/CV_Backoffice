@@ -115,6 +115,17 @@
                 </button>
             </div>
         </form>
+        @if ($fleetDevice->vehicle_id)
+            <form method="POST" action="{{ route('admin.fleet-devices.unassign', $fleetDevice->id) }}"
+                style="margin-top:8px;"
+                onsubmit="return confirm('{{ __('Sganciare il dispositivo dal veicolo attuale, senza assegnarlo a uno nuovo?') }}');">
+                @csrf
+                @method('PATCH')
+                <button type="submit" class="btn secondary">
+                    <i class="fa-solid fa-link-slash"></i> {{ __('Sgancia dal veicolo') }}
+                </button>
+            </form>
+        @endif
     </div>
 
     @if ($fleetDevice->assignments->isNotEmpty())
