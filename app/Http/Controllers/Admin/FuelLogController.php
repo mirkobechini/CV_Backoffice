@@ -49,8 +49,14 @@ class FuelLogController extends Controller
         // su tutti i log del gruppo per non dipendere da ordinamento/paginazione
         // della tabella corrente.
         $consumptionByLogId = [];
+        // orderBy('id') come tiebreaker (audit 2026-10-22, B7): con due
+        // rifornimenti nella stessa data, l'ordine tra loro non era
+        // deterministico (nessuna chiave secondaria), quindi "precedente"
+        // poteva risultare quello sbagliato, calcolando un consumo errato
+        // (o scartato per km negativi).
         $allLogsForConsumption = FuelLog::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
             ->orderBy('log_date')
+            ->orderBy('id')
             ->get(['id', 'vehicle_id', 'log_date', 'liters', 'mileage']);
         foreach ($allLogsForConsumption->groupBy('vehicle_id') as $logsForVehicle) {
             $previous = null;
