@@ -145,6 +145,35 @@ class FuelCardCrudTest extends TestCase
         $response->assertSessionHasErrors('vehicle_id');
     }
 
+    public function test_patch_omitting_vehicle_id_clears_it_when_switching_to_jolly(): void
+    {
+        // Audit 2026-10-22 (B9): un PATCH che omette del tutto vehicle_id
+        // (non solo vuoto, come fa sempre il form reale) lasciava invariato
+        // il valore esistente: update() aggiorna solo le chiavi presenti.
+        $group = $this->group();
+        $user = $this->capo($group);
+        $vehicle = $this->vehicle($group);
+        $card = FuelCard::create([
+            'card_number' => 'FC-001',
+            'status' => FuelCard::STATUS_ASSIGNED,
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $group->id,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.fuel-cards.update', $card), [
+            'card_number' => 'FC-001',
+            'status' => FuelCard::STATUS_JOLLY,
+            // vehicle_id intenzionalmente assente dal payload.
+        ]);
+
+        $response->assertRedirect(route('admin.fuel-cards.show', $card));
+        $this->assertDatabaseHas('fuel_cards', [
+            'id' => $card->id,
+            'status' => FuelCard::STATUS_JOLLY,
+            'vehicle_id' => null,
+        ]);
+    }
+
     public function test_retired_status_keeps_the_vehicle(): void
     {
         // Segnalato da Mirko: quando una tessera viene sostituita deve
