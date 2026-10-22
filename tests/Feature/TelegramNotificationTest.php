@@ -85,6 +85,25 @@ class TelegramNotificationTest extends TestCase
         $this->assertDatabaseMissing('notification_settings', ['key' => 'telegram_chat_id']);
     }
 
+    public function test_start_with_sql_wildcard_does_not_match_another_users_token(): void
+    {
+        // Audit sicurezza 2026-10-22 (SH7): il confronto usava LIKE con il
+        // token preso dal testo del messaggio Telegram, non escapato — `%`
+        // e `_` permettevano di far corrispondere il token pendente di un
+        // ALTRO utente con pochi tentativi.
+        config(['services.telegram.bot_token' => 'fake-token', 'services.telegram.webhook_secret' => 'my-secret']);
+        Http::fake();
+
+        $victim = $this->admin();
+        app(TelegramNotifier::class)->generateLinkToken($victim);
+
+        $this->postJson(route('telegram.webhook'), [
+            'message' => ['chat' => ['id' => 999], 'text' => '/start %'],
+        ], ['X-Telegram-Bot-Api-Secret-Token' => 'my-secret']);
+
+        $this->assertDatabaseMissing('notification_settings', ['key' => 'telegram_chat_id']);
+    }
+
     public function test_stop_unlinks_the_chat(): void
     {
         config(['services.telegram.bot_token' => 'fake-token', 'services.telegram.webhook_secret' => 'my-secret']);

@@ -86,9 +86,16 @@ class TelegramNotifier
             return;
         }
 
+        // Confronto esatto in PHP, non LIKE: il token arriva dal testo del
+        // messaggio Telegram, quindi un attaccante poteva inserire `%`/`_`
+        // (wildcard SQL non escapati) per far corrispondere il token
+        // pendente di un ALTRO utente con pochi tentativi (audit sicurezza
+        // 2026-10-22, SH7). La tabella ha al più un record per utente, il
+        // costo di caricarla tutta è trascurabile.
+        $token = strtoupper($token);
         $setting = NotificationSetting::where('key', 'telegram_link_token')
-            ->where('value', 'like', strtoupper($token).'|%')
-            ->first();
+            ->get()
+            ->first(fn (NotificationSetting $s) => Str::before($s->value, '|') === $token);
 
         if (! $setting) {
             $this->sendRaw($chatId, 'Codice non valido o già usato. Generane uno nuovo dal profilo.');
