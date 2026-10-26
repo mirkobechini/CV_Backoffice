@@ -49,15 +49,11 @@
                 <div class="field">
                     <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
                     <select class="select @error('status') is-invalid @enderror" id="status" name="status" required>
-                        <option value="assigned" {{ old('status', $fuelCard->status) == 'assigned' ? 'selected' : '' }}>
-                            {{ __('Assegnata a un veicolo') }}</option>
-                        <option value="jolly" {{ old('status', $fuelCard->status) == 'jolly' ? 'selected' : '' }}>
-                            {{ __('Jolly (condivisa tra tutti i veicoli)') }}</option>
-                        <option value="unassigned"
-                            {{ old('status', $fuelCard->status) == 'unassigned' ? 'selected' : '' }}>
-                            {{ __('Non ancora assegnata') }}</option>
-                        <option value="retired" {{ old('status', $fuelCard->status) == 'retired' ? 'selected' : '' }}>
-                            {{ __('Vecchia (sostituita)') }}</option>
+                        @foreach ($statusOptions as $value => $label)
+                            <option value="{{ $value }}"
+                                {{ old('status', $fuelCard->status) == $value ? 'selected' : '' }}>{{ $label }}
+                            </option>
+                        @endforeach
                     </select>
                     @error('status')
                         <div class="field-error">{{ $message }}</div>

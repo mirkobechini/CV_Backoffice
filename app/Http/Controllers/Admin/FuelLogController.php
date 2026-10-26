@@ -78,7 +78,7 @@ class FuelLogController extends Controller
     public function create()
     {
         $vehicles = Vehicle::forCurrentUser()->get();
-        $fuelCards = FuelCard::where('group_id', request()->user()->activeGroup()?->id)->get();
+        $fuelCards = FuelCard::forCurrentUser()->get();
 
         return view('admin.fuel-logs.create', compact('vehicles', 'fuelCards'));
     }
@@ -109,7 +109,7 @@ class FuelLogController extends Controller
     public function edit(FuelLog $fuelLog)
     {
         $vehicles = Vehicle::forCurrentUser()->get();
-        $fuelCards = FuelCard::where('group_id', request()->user()->activeGroup()?->id)->get();
+        $fuelCards = FuelCard::forCurrentUser()->get();
 
         return view('admin.fuel-logs.edit', compact('fuelLog', 'vehicles', 'fuelCards'));
     }

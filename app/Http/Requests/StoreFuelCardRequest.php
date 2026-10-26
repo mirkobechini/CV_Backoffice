@@ -22,12 +22,7 @@ class StoreFuelCardRequest extends FormRequest
         return [
             'card_number' => ['required', 'string', 'max:255'],
             'provider' => ['nullable', 'string', 'max:255'],
-            'status' => ['required', 'in:'.implode(',', [
-                FuelCard::STATUS_ASSIGNED,
-                FuelCard::STATUS_JOLLY,
-                FuelCard::STATUS_UNASSIGNED,
-                FuelCard::STATUS_RETIRED,
-            ])],
+            'status' => ['required', 'in:'.implode(',', FuelCard::statuses())],
             'vehicle_id' => ['nullable', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'notes' => ['nullable', 'string'],
         ];
