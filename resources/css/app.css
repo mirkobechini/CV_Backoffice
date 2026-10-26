@@ -189,6 +189,8 @@ body {
     top: 0;
     height: 100vh;
     flex-shrink: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .sidebar-brand {
@@ -3311,6 +3313,13 @@ body.modal-open {
 
     .stats {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Sotto i 16px Safari su iOS zooma la pagina al focus di un campo. */
+    .input,
+    .select,
+    textarea.input {
+        font-size: 16px;
     }
 }
 
