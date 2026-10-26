@@ -41,7 +41,7 @@ class GroupController extends Controller
      */
     public function show(Request $request, Group $group)
     {
-        $this->authorizeGroup($group);
+        $this->authorize('view', $group);
 
         $group->load(['users', 'vehicles']);
 
@@ -61,12 +61,7 @@ class GroupController extends Controller
      */
     public function update(Request $request, Group $group)
     {
-        $this->authorizeGroup($group);
-
-        // Solo il capo può rinominare il gruppo.
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può rinominare il gruppo.');
-        }
+        $this->authorize('update', $group);
 
         $data = $request->validate([
             'name' => 'required|string|max:255',
@@ -83,12 +78,7 @@ class GroupController extends Controller
      */
     public function updateTireSeason(Request $request, Group $group)
     {
-        $this->authorizeGroup($group);
-
-        // Solo il capo può cambiarle, come le altre impostazioni del gruppo.
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può modificare le date di cambio gomme.');
-        }
+        $this->authorize('updateTireSeason', $group);
 
         $data = $request->validate([
             'winter_switch_month' => 'required|integer|min:1|max:12',
@@ -120,11 +110,7 @@ class GroupController extends Controller
      */
     public function updateInvitePermission(Request $request, Group $group)
     {
-        $this->authorizeGroup($group);
-
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può gestire questo permesso.');
-        }
+        $this->authorize('updateInvitePermission', $group);
 
         $group->update(['sottocapo_can_manage_invites' => $request->boolean('sottocapo_can_manage_invites')]);
 
@@ -172,11 +158,7 @@ class GroupController extends Controller
      */
     public function regenerateInviteCode(Group $group)
     {
-        $this->authorizeGroup($group);
-
-        if (! $group->userCanManageInvites($this->currentUser())) {
-            abort(403, 'Non puoi gestire il codice invito di questo gruppo.');
-        }
+        $this->authorize('manageInvites', $group);
 
         $group->update(['invite_code' => Group::generateInviteCode()]);
 
@@ -189,11 +171,7 @@ class GroupController extends Controller
      */
     public function generatePublicStatusToken(Group $group)
     {
-        $this->authorizeGroup($group);
-
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può gestire la pagina pubblica di stato.');
-        }
+        $this->authorize('managePublicStatus', $group);
 
         $group->update(['public_status_token' => Group::generatePublicStatusToken()]);
 
@@ -205,11 +183,7 @@ class GroupController extends Controller
      */
     public function revokePublicStatusToken(Group $group)
     {
-        $this->authorizeGroup($group);
-
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può gestire la pagina pubblica di stato.');
-        }
+        $this->authorize('managePublicStatus', $group);
 
         $group->update(['public_status_token' => null]);
 
@@ -222,11 +196,7 @@ class GroupController extends Controller
      */
     public function invite(Request $request, Group $group)
     {
-        $this->authorizeGroup($group);
-
-        if (! $group->userCanManageInvites($this->currentUser())) {
-            abort(403, 'Non puoi inviare inviti per questo gruppo.');
-        }
+        $this->authorize('sendInvite', $group);
 
         $data = $request->validate([
             'email' => ['required', 'email'],
@@ -247,16 +217,11 @@ class GroupController extends Controller
      */
     public function updateRole(Request $request, Group $group, User $user)
     {
-        $this->authorizeGroup($group);
+        $this->authorize('updateRole', $group);
 
         $data = $request->validate([
             'role' => 'required|in:capo,sottocapo,member',
         ]);
-
-        // Solo il capo può gestire i ruoli.
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può gestire i ruoli.');
-        }
 
         // L'utente target deve appartenere al gruppo.
         if (! $user->roleIn($group)) {
@@ -281,12 +246,7 @@ class GroupController extends Controller
      */
     public function removeMember(Group $group, User $user)
     {
-        $this->authorizeGroup($group);
-
-        // Solo il capo può rimuovere membri.
-        if ($this->currentUser()->roleIn($group) !== Group::ROLE_CAPO) {
-            abort(403, 'Solo il capo può rimuovere membri.');
-        }
+        $this->authorize('removeMember', $group);
 
         // L'utente target deve appartenere al gruppo.
         if (! $user->roleIn($group)) {
@@ -310,15 +270,5 @@ class GroupController extends Controller
         $group->removeUser($user);
 
         return back()->with('status', 'Membro rimosso dal gruppo.');
-    }
-
-    /**
-     * Verifica che l'utente appartenga al gruppo.
-     */
-    private function authorizeGroup(Group $group): void
-    {
-        if (! $this->currentUser()->groups()->where('groups.id', $group->id)->exists()) {
-            abort(403, 'Non appartieni a questo gruppo.');
-        }
     }
 }
