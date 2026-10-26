@@ -59,7 +59,7 @@ class CsvExportController extends Controller
 
     private function exportIssues()
     {
-        $issues = Issue::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+        $issues = Issue::with('vehicle')->forCurrentUser()->get();
 
         $headers = ['Veicolo', 'Descrizione', 'Stato', 'Data Evento'];
         $rows = $issues->map(fn ($i) => [
@@ -74,7 +74,7 @@ class CsvExportController extends Controller
 
     private function exportDeadlines()
     {
-        $deadlines = Deadline::with('vehicle', 'insuranceCoverages')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+        $deadlines = Deadline::with('vehicle', 'insuranceCoverages')->forCurrentUser()->get();
 
         $headers = ['Veicolo', 'Tipo', 'Data Scadenza', 'Stato', 'Rinnovata', 'Compagnia', 'Numero Polizza', 'Coperture', 'Premio', 'Massimale', 'Broker'];
         $rows = $deadlines->map(fn ($d) => [
@@ -120,7 +120,7 @@ class CsvExportController extends Controller
 
     private function exportMaintenanceRecords()
     {
-        $records = MaintenanceRecord::with(['vehicle', 'provider'])->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+        $records = MaintenanceRecord::with(['vehicle', 'provider'])->forCurrentUser()->get();
 
         $headers = ['Veicolo', 'Fornitore', 'Data Appuntamento', 'Data Rientro', 'Tipo Attività', 'Km al Servizio', 'Costo'];
         $rows = $records->map(fn ($r) => [
@@ -138,7 +138,7 @@ class CsvExportController extends Controller
 
     private function exportMileageLogs()
     {
-        $logs = MileageLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+        $logs = MileageLog::with('vehicle')->forCurrentUser()->get();
 
         $headers = ['Veicolo', 'Data', 'Chilometri'];
         $rows = $logs->map(fn ($l) => [
@@ -152,7 +152,7 @@ class CsvExportController extends Controller
 
     private function exportFuelLogs()
     {
-        $logs = FuelLog::with('vehicle', 'fuelCard')->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->get();
+        $logs = FuelLog::with('vehicle', 'fuelCard')->forCurrentUser()->get();
 
         $headers = ['Veicolo', 'Data', 'Litri', 'Costo totale', 'Chilometri', 'Tessera'];
         $rows = $logs->map(fn ($l) => [
@@ -169,12 +169,7 @@ class CsvExportController extends Controller
 
     private function exportFleetDevices()
     {
-        // FleetDevice ha un group_id proprio (non dedotto dal veicolo, che
-        // può essere assente per un dispositivo non ancora assegnato): il
-        // filtro è diretto sul gruppo attivo, non su whereHas('vehicle').
-        $groupId = auth()->user()?->activeGroup()?->id;
-
-        $devices = FleetDevice::with('vehicle')->where('group_id', $groupId)->get();
+        $devices = FleetDevice::with('vehicle')->forCurrentUser()->get();
 
         $headers = ['Tipo', 'Codice', 'Veicolo', 'Targa'];
         $rows = $devices->map(fn ($d) => [
@@ -189,9 +184,7 @@ class CsvExportController extends Controller
 
     private function exportFuelCards()
     {
-        $groupId = auth()->user()?->activeGroup()?->id;
-
-        $cards = FuelCard::with('vehicle')->where('group_id', $groupId)->get();
+        $cards = FuelCard::with('vehicle')->forCurrentUser()->get();
 
         $headers = ['Numero tessera', 'Fornitore', 'Stato', 'Veicolo'];
         $rows = $cards->map(fn ($c) => [

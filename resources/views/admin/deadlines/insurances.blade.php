@@ -9,15 +9,6 @@
 @endsection
 
 @section('content')
-    @php
-        $badgeClass = fn($color) => match ($color) {
-            'red' => 'b-red',
-            'yellow' => 'b-amber',
-            'green' => 'b-green',
-            default => 'b-gray',
-        };
-    @endphp
-
     <div class="table-card">
         <div class="toolbar">
             <div class="toolbar-left">
@@ -94,14 +85,11 @@
                                 </td>
                                 <td>€ {{ number_format($deadline->insurance_premium_total, 2, ',', '.') }}</td>
                                 <td>{{ $deadline->due_date_formatted ?? 'N/A' }}</td>
-                                <td><span class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->status_label }}</span></td>
+                                <td><x-admin.status-badge :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge></td>
                                 <td>
-                                    <div class="row-actions">
-                                        <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="mini-btn"
-                                            title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                        <a href="{{ route('admin.deadlines.edit', $deadline->id) }}" class="mini-btn"
-                                            title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                    </div>
+                                    <x-admin.row-actions
+                                        :show-url="route('admin.deadlines.show', $deadline->id)"
+                                        :edit-url="route('admin.deadlines.edit', $deadline->id)" />
                                 </td>
                             </tr>
                         @endforeach

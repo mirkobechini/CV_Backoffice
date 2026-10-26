@@ -31,13 +31,11 @@
                     <div class="field">
                         <label for="type">{{ __('Tipo') }} <span class="req">*</span></label>
                         <select class="select @error('type') is-invalid @enderror" id="type" name="type" required>
-                            <option value="telepass" {{ old('type', $fleetDevice->type) == 'telepass' ? 'selected' : '' }}>
-                                Telepass</option>
-                            <option value="unipol_move"
-                                {{ old('type', $fleetDevice->type) == 'unipol_move' ? 'selected' : '' }}>UnipolMove
-                            </option>
-                            <option value="altro" {{ old('type', $fleetDevice->type) == 'altro' ? 'selected' : '' }}>
-                                {{ __('Altro') }}</option>
+                            @foreach ($typeOptions as $value => $label)
+                                <option value="{{ $value }}"
+                                    {{ old('type', $fleetDevice->type) == $value ? 'selected' : '' }}>{{ $label }}
+                                </option>
+                            @endforeach
                         </select>
                         @error('type')
                             <div class="field-error">{{ $message }}</div>

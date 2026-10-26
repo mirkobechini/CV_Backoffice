@@ -34,7 +34,7 @@ class FuelLogController extends Controller
         $sortDir = $validated['sort_dir'] ?? 'desc';
 
         $fuelLogs = $this->applySorting(
-            FuelLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser()),
+            FuelLog::with('vehicle')->forCurrentUser(),
             $sortBy,
             $sortDir,
             [
@@ -49,8 +49,14 @@ class FuelLogController extends Controller
         // su tutti i log del gruppo per non dipendere da ordinamento/paginazione
         // della tabella corrente.
         $consumptionByLogId = [];
-        $allLogsForConsumption = FuelLog::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        // orderBy('id') come tiebreaker (audit 2026-10-22, B7): con due
+        // rifornimenti nella stessa data, l'ordine tra loro non era
+        // deterministico (nessuna chiave secondaria), quindi "precedente"
+        // poteva risultare quello sbagliato, calcolando un consumo errato
+        // (o scartato per km negativi).
+        $allLogsForConsumption = FuelLog::forCurrentUser()
             ->orderBy('log_date')
+            ->orderBy('id')
             ->get(['id', 'vehicle_id', 'log_date', 'liters', 'mileage']);
         foreach ($allLogsForConsumption->groupBy('vehicle_id') as $logsForVehicle) {
             $previous = null;
@@ -72,7 +78,7 @@ class FuelLogController extends Controller
     public function create()
     {
         $vehicles = Vehicle::forCurrentUser()->get();
-        $fuelCards = FuelCard::where('group_id', request()->user()->activeGroup()?->id)->get();
+        $fuelCards = FuelCard::forCurrentUser()->get();
 
         return view('admin.fuel-logs.create', compact('vehicles', 'fuelCards'));
     }
@@ -103,7 +109,7 @@ class FuelLogController extends Controller
     public function edit(FuelLog $fuelLog)
     {
         $vehicles = Vehicle::forCurrentUser()->get();
-        $fuelCards = FuelCard::where('group_id', request()->user()->activeGroup()?->id)->get();
+        $fuelCards = FuelCard::forCurrentUser()->get();
 
         return view('admin.fuel-logs.edit', compact('fuelLog', 'vehicles', 'fuelCards'));
     }

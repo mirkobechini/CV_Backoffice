@@ -52,19 +52,10 @@
                             <td>{{ $equipmentType->first_inspection_months_formatted ?? 'N/A' }}</td>
                             <td>{{ $equipmentType->regular_inspection_months_formatted ?? 'N/A' }}</td>
                             <td>
-                                <div class="row-actions">
-                                    <a href="{{ route('admin.equipment-types.show', $equipmentType->id) }}"
-                                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i
-                                            class="fa-solid fa-eye"></i></a>
-                                    <a href="{{ route('admin.equipment-types.edit', $equipmentType->id) }}"
-                                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i
-                                            class="fa-solid fa-pen"></i></a>
-                                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#confirmDeleteModal-{{ $equipmentType->id }}">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </div>
+                                <x-admin.row-actions
+                                    :show-url="route('admin.equipment-types.show', $equipmentType->id)"
+                                    :edit-url="route('admin.equipment-types.edit', $equipmentType->id)"
+                                    :delete-target="'#confirmDeleteModal-' . $equipmentType->id" />
                             </td>
                         </tr>
                         <x-admin.delete-modal type="equipmentType" :object="$equipmentType" />

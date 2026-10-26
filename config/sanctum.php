@@ -50,7 +50,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // 30 giorni di default (audit sicurezza 2026-10-22, SH2): prima i
+    // token API non scadevano mai.
+    'expiration' => env('SANCTUM_TOKEN_EXPIRATION', 43200),
 
     /*
     |--------------------------------------------------------------------------

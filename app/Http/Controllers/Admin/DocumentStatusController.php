@@ -139,7 +139,7 @@ class DocumentStatusController extends Controller
         // decine di scadenze, una query con elaborazione in memoria evita
         // N query (una per veicolo+tipo) per costruire la matrice.
         $latestDeadlines = Deadline::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->get()
             ->sortBy(fn (Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])
             ->unique(fn (Deadline $d) => $d->vehicle_id.'|'.$d->type)
@@ -166,7 +166,7 @@ class DocumentStatusController extends Controller
     {
         [$vehicles, $deadlinesByVehicle] = $this->buildVehicleComplianceData();
 
-        $vehiclesInWorkshop = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $vehiclesInWorkshop = MaintenanceRecord::forCurrentUser()
             ->currentlyInWorkshop()
             ->pluck('vehicle_id')
             ->unique();
@@ -176,8 +176,18 @@ class DocumentStatusController extends Controller
 
             $nonCompliantTypes = [];
             foreach (self::DEADLINE_TYPES as $type) {
+                if (! $this->deadlineTypeAppliesToVehicle($type, $vehicle)) {
+                    continue;
+                }
+
                 $deadline = $deadlines[$type] ?? null;
-                if ($deadline && $deadline->automatic_status === Deadline::STATUS_EXPIRED) {
+
+                // Nessun record (mai inserita) è un documento mancante
+                // tanto quanto uno scaduto: un veicolo a cui manca del
+                // tutto un'assicurazione o una revisione, prima risultava
+                // "in regola" per assenza di dati, invece di segnalare la
+                // lacuna (audit 2026-10-22, B3).
+                if (! $deadline || $deadline->automatic_status === Deadline::STATUS_EXPIRED) {
                     $nonCompliantTypes[] = $type;
                 }
             }
@@ -189,5 +199,20 @@ class DocumentStatusController extends Controller
                 'non_compliant_types' => $nonCompliantTypes,
             ];
         })->values();
+    }
+
+    /**
+     * Assicurazione, Revisione Ministeriale e Tagliando sono obbligatori per
+     * qualunque veicolo; Revisione Ossigeno e Cinghia dipendono dalla
+     * configurazione del veicolo (stessi criteri già usati altrove per
+     * decidere se crearle/richiederle).
+     */
+    private function deadlineTypeAppliesToVehicle(string $type, Vehicle $vehicle): bool
+    {
+        return match ($type) {
+            Deadline::TYPE_OXYGEN => Deadline::supportsOxygenCheckForVehicle($vehicle),
+            Deadline::TYPE_CINGHIA => $vehicle->needsTimingBeltDeadline(),
+            default => true,
+        };
     }
 }

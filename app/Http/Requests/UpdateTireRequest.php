@@ -2,55 +2,32 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\AdminOnlyAccess;
-use App\Models\Tire;
-use App\Models\Vehicle;
-use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Arr;
 
-class UpdateTireRequest extends FormRequest
+/**
+ * Identica a StoreTireRequest tranne per "tire_group" (assente: in modifica
+ * si cambia una gomma già esistente in una posizione precisa, non si sceglie
+ * quante aggiungerne) e "position", sempre obbligatoria invece che solo per
+ * il gruppo "single" (audit 2026-10-22, Q6).
+ */
+class UpdateTireRequest extends StoreTireRequest
 {
-    use AdminOnlyAccess;
-
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return [
-            'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
-            'season' => 'required|in:summer,winter,all_season',
+        return array_merge(Arr::except(parent::rules(), ['tire_group']), [
             'position' => 'required|in:front_left,front_right,rear_left,rear_right',
-            'brand' => 'nullable|string|max:255',
-            'model_name' => 'nullable|string|max:255',
-            'size' => ['nullable', 'string', 'max:255', 'regex:'.Tire::SIZE_REGEX],
-            'status' => 'required|in:mounted,stored,retired',
-            'mounted_date' => 'nullable|date',
-            'mounted_mileage' => 'nullable|integer|min:0',
-            'next_change_date' => 'nullable|date',
-            'next_change_mileage' => 'nullable|integer|min:0',
-            'notes' => 'nullable|string',
-        ];
+        ]);
     }
 
     public function messages(): array
     {
-        return [
-            'vehicle_id.required' => 'Il veicolo è obbligatorio.',
-            'season.required' => 'La stagionalità è obbligatoria.',
-            'season.in' => 'La stagionalità selezionata non è valida.',
-            'position.required' => 'La posizione è obbligatoria.',
-            'position.in' => 'La posizione selezionata non è valida.',
-            'status.required' => 'Lo stato è obbligatorio.',
-            'status.in' => 'Lo stato selezionato non è valido.',
-            'size.regex' => 'La misura deve essere nel formato standard (es. 225/75R16C).',
-            'mounted_date.date' => 'La data di montaggio deve essere una data valida.',
-            'mounted_mileage.integer' => 'Il chilometraggio di montaggio deve essere un numero intero.',
-            'next_change_date.date' => 'La data del prossimo cambio deve essere una data valida.',
-            'next_change_mileage.integer' => 'Il chilometraggio del prossimo cambio deve essere un numero intero.',
-        ];
+        return array_merge(
+            Arr::except(parent::messages(), ['tire_group.required', 'tire_group.in', 'position.required_if']),
+            ['position.required' => 'La posizione è obbligatoria.']
+        );
     }
 }

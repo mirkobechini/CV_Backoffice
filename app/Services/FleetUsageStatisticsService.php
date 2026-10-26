@@ -35,7 +35,7 @@ class FleetUsageStatisticsService
      */
     public function kmTraveledByVehicle(?Carbon $since = null): Collection
     {
-        $rows = MileageLog::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $rows = MileageLog::forCurrentUser()
             ->when($since, fn ($q) => $q->where('log_date', '>=', $since))
             ->selectRaw('vehicle_id, MIN(mileage) as min_mileage, MAX(mileage) as max_mileage, COUNT(*) as readings')
             ->groupBy('vehicle_id')
@@ -92,7 +92,7 @@ class FleetUsageStatisticsService
      */
     public function issueCountByVehicle(?Carbon $since = null): Collection
     {
-        $counts = Issue::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $counts = Issue::forCurrentUser()
             ->when($since, fn ($q) => $q->where('event_date', '>=', $since))
             ->get(['vehicle_id'])
             ->countBy('vehicle_id');
@@ -119,7 +119,7 @@ class FleetUsageStatisticsService
      */
     public function averageDowntimeByProvider(?Carbon $since = null): array
     {
-        $records = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $records = MaintenanceRecord::forCurrentUser()
             ->whereNotNull('return_date')
             ->when($since, fn ($q) => $q->where('appointment_date', '>=', $since))
             ->with('provider')

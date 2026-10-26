@@ -57,17 +57,10 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="row-actions">
-                                    <a href="{{ route('admin.vehicle-types.show', $vehicleType->id) }}" class="mini-btn"
-                                        title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                    <a href="{{ route('admin.vehicle-types.edit', $vehicleType->id) }}" class="mini-btn"
-                                        title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#confirmDeleteModal-{{ $vehicleType->id }}">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </div>
+                                <x-admin.row-actions
+                                    :show-url="route('admin.vehicle-types.show', $vehicleType->id)"
+                                    :edit-url="route('admin.vehicle-types.edit', $vehicleType->id)"
+                                    :delete-target="'#confirmDeleteModal-' . $vehicleType->id" />
                             </td>
                         </tr>
                         <x-admin.delete-modal type="vehicleType" :object="$vehicleType" />

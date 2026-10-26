@@ -8,14 +8,6 @@
     ]" />
 @endsection
 
-@php
-    $badgeClass = match ($issue->status_color) {
-        'red' => 'b-red',
-        'yellow' => 'b-amber',
-        'green' => 'b-green',
-        default => 'b-gray',
-    };
-@endphp
 
 @section('content')
 
@@ -50,7 +42,7 @@
             </div>
         </div>
         <div class="dl-status">
-            <span class="badge {{ $badgeClass }}">{{ $issue->status_label }}</span>
+            <x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
             <span class="hint">{{ __('dal :d', ['d' => $issue->event_date_formatted ?? 'N/A']) }}</span>
         </div>
     </div>
@@ -100,7 +92,7 @@
             </div>
             <div class="dl-kv">
                 <span class="k">{{ __('Stato') }}</span>
-                <span class="v"><span class="badge {{ $badgeClass }}">{{ $issue->status_label }}</span></span>
+                <span class="v"><x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge></span>
             </div>
         </div>
     </div>

@@ -32,10 +32,8 @@ class FuelCardController extends Controller
         $sortBy = $validated['sort_by'] ?? 'status';
         $sortDir = $validated['sort_dir'] ?? 'asc';
 
-        $groupId = $request->user()->activeGroup()?->id;
-
         $fuelCards = $this->applySorting(
-            FuelCard::with('vehicle')->where('group_id', $groupId),
+            FuelCard::with('vehicle')->forCurrentUser(),
             $sortBy,
             $sortDir,
             [
@@ -57,8 +55,9 @@ class FuelCardController extends Controller
     public function create()
     {
         $vehicles = Vehicle::forCurrentUser()->get();
+        $statusOptions = FuelCard::statusFormOptions();
 
-        return view('admin.fuel-cards.create', compact('vehicles'));
+        return view('admin.fuel-cards.create', compact('vehicles', 'statusOptions'));
     }
 
     /**
@@ -90,8 +89,9 @@ class FuelCardController extends Controller
     public function edit(FuelCard $fuelCard)
     {
         $vehicles = Vehicle::forCurrentUser()->get();
+        $statusOptions = FuelCard::statusFormOptions();
 
-        return view('admin.fuel-cards.edit', compact('fuelCard', 'vehicles'));
+        return view('admin.fuel-cards.edit', compact('fuelCard', 'vehicles', 'statusOptions'));
     }
 
     /**
@@ -109,7 +109,6 @@ class FuelCardController extends Controller
      */
     public function destroy(FuelCard $fuelCard)
     {
-        $this->authorize('delete', $fuelCard);
         $fuelCard->delete();
 
         return redirect()->route('admin.fuel-cards.index')->with('status', 'Tessera eliminata con successo.');

@@ -3,6 +3,8 @@
 namespace App\Observers;
 
 use App\Models\Deadline;
+use App\Models\FleetDevice;
+use App\Models\FuelCard;
 use App\Models\Vehicle;
 use App\Services\DeadlineService;
 use Carbon\Carbon;
@@ -14,6 +16,27 @@ class VehicleObserver
     public function __construct(
         private readonly DeadlineService $deadlineService,
     ) {}
+
+    /**
+     * Sgancia dispositivi/tessere dal veicolo eliminato (audit 2026-10-22,
+     * B8): Vehicle usa SoftDeletes, quindi il vincolo nullOnDelete sulle FK
+     * non scatta mai davvero (nessun DELETE SQL avviene) — senza questo
+     * hook, FleetDevice/FuelCard restavano con un vehicle_id che punta a un
+     * veicolo ormai invisibile, un link morto permanente.
+     */
+    public function deleted(Vehicle $vehicle): void
+    {
+        FleetDevice::where('vehicle_id', $vehicle->id)->update(['vehicle_id' => null]);
+
+        // Solo lo stato "assegnata" richiede un veicolo: "ritirata" lo
+        // mantiene opzionale apposta per preservare lo storico (vedi
+        // FuelCard::STATUS_RETIRED), quindi perde solo il riferimento.
+        FuelCard::where('vehicle_id', $vehicle->id)
+            ->where('status', FuelCard::STATUS_ASSIGNED)
+            ->update(['vehicle_id' => null, 'status' => FuelCard::STATUS_UNASSIGNED]);
+
+        FuelCard::where('vehicle_id', $vehicle->id)->update(['vehicle_id' => null]);
+    }
 
     public function created(Vehicle $vehicle): void
     {

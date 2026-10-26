@@ -9,12 +9,6 @@
 
 @section('content')
     @php
-        $badgeClass = fn ($color) => match ($color) {
-            'red' => 'b-red',
-            'yellow' => 'b-amber',
-            'green' => 'b-green',
-            default => 'b-gray',
-        };
         $typeShortLabel = fn (string $type) => match ($type) {
             \App\Models\Deadline::TYPE_ASSICURAZIONE => __('Assicur.'),
             \App\Models\Deadline::TYPE_MINISTERIAL => __('Revis. min.'),
@@ -88,7 +82,7 @@
                                     <td>
                                         @if ($deadline)
                                             <a href="{{ route('admin.deadlines.show', $deadline) }}">
-                                                <span class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->status_label }}</span>
+                                                <x-admin.status-badge :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge>
                                             </a>
                                         @else
                                             <span class="badge b-gray">N/A</span>

@@ -136,18 +136,7 @@ class UpdateMaintenanceRecordRequest extends FormRequest
                 && ($currentRecord->return_date?->toDateString() ?? $currentRecord->appointment_date?->toDateString()) === $endDate;
 
             if ($vehicleId && $startDate && ! $datesUnchanged) {
-                $conflict = MaintenanceRecord::where('vehicle_id', $vehicleId)
-                    ->where('id', '!=', $currentId)
-                    ->where(function ($q) use ($startDate, $endDate) {
-                        $q->where(function ($q2) use ($startDate, $endDate) {
-                            $q2->where('appointment_date', '<=', $endDate)
-                                ->where(function ($q3) use ($startDate) {
-                                    $q3->whereNull('return_date')
-                                        ->orWhere('return_date', '>=', $startDate);
-                                });
-                        });
-                    })
-                    ->first();
+                $conflict = MaintenanceRecord::findSchedulingConflict((int) $vehicleId, $startDate, $endDate, $currentId);
 
                 if ($conflict) {
                     $conflictEnd = $conflict->return_date?->toDateString() ?? 'in corso';

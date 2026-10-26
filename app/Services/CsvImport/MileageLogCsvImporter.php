@@ -111,7 +111,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
         // del CSV — un import tipico (decine di veicoli × 12 mesi) arrivava
         // a centinaia di query solo per il controllo duplicati.
         $existingLogDates = MileageLog::whereYear('log_date', $year)
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->get(['vehicle_id', 'log_date'])
             ->map(fn ($log) => $log->vehicle_id.'|'.$log->log_date->toDateString())
             ->flip();
@@ -254,36 +254,51 @@ class MileageLogCsvImporter extends AbstractCsvImporter
                 $result['data']['_mileage'] = (int) $mileage;
             }
 
-            $mese = $row['mese'] ?? $row['data'] ?? $row['periodo'] ?? '';
-            if (empty($mese)) {
-                $result['valid'] = false;
-                $result['errors'][] = 'Mese/periodo mancante (usa MM/AAAA).';
-            } else {
-                $mese = str_replace(['-', '.'], '/', $mese);
-                $parts = explode('/', $mese);
-                if (count($parts) === 2 && is_numeric($parts[0]) && is_numeric($parts[1])) {
-                    $month = (int) $parts[0];
-                    $year = (int) $parts[1];
-                    if ($month < 1 || $month > 12) {
-                        $result['valid'] = false;
-                        $result['errors'][] = "Mese \"{$month}\" non valido.";
-                    } elseif ($year < 2000 || $year > 2100) {
-                        $result['warnings'][] = "Anno \"{$year}\" sembra errato.";
-                        $result['data']['_date'] = sprintf('%04d-%02d-01', $year, $month);
-                        $result['data']['_label_date'] = sprintf('%02d/%04d', $month, $year);
-                    } else {
-                        $result['data']['_date'] = sprintf('%04d-%02d-01', $year, $month);
-                        $result['data']['_label_date'] = sprintf('%02d/%04d', $month, $year);
-                    }
-                } else {
-                    $result['valid'] = false;
-                    $result['errors'][] = "Formato mese \"{$mese}\" non valido (usa MM/AAAA).";
-                }
-            }
+            $mese = (string) ($row['mese'] ?? $row['data'] ?? $row['periodo'] ?? '');
+            $this->applyMeseField($mese, $result);
 
             $results[] = $result;
         }
 
         return $results;
+    }
+
+    /**
+     * Valida il campo "mese" (MM/AAAA) e popola $result in place.
+     */
+    private function applyMeseField(string $mese, array &$result): void
+    {
+        if (empty($mese)) {
+            $result['valid'] = false;
+            $result['errors'][] = 'Mese/periodo mancante (usa MM/AAAA).';
+
+            return;
+        }
+
+        $mese = str_replace(['-', '.'], '/', $mese);
+        $parts = explode('/', $mese);
+        if (count($parts) !== 2 || ! is_numeric($parts[0]) || ! is_numeric($parts[1])) {
+            $result['valid'] = false;
+            $result['errors'][] = "Formato mese \"{$mese}\" non valido (usa MM/AAAA).";
+
+            return;
+        }
+
+        $month = (int) $parts[0];
+        $year = (int) $parts[1];
+
+        if ($month < 1 || $month > 12) {
+            $result['valid'] = false;
+            $result['errors'][] = "Mese \"{$month}\" non valido.";
+
+            return;
+        }
+
+        if ($year < 2000 || $year > 2100) {
+            $result['warnings'][] = "Anno \"{$year}\" sembra errato.";
+        }
+
+        $result['data']['_date'] = sprintf('%04d-%02d-01', $year, $month);
+        $result['data']['_label_date'] = sprintf('%02d/%04d', $month, $year);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVehicleGroupScoping;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Equipment extends Model
 {
-    use HasActivity;
+    use HasActivity, HasVehicleGroupScoping;
 
     public function getActivitylogOptions(): LogOptions
     {

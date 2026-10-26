@@ -120,22 +120,18 @@
                         'green' => 'green',
                         default => 'gray',
                     } }}">{{ $equipment->status_label }}</span>
-                <div class="row-actions">
-                    <a href="{{ route('admin.equipments.show', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                    <a href="{{ route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
+                <x-admin.row-actions
+                    :show-url="route('admin.equipments.show', ['equipment' => $equipment->id, 'back' => url()->full()])"
+                    :edit-url="route('admin.equipments.edit', ['equipment' => $equipment->id, 'back' => url()->full()])"
+                    :delete-target="'#confirmDeleteModal-' . $equipment->id">
                     <form method="POST" action="{{ route('admin.equipments.unassign', $equipment) }}"
-                        onsubmit="return confirm('{{ __('Rimuovere questa attrezzatura dal veicolo?') }}');">
+                        onsubmit="return confirm('{{ __('Rimuovere questa attrezzatura dal veicolo? Finché non viene riassegnata resterà visibile e assegnabile anche da altre associazioni.') }}');">
                         @csrf
                         @method('PATCH')
                         <button type="submit" class="mini-btn" title="{{ __('Rimuovi dal veicolo') }}"
                             aria-label="{{ __('Rimuovi dal veicolo') }}"><i class="fa-solid fa-link-slash"></i></button>
                     </form>
-                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}" data-bs-toggle="modal"
-                        data-bs-target="#confirmDeleteModal-{{ $equipment->id }}"><i
-                            class="fa-solid fa-trash"></i></button>
-                </div>
+                </x-admin.row-actions>
                 <x-admin.delete-modal type="equipment" :object="$equipment" />
             </div>
         @empty

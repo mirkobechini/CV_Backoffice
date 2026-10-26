@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Admin\TireController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Admin\VehicleScanController;
 use App\Http\Controllers\Admin\VehicleTypeController;
 use App\Http\Controllers\CsvExportController;
 use App\Http\Controllers\CsvImportController;
@@ -170,6 +171,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->parameters(['fuel-logs' => 'fuelLog']);
         Route::post('fleet-devices/{fleetDevice}/reassign', [FleetDeviceController::class, 'reassign'])
             ->name('fleet-devices.reassign');
+        Route::patch('fleet-devices/{fleetDevice}/unassign', [FleetDeviceController::class, 'unassign'])
+            ->name('fleet-devices.unassign');
         Route::resource('fleet-devices', FleetDeviceController::class)
             ->parameters(['fleet-devices' => 'fleetDevice']);
         Route::resource('fuel-cards', FuelCardController::class)
@@ -209,7 +212,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::get('vehicles-pdf/fleet-overview', [PdfExportController::class, 'fleetOverview'])
             ->name('vehicles.pdf.fleet-overview');
 
-        Route::post('vehicles/scan-libretto', [VehicleController::class, 'scanRegistrationCard'])
+        Route::post('vehicles/scan-libretto', [VehicleScanController::class, 'scanRegistrationCard'])
             ->middleware('throttle:vehicle-scan')
             ->name('vehicles.scan-libretto');
 

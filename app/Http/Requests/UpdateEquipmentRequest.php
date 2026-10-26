@@ -2,96 +2,22 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\AdminOnlyAccess;
-use App\Models\Vehicle;
-use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Carbon;
-use Illuminate\Validation\Validator;
 
-class UpdateEquipmentRequest extends FormRequest
+/**
+ * Identica a StoreEquipmentRequest tranne per "serial_number", che deve
+ * ignorare il record corrente nel controllo di unicità (audit 2026-10-22,
+ * Q6): prima duplicata per intero invece di estendere.
+ */
+class UpdateEquipmentRequest extends StoreEquipmentRequest
 {
-    use AdminOnlyAccess;
-
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return [
-            'vehicle_id' => ['nullable', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
-            'name' => 'required|string|max:255',
-            'brand' => 'nullable|string|max:255',
-            'model' => 'nullable|string|max:255',
+        return array_merge(parent::rules(), [
             'serial_number' => 'unique:equipment,serial_number,'.$this->route('equipment')?->id.',id|nullable|string|max:255',
-            'identification_number' => 'nullable|string|max:255',
-            'fabrication_date' => 'nullable|date',
-            'revision_date' => 'nullable|date',
-            'expiration_date' => 'nullable|date_format:Y-m',
-            'equipment_type_id' => 'required|exists:equipment_types,id',
-            'extinguisher_agent' => 'nullable|in:co2,powder',
-            'weight_kg' => 'nullable|numeric|min:0|max:999',
-            'collaudo_date' => 'nullable|date',
-            'next_collaudo_date' => 'nullable|date_format:Y-m',
-            'chair_type' => 'nullable|in:electric,manual_2_wheel,manual_4_wheel,manual_tracks',
-            'max_weight_kg' => 'nullable|numeric|min:0|max:9999',
-            'notes' => 'nullable|string|max:2000',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'name.required' => 'Il campo nome è obbligatorio.',
-            'name.string' => 'Il campo nome deve essere una stringa.',
-            'name.max' => 'Il campo nome non può superare i 255 caratteri.',
-            'serial_number.unique' => 'Il campo numero di serie deve essere univoco.',
-            'serial_number.string' => 'Il campo numero di serie deve essere una stringa.',
-            'serial_number.max' => 'Il campo numero di serie non può superare i 255 caratteri.',
-            'revision_date.date' => 'Il campo data di revisione deve essere una data valida.',
-            'expiration_date.date_format' => 'Il campo data di scadenza deve essere nel formato mese/anno valido.',
-            'equipment_type_id.required' => 'Il campo tipo di attrezzatura è obbligatorio.',
-            'equipment_type_id.exists' => 'Il tipo di attrezzatura selezionato non esiste.',
-            'fabrication_date.date' => 'La data di fabbricazione deve essere una data valida.',
-            'extinguisher_agent.in' => "L'agente estinguente selezionato non è valido.",
-            'weight_kg.numeric' => 'Il peso deve essere un numero.',
-            'collaudo_date.date' => 'La data di collaudo deve essere una data valida.',
-            'next_collaudo_date.date_format' => 'La data del prossimo collaudo deve essere nel formato mese/anno valido.',
-            'chair_type.in' => 'Il tipo di sedia selezionato non è valido.',
-            'max_weight_kg.numeric' => 'Il peso massimo deve essere un numero.',
-            'notes.max' => 'Le note non possono superare i 2000 caratteri.',
-        ];
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator) {
-            $expirationDate = $this->input('expiration_date');
-            $revisionDate = $this->input('revision_date');
-
-            if (! $expirationDate || ! $revisionDate) {
-                return;
-            }
-
-            if ($expirationDate && $revisionDate && Carbon::parse($expirationDate)->lt(Carbon::parse($revisionDate))) {
-                $validator->errors()->add('expiration_date', 'La data di scadenza deve essere successiva o uguale alla data di revisione.');
-            }
-        });
-
-        $validator->after(function (Validator $validator) {
-            $nextCollaudoDate = $this->input('next_collaudo_date');
-            $collaudoDate = $this->input('collaudo_date');
-
-            if (! $nextCollaudoDate || ! $collaudoDate) {
-                return;
-            }
-
-            if (Carbon::parse($nextCollaudoDate)->lt(Carbon::parse($collaudoDate))) {
-                $validator->errors()->add('next_collaudo_date', 'La data del prossimo collaudo deve essere successiva o uguale alla data di collaudo.');
-            }
-        });
+        ]);
     }
 }

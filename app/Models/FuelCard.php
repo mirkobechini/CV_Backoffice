@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasDirectGroupScoping;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -9,6 +10,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class FuelCard extends Model
 {
     use HasActivity;
+    use HasDirectGroupScoping;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -56,13 +58,48 @@ class FuelCard extends Model
         return $this->hasMany(FuelLog::class);
     }
 
+    /**
+     * @return array<int, string>
+     */
+    public static function statuses(): array
+    {
+        return [self::STATUS_ASSIGNED, self::STATUS_JOLLY, self::STATUS_UNASSIGNED, self::STATUS_RETIRED];
+    }
+
+    /**
+     * Etichetta breve (badge index/show). Unica fonte, prima duplicata nel
+     * match di questo accessor senza passare da __() (audit 2026-10-22 Q8).
+     *
+     * @return array<string, string>
+     */
+    public static function statusBadgeLabels(): array
+    {
+        return [
+            self::STATUS_ASSIGNED => __('Assegnata'),
+            self::STATUS_JOLLY => __('Jolly (condivisa)'),
+            self::STATUS_UNASSIGNED => __('Non assegnata'),
+            self::STATUS_RETIRED => __('Vecchia (sostituita)'),
+        ];
+    }
+
+    /**
+     * Etichetta descrittiva usata nelle select dei form create/edit, prima
+     * ripetuta identica in entrambe le viste (audit 2026-10-22 Q8).
+     *
+     * @return array<string, string>
+     */
+    public static function statusFormOptions(): array
+    {
+        return [
+            self::STATUS_ASSIGNED => __('Assegnata a un veicolo'),
+            self::STATUS_JOLLY => __('Jolly (condivisa tra tutti i veicoli)'),
+            self::STATUS_UNASSIGNED => __('Non ancora assegnata'),
+            self::STATUS_RETIRED => __('Vecchia (sostituita)'),
+        ];
+    }
+
     public function getStatusLabelAttribute(): string
     {
-        return match ($this->status) {
-            self::STATUS_ASSIGNED => 'Assegnata',
-            self::STATUS_JOLLY => 'Jolly (condivisa)',
-            self::STATUS_RETIRED => 'Vecchia (sostituita)',
-            default => 'Non assegnata',
-        };
+        return self::statusBadgeLabels()[$this->status] ?? __('Non assegnata');
     }
 }

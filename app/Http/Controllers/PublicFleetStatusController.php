@@ -17,7 +17,7 @@ class PublicFleetStatusController extends Controller
     {
         $group = Group::where('public_status_token', $token)->firstOrFail();
 
-        $vehiclesInWorkshop = MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forGroup($group->id))
+        $vehiclesInWorkshop = MaintenanceRecord::forGroup($group->id)
             ->currentlyInWorkshop()
             ->pluck('vehicle_id')
             ->unique();

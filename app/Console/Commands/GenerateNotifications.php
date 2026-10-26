@@ -158,7 +158,7 @@ class GenerateNotifications extends Command
     private function notifyUpcomingDeadlines(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
     {
         $upcomingDeadlines = Deadline::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+            ->forGroup($groupId)
             ->where('is_renewed', false)
             ->whereNotNull('due_date')
             ->whereBetween('due_date', [today(), today()->addDays($reminderDays)])
@@ -187,7 +187,7 @@ class GenerateNotifications extends Command
     private function notifyEscalatedDeadlines(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
     {
         $overdueDeadlines = Deadline::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+            ->forGroup($groupId)
             ->where('is_renewed', false)
             ->whereNotNull('due_date')
             ->where('due_date', '<=', today()->subDays(self::ESCALATION_THRESHOLD_DAYS))
@@ -210,7 +210,7 @@ class GenerateNotifications extends Command
     private function notifyOpenIssues(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
     {
         $openIssues = Issue::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+            ->forGroup($groupId)
             ->open()
             ->get();
 
@@ -279,7 +279,7 @@ class GenerateNotifications extends Command
     private function notifyUpcomingAppointments(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
     {
         $upcomingAppointments = MaintenanceRecord::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+            ->forGroup($groupId)
             ->whereNull('return_date')
             ->whereNotNull('appointment_date')
             ->whereBetween('appointment_date', [today(), today()->addDays($reminderDays)])

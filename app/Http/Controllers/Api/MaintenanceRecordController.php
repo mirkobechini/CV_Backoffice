@@ -11,7 +11,7 @@ class MaintenanceRecordController extends Controller
     public function index(Request $request)
     {
         $records = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->when($request->vehicle_id, fn ($q, $id) => $q->where('vehicle_id', $id))
             ->when($request->status, function ($q, $status) {
                 if ($status === 'in_progress') {

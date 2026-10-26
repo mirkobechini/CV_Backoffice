@@ -158,11 +158,19 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Il gruppo attivo dell'utente (il primo a cui appartiene).
+     * Il gruppo attivo dell'utente (il primo a cui è entrato).
+     *
+     * Query esplicitamente ordinata (audit sicurezza 2026-10-22): senza un
+     * ORDER BY, "il primo a cui appartiene" non è deterministico — per un
+     * utente in più gruppi (es. capo nel gruppo A, membro nel gruppo B
+     * dopo essersi unito con un codice invito) quale dei due risultasse
+     * "attivo" dipendeva dall'ordine di lettura del DB, non da una scelta
+     * esplicita. Vedi anche isManager()/canManageData() sotto, che prima
+     * di questo audit NON dipendevano affatto dal gruppo attivo.
      */
     public function activeGroup(): ?Group
     {
-        return $this->groups()->first();
+        return $this->groups()->orderBy('group_user.id')->first();
     }
 
     /**
@@ -209,26 +217,34 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * True se l'utente è capo in almeno un gruppo.
+     * True se l'utente è capo nel gruppo attivo.
+     *
+     * Scoperto durante l'audit 2026-10-22: questo metodo (e isManager()/
+     * canManageData() sotto) controllava il ruolo in QUALSIASI gruppo
+     * dell'utente, non in quello attivo. Un utente capo nel gruppo A che
+     * si univa anche al gruppo B come semplice membro (nessuna regola lo
+     * impedisce, vedi GroupController::join()) restava "manager" anche
+     * mentre operava nel contesto del gruppo B, con permessi di
+     * modifica/cancellazione sui dati di un'associazione in cui aveva solo
+     * un ruolo base. Ora scoperto esplicitamente sul gruppo attivo.
      */
     public function isCapo(): bool
     {
-        return $this->groups()->wherePivot('role', Group::ROLE_CAPO)->exists();
+        return $this->roleIn($this->activeGroup()) === Group::ROLE_CAPO;
     }
 
     /**
-     * True se l'utente è capo o sottocapo in almeno un gruppo.
+     * True se l'utente è capo o sottocapo nel gruppo attivo.
      */
     public function isManager(): bool
     {
-        return $this->groups()
-            ->whereIn('group_user.role', [Group::ROLE_CAPO, Group::ROLE_SOTTOCAPO])
-            ->exists();
+        return in_array($this->roleIn($this->activeGroup()), [Group::ROLE_CAPO, Group::ROLE_SOTTOCAPO], true);
     }
 
     /**
-     * True se l'utente può gestire (modificare/creare/eliminare) i dati.
-     * Capo e sottocapo possono gestire; i membri base solo visualizzare.
+     * True se l'utente può gestire (modificare/creare/eliminare) i dati nel
+     * gruppo attivo. Capo e sottocapo possono gestire; i membri base solo
+     * visualizzare.
      */
     public function canManageData(): bool
     {

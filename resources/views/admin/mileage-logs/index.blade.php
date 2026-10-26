@@ -100,17 +100,10 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="row-actions">
-                                        <a href="{{ route('admin.mileage-logs.show', $mileageLog->id) }}" class="mini-btn"
-                                            title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                        <a href="{{ route('admin.mileage-logs.edit', $mileageLog->id) }}" class="mini-btn"
-                                            title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#confirmDeleteModal-{{ $mileageLog->id }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </div>
+                                    <x-admin.row-actions
+                                        :show-url="route('admin.mileage-logs.show', $mileageLog->id)"
+                                        :edit-url="route('admin.mileage-logs.edit', $mileageLog->id)"
+                                        :delete-target="'#confirmDeleteModal-' . $mileageLog->id" />
                                 </td>
                             </tr>
                         @empty

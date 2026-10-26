@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVehicleGroupScoping;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class MaintenanceRecord extends Model
 {
-    use HasActivity, SoftDeletes;
+    use HasActivity, HasVehicleGroupScoping, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -189,5 +190,24 @@ class MaintenanceRecord extends Model
         return collect([$this->issue_descriptions, $this->deadline_types])
             ->filter(fn ($part) => $part !== '')
             ->implode(' · ');
+    }
+
+    /**
+     * Trova un appuntamento esistente sullo stesso veicolo che si
+     * sovrappone all'intervallo [$startDate, $endDate] (esistente.appointment_date
+     * <= $endDate AND esistente.return_date >= $startDate, o ancora in corso).
+     */
+    public static function findSchedulingConflict(int $vehicleId, string $startDate, string $endDate, ?int $excludeId = null): ?self
+    {
+        return static::where('vehicle_id', $vehicleId)
+            ->when($excludeId, fn ($query) => $query->where('id', '!=', $excludeId))
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->where('appointment_date', '<=', $endDate)
+                    ->where(function ($q2) use ($startDate) {
+                        $q2->whereNull('return_date')
+                            ->orWhere('return_date', '>=', $startDate);
+                    });
+            })
+            ->first();
     }
 }

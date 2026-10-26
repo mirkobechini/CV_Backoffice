@@ -5,6 +5,7 @@ namespace Tests\Feature\Crud;
 use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\FleetDevice;
+use App\Models\FuelCard;
 use App\Models\Group;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -145,6 +146,82 @@ class FleetDeviceCrudTest extends TestCase
             'previous_vehicle_id' => $originVehicle->id,
             'plate_snapshot' => $targetVehicle->license_plate,
         ]);
+    }
+
+    public function test_capo_can_unassign_device_from_vehicle(): void
+    {
+        // Audit 2026-10-22 (B8): prima l'unico modo per cambiare veicolo
+        // era reassign(), che richiede sempre un nuovo veicolo — nessuna
+        // via per tornare a "non assegnato".
+        $group = $this->group();
+        $user = $this->capo($group);
+        $vehicle = $this->vehicle($group);
+        $device = FleetDevice::create([
+            'type' => FleetDevice::TYPE_TELEPASS,
+            'code' => 'TP-1',
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $group->id,
+        ]);
+
+        $response = $this->actingAs($user)->patch(route('admin.fleet-devices.unassign', $device));
+
+        $response->assertRedirect(route('admin.fleet-devices.show', $device));
+        $this->assertNull($device->fresh()->vehicle_id);
+    }
+
+    public function test_member_cannot_unassign_device(): void
+    {
+        $group = $this->group();
+        $member = $this->member($group);
+        $vehicle = $this->vehicle($group);
+        $device = FleetDevice::create([
+            'type' => FleetDevice::TYPE_TELEPASS,
+            'code' => 'TP-1',
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $group->id,
+        ]);
+
+        $response = $this->actingAs($member)->patch(route('admin.fleet-devices.unassign', $device));
+
+        $response->assertForbidden();
+        $this->assertSame($vehicle->id, $device->fresh()->vehicle_id);
+    }
+
+    public function test_deleting_vehicle_unassigns_its_fleet_devices_and_fuel_cards(): void
+    {
+        // Audit 2026-10-22 (B8): Vehicle usa SoftDeletes, quindi il
+        // vincolo nullOnDelete sulle FK non scatta mai (nessun DELETE SQL
+        // avviene) — senza l'hook in VehicleObserver, FleetDevice/FuelCard
+        // restavano con un vehicle_id che punta a un veicolo invisibile.
+        $group = $this->group();
+        $user = $this->capo($group);
+        $vehicle = $this->vehicle($group);
+        $device = FleetDevice::create([
+            'type' => FleetDevice::TYPE_TELEPASS,
+            'code' => 'TP-1',
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $group->id,
+        ]);
+        $assignedCard = FuelCard::create([
+            'card_number' => 'C-1',
+            'status' => FuelCard::STATUS_ASSIGNED,
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $group->id,
+        ]);
+        $retiredCard = FuelCard::create([
+            'card_number' => 'C-2',
+            'status' => FuelCard::STATUS_RETIRED,
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $group->id,
+        ]);
+
+        $this->actingAs($user)->delete(route('admin.vehicles.destroy', $vehicle));
+
+        $this->assertNull($device->fresh()->vehicle_id);
+        $this->assertNull($assignedCard->fresh()->vehicle_id);
+        $this->assertSame(FuelCard::STATUS_UNASSIGNED, $assignedCard->fresh()->status);
+        $this->assertNull($retiredCard->fresh()->vehicle_id);
+        $this->assertSame(FuelCard::STATUS_RETIRED, $retiredCard->fresh()->status);
     }
 
     public function test_member_cannot_reassign_device(): void

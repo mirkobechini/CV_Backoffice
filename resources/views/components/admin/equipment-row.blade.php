@@ -1,14 +1,5 @@
 @props(['equipment', 'groupKey' => null])
 
-@php
-    $statusBadgeClass = match ($equipment->overall_status_color) {
-        'red' => 'b-red',
-        'yellow' => 'b-amber',
-        'green' => 'b-green',
-        default => 'b-gray',
-    };
-@endphp
-
 <tr @if ($groupKey !== null) data-groups="g{{ $groupKey }}" @endif>
     <td><input type="checkbox" class="equipment-select" value="{{ $equipment->id }}"></td>
     <td>
@@ -49,18 +40,12 @@
     </td>
     <td class="code">{{ $equipment->vehicle?->internal_code ?? 'N/A' }}</td>
     <td class="code">{{ $equipment->vehicle?->license_plate ?? 'N/A' }}</td>
-    <td><span class="badge {{ $statusBadgeClass }}">{{ $equipment->overall_status_label }}</span></td>
+    <td><x-admin.status-badge :color="$equipment->overall_status_color">{{ $equipment->overall_status_label }}</x-admin.status-badge></td>
     <td>
-        <div class="row-actions">
-            <a href="{{ route('admin.equipments.show', $equipment->id) }}" class="mini-btn"
-                title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-            <a href="{{ route('admin.equipments.edit', $equipment->id) }}" class="mini-btn"
-                title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-            <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
-                data-bs-toggle="modal" data-bs-target="#confirmDeleteModal-{{ $equipment->id }}">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-        </div>
+        <x-admin.row-actions
+            :show-url="route('admin.equipments.show', $equipment->id)"
+            :edit-url="route('admin.equipments.edit', $equipment->id)"
+            :delete-target="'#confirmDeleteModal-' . $equipment->id" />
     </td>
 </tr>
 <x-admin.delete-modal type="equipment" :object="$equipment" />

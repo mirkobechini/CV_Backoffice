@@ -117,14 +117,6 @@
             </div>
             <div class="body">
                 @foreach ($equipmentMaintenanceRecord->issues as $issue)
-                    @php
-                        $issueBadgeClass = match ($issue->status_color) {
-                            'red' => 'b-red',
-                            'yellow' => 'b-amber',
-                            'green' => 'b-green',
-                            default => 'b-gray',
-                        };
-                    @endphp
                     <div class="dl-kv">
                         <span class="k">{{ $issue->equipment->name ?? 'N/A' }}</span>
                         <span class="v">
@@ -132,7 +124,7 @@
                                 {{ $issue->description }}
                                 <span class="arrow">›</span>
                             </a>
-                            <span class="badge {{ $issueBadgeClass }}">{{ $issue->status_label }}</span>
+                            <x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
                         </span>
                     </div>
                 @endforeach

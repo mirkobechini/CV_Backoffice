@@ -137,20 +137,7 @@ class StoreMaintenanceRecordRequest extends FormRequest
             }
 
             if ($vehicleId && $startDate) {
-                $conflict = MaintenanceRecord::where('vehicle_id', $vehicleId)
-                    ->where(function ($q) use ($startDate, $endDate) {
-                        // Appuntamento esistente che si sovrappone al nuovo intervallo
-                        $q->where(function ($q2) use ($startDate, $endDate) {
-                            // esistente.appointment_date <= nuovo.return_date
-                            // AND esistente.return_date >= nuovo.appointment_date
-                            $q2->where('appointment_date', '<=', $endDate)
-                                ->where(function ($q3) use ($startDate) {
-                                    $q3->whereNull('return_date')
-                                        ->orWhere('return_date', '>=', $startDate);
-                                });
-                        });
-                    })
-                    ->first();
+                $conflict = MaintenanceRecord::findSchedulingConflict((int) $vehicleId, $startDate, $endDate);
 
                 if ($conflict) {
                     $conflictEnd = $conflict->return_date?->toDateString() ?? 'in corso';

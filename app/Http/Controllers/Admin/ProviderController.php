@@ -87,7 +87,15 @@ class ProviderController extends Controller
      */
     public function show(Provider $provider)
     {
-        $provider->load('maintenanceRecords.items.itemable', 'maintenanceRecords.vehicle');
+        // Provider è condiviso tra gruppi (nessun group_id proprio), ma i
+        // suoi interventi no: senza questo filtro la pagina mostrava anche
+        // gli interventi di veicoli di ALTRE associazioni (audit sicurezza
+        // 2026-10-22, SH4).
+        $provider->load([
+            'maintenanceRecords' => fn ($query) => $query->forCurrentUser(),
+            'maintenanceRecords.items.itemable',
+            'maintenanceRecords.vehicle',
+        ]);
 
         return view('admin.providers.show', compact('provider'));
     }

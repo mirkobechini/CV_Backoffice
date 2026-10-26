@@ -54,4 +54,27 @@ class DeadlineOccurrenceCreator
             ], $extra)
         );
     }
+
+    /**
+     * Copia le coperture assicurative di $from sulla nuova occorrenza $to
+     * (audit 2026-10-22, Q4: prima duplicato in DeadlineManualRenewalService
+     * e DeadlineService). $to è null se create() ha applicato la guardia
+     * anti-duplicati: in quel caso le coperture sono già sulla scadenza
+     * esistente, non vanno copiate di nuovo. Per un tipo diverso da
+     * Assicurazione $from->insuranceCoverages è sempre vuota: nessun
+     * controllo di tipo necessario, il loop semplicemente non crea nulla.
+     */
+    public static function copyInsuranceCoverages(Deadline $from, ?Deadline $to): void
+    {
+        if (! $to) {
+            return;
+        }
+
+        foreach ($from->insuranceCoverages as $coverage) {
+            $to->insuranceCoverages()->create([
+                'coverage_type' => $coverage->coverage_type,
+                'cost' => $coverage->cost,
+            ]);
+        }
+    }
 }

@@ -36,14 +36,14 @@ class DashboardController extends Controller
             $totalVehicles = $groupVehicles->count();
 
             $openIssues = Issue::with('vehicle')
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->open()
                 ->orderByDesc('event_date')
                 ->take(20)
                 ->get();
 
             $upcomingDeadlines = Deadline::with('vehicle')
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->upcoming()
                 ->get();
 
@@ -56,7 +56,7 @@ class DashboardController extends Controller
             // quel record resta "pending"/"valid" in DB anche quando ormai
             // è scaduta, e la dashboard non la mostrava mai.
             $expiredDeadlines = Deadline::with('vehicle.latestMileageLog')
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->where('is_renewed', false)
                 ->possiblyExpired()
                 ->get()
@@ -69,7 +69,7 @@ class DashboardController extends Controller
             // il suo esatto complemento) — altrimenti lo stesso
             // veicolo/appuntamento comparirebbe due volte in dashboard.
             $upcomingAppointments = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->whereNull('return_date')
                 ->notYetStarted()
                 ->orderBy('appointment_date')
@@ -96,7 +96,7 @@ class DashboardController extends Controller
 
             // Veicoli attualmente in officina: check-in avvenuto, non ancora rientrati.
             $inWorkshopRecords = MaintenanceRecord::with(['vehicle', 'provider'])
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->currentlyInWorkshop()
                 ->orderBy('appointment_date')
                 ->get();
@@ -121,7 +121,7 @@ class DashboardController extends Controller
             // assicurazioni, qui limitato al solo totale per il riepilogo
             // in dashboard.
             $activeInsurancePremiumTotal = Deadline::with('insuranceCoverages')
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->where('type', Deadline::TYPE_ASSICURAZIONE)
                 ->where('is_renewed', false)
                 ->get()
@@ -134,7 +134,7 @@ class DashboardController extends Controller
             // programmati: un appuntamento ancora aperto non garantisce che
             // il veicolo sia stato lavato davvero.
             $carWashRecords = MaintenanceRecord::with('vehicle')
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->where('activity_type', MaintenanceRecord::ACTIVITY_WASH)
                 ->whereNotNull('return_date')
                 ->whereBetween('return_date', [Carbon::today()->startOfMonth(), Carbon::today()->endOfMonth()])

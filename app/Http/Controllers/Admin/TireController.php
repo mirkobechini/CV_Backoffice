@@ -44,7 +44,7 @@ class TireController extends Controller
         $sortDir = $validated['sort_dir'] ?? 'asc';
 
         $query = Tire::with('vehicle.brand', 'vehicle.carModel')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser());
+            ->forCurrentUser();
 
         if ($q = $request->get('q')) {
             $query->where(function ($sub) use ($q) {
