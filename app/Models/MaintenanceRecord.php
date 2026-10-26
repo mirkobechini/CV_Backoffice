@@ -191,4 +191,23 @@ class MaintenanceRecord extends Model
             ->filter(fn ($part) => $part !== '')
             ->implode(' · ');
     }
+
+    /**
+     * Trova un appuntamento esistente sullo stesso veicolo che si
+     * sovrappone all'intervallo [$startDate, $endDate] (esistente.appointment_date
+     * <= $endDate AND esistente.return_date >= $startDate, o ancora in corso).
+     */
+    public static function findSchedulingConflict(int $vehicleId, string $startDate, string $endDate, ?int $excludeId = null): ?self
+    {
+        return static::where('vehicle_id', $vehicleId)
+            ->when($excludeId, fn ($query) => $query->where('id', '!=', $excludeId))
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->where('appointment_date', '<=', $endDate)
+                    ->where(function ($q2) use ($startDate) {
+                        $q2->whereNull('return_date')
+                            ->orWhere('return_date', '>=', $startDate);
+                    });
+            })
+            ->first();
+    }
 }
