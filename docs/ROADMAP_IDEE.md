@@ -127,7 +127,7 @@
 | B7 | Low | Km/L sbagliato con due rifornimenti nello stesso giorno (ordine di lettura non deterministico) | `FuelLogController::index` | ✅ (issue-446) `orderBy('id')` come chiave secondaria |
 | B8 | Low | Nessuna via per "sganciare" un FleetDevice (tornare a non assegnato) dopo averlo assegnato una volta; veicolo eliminato lascia un link morto su FleetDevice/FuelCard (SoftDeletes, `nullOnDelete` mai attivato) | `FleetDeviceController.php`, `UpdateFleetDeviceRequest.php` | ✅ (issue-448) azione `unassign()` + `VehicleObserver::deleted()` |
 | B9 | Low | `UpdateFuelCardRequest`: un PATCH che omette `vehicle_id` lascia il valore esistente invariato anche se lo stato diventa jolly/non assegnata (il form reale non lo permette, ma l'endpoint sì) | `UpdateFuelCardRequest.php::withValidator()` | ✅ (issue-450) `prepareForValidation()` azzera `vehicle_id` se assente |
-| B10 | Nitpick | "Successo" (flash `session('status')`/`'success'`) probabilmente non mostrato nella maggior parte delle pagine admin — `layouts/app.blade.php` non lo renderizza, solo ~8 viste lo fanno da sole | `resources/views/layouts/app.blade.php` | ⬜ da verificare nel browser |
+| B10 | Nitpick | "Successo" (flash `session('status')`/`'success'`) probabilmente non mostrato nella maggior parte delle pagine admin — `layouts/app.blade.php` non lo renderizza, solo ~8 viste lo fanno da sole | `resources/views/layouts/app.blade.php` | ✅ (issue-454) centralizzato nel layout, duplicati rimossi, codici interni Breeze/profilo esclusi |
 
 ### Qualità del codice
 

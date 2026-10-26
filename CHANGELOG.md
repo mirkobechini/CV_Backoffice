@@ -22,6 +22,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Bug (B8)**: nessun modo per sganciare un FleetDevice dal veicolo senza assegnarlo a uno nuovo; un veicolo eliminato lasciava FleetDevice/FuelCard con un riferimento morto (Vehicle usa SoftDeletes, quindi `nullOnDelete` non scattava mai). Aggiunta un'azione dedicata e un hook che sgancia entrambi i modelli quando il veicolo viene eliminato.
 - **Sicurezza**: aggiornato `livewire/livewire` (v4.4.7 → v4.4.8) per un bypass di autorizzazione in `#[Authorize]` (advisory PKSA-xhv3-nr94-h8db, 2026-10-23).
 - **Bug (B9)**: un PATCH su una tessera carburante che omettesse del tutto `vehicle_id` (invece di inviarlo vuoto, come fa sempre il form) lasciava invariato il veicolo esistente anche passando a jolly/non assegnata. Ora azzerato esplicitamente prima della validazione quando assente.
+- **Bug (B10)**: il layout admin non mostrava affatto il messaggio di successo (`session('status')`) sulla stragrande maggioranza delle pagine — restava invisibile ovunque tranne nelle ~6 viste che lo stampavano da sole (ora centralizzato, rimossi i duplicati).
 
 ## [v1.20.1] - 2026-10-22
 
