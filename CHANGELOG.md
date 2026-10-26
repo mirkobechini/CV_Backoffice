@@ -29,6 +29,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Qualità codice (Q1a)**: `Deadline.php` (416 righe) spezzato sotto le 400 — estratte le etichette giorni/km in `DeadlineLabelFormatter`. Refactoring puro, nessun cambio di comportamento.
 - **Qualità codice (Q1b)**: `deadlines/edit.blade.php` (406 righe) era quasi identico a `create.blade.php` — estratto un partial condiviso `_form.blade.php`. Refactoring puro.
 - **Qualità codice (Q1c)**: `VehicleController.php` (405 righe) spezzato sotto le 400 — estratto `scanRegistrationCard()` in un nuovo `VehicleScanController`. Refactoring puro. Chiude l'intera voce Q1.
+- **Qualità codice (Q2a)**: `MaintenanceRecordBusinessLogicTest.php` (1462 righe) spezzato in 6 file per feature (IssueLifecycle, IssueForm, TagliandoRenewal, Scheduling, TimingBeltRenewal, DeadlineLinking). Refactoring puro, tutti i 37 test originali preservati.
 
 ## [v1.20.1] - 2026-10-22
 
