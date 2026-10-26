@@ -20,6 +20,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Bug (B6)**: il check-out one-tap di un'attrezzatura dal veicolo non avvisava che, una volta non assegnata, resta visibile e assegnabile da QUALSIASI altra associazione (comportamento deliberato, pool condiviso) — il testo di conferma ora lo specifica.
 - **Bug (B7)**: il calcolo del consumo (km/l) ordinava i rifornimenti solo per data, senza chiave secondaria — con due rifornimenti nello stesso giorno l'ordine tra loro non era deterministico, calcolando a volte un consumo errato. Aggiunto `id` come tiebreaker.
 - **Bug (B8)**: nessun modo per sganciare un FleetDevice dal veicolo senza assegnarlo a uno nuovo; un veicolo eliminato lasciava FleetDevice/FuelCard con un riferimento morto (Vehicle usa SoftDeletes, quindi `nullOnDelete` non scattava mai). Aggiunta un'azione dedicata e un hook che sgancia entrambi i modelli quando il veicolo viene eliminato.
+- **Sicurezza**: aggiornato `livewire/livewire` (v4.4.7 → v4.4.8) per un bypass di autorizzazione in `#[Authorize]` (advisory PKSA-xhv3-nr94-h8db, 2026-10-23).
 
 ## [v1.20.1] - 2026-10-22
 
