@@ -12,14 +12,6 @@
     $linkedTireItems = $maintenanceRecord->items
         ->where('itemable_type', \App\Models\Tire::class);
     $title = $maintenanceRecord->issue_descriptions !== '' ? $maintenanceRecord->issue_descriptions : $maintenanceRecord->activity_type ?? __('Intervento');
-    $badgeClass = fn($color) => match ($color) {
-        'red' => 'b-red',
-        'yellow' => 'b-amber',
-        'green' => 'b-green',
-        'blue' => 'b-blue',
-        'purple' => 'b-purple',
-        default => 'b-gray',
-    };
     $isCompleted = $maintenanceRecord->return_date !== null;
     $showCompleteButton =
         $maintenanceRecord->return_date === null &&
@@ -157,7 +149,7 @@
                                 <span class="hint">— {{ $issue->event_date->format('d/m/Y') }}</span>
                             @endif
                         </span>
-                        <span class="v"><span class="badge {{ $badgeClass($issue->status_color) }}">{{ $issue->status_label }}</span></span>
+                        <span class="v"><x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge></span>
                     </div>
                 @endforeach
             </div>
@@ -177,7 +169,7 @@
                                 <span class="hint">— {{ $deadline->due_date->format('d/m/Y') }}</span>
                             @endif
                         </span>
-                        <span class="v"><span class="badge {{ $badgeClass($deadline->status_color) }}">{{ $deadline->status_label }}</span></span>
+                        <span class="v"><x-admin.status-badge :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge></span>
                     </div>
                 @endforeach
             </div>

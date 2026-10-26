@@ -15,12 +15,6 @@
         'revisione' => 'fa-solid fa-clipboard-check',
         'ossigeno' => 'fa-solid fa-wind',
     ];
-    $badgeClass = match ($deadline->status_color) {
-        'red' => 'b-red',
-        'yellow' => 'b-amber',
-        'green' => 'b-green',
-        default => 'b-gray',
-    };
     $valClass = match ($deadline->status_color) {
         'red' => 'red',
         'yellow' => 'amber',
@@ -130,7 +124,7 @@
             </div>
         </div>
         <div class="dl-status">
-            <span class="badge {{ $badgeClass }}">{{ $deadline->status_label }}</span>
+            <x-admin.status-badge :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge>
             @if ($daysDiff !== null)
                 <span class="hint">
                     @if ($daysDiff < 0)
@@ -233,7 +227,7 @@
             @endif
             <div class="dl-kv">
                 <span class="k">{{ __('Stato') }}</span>
-                <span class="v"><span class="badge {{ $badgeClass }}">{{ $deadline->status_label }}</span></span>
+                <span class="v"><x-admin.status-badge :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge></span>
             </div>
         </div>
     </div>
@@ -248,18 +242,10 @@
             </div>
             <div class="body">
                 @foreach ($renewalChain as $occurrence)
-                    @php
-                        $occBadgeClass = match ($occurrence->status_color) {
-                            'red' => 'b-red',
-                            'yellow' => 'b-amber',
-                            'green' => 'b-green',
-                            default => 'b-gray',
-                        };
-                    @endphp
                     <div class="dl-kv">
                         <span class="k">{{ $occurrence->due_date_formatted ?? __('Senza data') }}</span>
                         <span class="v">
-                            <span class="badge {{ $occBadgeClass }}">{{ $occurrence->status_label }}</span>
+                            <x-admin.status-badge :color="$occurrence->status_color">{{ $occurrence->status_label }}</x-admin.status-badge>
                             @if ($occurrence->id === $deadline->id)
                                 {{ __('(questa)') }}
                             @else

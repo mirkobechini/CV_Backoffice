@@ -9,18 +9,6 @@
 @endsection
 
 @php
-    $badgeClass = match ($equipment->status_color) {
-        'red' => 'b-red',
-        'yellow' => 'b-amber',
-        'green' => 'b-green',
-        default => 'b-gray',
-    };
-    $collaudoBadgeClass = match ($equipment->collaudo_status_color) {
-        'red' => 'b-red',
-        'yellow' => 'b-amber',
-        'green' => 'b-green',
-        default => 'b-gray',
-    };
     $category = $equipment->equipmentType->category ?? null;
 @endphp
 
@@ -61,7 +49,7 @@
                 {{ $equipment->serial_number ?: __('N/A') }}</div>
         </div>
         <div class="dl-status">
-            <span class="badge {{ $badgeClass }}">{{ $equipment->status_label }}</span>
+            <x-admin.status-badge :color="$equipment->status_color">{{ $equipment->status_label }}</x-admin.status-badge>
             @if ($equipment->needs_exchange)
                 <span class="badge b-red">{{ __('Da sostituire') }}</span>
             @endif
@@ -127,7 +115,7 @@
                     <span class="k">{{ __('Prossimo collaudo') }}</span>
                     <span class="v">
                         {{ $equipment->next_collaudo_date_formatted ?? 'N/A' }}
-                        <span class="badge {{ $collaudoBadgeClass }}">{{ $equipment->collaudo_status_label }}</span>
+                        <x-admin.status-badge :color="$equipment->collaudo_status_color">{{ $equipment->collaudo_status_label }}</x-admin.status-badge>
                     </span>
                 </div>
                 <div class="dl-kv">
@@ -176,7 +164,7 @@
             </div>
             <div class="dl-kv">
                 <span class="k">{{ __('Stato') }}</span>
-                <span class="v"><span class="badge {{ $badgeClass }}">{{ $equipment->status_label }}</span></span>
+                <span class="v"><x-admin.status-badge :color="$equipment->status_color">{{ $equipment->status_label }}</x-admin.status-badge></span>
             </div>
             @if ($equipment->notes)
                 <div class="dl-kv">

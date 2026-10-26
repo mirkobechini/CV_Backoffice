@@ -42,22 +42,11 @@
                         </span>
                     @endif
                 </span>
-                <span
-                    class="badge {{ match ($issue->status_color) {
-                        'red' => 'b-red',
-                        'yellow' => 'b-amber',
-                        'green' => 'b-green',
-                        default => 'b-gray',
-                    } }}">{{ $issue->status_label }}</span>
-                <div class="row-actions">
-                    <a href="{{ route('admin.issues.show', ['issue' => $issue->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                    <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}" data-bs-toggle="modal"
-                        data-bs-target="#confirmDeleteModal-{{ $issue->id }}"><i
-                            class="fa-solid fa-trash"></i></button>
-                </div>
+                <x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
+                <x-admin.row-actions
+                    :show-url="route('admin.issues.show', ['issue' => $issue->id, 'back' => url()->full()])"
+                    :edit-url="route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()])"
+                    :delete-target="'#confirmDeleteModal-' . $issue->id" />
                 <x-admin.delete-modal type="issue" :object="$issue" />
             </div>
         @empty

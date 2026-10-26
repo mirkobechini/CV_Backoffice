@@ -99,16 +99,10 @@
                                 @endif
                             </td>
                             <td>
-                                <div class="row-actions">
-                                    <a href="{{ route('admin.providers.show', $provider->id) }}" class="mini-btn"
-                                        title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                    <a href="{{ route('admin.providers.edit', $provider->id) }}" class="mini-btn"
-                                        title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
-                                        data-bs-toggle="modal" data-bs-target="#confirmDeleteModal-{{ $provider->id }}">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </div>
+                                <x-admin.row-actions
+                                    :show-url="route('admin.providers.show', $provider->id)"
+                                    :edit-url="route('admin.providers.edit', $provider->id)"
+                                    :delete-target="'#confirmDeleteModal-' . $provider->id" />
                             </td>
                         </tr>
                         <x-admin.delete-modal type="provider" :object="$provider" />

@@ -21,13 +21,7 @@
                             <tr>
                                 <td>{{ $deadline->due_date?->format('d/m/Y') ?? 'N/A' }}</td>
                                 <td>
-                                    <span
-                                        class="badge {{ match ($deadline->status_color) {
-                                            'red' => 'b-red',
-                                            'yellow' => 'b-amber',
-                                            'green' => 'b-green',
-                                            default => 'b-gray',
-                                        } }}">{{ $deadline->status_label }}</span>
+                                    <x-admin.status-badge :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge>
                                 </td>
                                 <td>
                                     @if ($deadline->is_renewed)
