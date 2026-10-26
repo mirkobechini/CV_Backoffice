@@ -2,61 +2,15 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\AdminOnlyAccess;
-use App\Models\MileageLog;
-use App\Models\Vehicle;
-use App\Rules\BelongsToCurrentUserGroup;
-use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
-
-class UpdateMileageLogRequest extends FormRequest
+/**
+ * Identica a StoreMileageLogRequest tranne per il controllo di conflitto
+ * cronologico, che deve escludere il record corrente (audit 2026-10-22,
+ * Q6): prima duplicata per intero invece di estendere.
+ */
+class UpdateMileageLogRequest extends StoreMileageLogRequest
 {
-    use AdminOnlyAccess;
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    public function rules(): array
+    protected function currentMileageLogId(): ?int
     {
-        return [
-            'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
-            'log_date' => ['required', 'date'],
-            'mileage' => ['required', 'integer', 'min:0'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'vehicle_id.required' => 'Il campo veicolo è obbligatorio.',
-            'log_date.required' => 'Il campo data del registro è obbligatorio.',
-            'log_date.date' => 'Il campo data del registro deve essere una data valida.',
-            'mileage.required' => 'Il campo chilometraggio è obbligatorio.',
-            'mileage.integer' => 'Il campo chilometraggio deve essere un numero intero.',
-            'mileage.min' => 'Il chilometraggio non può essere negativo.',
-        ];
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator) {
-            $vehicleId = $this->input('vehicle_id');
-            $logDate = $this->input('log_date');
-            $newMileage = $this->input('mileage');
-            $currentId = $this->route('mileageLog')?->id;
-
-            if (! $vehicleId || ! $logDate || ! $newMileage) {
-                return;
-            }
-
-            $conflict = MileageLog::findChronologyConflict($vehicleId, $logDate, (int) $newMileage, $currentId);
-
-            if ($conflict !== null) {
-                $validator->errors()->add('mileage', $conflict);
-            }
-        });
+        return $this->route('mileageLog')?->id;
     }
 }
