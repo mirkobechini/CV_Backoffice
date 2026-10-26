@@ -32,6 +32,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Qualità codice (Q2a)**: `MaintenanceRecordBusinessLogicTest.php` (1462 righe) spezzato in 6 file per feature (IssueLifecycle, IssueForm, TagliandoRenewal, Scheduling, TimingBeltRenewal, DeadlineLinking). Refactoring puro, tutti i 37 test originali preservati.
 - **Qualità codice (Q2b)**: `DeadlineCrudTest.php` (1118 righe) spezzato in 6 file per feature (CrudBasic, InsuranceCrud, Lifecycle, RenewalViaUpdate, Filtering, MileageRecording). Refactoring puro, tutti i 39 test originali preservati.
 - **Qualità codice (Q2c)**: `DashboardTest.php` (658 righe) spezzato in 4 file per feature (AccessAndDeadlines, WorkshopAndRenewal, TireSeasonCard, Cards). Refactoring puro, tutti i 24 test originali preservati.
+- **Qualità codice (Q2d)**: `MaintenanceRecordTireIntegrationTest.php` (628 righe) spezzato in 3 file per feature (TireLinking, TireCompletion, TireUpdate). Refactoring puro, tutti i 18 test originali preservati.
 
 ## [v1.20.1] - 2026-10-22
 
