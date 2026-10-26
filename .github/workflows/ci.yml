@@ -11,7 +11,7 @@ jobs:
   #  PHPUnit + Pint (quality check)
   # ────────────────────────────────────────────
   php-tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     strategy:
       matrix:
@@ -61,7 +61,7 @@ jobs:
   #  Frontend build (Vite)
   # ────────────────────────────────────────────
   frontend-build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - uses: actions/checkout@v5
