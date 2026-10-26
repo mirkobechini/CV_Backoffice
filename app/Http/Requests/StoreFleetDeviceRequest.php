@@ -19,11 +19,7 @@ class StoreFleetDeviceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', 'in:'.implode(',', [
-                FleetDevice::TYPE_TELEPASS,
-                FleetDevice::TYPE_UNIPOL_MOVE,
-                FleetDevice::TYPE_ALTRO,
-            ])],
+            'type' => ['required', 'in:'.implode(',', array_keys(FleetDevice::typeOptions()))],
             'code' => ['required', 'string', 'max:255'],
             'vehicle_id' => ['nullable', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'provider_notes' => ['nullable', 'string', 'max:255'],

@@ -35,10 +35,8 @@ class FleetDeviceController extends Controller
         $sortBy = $validated['sort_by'] ?? 'type';
         $sortDir = $validated['sort_dir'] ?? 'asc';
 
-        $groupId = $request->user()->activeGroup()?->id;
-
         $fleetDevices = $this->applySorting(
-            FleetDevice::with('vehicle')->where('group_id', $groupId),
+            FleetDevice::with('vehicle')->forCurrentUser(),
             $sortBy,
             $sortDir,
             [
@@ -60,8 +58,9 @@ class FleetDeviceController extends Controller
     public function create()
     {
         $vehicles = Vehicle::forCurrentUser()->get();
+        $typeOptions = FleetDevice::typeOptions();
 
-        return view('admin.fleet-devices.create', compact('vehicles'));
+        return view('admin.fleet-devices.create', compact('vehicles', 'typeOptions'));
     }
 
     /**
@@ -114,7 +113,9 @@ class FleetDeviceController extends Controller
      */
     public function edit(FleetDevice $fleetDevice)
     {
-        return view('admin.fleet-devices.edit', compact('fleetDevice'));
+        $typeOptions = FleetDevice::typeOptions();
+
+        return view('admin.fleet-devices.edit', compact('fleetDevice', 'typeOptions'));
     }
 
     /**
@@ -179,7 +180,6 @@ class FleetDeviceController extends Controller
      */
     public function destroy(FleetDevice $fleetDevice)
     {
-        $this->authorize('delete', $fleetDevice);
         $fleetDevice->delete();
 
         return redirect()->route('admin.fleet-devices.index')->with('status', 'Dispositivo eliminato con successo.');

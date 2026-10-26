@@ -169,12 +169,7 @@ class CsvExportController extends Controller
 
     private function exportFleetDevices()
     {
-        // FleetDevice ha un group_id proprio (non dedotto dal veicolo, che
-        // può essere assente per un dispositivo non ancora assegnato): il
-        // filtro è diretto sul gruppo attivo, non su whereHas('vehicle').
-        $groupId = auth()->user()?->activeGroup()?->id;
-
-        $devices = FleetDevice::with('vehicle')->where('group_id', $groupId)->get();
+        $devices = FleetDevice::with('vehicle')->forCurrentUser()->get();
 
         $headers = ['Tipo', 'Codice', 'Veicolo', 'Targa'];
         $rows = $devices->map(fn ($d) => [
@@ -189,9 +184,7 @@ class CsvExportController extends Controller
 
     private function exportFuelCards()
     {
-        $groupId = auth()->user()?->activeGroup()?->id;
-
-        $cards = FuelCard::with('vehicle')->where('group_id', $groupId)->get();
+        $cards = FuelCard::with('vehicle')->forCurrentUser()->get();
 
         $headers = ['Numero tessera', 'Fornitore', 'Stato', 'Veicolo'];
         $rows = $cards->map(fn ($c) => [
