@@ -2,42 +2,22 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\AdminOnlyAccess;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateProviderRequest extends FormRequest
+/**
+ * Identica a StoreProviderRequest tranne per "name", che deve ignorare il
+ * record corrente nel controllo di unicità (audit 2026-10-22, Q6): prima
+ * duplicata per intero invece di estendere.
+ */
+class UpdateProviderRequest extends StoreProviderRequest
 {
-    use AdminOnlyAccess;
-
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return [
+        return array_merge(parent::rules(), [
             'name' => 'required|string|max:255|unique:providers,name,'.$this->route('provider')?->id.',id',
-            'address' => 'nullable|string|max:255',
-            'contact_info' => 'nullable|string|max:255',
-            'type' => 'required|in:Meccanico,Carrozziere,Gommista,Lavaggio,Allestitore,Vetri,Elettrauto,Centro Revisioni',
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'name.required' => 'Il nome è obbligatorio.',
-            'name.string' => 'Il nome deve essere una stringa.',
-            'name.max' => 'Il nome non può superare i 255 caratteri.',
-            'name.unique' => 'Esiste già un\'officina con questo nome.',
-            'address.string' => 'L\'indirizzo deve essere una stringa.',
-            'address.max' => 'L\'indirizzo non può superare i 255 caratteri.',
-            'contact_info.string' => 'Le informazioni di contatto devono essere una stringa.',
-            'contact_info.max' => 'Le informazioni di contatto non possono superare i 255 caratteri.',
-            'type.required' => 'Il tipo è obbligatorio.',
-            'type.in' => 'Il tipo selezionato non è valido. Deve essere uno dei seguenti: Meccanico, Carrozziere, Gommista, Lavaggio, Allestitore, Vetri, Elettrauto, Centro Revisioni.',
-        ];
+        ]);
     }
 }

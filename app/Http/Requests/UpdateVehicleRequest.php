@@ -2,103 +2,24 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Concerns\AdminOnlyAccess;
-use App\Http\Requests\Concerns\HandlesAllowedTireSizes;
-use App\Http\Requests\Concerns\HandlesWarrantyExtension;
-use App\Models\Vehicle;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UpdateVehicleRequest extends FormRequest
+/**
+ * Identica a StoreVehicleRequest tranne per "license_plate"/"internal_code",
+ * che devono ignorare il record corrente nel controllo di unicità (audit
+ * 2026-10-22, Q6): prima duplicata per intero invece di estendere.
+ */
+class UpdateVehicleRequest extends StoreVehicleRequest
 {
-    use AdminOnlyAccess, HandlesAllowedTireSizes, HandlesWarrantyExtension;
-
     /**
-     * Get the validation rules that apply to the request.
-     *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        return [
+        return array_merge(parent::rules(), [
             'license_plate' => ['required', 'string', 'size:7', 'regex:/^[A-Z]{2}[0-9]{3}[A-Z]{2}$/', Rule::unique('vehicles', 'license_plate')->ignore($this->route('vehicle')->id)],
-            'vehicle_type_id' => 'required|exists:vehicle_types,id',
             'internal_code' => ['required', 'string', 'size:4', 'regex:/^[0-9]{4}$/', Rule::unique('vehicles', 'internal_code')->ignore($this->route('vehicle')->id)],
-            'brand_id' => 'required|exists:brands,id',
-            'car_model_id' => 'required|exists:car_models,id|car_model_belongs_to_brand:brand_id',
-            'fuel_type' => 'nullable|in:benzina,diesel,elettrico,ibrido',
-            'immatricolation_date' => 'required|date',
-            'registration_card' => 'nullable|file|mimes:pdf,jpg,jpeg,png',
-            'has_warranty_extension' => 'nullable|boolean',
-            'warranty_expiration_date' => 'nullable|date|required_if_accepted:has_warranty_extension|after_or_equal:immatricolation_date',
-            'warranty_extension_duration' => 'nullable|integer|min:1|required_if_accepted:has_warranty_extension',
-            'timing_belt_type' => ['nullable', Rule::in(Vehicle::TIMING_BELT_TYPES)],
-            'vin' => 'nullable|string|max:255',
-            'color' => 'nullable|string|max:255',
-            'seats' => 'nullable|integer|min:1|max:99',
-            'environmental_class' => 'nullable|string|max:255',
-            'max_mass_kg' => 'nullable|integer|min:0',
-            'engine_displacement_cc' => 'nullable|integer|min:0',
-            'engine_power_kw' => 'nullable|integer|min:0',
-            'vehicle_category' => 'nullable|string|max:255',
-            // Percorso "pending" della foto già caricata durante la
-            // scansione del libretto (vedi VehicleController::scanRegistrationCard()
-            // e promoteScannedRegistrationCard()): non è un campo del
-            // modello, viene rimosso da $data prima di Vehicle::update().
-            'scanned_registration_card_path' => 'nullable|string',
-        ] + $this->allowedTireSizesRules();
-    }
-
-    public function messages(): array
-    {
-        return [
-            'license_plate.required' => 'La targa è obbligatoria.',
-            'license_plate.size' => 'La targa deve avere 7 caratteri.',
-            'license_plate.regex' => 'La targa deve essere nel formato AA123AA.',
-            'license_plate.unique' => 'La targa deve essere unica.',
-            'vehicle_type_id.required' => 'Il tipo di veicolo è obbligatorio.',
-            'vehicle_type_id.exists' => 'Il tipo di veicolo selezionato non esiste.',
-            'internal_code.required' => 'La sigla è obbligatoria.',
-            'internal_code.size' => 'La sigla deve avere 4 cifre.',
-            'internal_code.regex' => 'La sigla deve contenere solo 4 cifre.',
-            'brand_id.required' => 'La marca è obbligatoria.',
-            'brand_id.exists' => 'La marca selezionata non esiste.',
-            'car_model_id.required' => 'Il modello è obbligatorio.',
-            'car_model_id.exists' => 'Il modello selezionato non esiste.',
-            'car_model_id.car_model_belongs_to_brand' => 'Il modello selezionato non appartiene alla marca specificata.',
-            'fuel_type.in' => 'Il tipo carburante selezionato non è valido.',
-            'immatricolation_date.required' => 'La data di immatricolazione è obbligatoria.',
-            'registration_card.file' => 'La carta di circolazione deve essere un file.',
-            'registration_card.mimes' => 'La carta di circolazione deve essere un file PDF, JPG, JPEG o PNG.',
-            'has_warranty_extension.boolean' => 'Il campo di estensione della garanzia deve essere un valore booleano.',
-            'warranty_expiration_date.required_if_accepted' => "La data di scadenza è obbligatoria quando l'estensione garanzia è attiva.",
-            'warranty_expiration_date.date' => 'La data di scadenza originale della garanzia deve essere una data valida.',
-            'warranty_extension_duration.required_if_accepted' => "La durata estensione è obbligatoria quando l'estensione garanzia è attiva.",
-            'warranty_expiration_date.after_or_equal' => 'La data di scadenza originale della garanzia deve essere successiva o uguale alla data di immatricolazione.',
-            'warranty_extension_duration.integer' => "La durata dell'estensione della garanzia deve essere un numero intero.",
-            'warranty_extension_duration.min' => "La durata dell'estensione della garanzia deve essere almeno di 1 mese.",
-            'seats.integer' => 'Il numero di posti deve essere un numero intero.',
-            'seats.min' => 'Il numero di posti deve essere almeno 1.',
-            'max_mass_kg.integer' => 'La massa massima deve essere un numero intero.',
-            'engine_displacement_cc.integer' => 'La cilindrata deve essere un numero intero.',
-            'engine_power_kw.integer' => 'La potenza deve essere un numero intero.',
-        ] + $this->allowedTireSizesMessages();
-    }
-
-    public function prepareForValidation(): void
-    {
-        $this->merge([
-            'license_plate' => strtoupper(str_replace(' ', '', (string) $this->input('license_plate'))),
-            'has_warranty_extension' => $this->boolean('has_warranty_extension'),
-            'allowed_tire_sizes' => $this->normalizedAllowedTireSizes(),
-            'allowed_tire_size_combinations' => $this->normalizedAllowedTireCombinations(),
         ]);
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(fn ($validator) => $this->assertAllowedTireCombinationsReferenceKnownCodes($validator));
     }
 }
