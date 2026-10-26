@@ -15,13 +15,7 @@
                         <div class="meta">{{ $issue->vehicle->internal_code }} ·
                             {{ $issue->event_date?->format('d/m/Y') }}</div>
                     </div>
-                    <span
-                        class="badge {{ match ($issue->status_color) {
-                            'red' => 'b-red',
-                            'yellow' => 'b-amber',
-                            'green' => 'b-green',
-                            default => 'b-gray',
-                        } }}">{{ $issue->status_label }}</span>
+                    <x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
                 </a>
             @empty
                 <div class="dash-empty">

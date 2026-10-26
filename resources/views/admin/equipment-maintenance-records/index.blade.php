@@ -9,13 +9,6 @@
 
 @section('content')
     @php
-        $badgeClass = fn($color) => match ($color) {
-            'red' => 'b-red',
-            'yellow' => 'b-amber',
-            'green' => 'b-green',
-            'blue' => 'b-blue',
-            default => 'b-gray',
-        };
         $statusFilterUrl = fn($status) => route('admin.equipment-maintenance-records.index', array_merge(request()->except(['status_filter', 'page']), $status === 'all' ? [] : ['status_filter' => $status]));
     @endphp
 
@@ -76,22 +69,16 @@
                             <td>{{ $record->cost !== null ? '€ ' . number_format((float) $record->cost, 2, ',', '.') : '—' }}</td>
                             <td>
                                 @if ($record->return_date)
-                                    <span class="badge {{ $badgeClass('green') }}">{{ __('Completato') }}</span>
+                                    <x-admin.status-badge color="green">{{ __('Completato') }}</x-admin.status-badge>
                                 @else
-                                    <span class="badge {{ $badgeClass('yellow') }}">{{ __('In programma') }}</span>
+                                    <x-admin.status-badge color="yellow">{{ __('In programma') }}</x-admin.status-badge>
                                 @endif
                             </td>
                             <td>
-                                <div class="row-actions">
-                                    <a href="{{ route('admin.equipment-maintenance-records.show', $record->id) }}"
-                                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                    <a href="{{ route('admin.equipment-maintenance-records.edit', $record->id) }}"
-                                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
-                                        data-bs-toggle="modal" data-bs-target="#confirmDeleteModal-{{ $record->id }}">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                </div>
+                                <x-admin.row-actions
+                                    :show-url="route('admin.equipment-maintenance-records.show', $record->id)"
+                                    :edit-url="route('admin.equipment-maintenance-records.edit', $record->id)"
+                                    :delete-target="'#confirmDeleteModal-' . $record->id" />
                             </td>
                         </tr>
                         <x-admin.delete-modal type="equipmentmaintenancerecord" :object="$record" />

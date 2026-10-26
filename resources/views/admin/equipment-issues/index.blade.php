@@ -9,12 +9,6 @@
 
 @section('content')
     @php
-        $badgeClass = fn($color) => match ($color) {
-            'red' => 'b-red',
-            'yellow' => 'b-amber',
-            'green' => 'b-green',
-            default => 'b-gray',
-        };
         $statusFilterUrl = fn($status) => route('admin.equipment-issues.index', array_merge(request()->except(['status_filter', 'page']), $status === 'all' ? [] : ['status_filter' => $status]));
     @endphp
 
@@ -115,21 +109,15 @@
                                     </div>
                                 </td>
                                 <td>{{ $issue->description }}</td>
-                                <td><span
-                                        class="badge {{ $badgeClass($issue->status_color) }}">{{ $issue->status_label }}</span>
+                                <td>
+                                    <x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
                                 </td>
                                 <td>{{ $issue->event_date_formatted ?? 'N/A' }}</td>
                                 <td>
-                                    <div class="row-actions">
-                                        <a href="{{ route('admin.equipment-issues.show', $issue->id) }}" class="mini-btn"
-                                            title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                                        <a href="{{ route('admin.equipment-issues.edit', $issue->id) }}" class="mini-btn"
-                                            title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                                        <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
-                                            data-bs-toggle="modal" data-bs-target="#confirmDeleteModal-{{ $issue->id }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </div>
+                                    <x-admin.row-actions
+                                        :show-url="route('admin.equipment-issues.show', $issue->id)"
+                                        :edit-url="route('admin.equipment-issues.edit', $issue->id)"
+                                        :delete-target="'#confirmDeleteModal-' . $issue->id" />
                                 </td>
                             </tr>
                             <x-admin.delete-modal type="equipmentissue" :object="$issue" />

@@ -30,15 +30,10 @@
                         'retired' => 'red',
                         default => 'gray',
                     } }}">{{ $tire->status_label }}</span>
-                <div class="row-actions">
-                    <a href="{{ route('admin.tires.show', ['tire' => $tire->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i class="fa-solid fa-eye"></i></a>
-                    <a href="{{ route('admin.tires.edit', ['tire' => $tire->id, 'back' => url()->full()]) }}"
-                        class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i class="fa-solid fa-pen"></i></a>
-                    <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}" data-bs-toggle="modal"
-                        data-bs-target="#confirmDeleteModal-{{ $tire->id }}"><i
-                            class="fa-solid fa-trash"></i></button>
-                </div>
+                <x-admin.row-actions
+                    :show-url="route('admin.tires.show', ['tire' => $tire->id, 'back' => url()->full()])"
+                    :edit-url="route('admin.tires.edit', ['tire' => $tire->id, 'back' => url()->full()])"
+                    :delete-target="'#confirmDeleteModal-' . $tire->id" />
                 <x-admin.delete-modal type="tire" :object="$tire" />
             </div>
         @empty

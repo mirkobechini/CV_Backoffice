@@ -1,13 +1,17 @@
-@props(['showUrl', 'editUrl', 'deleteTarget', 'label'])
+@props(['showUrl' => null, 'editUrl' => null, 'deleteTarget' => null])
 
-@php
-    $showBackUrl = $showUrl . (str_contains($showUrl, '?') ? '&' : '?') . 'back=' . urlencode(url()->full());
-    $editBackUrl = $editUrl . (str_contains($editUrl, '?') ? '&' : '?') . 'back=' . urlencode(url()->full());
-@endphp
-
-<td class="text-nowrap">
-    <a href="{{ $showBackUrl }}" class="btn btn-primary" aria-label="Visualizza {{ $label }}">Visualizza</a>
-    <a href="{{ $editBackUrl }}" class="btn btn-warning" aria-label="Modifica {{ $label }}">Modifica</a>
-    <button type="button" data-bs-toggle="modal" data-bs-target="{{ $deleteTarget }}" class="btn btn-danger"
-        aria-label="Elimina {{ $label }}">Elimina</button>
-</td>
+<div class="row-actions">
+    @if ($showUrl)
+        <a href="{{ $showUrl }}" class="mini-btn" title="{{ __('Visualizza') }}" aria-label="{{ __('Visualizza') }}"><i
+                class="fa-solid fa-eye"></i></a>
+    @endif
+    @if ($editUrl)
+        <a href="{{ $editUrl }}" class="mini-btn" title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}"><i
+                class="fa-solid fa-pen"></i></a>
+    @endif
+    {{ $slot ?? '' }}
+    @if ($deleteTarget)
+        <button type="button" class="mini-btn" title="{{ __('Elimina') }}" aria-label="{{ __('Elimina') }}"
+            data-bs-toggle="modal" data-bs-target="{{ $deleteTarget }}"><i class="fa-solid fa-trash"></i></button>
+    @endif
+</div>

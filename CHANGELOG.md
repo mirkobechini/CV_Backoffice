@@ -40,6 +40,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Qualità codice (Q6, parte 1/2)**: 6 delle ~15 coppie Store/Update Request quasi identiche ora usano l'ereditarietà (`UpdateProviderRequest`, `UpdateVehicleTypeRequest`, `UpdateEquipmentTypeRequest`, `UpdateEquipmentRequest`, `UpdateVehicleRequest`, `UpdateFuelLogRequest`). Refactoring puro, nessun cambio di comportamento.
 - **Qualità codice (Q6, parte 2/3)**: altre 6 coppie Store/Update Request ora usano l'ereditarietà (`UpdateIssueRequest`, `UpdateDeadlineRequest`, `UpdateEquipmentIssueRequest`, `UpdateMileageLogRequest`, `UpdateFleetDeviceRequest`, `UpdateTireRequest`). Refactoring puro, nessun cambio di comportamento.
 - **Qualità codice (Q6, parte 3/3)**: ultime 2 coppie Store/Update Request ora usano l'ereditarietà (`UpdateEquipmentMaintenanceRecordRequest`, `UpdateFuelCardRequest`). `MaintenanceRecord` resta deliberatamente duplicata: `withValidator()` ha logica stateful dipendente dalla route, troppo rischiosa da forzare in un'unica gerarchia. Chiude l'intera voce Q6 (14/15 coppie unificate). Refactoring puro, nessun cambio di comportamento.
+- **Qualità codice (Q7)**: estratto `x-admin.status-badge` (mapping colore stato duplicato in 14 viste); tutte le 19 viste con markup azioni riga duplicato ora usano `x-admin.row-actions` (esisteva già ma non era mai usato, riscritto per combaciare col markup reale). Refactoring puro, nessun cambio di comportamento o di markup renderizzato.
 
 ## [v1.20.1] - 2026-10-22
 

@@ -8,15 +8,6 @@
     ]" />
 @endsection
 
-@php
-    $badgeClass = match ($equipmentIssue->status_color) {
-        'red' => 'b-red',
-        'yellow' => 'b-amber',
-        'green' => 'b-green',
-        default => 'b-gray',
-    };
-@endphp
-
 @section('content')
 
     <div class="page-actions">
@@ -41,7 +32,7 @@
             <div class="sub">{{ $equipmentIssue->equipment->name ?: ($equipmentIssue->equipment->equipmentType->name ?? 'N/A') }}</div>
         </div>
         <div class="dl-status">
-            <span class="badge {{ $badgeClass }}">{{ $equipmentIssue->status_label }}</span>
+            <x-admin.status-badge :color="$equipmentIssue->status_color">{{ $equipmentIssue->status_label }}</x-admin.status-badge>
             <span class="hint">{{ __('dal :d', ['d' => $equipmentIssue->event_date_formatted ?? 'N/A']) }}</span>
         </div>
     </div>
@@ -78,7 +69,7 @@
             </div>
             <div class="dl-kv">
                 <span class="k">{{ __('Stato') }}</span>
-                <span class="v"><span class="badge {{ $badgeClass }}">{{ $equipmentIssue->status_label }}</span></span>
+                <span class="v"><x-admin.status-badge :color="$equipmentIssue->status_color">{{ $equipmentIssue->status_label }}</x-admin.status-badge></span>
             </div>
         </div>
     </div>
