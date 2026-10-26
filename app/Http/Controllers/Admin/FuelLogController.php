@@ -34,7 +34,7 @@ class FuelLogController extends Controller
         $sortDir = $validated['sort_dir'] ?? 'desc';
 
         $fuelLogs = $this->applySorting(
-            FuelLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser()),
+            FuelLog::with('vehicle')->forCurrentUser(),
             $sortBy,
             $sortDir,
             [
@@ -54,7 +54,7 @@ class FuelLogController extends Controller
         // deterministico (nessuna chiave secondaria), quindi "precedente"
         // poteva risultare quello sbagliato, calcolando un consumo errato
         // (o scartato per km negativi).
-        $allLogsForConsumption = FuelLog::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $allLogsForConsumption = FuelLog::forCurrentUser()
             ->orderBy('log_date')
             ->orderBy('id')
             ->get(['id', 'vehicle_id', 'log_date', 'liters', 'mileage']);

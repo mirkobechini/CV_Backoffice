@@ -16,7 +16,7 @@ class IssueStatisticsService
 {
     private function baseQuery(?Carbon $since)
     {
-        return Issue::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        return Issue::forCurrentUser()
             ->whereNotNull('part')
             ->when($since, fn ($q) => $q->where('event_date', '>=', $since));
     }

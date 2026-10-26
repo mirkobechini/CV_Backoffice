@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVehicleGroupScoping;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class MaintenanceRecord extends Model
 {
-    use HasActivity, SoftDeletes;
+    use HasActivity, HasVehicleGroupScoping, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {

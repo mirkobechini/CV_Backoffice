@@ -11,7 +11,7 @@ class DeadlineController extends Controller
     public function index(Request $request)
     {
         $deadlines = Deadline::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->when($request->q, fn ($q, $search) => $q->search($search))
             ->when($request->status, fn ($q, $status) => $q->where('status', $status))
             ->when($request->type, fn ($q, $type) => $q->where('type', $type))

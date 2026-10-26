@@ -77,10 +77,10 @@ class VehicleController extends Controller
         // Stats per la toolbar
         $totalVehicles = Vehicle::forCurrentUser()->count();
         $openIssuesCount = Issue::whereIn('status', ['open', 'in_progress'])
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->count();
         $deadlinesIn30 = Deadline::where('is_renewed', false)
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->upcoming(30)
             ->count();
 

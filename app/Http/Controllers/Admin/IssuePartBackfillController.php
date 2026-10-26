@@ -28,7 +28,7 @@ class IssuePartBackfillController extends Controller
         $this->abortUnlessLicenseHasFeature($request->user(), License::FEATURE_AI_BACKFILL);
 
         $issues = Issue::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->whereNull('part')
             ->orderBy('event_date')
             ->get();
@@ -54,7 +54,7 @@ class IssuePartBackfillController extends Controller
             'issue_ids.*' => 'integer',
         ]);
 
-        $issues = Issue::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $issues = Issue::forCurrentUser()
             ->whereNull('part')
             ->whereIn('id', $data['issue_ids'])
             ->get();
@@ -82,7 +82,7 @@ class IssuePartBackfillController extends Controller
             'parts.*' => ['nullable', 'in:'.implode(',', Issue::PARTS)],
         ]);
 
-        $issueIds = Issue::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $issueIds = Issue::forCurrentUser()
             ->whereNull('part')
             ->pluck('id');
 

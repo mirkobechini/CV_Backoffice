@@ -118,14 +118,14 @@ class SendSummaryReport extends Command
                         ->get();
 
                     $vehicleIdsWithOpenIssues = Issue::open()
-                        ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                        ->forGroup($groupId)
                         ->distinct('vehicle_id')
                         ->pluck('vehicle_id');
 
                     $perGroupData[$cacheKey] = [
                         'totalVehicles' => $allVehicles->count(),
                         'vehiclesOk' => $allVehicles->reject(fn ($v) => $vehicleIdsWithOpenIssues->contains($v->id))->count(),
-                        'openIssues' => Issue::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))->open()->get(),
+                        'openIssues' => Issue::with('vehicle')->forGroup($groupId)->open()->get(),
                         // Filtriamo su automatic_status (calcolato live da data/km), non
                         // sulla colonna status persistita: quest'ultima viene
                         // risincronizzata solo alla creazione/modifica di una scadenza o
@@ -135,7 +135,7 @@ class SendSummaryReport extends Command
                         // giornaliero non la includeva mai (stesso bug già corretto sulla
                         // dashboard, vedi DashboardController).
                         'expiredDeadlines' => Deadline::with('vehicle.latestMileageLog')
-                            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                            ->forGroup($groupId)
                             ->where('is_renewed', false)
                             ->possiblyExpired()
                             ->get()
@@ -143,18 +143,18 @@ class SendSummaryReport extends Command
                             ->sortBy('due_date')
                             ->values(),
                         'upcomingDeadlines' => Deadline::with('vehicle')
-                            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                            ->forGroup($groupId)
                             ->upcoming($reminderDays)
                             ->get(),
                         'upcomingAppointments' => MaintenanceRecord::with('vehicle', 'provider', 'items.itemable')
-                            ->whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                            ->forGroup($groupId)
                             ->whereNull('return_date')
                             ->where('appointment_date', '>=', today())
                             ->orderBy('appointment_date')
                             ->take(5)
                             ->get(),
                         'incompleteVehicles' => $allVehicles->filter(fn ($v) => ! $v->hasAllRequiredEquipment()),
-                        'vehiclesInMaintenance' => MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forGroup($groupId))
+                        'vehiclesInMaintenance' => MaintenanceRecord::forGroup($groupId)
                             ->whereNull('return_date')
                             ->distinct('vehicle_id')
                             ->count('vehicle_id'),

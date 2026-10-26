@@ -11,7 +11,7 @@ class IssueController extends Controller
     public function index(Request $request)
     {
         $issues = Issue::with('vehicle')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->when($request->q, fn ($q, $search) => $q->search($search))
             ->when($request->status, fn ($q, $status) => $q->where('status', $status))
             ->orderByDesc('event_date')
@@ -45,7 +45,7 @@ class IssueController extends Controller
         $request->validate(['q' => 'required|string|min:2']);
 
         $results = Issue::selectRaw('description, COUNT(*) as total')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->where('description', 'like', '%'.$request->q.'%')
             ->groupBy('description')
             ->orderByDesc('total')

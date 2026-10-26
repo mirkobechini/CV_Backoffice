@@ -27,7 +27,7 @@ class CostStatisticsService
 
     private function baseQuery(?Carbon $since)
     {
-        return MaintenanceRecord::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        return MaintenanceRecord::forCurrentUser()
             ->whereNotNull('cost')
             ->when($since, fn ($q) => $q->where('appointment_date', '>=', $since));
     }
