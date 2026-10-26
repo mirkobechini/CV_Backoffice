@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.20.2] - 2026-10-26
+
 ### Fixed
 
 - **Sicurezza (alto, SH1)**: `canManageData()`/`isManager()`/`isCapo()` controllavano il ruolo dell'utente in QUALSIASI gruppo a cui appartiene, non nel gruppo attivo — un capo del gruppo A che si univa anche al gruppo B come membro base restava "manager" (poteva modificare/creare/eliminare dati) anche mentre operava nel contesto del gruppo B. `activeGroup()` ora ha un ordinamento esplicito (prima non deterministico per utenti multi-gruppo).
