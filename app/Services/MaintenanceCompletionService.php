@@ -262,11 +262,7 @@ class MaintenanceCompletionService
 
         // Tutte le scadenze partono dalla data di RIENTRO.
         $baseDate = Carbon::parse($maintenanceRecord->return_date ?? Carbon::today());
-        $nextDueDate = match ($deadline->type) {
-            Deadline::TYPE_MINISTERIAL => DeadlineRenewalCalculator::ministerial($baseDate, $maintenanceRecord->vehicle),
-            Deadline::TYPE_OXYGEN => DeadlineRenewalCalculator::oxygen($baseDate, $maintenanceRecord->vehicle),
-            default => null,
-        };
+        $nextDueDate = DeadlineRenewalCalculator::ministerialOrOxygen($baseDate, $maintenanceRecord->vehicle, $deadline->type);
         if ($nextDueDate) {
             // Stessa guardia anti-duplicati del rinnovo via form di
             // modifica (renews_deadline_id): prima questo controller aveva

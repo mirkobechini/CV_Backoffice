@@ -307,23 +307,10 @@ class DeadlineService
             // adesso") marcava la vecchia come rinnovata ma non creava mai
             // la successiva per questo tipo, perché non comparso qui nello
             // switch originale (audit 2026-10-22, B2): il veicolo restava
-            // silenziosamente senza assicurazione attiva. Stesso calcolo
-            // di DeadlineManualRenewalService::renew().
-            $renewalMonths = $renewedDeadline->insurance_renewal_months ?? Deadline::INSURANCE_INTERVAL_MONTHS;
-            $nextDueDate = $baseDate->copy()->addMonthsNoOverflow($renewalMonths);
-            $extra = [
-                'insurance_company' => $renewedDeadline->insurance_company,
-                'insurance_policy_number' => $renewedDeadline->insurance_policy_number,
-                'insurance_coverage_limit' => $renewedDeadline->insurance_coverage_limit,
-                'insurance_broker_contact' => $renewedDeadline->insurance_broker_contact,
-                'insurance_renewal_months' => $renewedDeadline->insurance_renewal_months,
-            ];
+            // silenziosamente senza assicurazione attiva.
+            [$nextDueDate, $extra] = DeadlineRenewalCalculator::insurance($baseDate, $renewedDeadline);
         } else {
-            $nextDueDate = match ($renewedDeadline->type) {
-                Deadline::TYPE_MINISTERIAL => DeadlineRenewalCalculator::ministerial($baseDate, $vehicle),
-                Deadline::TYPE_OXYGEN => DeadlineRenewalCalculator::oxygen($baseDate, $vehicle),
-                default => null,
-            };
+            $nextDueDate = DeadlineRenewalCalculator::ministerialOrOxygen($baseDate, $vehicle, $renewedDeadline->type);
         }
 
         if (! $nextDueDate) {
@@ -332,14 +319,7 @@ class DeadlineService
 
         $next = $this->createNextOccurrence($renewedDeadline, $vehicle, $nextDueDate, $extra);
 
-        if ($next && $renewedDeadline->type === Deadline::TYPE_ASSICURAZIONE) {
-            foreach ($renewedDeadline->insuranceCoverages as $coverage) {
-                $next->insuranceCoverages()->create([
-                    'coverage_type' => $coverage->coverage_type,
-                    'cost' => $coverage->cost,
-                ]);
-            }
-        }
+        DeadlineOccurrenceCreator::copyInsuranceCoverages($renewedDeadline, $next);
     }
 
     /**
