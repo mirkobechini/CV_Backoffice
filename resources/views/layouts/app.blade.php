@@ -95,6 +95,28 @@
                 </div>
             </div>
 
+            {{--
+                Audit 2026-10-22 (B10): la stragrande maggioranza dei
+                redirect dei controller admin (~80) passa una frase già
+                pronta con with('status', '...'), ma questo layout non la
+                renderizzava affatto — restava invisibile ovunque tranne
+                nelle ~6 viste che la stampavano da sole. Alcuni flussi
+                Breeze/profilo riusano invece 'status' come codice interno
+                breve (es. 'profile-updated'), già tradotto in un messaggio
+                dedicato dalla vista stessa: quelli vanno esclusi qui, o
+                finirebbe in pagina il codice grezzo invece della frase.
+            --}}
+            @php($rawStatusCodes = [
+                'profile-updated', 'token-created', 'token-revoked', 'password-updated',
+                'verification-link-sent', 'telegram-link-generated', 'telegram-unlinked',
+                'two-factor-confirmed', 'two-factor-disabled', 'recovery-codes-regenerated',
+            ])
+            @if (session('status') && ! in_array(session('status'), $rawStatusCodes, true))
+                <div class="container pt-3">
+                    <div class="alert success">{{ session('status') }}</div>
+                </div>
+            @endif
+
             @php($activeGroupLicense = auth()->user()?->activeGroup()?->currentLicense())
             @if ($activeGroupLicense?->isExpired())
                 <div class="container pt-3">
