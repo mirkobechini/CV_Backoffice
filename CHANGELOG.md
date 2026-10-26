@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- **Mobile**: la sidebar non scorreva (`height: 100vh` senza `overflow-y`) — dopo l'aggiunta di nuove sezioni (Pedaggi, Tessere) il contenuto superava l'altezza visibile, rendendo irraggiungibili tutte le voci dopo "Appuntamenti" (Scadenze, Attrezzature, Sistema, logout). Toccare un campo input/select causava inoltre lo zoom automatico di Safari su iOS (font-size sotto i 16px) — ora 16px sotto i 992px.
+
 ## [v1.20.2] - 2026-10-26
 
 ### Fixed
