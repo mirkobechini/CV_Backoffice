@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\Searchable;
 use App\Services\DeadlineDueDateCalculator;
+use App\Services\DeadlineLabelFormatter;
 use App\Services\DeadlineStatusCalculator;
 use App\Services\DeadlineStatusSyncService;
 use Carbon\Carbon;
@@ -269,30 +270,13 @@ class Deadline extends Model
 
     /**
      * Etichetta dei giorni/km mancanti alla scadenza, per la colonna
-     * "prossima scadenza" dell'index veicoli.
+     * "prossima scadenza" dell'index veicoli. Logica in
+     * DeadlineLabelFormatter (estratta per tenere questo model sotto le
+     * 400 righe, audit 2026-10-22, Q1).
      */
     public function getDaysLabelAttribute(): string
     {
-        // Scadenze per km: mostra i km mancanti al target
-        if ($this->interval_km !== null && $this->last_mileage !== null) {
-            $this->loadMissing('vehicle.latestMileageLog');
-            $currentMileage = $this->vehicle?->mileage;
-            if ($currentMileage !== null) {
-                $remaining = ($this->last_mileage + $this->interval_km) - $currentMileage;
-                if ($remaining <= 0) {
-                    return '+'.number_format(abs($remaining), 0, ',', '.').' km';
-                }
-
-                return number_format($remaining, 0, ',', '.').' km';
-            }
-        }
-
-        // Scadenze per data: mostra i giorni alla scadenza
-        if ($this->due_date) {
-            return $this->formatDaysRemaining($this->due_date);
-        }
-
-        return '—';
+        return DeadlineLabelFormatter::daysLabel($this);
     }
 
     /**
@@ -302,19 +286,7 @@ class Deadline extends Model
      */
     public function getDateRemainingLabelAttribute(): ?string
     {
-        return $this->due_date ? $this->formatDaysRemaining($this->due_date) : null;
-    }
-
-    /**
-     * "+N gg" se la data è già passata (scaduta da N giorni), "N gg"
-     * altrimenti — condiviso tra days_label e date_remaining_label, che
-     * prima duplicavano lo stesso calcolo (bug/DRY segnalato 2026-10-19).
-     */
-    private function formatDaysRemaining(Carbon $date): string
-    {
-        $days = Carbon::today()->diffInDays($date, false);
-
-        return $days < 0 ? '+'.abs($days).' gg' : $days.' gg';
+        return DeadlineLabelFormatter::dateRemainingLabel($this);
     }
 
     /**
@@ -323,20 +295,7 @@ class Deadline extends Model
      */
     public function getKmRemainingLabelAttribute(): ?string
     {
-        if ($this->interval_km === null || $this->last_mileage === null) {
-            return null;
-        }
-
-        $this->loadMissing('vehicle.latestMileageLog');
-        $currentMileage = $this->vehicle?->mileage;
-        if ($currentMileage === null) {
-            return null;
-        }
-
-        $remaining = ($this->last_mileage + $this->interval_km) - $currentMileage;
-        $formatted = number_format(abs($remaining), 0, ',', '.');
-
-        return $remaining <= 0 ? '+'.$formatted.' km' : $formatted.' km';
+        return DeadlineLabelFormatter::kmRemainingLabel($this);
     }
 
     public function getAutomaticStatusAttribute(): string
