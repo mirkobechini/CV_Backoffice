@@ -61,4 +61,38 @@ class DeadlineRenewalCalculator
             ? $baseDate->copy()->addMonthsNoOverflow(Deadline::OXYGEN_CHECK_INTERVAL_MONTHS)
             : null;
     }
+
+    /**
+     * Dispatch ministeriale/ossigeno, gli unici due tipi che condividono lo
+     * stesso identico match (audit 2026-10-22, Q4): prima reimplementato in
+     * 3 punti (qui, DeadlineManualRenewalService, MaintenanceCompletionService).
+     */
+    public static function ministerialOrOxygen(Carbon $baseDate, Vehicle $vehicle, string $type): ?Carbon
+    {
+        return match ($type) {
+            Deadline::TYPE_MINISTERIAL => self::ministerial($baseDate, $vehicle),
+            Deadline::TYPE_OXYGEN => self::oxygen($baseDate, $vehicle),
+            default => null,
+        };
+    }
+
+    /**
+     * Prossima data + dati polizza da riportare, dopo il rinnovo di
+     * un'Assicurazione (audit 2026-10-22, Q4): prima duplicato in
+     * DeadlineManualRenewalService e DeadlineService.
+     *
+     * @return array{0: Carbon, 1: array<string, mixed>}
+     */
+    public static function insurance(Carbon $baseDate, Deadline $deadline): array
+    {
+        $renewalMonths = $deadline->insurance_renewal_months ?? Deadline::INSURANCE_INTERVAL_MONTHS;
+
+        return [$baseDate->copy()->addMonthsNoOverflow($renewalMonths), [
+            'insurance_company' => $deadline->insurance_company,
+            'insurance_policy_number' => $deadline->insurance_policy_number,
+            'insurance_coverage_limit' => $deadline->insurance_coverage_limit,
+            'insurance_broker_contact' => $deadline->insurance_broker_contact,
+            'insurance_renewal_months' => $deadline->insurance_renewal_months,
+        ]];
+    }
 }

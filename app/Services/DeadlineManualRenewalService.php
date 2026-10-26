@@ -62,36 +62,14 @@ class DeadlineManualRenewalService
             // I dati della polizza (compagnia, numero, coperture...) restano
             // gli stessi sulla prossima scadenza finché non viene aggiornata
             // al rinnovo successivo: evita di doverli reinserire da zero.
-            $renewalMonths = $deadline->insurance_renewal_months ?? Deadline::INSURANCE_INTERVAL_MONTHS;
-
-            $next = DeadlineOccurrenceCreator::create($deadline, $vehicle, $renewedDate->copy()->addMonthsNoOverflow($renewalMonths), [
-                'insurance_company' => $deadline->insurance_company,
-                'insurance_policy_number' => $deadline->insurance_policy_number,
-                'insurance_coverage_limit' => $deadline->insurance_coverage_limit,
-                'insurance_broker_contact' => $deadline->insurance_broker_contact,
-                'insurance_renewal_months' => $deadline->insurance_renewal_months,
-            ]);
-
-            // null se esiste già una prossima occorrenza (guardia anti-
-            // duplicati di DeadlineOccurrenceCreator): in quel caso le
-            // coperture non vanno copiate di nuovo, sono già lì.
-            if ($next) {
-                foreach ($deadline->insuranceCoverages as $coverage) {
-                    $next->insuranceCoverages()->create([
-                        'coverage_type' => $coverage->coverage_type,
-                        'cost' => $coverage->cost,
-                    ]);
-                }
-            }
+            [$nextDueDate, $extra] = DeadlineRenewalCalculator::insurance($renewedDate, $deadline);
+            $next = DeadlineOccurrenceCreator::create($deadline, $vehicle, $nextDueDate, $extra);
+            DeadlineOccurrenceCreator::copyInsuranceCoverages($deadline, $next);
 
             return $deadline;
         }
 
-        $nextDueDate = match ($deadline->type) {
-            Deadline::TYPE_MINISTERIAL => DeadlineRenewalCalculator::ministerial($renewedDate, $vehicle),
-            Deadline::TYPE_OXYGEN => DeadlineRenewalCalculator::oxygen($renewedDate, $vehicle),
-            default => null,
-        };
+        $nextDueDate = DeadlineRenewalCalculator::ministerialOrOxygen($renewedDate, $vehicle, $deadline->type);
 
         if ($nextDueDate) {
             DeadlineOccurrenceCreator::create($deadline, $vehicle, $nextDueDate);
