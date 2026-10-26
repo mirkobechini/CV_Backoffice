@@ -39,9 +39,6 @@
                                 class="fa-solid fa-database"></i></span> {{ __('Backup database') }}</h3>
                 </div>
                 <div class="body">
-                    @if (session('status'))
-                        <div class="alert success" style="margin-bottom:10px;">{{ session('status') }}</div>
-                    @endif
                     @if (session('error'))
                         <div class="alert danger" style="margin-bottom:10px;">{{ session('error') }}</div>
                     @endif

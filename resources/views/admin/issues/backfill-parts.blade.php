@@ -17,10 +17,6 @@
         </a>
     </div>
 
-    @if (session('status'))
-        <div class="alert success">{{ session('status') }}</div>
-    @endif
-
     @if ($issues->isEmpty())
         <div class="table-card">
             <div class="body" style="padding:24px;">

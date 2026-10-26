@@ -9,13 +9,6 @@
 
         <h1 class="mb-4">Importa dati da CSV</h1>
 
-        @if (session('status'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('status') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
         @if (session('status_error'))
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <strong>{{ session('status_error') }}</strong>
