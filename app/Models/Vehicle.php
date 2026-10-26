@@ -192,8 +192,10 @@ class Vehicle extends Model
     }
 
     /**
-     * Filtra i veicoli per il gruppo dell'utente autenticato.
-     * Se l'utente non ha un gruppo, non applica alcun filtro.
+     * Filtra i veicoli per il gruppo attivo dell'utente autenticato. Se non
+     * c'è un utente autenticato (es. comandi da console), non applica
+     * alcun filtro; se l'utente non ha un gruppo attivo, non restituisce
+     * alcun risultato (vedi scopeForGroup()).
      */
     public function scopeForCurrentUser(Builder $query): Builder
     {
