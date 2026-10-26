@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Admin\TireController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VehicleController;
+use App\Http\Controllers\Admin\VehicleScanController;
 use App\Http\Controllers\Admin\VehicleTypeController;
 use App\Http\Controllers\CsvExportController;
 use App\Http\Controllers\CsvImportController;
@@ -211,7 +212,7 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::get('vehicles-pdf/fleet-overview', [PdfExportController::class, 'fleetOverview'])
             ->name('vehicles.pdf.fleet-overview');
 
-        Route::post('vehicles/scan-libretto', [VehicleController::class, 'scanRegistrationCard'])
+        Route::post('vehicles/scan-libretto', [VehicleScanController::class, 'scanRegistrationCard'])
             ->middleware('throttle:vehicle-scan')
             ->name('vehicles.scan-libretto');
 
