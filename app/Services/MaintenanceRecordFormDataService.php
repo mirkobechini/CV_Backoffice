@@ -36,7 +36,7 @@ class MaintenanceRecordFormDataService
                 ->get(['id', 'vehicle_id', 'description', 'event_date']),
             'pendingDeadlines' => $this->pendingDeadlines(),
             'storedTires' => Tire::where('status', Tire::STATUS_STORED)
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->get(['id', 'vehicle_id', 'season', 'position', 'brand', 'model_name', 'size']),
         ];
     }
@@ -74,7 +74,7 @@ class MaintenanceRecordFormDataService
                     $q->orWhereIn('id', $linkedTireIds);
                 }
             })
-                ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+                ->forCurrentUser()
                 ->get(['id', 'vehicle_id', 'season', 'position', 'brand', 'model_name', 'size']),
             'linkedTireIds' => $linkedTireIds,
             // Una domanda per ogni gomma collegata che sostituisce davvero

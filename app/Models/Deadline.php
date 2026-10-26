@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVehicleGroupScoping;
 use App\Models\Concerns\Searchable;
 use App\Services\DeadlineDueDateCalculator;
 use App\Services\DeadlineLabelFormatter;
@@ -18,7 +19,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Deadline extends Model
 {
-    use HasActivity, Searchable, SoftDeletes;
+    use HasActivity, HasVehicleGroupScoping, Searchable, SoftDeletes;
 
     /**
      * Cache dell'accessor automatic_status per evitare query ripetute

@@ -92,7 +92,7 @@ class ProviderController extends Controller
         // gli interventi di veicoli di ALTRE associazioni (audit sicurezza
         // 2026-10-22, SH4).
         $provider->load([
-            'maintenanceRecords' => fn ($query) => $query->whereHas('vehicle', fn ($vq) => $vq->forCurrentUser()),
+            'maintenanceRecords' => fn ($query) => $query->forCurrentUser(),
             'maintenanceRecords.items.itemable',
             'maintenanceRecords.vehicle',
         ]);

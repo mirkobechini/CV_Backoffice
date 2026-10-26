@@ -43,7 +43,7 @@ class IssueController extends Controller
         $search = $request->get('q');
 
         $issuesQuery = Issue::with('vehicle.brand', 'vehicle.carModel')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser());
+            ->forCurrentUser();
 
         // Issue::$searchable copre solo description/status: il campo cerca
         // "veicolo o descrizione" (vedi placeholder in vista), quindi il
@@ -92,7 +92,7 @@ class IssueController extends Controller
             };
         });
 
-        $issuesWithoutPartCount = Issue::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $issuesWithoutPartCount = Issue::forCurrentUser()
             ->whereNull('part')
             ->count();
 
@@ -111,7 +111,7 @@ class IssueController extends Controller
         $vehicles = Vehicle::forCurrentUser()->get();
         // Preselezione veicolo quando si arriva dalla create appuntamento.
         $selectedVehicleId = request('vehicle_id');
-        $tires = Tire::whereHas('vehicle', fn ($q) => $q->forCurrentUser())->with('vehicle')->get();
+        $tires = Tire::forCurrentUser()->with('vehicle')->get();
 
         // Guasti ancora aperti/in lavorazione di tutti i veicoli del gruppo,
         // mostrati filtrati per veicolo selezionato (stesso pattern delle
@@ -120,7 +120,7 @@ class IssueController extends Controller
         // di scoprirlo solo dopo un controllo duplicati che intercetta solo
         // un doppio submit identico entro 5 minuti.
         $openIssues = Issue::whereIn('status', ['open', 'in_progress'])
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->orderByDesc('event_date')
             ->get();
 
@@ -169,7 +169,7 @@ class IssueController extends Controller
     public function edit(Issue $issue)
     {
         $vehicles = Vehicle::forCurrentUser()->get();
-        $tires = Tire::whereHas('vehicle', fn ($q) => $q->forCurrentUser())->with('vehicle')->get();
+        $tires = Tire::forCurrentUser()->with('vehicle')->get();
 
         return view('admin.issues.edit', compact('issue', 'vehicles', 'tires'));
     }

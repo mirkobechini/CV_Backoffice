@@ -69,7 +69,7 @@ class DeadlineController extends Controller
         $search = $request->get('q');
 
         $deadlinesQuery = Deadline::with('vehicle.latestMileageLog')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser());
+            ->forCurrentUser();
 
         // Deadline::$searchable copre solo type/status: il campo cerca
         // "tipologia o veicolo" (vedi placeholder in vista), quindi il
@@ -172,7 +172,7 @@ class DeadlineController extends Controller
         $sortDir = $request->get('sort_dir', $request->get('sort_by') ? 'asc' : 'desc');
 
         $deadlines = Deadline::with('vehicle', 'insuranceCoverages')
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->where('type', 'Assicurazione')
             ->get()
             ->sortBy(fn (Deadline $d) => [$d->is_renewed ? 1 : 0, $d->id * -1])

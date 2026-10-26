@@ -26,7 +26,7 @@ class MaintenanceCalendarController extends Controller
         ]);
 
         $records = MaintenanceRecord::with(['vehicle', 'provider'])
-            ->whereHas('vehicle', fn ($vq) => $vq->forCurrentUser())
+            ->forCurrentUser()
             ->whereBetween('appointment_date', [$request->start, $request->end])
             ->get();
 

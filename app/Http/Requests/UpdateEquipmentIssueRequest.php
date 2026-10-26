@@ -18,7 +18,7 @@ class UpdateEquipmentIssueRequest extends FormRequest
                 if (! $equipment?->vehicle_id) {
                     return;
                 }
-                $belongs = Equipment::whereKey($value)->whereHas('vehicle', fn ($q) => $q->forCurrentUser())->exists();
+                $belongs = Equipment::whereKey($value)->forCurrentUser()->exists();
                 if (! $belongs) {
                     $fail('L\'attrezzatura selezionata non esiste o non appartiene al tuo gruppo.');
                 }

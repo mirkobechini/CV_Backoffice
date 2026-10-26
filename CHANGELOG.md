@@ -36,6 +36,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Qualità codice (Q2e)**: `VehicleCrudTest.php` (611 righe) spezzato in 2 file per feature (CrudBasic, TimingBeltAndToolbar). Refactoring puro, tutti i 21 test originali preservati. Chiude l'intera voce Q2.
 - **Qualità codice (Q3)**: creata `GroupPolicy` per centralizzare l'autorizzazione di `GroupController`, prima ~15 controlli manuali (`abort(403)`, "solo il capo" ripetuto 7 volte). Refactoring puro, nessun cambio di comportamento.
 - **Qualità codice (Q4)**: unificato il dispatch per tipo di scadenza (ministeriale/ossigeno duplicato in 3 punti, calcolo+copia coperture Assicurazione duplicato in 2) in `DeadlineRenewalCalculator`/`DeadlineOccurrenceCreator`. Refactoring puro, nessun cambio di comportamento.
+- **Qualità codice (Q5)**: creato `HasVehicleGroupScoping` (applicato a Issue, Deadline, MaintenanceRecord, MileageLog, FuelLog, Tire, Equipment) per eliminare ~60 copie identiche di `whereHas('vehicle', ...)` in 26 file. Refactoring puro, nessun cambio di comportamento.
 
 ## [v1.20.1] - 2026-10-22
 

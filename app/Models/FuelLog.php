@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVehicleGroupScoping;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class FuelLog extends Model
 {
-    use HasActivity;
+    use HasActivity, HasVehicleGroupScoping;
 
     public function getActivitylogOptions(): LogOptions
     {

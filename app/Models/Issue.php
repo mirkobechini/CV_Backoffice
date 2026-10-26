@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVehicleGroupScoping;
 use App\Models\Concerns\Searchable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Issue extends Model
 {
-    use HasActivity, Searchable, SoftDeletes;
+    use HasActivity, HasVehicleGroupScoping, Searchable, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {

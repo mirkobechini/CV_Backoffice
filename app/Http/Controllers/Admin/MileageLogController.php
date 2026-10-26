@@ -33,7 +33,7 @@ class MileageLogController extends Controller
         $sortDir = $validated['sort_dir'] ?? 'desc';
 
         $mileageLogs = $this->applySorting(
-            MileageLog::with('vehicle')->whereHas('vehicle', fn ($q) => $q->forCurrentUser()),
+            MileageLog::with('vehicle')->forCurrentUser(),
             $sortBy,
             $sortDir,
             [
@@ -50,7 +50,7 @@ class MileageLogController extends Controller
         // richiesta caricava e processava anche i log di TUTTI gli altri
         // gruppi (non mostrati, ma comunque letti e tenuti in memoria).
         $deltaByLogId = [];
-        $allLogsForDelta = MileageLog::whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+        $allLogsForDelta = MileageLog::forCurrentUser()
             ->orderBy('log_date')
             ->get(['id', 'vehicle_id', 'mileage']);
         foreach ($allLogsForDelta->groupBy('vehicle_id') as $logsForVehicle) {
@@ -230,7 +230,7 @@ class MileageLogController extends Controller
         // id di chilometraggi di un altro gruppo passandoli direttamente
         // nella richiesta.
         $count = MileageLog::whereIn('id', $data['ids'])
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->delete();
 
         return redirect()->route('admin.mileage-logs.index')

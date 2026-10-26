@@ -111,7 +111,7 @@ class MileageLogCsvImporter extends AbstractCsvImporter
         // del CSV — un import tipico (decine di veicoli × 12 mesi) arrivava
         // a centinaia di query solo per il controllo duplicati.
         $existingLogDates = MileageLog::whereYear('log_date', $year)
-            ->whereHas('vehicle', fn ($q) => $q->forCurrentUser())
+            ->forCurrentUser()
             ->get(['vehicle_id', 'log_date'])
             ->map(fn ($log) => $log->vehicle_id.'|'.$log->log_date->toDateString())
             ->flip();
