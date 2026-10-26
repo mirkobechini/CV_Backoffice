@@ -67,13 +67,13 @@ trait HasGroupScopedAccess
     }
 
     /**
-     * Stessa regola di Vehicle::scopeForCurrentUser(): un utente senza
-     * gruppo attivo non viene ristretto (vede/gestisce tutto), e un utente
-     * con un gruppo attivo può accedere solo ai record il cui veicolo
-     * appartiene a quel gruppo. Un record senza veicolo collegato (es.
-     * un'attrezzatura non ancora assegnata) non appartiene a nessun gruppo
-     * specifico e resta visibile a tutti, coerentemente con come i
-     * controller filtrano le rispettive liste.
+     * Stessa regola di Vehicle::scopeForGroup(): un utente senza gruppo
+     * attivo non ha accesso (vedi sotto), un utente con un gruppo attivo può
+     * accedere solo ai record il cui gruppo (diretto, o tramite il veicolo
+     * collegato) corrisponde. Un record senza veicolo collegato e senza una
+     * colonna group_id propria (es. un'attrezzatura non ancora assegnata)
+     * non appartiene a nessun gruppo specifico e resta visibile a tutti,
+     * coerentemente con come i controller filtrano le rispettive liste.
      */
     protected function belongsToUserGroup(User $user, mixed $model): bool
     {
