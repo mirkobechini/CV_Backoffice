@@ -133,7 +133,7 @@
 
 | # | Area | Descrizione | Riferimento | Stato |
 |---|------|-------------|-------------|-------|
-| Q1 | File da spezzare | `Deadline.php` (416), `deadlines/edit.blade.php` (406, quasi identico a create.blade.php), `VehicleController.php` (405) | vedi dettaglio audit | 🔄 `Deadline.php` ✅ (issue-456, 416→375); `deadlines/edit.blade.php` ✅ (issue-458, partial condiviso `_form.blade.php`); `VehicleController.php` ⬜ |
+| Q1 | File da spezzare | `Deadline.php` (416), `deadlines/edit.blade.php` (406, quasi identico a create.blade.php), `VehicleController.php` (405) | vedi dettaglio audit | ✅ `Deadline.php` (issue-456, 416→375); `deadlines/edit.blade.php` (issue-458, partial condiviso `_form.blade.php`); `VehicleController.php` (issue-460, estratto `VehicleScanController`, 405→301) |
 | Q2 | File da spezzare (test) | `MaintenanceRecordBusinessLogicTest.php` (1462!), `DeadlineCrudTest.php` (1042+), `DashboardTest.php`, `MaintenanceRecordTireIntegrationTest.php`, `VehicleCrudTest.php` | `tests/Feature/` | ⬜ |
 | Q3 | Design pattern | Manca una `GroupPolicy`: `GroupController` ha ~15 `abort(403)` manuali, lo stesso controllo ripetuto 7 volte | `app/Http/Controllers/Admin/GroupController.php` | ⬜ |
 | Q4 | Design pattern | `DeadlineRenewalCalculator` non fa dispatch per tipo da solo: lo stesso match/if è reimplementato in 3 punti (`DeadlineManualRenewalService`, `DeadlineService`, `MaintenanceCompletionService`) | più file | ⬜ |
