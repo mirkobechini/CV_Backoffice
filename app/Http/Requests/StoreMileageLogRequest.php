@@ -51,11 +51,21 @@ class StoreMileageLogRequest extends FormRequest
                 return;
             }
 
-            $conflict = MileageLog::findChronologyConflict($vehicleId, $logDate, (int) $newMileage);
+            $conflict = MileageLog::findChronologyConflict($vehicleId, $logDate, (int) $newMileage, $this->currentMileageLogId());
 
             if ($conflict !== null) {
                 $validator->errors()->add('mileage', $conflict);
             }
         });
+    }
+
+    /**
+     * Il record da escludere dal controllo di conflitto cronologico: nessuno
+     * in creazione, se stesso in modifica (sovrascritto da
+     * UpdateMileageLogRequest, audit 2026-10-22, Q6).
+     */
+    protected function currentMileageLogId(): ?int
+    {
+        return null;
     }
 }
