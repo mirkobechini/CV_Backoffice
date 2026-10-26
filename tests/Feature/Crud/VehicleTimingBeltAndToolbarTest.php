@@ -1,0 +1,305 @@
+<?php
+
+namespace Tests\Feature\Crud;
+
+use App\Models\Brand;
+use App\Models\CarModel;
+use App\Models\Deadline;
+use App\Models\Equipment;
+use App\Models\EquipmentType;
+use App\Models\Group;
+use App\Models\Issue;
+use App\Models\MileageLog;
+use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleType;
+use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class VehicleTimingBeltAndToolbarTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function createUser(): User
+    {
+        return User::factory()->withRole('admin')->create();
+    }
+
+    /**
+     * Stesso gruppo creato dallo stato "admin" di UserFactory::withRole():
+     * i veicoli devono appartenervi per essere visibili/accessibili
+     * all'utente di questi test (le route sono scoperte per gruppo).
+     */
+    private function defaultGroup(): Group
+    {
+        return Group::firstOrCreate(
+            ['name' => 'Associazione di default'],
+            ['invite_code' => Group::generateInviteCode()]
+        );
+    }
+
+    private function createVehicleDependencies(): array
+    {
+        $brand = Brand::create([
+            'name' => 'Fiat',
+        ]);
+
+        $carModel = CarModel::create([
+            'name' => 'Ducato',
+            'brand_id' => $brand->id,
+        ]);
+
+        $vehicleType = VehicleType::create([
+            'name' => 'Ambulanza',
+            'needs_oxygen_check' => true,
+            'first_inspection_months' => 48,
+            'regular_inspection_months' => 24,
+        ]);
+
+        return compact('brand', 'carModel', 'vehicleType');
+    }
+
+    private function createVehicle(): array
+    {
+        $dependencies = $this->createVehicleDependencies();
+        $brand = $dependencies['brand'];
+        $carModel = $dependencies['carModel'];
+        $vehicleType = $dependencies['vehicleType'];
+
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => '1234',
+            'brand_id' => $brand->id,
+            'car_model_id' => $carModel->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+
+        return compact('brand', 'carModel', 'vehicleType', 'vehicle');
+    }
+
+    public function test_turning_on_timing_belt_prompts_to_create_the_deadline(): void
+    {
+        // timing_belt_type da solo non doveva creare/eliminare nulla: qui
+        // verifichiamo solo che compaia il banner di conferma, non che la
+        // scadenza venga creata in automatico.
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+
+        $response = $this->actingAs($user)->from(route('admin.vehicles.edit', $vehicle))->put(route('admin.vehicles.update', $vehicle), [
+            'license_plate' => $vehicle->license_plate,
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => $vehicle->internal_code,
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => $vehicle->immatricolation_date->format('Y-m-d'),
+            'timing_belt_type' => 'dry_belt',
+        ]);
+
+        $response->assertSessionHas('timingBeltPrompt', fn ($prompt) => $prompt['action'] === 'create');
+        $this->assertDatabaseMissing('deadlines', ['vehicle_id' => $vehicle->id, 'type' => Deadline::TYPE_CINGHIA]);
+    }
+
+    public function test_confirming_timing_belt_prompt_creates_the_deadline_from_immatriculation_date(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update(['immatricolation_date' => '2020-01-15', 'timing_belt_type' => 'oil_bath_belt']);
+        $expectedDueDate = Carbon::parse('2020-01-15')->addDays(Deadline::TIMING_BELT_INTERVAL_DAYS);
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.timing-belt-deadline.create', $vehicle));
+
+        $response->assertRedirect(route('admin.vehicles.show', $vehicle));
+        $this->assertDatabaseHas('deadlines', [
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'due_date' => $expectedDueDate->format('Y-m-d 00:00:00'),
+        ]);
+    }
+
+    public function test_confirming_timing_belt_prompt_creates_km_only_deadline_for_dry_belt(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update(['immatricolation_date' => '2020-01-15', 'timing_belt_type' => 'dry_belt']);
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.timing-belt-deadline.create', $vehicle));
+
+        $response->assertRedirect(route('admin.vehicles.show', $vehicle));
+        $deadline = Deadline::where('vehicle_id', $vehicle->id)->where('type', Deadline::TYPE_CINGHIA)->first();
+        $this->assertNotNull($deadline);
+        $this->assertNull($deadline->due_date);
+        $this->assertNull($deadline->interval_days);
+        $this->assertSame(Deadline::TIMING_BELT_INTERVAL_KM, $deadline->interval_km);
+    }
+
+    public function test_turning_off_timing_belt_prompts_to_delete_the_active_deadline(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $vehicle = $data['vehicle'];
+        $vehicle->update(['timing_belt_type' => 'oil_bath_belt']);
+        $deadline = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'due_date' => '2030-01-15',
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->put(route('admin.vehicles.update', $vehicle), [
+            'license_plate' => $vehicle->license_plate,
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => $vehicle->internal_code,
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => $vehicle->immatricolation_date->format('Y-m-d'),
+            'timing_belt_type' => 'chain',
+        ]);
+
+        $response->assertSessionHas('timingBeltPrompt', fn ($prompt) => $prompt['action'] === 'delete' && $prompt['deadline_id'] === $deadline->id);
+        $this->assertDatabaseHas('deadlines', ['id' => $deadline->id, 'deleted_at' => null]);
+    }
+
+    public function test_show_page_displays_timing_belt_type_instead_of_yes_no(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $data['vehicle']->update(['timing_belt_type' => 'oil_bath_belt']);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $data['vehicle']));
+
+        $response->assertOk();
+        $response->assertSee("Cinghia a bagno d'olio");
+        $response->assertDontSee('Catena');
+
+        $data['vehicle']->update(['timing_belt_type' => 'chain']);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $data['vehicle']));
+
+        $response->assertOk();
+        $response->assertSee('Catena');
+    }
+
+    public function test_deadlines_grouped_shows_active_dry_belt_cinghia_not_the_renewed_one(): void
+    {
+        // Stesso bug del test analogo in DeadlineCrudTest, ma per
+        // l'accessor usato dalla scheda veicolo (e dal PDF flotta):
+        // sortByDesc('due_date') non distingue due scadenze cinghia a
+        // secco (due_date sempre nullo) e poteva scegliere quella
+        // rinnovata invece di quella attiva.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $vehicle->update(['timing_belt_type' => 'dry_belt']);
+
+        $old = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'renewed',
+            'is_renewed' => true,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 50000,
+        ]);
+
+        $active = Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'is_renewed' => false,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 120000,
+            'renews_deadline_id' => $old->id,
+        ]);
+
+        $vehicle->load('deadlines');
+        $grouped = $vehicle->deadlines_grouped;
+        $picked = $grouped->get(Deadline::TYPE_CINGHIA);
+
+        $this->assertNotNull($picked);
+        $this->assertSame($active->id, $picked->id);
+    }
+
+    public function test_show_page_displays_km_remaining_for_dry_belt_cinghia_instead_of_dash(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $vehicle->update(['timing_belt_type' => 'dry_belt']);
+
+        // Km vicini alla soglia (entro il 90%), così la scadenza risulta
+        // "pending" ed entra nell'elenco delle scadenze attive mostrate
+        // nella scheda (non solo "valid", che non vi compare).
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_CINGHIA,
+            'status' => 'pending',
+            'is_renewed' => false,
+            'due_date' => null,
+            'interval_km' => 100000,
+            'last_mileage' => 0,
+        ]);
+        MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => now(),
+            'mileage' => 95000,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('5.000 km');
+    }
+
+    public function test_index_toolbar_stats_and_incomplete_filter(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $completeVehicle = $data['vehicle'];
+
+        $extinguisherType = EquipmentType::create([
+            'name' => 'Estintore',
+            'category' => EquipmentType::CATEGORY_FIRE_EXTINGUISHER,
+        ]);
+        $data['vehicleType']->equipmentTypes()->attach($extinguisherType->id, ['required_quantity' => 1]);
+        Equipment::create([
+            'name' => 'Estintore cabina',
+            'equipment_type_id' => $extinguisherType->id,
+            'vehicle_id' => $completeVehicle->id,
+            'serial_number' => 'EX-1',
+        ]);
+
+        $incompleteVehicle = Vehicle::create([
+            'license_plate' => 'XY987ZZ',
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => '5678',
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        Issue::create([
+            'vehicle_id' => $incompleteVehicle->id,
+            'description' => 'Guasto aperto',
+            'status' => 'open',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.index'));
+        $response->assertOk();
+        $response->assertViewHas('totalVehicles', 2);
+        $response->assertViewHas('openIssuesCount', 1);
+        $response->assertViewHas('completeFleet', 1);
+
+        $filtered = $this->actingAs($user)->get(route('admin.vehicles.index', ['filter' => 'incomplete']));
+        $filtered->assertOk();
+        $filtered->assertViewHas('vehicles', fn ($vehicles) => $vehicles->pluck('id')->all() === [$incompleteVehicle->id]);
+    }
+}
