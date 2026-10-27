@@ -36,6 +36,7 @@
                             </div>
                         </th>
                         <th>{{ __('Targa') }}</th>
+                        <th>{{ __('Alimentazione') }}</th>
                         <th>
                             <div class="th-wrap"><span>{{ __('Data') }}</span>
                                 <a href="{{ $sortToggleUrl('date') }}" class="mini {{ $sortBy === 'date' ? 'on' : '' }}"
@@ -59,6 +60,16 @@
                         <tr>
                             <td class="code">{{ $fuelLog->vehicle->internal_code ?? 'N/A' }}</td>
                             <td class="code">{{ $fuelLog->vehicle->license_plate ?? 'N/A' }}</td>
+                            <td>
+                                @if ($fuelLog->vehicle?->fuel_type)
+                                    <x-admin.status-badge
+                                        :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$fuelLog->vehicle->fuel_type] ?? 'gray'">
+                                        {{ $fuelLog->vehicle->fuel_type_label }}
+                                    </x-admin.status-badge>
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td>{{ $fuelLog->log_date_formatted ?? 'N/A' }}</td>
                             <td>{{ number_format($fuelLog->liters, 2, ',', '.') }} L</td>
                             <td>{{ $fuelLog->cost_total ? '€ '.number_format($fuelLog->cost_total, 2, ',', '.') : 'N/A' }}</td>
@@ -75,7 +86,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="empty">{{ __('Nessun rifornimento registrato.') }}</td>
+                            <td colspan="8" class="empty">{{ __('Nessun rifornimento registrato.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

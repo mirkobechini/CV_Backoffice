@@ -122,6 +122,39 @@ class Vehicle extends Model
     }
 
     /**
+     * @return array<string, string>
+     */
+    public static function fuelTypeLabels(): array
+    {
+        return [
+            'benzina' => __('Benzina'),
+            'diesel' => __('Diesel'),
+            'elettrico' => __('Elettrico'),
+            'ibrido' => __('Ibrido'),
+        ];
+    }
+
+    /**
+     * Colore badge per tipo di alimentazione, usato nelle viste rifornimento.
+     *
+     * @return array<string, string>
+     */
+    public static function fuelTypeBadgeColors(): array
+    {
+        return [
+            'benzina' => 'yellow',
+            'diesel' => 'blue',
+            'elettrico' => 'green',
+            'ibrido' => 'purple',
+        ];
+    }
+
+    public function getFuelTypeLabelAttribute(): ?string
+    {
+        return $this->fuel_type ? (self::fuelTypeLabels()[$this->fuel_type] ?? $this->fuel_type) : null;
+    }
+
+    /**
      * Elenco leggibile delle misure consigliate col relativo codice (es.
      * "A1: 225/75R16C"), lo stesso usato dalla carta di circolazione per
      * indicare quale misura è quale nella tabella delle combinazioni
