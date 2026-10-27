@@ -86,6 +86,20 @@ class FuelLogCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_fuel_type_badge_is_shown_on_index_and_show(): void
+    {
+        $user = $this->createUser();
+        $fuelLog = $this->createFuelLog()['fuelLog'];
+
+        $indexResponse = $this->actingAs($user)->get(route('admin.fuel-logs.index'));
+        $showResponse = $this->actingAs($user)->get(route('admin.fuel-logs.show', $fuelLog));
+
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('Diesel');
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('Diesel');
+    }
+
     public function test_fuel_card_select_shows_vehicle_code_and_sort_data(): void
     {
         $user = $this->createUser();
