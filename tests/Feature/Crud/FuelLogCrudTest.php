@@ -86,6 +86,38 @@ class FuelLogCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_fuel_type_badge_is_shown_on_index_and_show(): void
+    {
+        $user = $this->createUser();
+        $fuelLog = $this->createFuelLog()['fuelLog'];
+
+        $indexResponse = $this->actingAs($user)->get(route('admin.fuel-logs.index'));
+        $showResponse = $this->actingAs($user)->get(route('admin.fuel-logs.show', $fuelLog));
+
+        $indexResponse->assertStatus(200);
+        $indexResponse->assertSee('Diesel');
+        $showResponse->assertStatus(200);
+        $showResponse->assertSee('Diesel');
+    }
+
+    public function test_fuel_card_select_shows_vehicle_code_and_sort_data(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $fuelCard = FuelCard::create([
+            'card_number' => 'TK-9876',
+            'status' => FuelCard::STATUS_ASSIGNED,
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $vehicle->group_id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.fuel-logs.create'));
+
+        $response->assertStatus(200);
+        $response->assertSee('TK-9876 · '.$vehicle->internal_code, false);
+        $response->assertSee('data-vehicle-id="'.$fuelCard->vehicle_id.'"', false);
+    }
+
     public function test_fuel_log_show_page_is_reachable(): void
     {
         $user = $this->createUser();

@@ -56,6 +56,19 @@
                 </span>
             </div>
             <div class="dl-kv">
+                <span class="k">{{ __('Alimentazione') }}</span>
+                <span class="v">
+                    @if ($fuelLog->vehicle?->fuel_type)
+                        <x-admin.status-badge
+                            :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$fuelLog->vehicle->fuel_type] ?? 'gray'">
+                            {{ $fuelLog->vehicle->fuel_type_label }}
+                        </x-admin.status-badge>
+                    @else
+                        N/A
+                    @endif
+                </span>
+            </div>
+            <div class="dl-kv">
                 <span class="k">{{ __('Data rifornimento') }}</span>
                 <span class="v">{{ $fuelLog->log_date_formatted ?? 'N/A' }}</span>
             </div>
