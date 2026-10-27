@@ -3,6 +3,7 @@ import './vehicle-type-equipment';
 import './date-pickers';
 import './tire-size-input';
 import './heic-convert';
+import './fuel-card-select';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 import 'flatpickr/dist/flatpickr.min.css';
 import 'flatpickr/dist/plugins/monthSelect/style.css';

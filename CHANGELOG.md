@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Rifornimenti: la select "Tessera usata" mostra ora la sigla del veicolo collegato accanto al numero tessera, e selezionando un veicolo le sue tessere salgono in cima alla lista.
+
 ### Fixed
 
 - **Sicurezza**: aggiornato `phpunit/phpunit` (dipendenza di sviluppo) per una vulnerabilità di esecuzione codice via directory temporanea condivisa nella gestione della code coverage PHPT (advisory PKSA-qhjm-rpqc-qkn6, 2026-10-27).

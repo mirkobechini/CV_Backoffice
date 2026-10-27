@@ -86,6 +86,24 @@ class FuelLogCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_fuel_card_select_shows_vehicle_code_and_sort_data(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $fuelCard = FuelCard::create([
+            'card_number' => 'TK-9876',
+            'status' => FuelCard::STATUS_ASSIGNED,
+            'vehicle_id' => $vehicle->id,
+            'group_id' => $vehicle->group_id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.fuel-logs.create'));
+
+        $response->assertStatus(200);
+        $response->assertSee('TK-9876 · '.$vehicle->internal_code, false);
+        $response->assertSee('data-vehicle-id="'.$fuelCard->vehicle_id.'"', false);
+    }
+
     public function test_fuel_log_show_page_is_reachable(): void
     {
         $user = $this->createUser();
