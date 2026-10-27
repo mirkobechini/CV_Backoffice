@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Added
 
 - Rifornimenti: la select "Tessera usata" mostra ora la sigla del veicolo collegato accanto al numero tessera, e selezionando un veicolo le sue tessere salgono in cima alla lista.
+- Rifornimenti: nuovo badge "Alimentazione" (benzina/diesel/elettrico/ibrido, letto dal veicolo) nell'elenco e nel dettaglio.
 
 ### Fixed
 
