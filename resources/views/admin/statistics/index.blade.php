@@ -25,12 +25,16 @@
             class="chip {{ $tab === 'guasti' ? 'on' : '' }}">{{ __('Guasti') }}</a>
         <a href="{{ route('admin.statistics.index', ['tab' => 'costi', 'period' => $period]) }}"
             class="chip {{ $tab === 'costi' ? 'on' : '' }}">{{ __('Costi') }}</a>
+        <a href="{{ route('admin.statistics.index', ['tab' => 'carburante', 'period' => $period]) }}"
+            class="chip {{ $tab === 'carburante' ? 'on' : '' }}">{{ __('Carburante') }}</a>
         <a href="{{ route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => $period]) }}"
             class="chip {{ $tab === 'affidabilita' ? 'on' : '' }}">{{ __('Affidabilità e utilizzo') }}</a>
     </div>
 
     @if ($tab === 'costi')
         @include('admin.statistics._tab-costi')
+    @elseif ($tab === 'carburante')
+        @include('admin.statistics._tab-carburante')
     @elseif ($tab === 'affidabilita')
         @include('admin.statistics._tab-affidabilita')
     @else
