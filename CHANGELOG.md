@@ -4,22 +4,18 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
-### Added
-
-- Statistiche: nuova tab "Carburante" con litri/spesa per anno, per veicolo, per tipo di alimentazione, e consumo medio (km/L) per veicolo.
+## [v1.21.0] - 2026-10-27
 
 ### Added
 
 - Rifornimenti: la select "Tessera usata" mostra ora la sigla del veicolo collegato accanto al numero tessera, e selezionando un veicolo le sue tessere salgono in cima alla lista.
 - Rifornimenti: nuovo badge "Alimentazione" (benzina/diesel/elettrico/ibrido, letto dal veicolo) nell'elenco e nel dettaglio.
-
-### Fixed
-
-- **Sicurezza**: aggiornato `phpunit/phpunit` (dipendenza di sviluppo) per una vulnerabilità di esecuzione codice via directory temporanea condivisa nella gestione della code coverage PHPT (advisory PKSA-qhjm-rpqc-qkn6, 2026-10-27).
+- Statistiche: nuova tab "Carburante" con litri/spesa per anno, per veicolo, per tipo di alimentazione, e consumo medio (km/L) per veicolo.
 
 ### Fixed
 
 - **Mobile**: la sidebar non scorreva (`height: 100vh` senza `overflow-y`) — dopo l'aggiunta di nuove sezioni (Pedaggi, Tessere) il contenuto superava l'altezza visibile, rendendo irraggiungibili tutte le voci dopo "Appuntamenti" (Scadenze, Attrezzature, Sistema, logout). Toccare un campo input/select causava inoltre lo zoom automatico di Safari su iOS (font-size sotto i 16px) — ora 16px sotto i 992px.
+- **Sicurezza**: aggiornato `phpunit/phpunit` (dipendenza di sviluppo) per una vulnerabilità di esecuzione codice via directory temporanea condivisa nella gestione della code coverage PHPT (advisory PKSA-qhjm-rpqc-qkn6, 2026-10-27).
 
 ## [v1.20.2] - 2026-10-26
 
