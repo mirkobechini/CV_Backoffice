@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- **Sicurezza**: aggiornato `symfony/mime` (dipendenza indiretta di Laravel) per un'email header injection tramite caratteri non-token nei nomi parametro MIME (CVE-2026-45070, 2026-10-28).
+
 ## [v1.21.0] - 2026-10-27
 
 ### Added
