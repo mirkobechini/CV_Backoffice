@@ -27,6 +27,42 @@
     </div>
 </div>
 
+<div class="table-card" style="margin-bottom:16px;">
+    <div class="toolbar">
+        <h2>{{ __('Età flotta') }}</h2>
+    </div>
+    @if ($fleetAgeByVehicle->isEmpty())
+        <div class="body" style="padding:16px 20px;">
+            <p class="hint" style="margin:0;">{{ __('Nessun veicolo con data di immatricolazione registrata.') }}</p>
+        </div>
+    @else
+        <div class="body" style="padding:16px 20px;">
+            <div class="dash-list-item" style="align-items:baseline;">
+                <span class="name">{{ __('Media flotta') }}</span>
+                <span class="meta" style="margin-left:auto;font-weight:700;">{{ __(':years anni', ['years' => number_format($averageFleetAge, 1, ',', '.')]) }}</span>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Veicolo') }}</th>
+                        <th>{{ __('Età') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($fleetAgeByVehicle as $row)
+                        <tr>
+                            <td class="code">{{ $row['label'] }}</td>
+                            <td>{{ __(':years anni', ['years' => number_format($row['age_years'], 1, ',', '.')]) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
 @php($maxIssueCount = $issueCountByVehicle->max('count') ?: 1)
 
 <div class="table-card" style="margin-bottom:16px;">

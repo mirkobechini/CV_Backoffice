@@ -147,6 +147,40 @@ class FleetUsageStatisticsService
     }
 
     /**
+     * Età (in anni) di ogni veicolo con una data di immatricolazione
+     * registrata, dal più vecchio: utile per pianificare sostituzioni nel
+     * tempo, non solo per sapere l'età media complessiva. Sempre "adesso",
+     * non filtrata per periodo — l'età di un veicolo rispetto a oggi non
+     * è un dato storico per mese.
+     *
+     * @return Collection<int, array{vehicle_id: int, label: string, age_years: float}>
+     */
+    public function fleetAgeByVehicle(): Collection
+    {
+        return Vehicle::forCurrentUser()
+            ->whereNotNull('immatricolation_date')
+            ->get(['id', 'internal_code', 'immatricolation_date'])
+            ->map(fn (Vehicle $v) => [
+                'vehicle_id' => $v->id,
+                'label' => $v->internal_code ?? 'N/A',
+                'age_years' => round($v->immatricolation_date->diffInDays(Carbon::today()) / 365.25, 1),
+            ])
+            ->sortByDesc('age_years')
+            ->values();
+    }
+
+    /**
+     * Età media della flotta (anni), tra i veicoli con una data di
+     * immatricolazione registrata.
+     */
+    public function averageFleetAge(): ?float
+    {
+        $ages = $this->fleetAgeByVehicle();
+
+        return $ages->isEmpty() ? null : round($ages->avg('age_years'), 1);
+    }
+
+    /**
      * Veicoli senza un chilometraggio o un rifornimento registrato da
      * almeno $days giorni (o mai, se non hanno nessuna delle due
      * registrazioni): sempre "adesso", non filtrato per periodo — stesso
