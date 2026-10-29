@@ -59,6 +59,38 @@
 
 <div class="table-card" style="margin-bottom:16px;">
     <div class="toolbar">
+        <h2>{{ __('Litri e spesa per tipo di veicolo') }}</h2>
+    </div>
+    @if ($litersAndCostByVehicleType->isEmpty())
+        <div class="body" style="padding:16px 20px;">
+            <p class="hint" style="margin:0;">{{ __('Nessun rifornimento registrato nel periodo selezionato.') }}</p>
+        </div>
+    @else
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Tipo veicolo') }}</th>
+                        <th>{{ __('Litri') }}</th>
+                        <th>{{ __('Spesa totale') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($litersAndCostByVehicleType as $type => $row)
+                        <tr>
+                            <td>{{ $type }}</td>
+                            <td>{{ number_format($row['liters'], 2, ',', '.') }} L</td>
+                            <td>€ {{ number_format($row['cost'], 2, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
+<div class="table-card" style="margin-bottom:16px;">
+    <div class="toolbar">
         <h2>{{ __('Litri e spesa per alimentazione') }}</h2>
     </div>
     @if ($litersAndCostByFuelType->isEmpty())

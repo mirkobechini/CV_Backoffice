@@ -93,6 +93,26 @@ class FuelStatisticsService
     }
 
     /**
+     * Litri e spesa totali per tipo di veicolo (Ambulanza, Pulmino,
+     * ecc.), per vedere quale categoria di mezzi pesa di più sulla
+     * spesa carburante della flotta.
+     *
+     * @return Collection<string, array{liters: float, cost: float}> tipo veicolo => litri e costo totali
+     */
+    public function litersAndCostByVehicleType(?Carbon $since = null): Collection
+    {
+        $logs = $this->baseQuery($since)->with('vehicle.vehicleType')->get(['id', 'vehicle_id', 'liters', 'cost_total']);
+
+        return $logs
+            ->groupBy(fn (FuelLog $log) => $log->vehicle?->vehicleType?->name ?? 'N/A')
+            ->map(fn ($group) => [
+                'liters' => (float) $group->sum('liters'),
+                'cost' => (float) $group->sum('cost_total'),
+            ])
+            ->sortByDesc(fn ($row) => $row['liters']);
+    }
+
+    /**
      * Consumo medio (km/L) per veicolo nel periodo: media dei consumi tra
      * rifornimenti consecutivi dello stesso veicolo (FuelLog::
      * consumptionKmPerLiter(), stesso calcolo dell'elenco rifornimenti),
