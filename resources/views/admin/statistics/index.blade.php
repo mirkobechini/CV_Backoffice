@@ -2,6 +2,7 @@
 
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
+        ['label' => __('Report')],
         ['label' => __('Statistiche')],
     ]" />
 @endsection
