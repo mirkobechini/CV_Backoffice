@@ -18,6 +18,7 @@
         ->where('is_renewed', false)
         ->where('due_date', '<=', now()->addDays(30))
         ->count();
+    $sidebarVehiclesCount = \App\Models\Vehicle::forCurrentUser()->count();
 
     $fuelGroupActive = request()->routeIs([
         'admin.fuel-logs.*',
@@ -73,6 +74,9 @@
         <a class="sidebar-link {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}"
             href="{{ route('admin.vehicles.index') }}" title="{{ __('Veicoli') }}">
             <i class="fa-solid fa-truck"></i><span>{{ __('Veicoli') }}</span>
+            @if ($sidebarVehiclesCount > 0)
+                <span class="sidebar-badge sidebar-badge-neutral">{{ $sidebarVehiclesCount }}</span>
+            @endif
         </a>
         <a class="sidebar-link {{ request()->routeIs('admin.tires.*') ? 'active' : '' }}"
             href="{{ route('admin.tires.index') }}" title="{{ __('Pneumatici') }}">
