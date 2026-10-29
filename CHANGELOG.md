@@ -6,6 +6,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- Statistiche: nuova card "Costo totale per km percorso" (tab Costi) che somma manutenzione e carburante, affiancata a quella già esistente (ora "Costo manutenzioni per km percorso").
+
+### Added
+
 - Statistiche: nuova card "Veicoli fermi" (tab Affidabilità e utilizzo) con i veicoli senza chilometraggio o rifornimento registrato da almeno 30 giorni.
 
 ### Added
