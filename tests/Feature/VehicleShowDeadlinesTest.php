@@ -93,6 +93,9 @@ class VehicleShowDeadlinesTest extends TestCase
 
         $response->assertOk();
         $response->assertDontSee(__('Nessuna scadenza attiva'));
-        $this->assertSame(3, substr_count($response->getContent(), $dueDate->format('d/m/Y')));
+        // 4 occorrenze: la card "Scadenze attive" compare sia nella tab
+        // Panoramica (riepilogo, restyle "Saru" ADR §19) sia nella tab
+        // Scadenze, più "Stato Scadenze" e lo storico.
+        $this->assertSame(4, substr_count($response->getContent(), $dueDate->format('d/m/Y')));
     }
 }
