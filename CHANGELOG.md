@@ -6,6 +6,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- Statistiche: nuova card "Veicoli fermi" (tab Affidabilità e utilizzo) con i veicoli senza chilometraggio o rifornimento registrato da almeno 30 giorni.
+
+### Added
+
 - Statistiche: nuova tab "Scadenze" con conteggio per stato attuale, scadute per tipo, e costo medio rinnovo assicurazione.
 
 ### Added
