@@ -25,7 +25,7 @@
     </div>
 
     <div class="dl-header">
-        <div class="dl-avatar" style="background:linear-gradient(135deg,#f87171,#dc2626);"><i
+        <div class="dl-avatar" style="background:linear-gradient(135deg,var(--red),var(--guasto));"><i
                 class="fa-solid fa-triangle-exclamation"></i></div>
         <div class="dl-title">
             <h1>{{ $equipmentIssue->description }}</h1>
