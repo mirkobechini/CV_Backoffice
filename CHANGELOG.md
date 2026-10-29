@@ -21,6 +21,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Fixed
 
 - Il valore della card KPI "Premio assicurativo annuo" andava a capo tra "€" e la cifra nella card stretta della dashboard.
+- Le 3 colonne dashboard finivano ad altezze diverse; ora si allungano in pari con l'ultima card di ciascuna che assorbe lo spazio avanzato. Il dettaglio espandibile di "Lavaggi del mese" scrolla internamente invece di allungare la colonna. Card "Prossimi appuntamenti" con riquadro data a sinistra come nel mockup; scadenze imminenti/scadute ora nella stessa colonna.
 - Le chiamate `fetch()` da sessione browser verso `/api/*` non si autenticavano mai via cookie (Sanctum configurato solo per token Bearer) — rendeva silenziosamente non funzionante da browser anche l'autocomplete descrizioni guasto esistente, non solo la nuova ricerca veicoli. Risolto abilitando l'autenticazione via sessione per le richieste same-origin (comportamento standard Sanctum).
 
 ## [v1.22.0] - 2026-10-29
