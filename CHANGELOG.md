@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Changed
+
+- **Restyle "Saru" (fase 1/fondamenta)**: nuova palette arancione (tema chiaro e scuro) al posto dell'indigo precedente, sidebar riorganizzata per flusso di lavoro (Flotta/Manutenzione/Attrezzature/Report/Sistema) con contatori badge per guasti aperti e scadenze imminenti, logo scimmia Saru al posto dell'icona generica. Vedi `docs/ADR.md` §19. Solo fondamenta condivise (layout, variabili CSS, sidebar/topbar): le singole pagine saranno ridisegnate nelle fasi successive.
+
 ## [v1.22.0] - 2026-10-29
 
 ### Added
