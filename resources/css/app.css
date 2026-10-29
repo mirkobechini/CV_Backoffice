@@ -752,6 +752,24 @@ body {
     margin-top: 16px;
 }
 
+/* Dashboard a 3 colonne fisse, come nel mockup (restyle "Saru", ADR §19) —
+   sostituisce le righe impilate a coppie: ogni colonna è una pila
+   verticale di card indipendenti, non un'unica griglia 2D. */
+.dash-columns {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+    align-items: start;
+}
+
+.dash-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
 .dash-card {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -901,6 +919,10 @@ body {
     }
 
     .dash-grid2 {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-columns {
         grid-template-columns: 1fr;
     }
 }
