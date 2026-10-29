@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ChecksLicenseFeature;
 use App\Http\Controllers\Controller;
 use App\Models\License;
 use App\Services\CostStatisticsService;
+use App\Services\EquipmentStatisticsService;
 use App\Services\FleetUsageStatisticsService;
 use App\Services\FuelStatisticsService;
 use App\Services\IssueStatisticsService;
@@ -34,6 +35,7 @@ class StatisticsController extends Controller
         FleetUsageStatisticsService $usageStatistics,
         FuelStatisticsService $fuelStatistics,
         TireStatisticsService $tireStatistics,
+        EquipmentStatisticsService $equipmentStatistics,
     ) {
         if (! $request->user()->canManageData()) {
             abort(403);
@@ -43,7 +45,7 @@ class StatisticsController extends Controller
 
         $validated = $request->validate([
             'period' => 'nullable|in:all,12m,6m',
-            'tab' => 'nullable|in:guasti,costi,affidabilita,carburante,pneumatici',
+            'tab' => 'nullable|in:guasti,costi,affidabilita,carburante,pneumatici,attrezzature',
         ]);
         $period = $validated['period'] ?? 'all';
         $tab = $validated['tab'] ?? 'guasti';
@@ -72,6 +74,12 @@ class StatisticsController extends Controller
                 'tireCostByVehicle' => $tireStatistics->costByVehicle($since),
                 'tireChangeFrequencyByVehicle' => $tireStatistics->changeFrequencyByVehicle($since),
                 'averageKmBetweenChangesByVehicle' => $tireStatistics->averageKmBetweenChangesByVehicle($since),
+            ],
+            'attrezzature' => [
+                'equipmentIssueCountByEquipment' => $equipmentStatistics->issueCountByEquipment($since),
+                'equipmentIssueCountByType' => $equipmentStatistics->issueCountByType($since),
+                'equipmentCostByYear' => $equipmentStatistics->costByYear($since),
+                'equipmentCostByEquipment' => $equipmentStatistics->costByEquipment($since),
             ],
             'affidabilita' => [
                 // "Tutto" mostra il km assoluto (ultima lettura), non la

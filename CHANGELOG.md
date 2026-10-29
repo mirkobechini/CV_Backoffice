@@ -6,6 +6,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- Statistiche: nuova tab "Attrezzature" con guasti per attrezzatura/tipo e spesa manutenzione per anno/attrezzatura (stesso impianto delle tab esistenti per i veicoli).
+
+### Added
+
 - Statistiche: nuova tab "Pneumatici" con spesa cambio gomme per anno/veicolo, numero cambi per veicolo e km medi tra due cambi consecutivi.
 
 ## [v1.21.1] - 2026-10-29
