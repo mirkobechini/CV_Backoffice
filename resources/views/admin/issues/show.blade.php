@@ -2,7 +2,7 @@
 
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
-        ['label' => __('Servizi')],
+        ['label' => __('Manutenzione')],
         ['label' => __('Guasti'), 'url' => route('admin.issues.index')],
         ['label' => $issue->description],
     ]" />
@@ -31,7 +31,7 @@
     </div>
 
     <div class="dl-header">
-        <div class="dl-avatar" style="background:linear-gradient(135deg,#f87171,#dc2626);"><i
+        <div class="dl-avatar" style="background:linear-gradient(135deg,var(--red),var(--guasto));"><i
                 class="fa-solid fa-triangle-exclamation"></i></div>
         <div class="dl-title">
             <h1>{{ $issue->description }}</h1>

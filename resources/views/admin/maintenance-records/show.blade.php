@@ -25,7 +25,7 @@
 
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
-        ['label' => __('Servizi')],
+        ['label' => __('Manutenzione')],
         ['label' => __('Appuntamenti'), 'url' => route('admin.maintenance-records.index')],
         ['label' => $title],
     ]" />

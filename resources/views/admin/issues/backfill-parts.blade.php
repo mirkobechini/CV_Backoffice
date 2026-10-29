@@ -2,7 +2,7 @@
 
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
-        ['label' => __('Servizi')],
+        ['label' => __('Manutenzione')],
         ['label' => __('Guasti'), 'url' => route('admin.issues.index')],
         ['label' => __('Allinea parte veicolo')],
     ]" />
