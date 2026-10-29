@@ -29,6 +29,8 @@
             class="chip {{ $tab === 'carburante' ? 'on' : '' }}">{{ __('Carburante') }}</a>
         <a href="{{ route('admin.statistics.index', ['tab' => 'pneumatici', 'period' => $period]) }}"
             class="chip {{ $tab === 'pneumatici' ? 'on' : '' }}">{{ __('Pneumatici') }}</a>
+        <a href="{{ route('admin.statistics.index', ['tab' => 'attrezzature', 'period' => $period]) }}"
+            class="chip {{ $tab === 'attrezzature' ? 'on' : '' }}">{{ __('Attrezzature') }}</a>
         <a href="{{ route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => $period]) }}"
             class="chip {{ $tab === 'affidabilita' ? 'on' : '' }}">{{ __('Affidabilità e utilizzo') }}</a>
     </div>
@@ -39,6 +41,8 @@
         @include('admin.statistics._tab-carburante')
     @elseif ($tab === 'pneumatici')
         @include('admin.statistics._tab-pneumatici')
+    @elseif ($tab === 'attrezzature')
+        @include('admin.statistics._tab-attrezzature')
     @elseif ($tab === 'affidabilita')
         @include('admin.statistics._tab-affidabilita')
     @else
