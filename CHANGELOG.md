@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.21.1] - 2026-10-29
+
 ### Changed
 
 - Calendario manutenzioni: FullCalendar ora caricato da un bundle Vite dedicato invece che da CDN (pinnato a una versione vecchia e non tracciata da nessun aggiornamento automatico). Nessun cambio di comportamento visibile.
