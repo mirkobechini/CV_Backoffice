@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v1.21.1] - 2026-10-29
+
+### Changed
+
+- Calendario manutenzioni: FullCalendar ora caricato da un bundle Vite dedicato invece che da CDN (pinnato a una versione vecchia e non tracciata da nessun aggiornamento automatico). Nessun cambio di comportamento visibile.
+
+### Fixed
+
+- **Sicurezza**: aggiornato `symfony/mime` (dipendenza indiretta di Laravel) per un'email header injection tramite caratteri non-token nei nomi parametro MIME (CVE-2026-45070, 2026-10-28).
+
 ## [v1.21.0] - 2026-10-27
 
 ### Added

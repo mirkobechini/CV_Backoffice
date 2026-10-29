@@ -10,22 +10,22 @@
         "axios": "^1.20.0",
         "concurrently": "^10.0.6",
         "laravel-vite-plugin": "^3.2.0",
-        "postcss": "^8.5.28",
-        "sass": "^1.93.3",
+        "postcss": "^8.5.30",
+        "sass": "^1.106.1",
         "tailwindcss": "^4.3.3",
         "vite": "^8.3.4"
     },
     "dependencies": {
         "@fortawesome/fontawesome-free": "^7.2.0",
-        "@fullcalendar/core": "^6.1.21",
-        "@fullcalendar/daygrid": "^6.1.21",
-        "@fullcalendar/interaction": "^6.1.21",
+        "@fullcalendar/core": "^6.1.22",
+        "@fullcalendar/daygrid": "^6.1.22",
+        "@fullcalendar/interaction": "^6.1.22",
         "@popperjs/core": "^2.11.8",
         "bootstrap": "^5.3.8",
         "bootstrap-icons": "^1.13.1",
         "flatpickr": "^4.6.13",
         "heic2any": "^0.0.4",
         "html5-qrcode": "^2.3.8",
-        "styled-components": "^6.3.11"
+        "styled-components": "^6.6.0"
     }
 }
