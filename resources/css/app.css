@@ -768,7 +768,7 @@ body {
     grid-template-columns: 1.2fr 1fr 1fr;
     gap: 16px;
     margin-top: 16px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .dash-col {
@@ -776,6 +776,14 @@ body {
     flex-direction: column;
     gap: 16px;
     min-width: 0;
+}
+
+/* Le 3 colonne hanno contenuto di lunghezza diversa (liste con più o meno
+   righe): la colonna si allunga quanto la più alta (align-items:stretch
+   sopra), e qui l'ultima card di ciascuna assorbe lo spazio avanzato,
+   così i 3 fondi restano allineati invece di finire ad altezze diverse. */
+.dash-col > .dash-card:last-child {
+    flex: 1;
 }
 
 .dash-card {
