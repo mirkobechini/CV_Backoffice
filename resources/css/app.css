@@ -1605,6 +1605,12 @@ body {
     margin-top: 16px;
 }
 
+/* Tab Panoramica: 2 colonne come nel mockup (vs 3 delle altre tab, che
+   hanno meno card) — restyle "Saru" ADR §19. */
+.veh-grid-2col {
+    grid-template-columns: repeat(2, 1fr);
+}
+
 /* Scheda veicolo a tab (restyle "Saru", ADR §19) — sopra i nav-tabs/
    tab-pane di Bootstrap (JS nativo via data-bs-toggle="tab"), ristilizzati
    per coerenza col resto della UI invece dell'aspetto Bootstrap di default. */
@@ -2063,6 +2069,38 @@ body {
     .veh-meta {
         margin-left: 0;
         width: 100%;
+    }
+}
+
+/* Scheda veicolo su mobile (restyle "Saru", ADR §19): header più compatto,
+   coerente col mockup mobile — stesse informazioni, meno spazio verticale
+   impegnato dalle 3 box km/immatricolazione/garanzia impilate. */
+@media (max-width: 767.98px) {
+    .veh-header {
+        padding: 14px 16px;
+        gap: 12px;
+    }
+
+    .veh-avatar {
+        width: 48px;
+        height: 48px;
+        font-size: 22px;
+    }
+
+    .veh-title h1 {
+        font-size: 17px;
+    }
+
+    .veh-meta {
+        gap: 8px;
+    }
+
+    .veh-meta .meta-item {
+        padding: 6px 10px;
+    }
+
+    .veh-meta .meta-item .val {
+        font-size: 13px;
     }
 }
 

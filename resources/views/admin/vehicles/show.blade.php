@@ -128,10 +128,13 @@
         <div class="tab-content veh-tab-content">
             <div class="tab-pane fade show active" id="veh-tab-panoramica" role="tabpanel"
                 aria-labelledby="veh-tab-panoramica-btn">
-                <div class="veh-grid">
+                <div class="veh-grid veh-grid-2col">
                     <x-admin.vehicle-show.registry-card :vehicle="$vehicle" />
+                    <x-admin.vehicle-show.deadlines-active-card :vehicle="$vehicle" :active-deadlines="$activeDeadlines" />
                     <x-admin.vehicle-show.tech-specs-card :vehicle="$vehicle" />
+                    <x-admin.vehicle-show.tires-summary-card :vehicle="$vehicle" />
                     <x-admin.vehicle-show.documents-card :vehicle="$vehicle" />
+                    <x-admin.vehicle-show.equipment-summary-card :vehicle="$vehicle" :missing-equipment="$missingEquipment" />
                     <x-admin.vehicle-show.reliability-trend-card :reliability-trend="$reliabilityTrend" />
                 </div>
             </div>
