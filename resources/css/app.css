@@ -454,15 +454,33 @@ body {
     display: grid;
     place-items: center;
     font-size: 12px;
+    font-weight: 700;
     color: #fff;
     flex-shrink: 0;
+}
+
+/* Nome + ruolo impilati, come nel mockup (restyle "Saru", ADR §19) —
+   prima solo il nome, su un'unica riga. */
+.sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
 }
 
 .sidebar-user-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex: 1;
+}
+
+.sidebar-user-role {
+    font-size: 10.5px;
+    color: #786b54;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .sidebar-logout {
