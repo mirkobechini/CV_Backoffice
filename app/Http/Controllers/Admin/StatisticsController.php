@@ -9,6 +9,7 @@ use App\Services\CostStatisticsService;
 use App\Services\FleetUsageStatisticsService;
 use App\Services\FuelStatisticsService;
 use App\Services\IssueStatisticsService;
+use App\Services\TireStatisticsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 
@@ -32,6 +33,7 @@ class StatisticsController extends Controller
         CostStatisticsService $costStatistics,
         FleetUsageStatisticsService $usageStatistics,
         FuelStatisticsService $fuelStatistics,
+        TireStatisticsService $tireStatistics,
     ) {
         if (! $request->user()->canManageData()) {
             abort(403);
@@ -41,7 +43,7 @@ class StatisticsController extends Controller
 
         $validated = $request->validate([
             'period' => 'nullable|in:all,12m,6m',
-            'tab' => 'nullable|in:guasti,costi,affidabilita,carburante',
+            'tab' => 'nullable|in:guasti,costi,affidabilita,carburante,pneumatici',
         ]);
         $period = $validated['period'] ?? 'all';
         $tab = $validated['tab'] ?? 'guasti';
@@ -64,6 +66,12 @@ class StatisticsController extends Controller
                 'litersAndCostByVehicle' => $fuelStatistics->litersAndCostByVehicle($since),
                 'litersAndCostByFuelType' => $fuelStatistics->litersAndCostByFuelType($since),
                 'averageConsumptionByVehicle' => $fuelStatistics->averageConsumptionByVehicle($since),
+            ],
+            'pneumatici' => [
+                'tireCostByYear' => $tireStatistics->costByYear($since),
+                'tireCostByVehicle' => $tireStatistics->costByVehicle($since),
+                'tireChangeFrequencyByVehicle' => $tireStatistics->changeFrequencyByVehicle($since),
+                'averageKmBetweenChangesByVehicle' => $tireStatistics->averageKmBetweenChangesByVehicle($since),
             ],
             'affidabilita' => [
                 // "Tutto" mostra il km assoluto (ultima lettura), non la
