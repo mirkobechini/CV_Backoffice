@@ -9,7 +9,9 @@ use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\Group;
 use App\Models\Issue;
+use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -258,7 +260,7 @@ class VehicleTimingBeltAndToolbarTest extends TestCase
         $response->assertSee('5.000 km');
     }
 
-    public function test_index_toolbar_stats_and_incomplete_filter(): void
+    public function test_index_total_vehicles_and_incomplete_filter(): void
     {
         $user = $this->createUser();
         $data = $this->createVehicle();
@@ -295,11 +297,43 @@ class VehicleTimingBeltAndToolbarTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.vehicles.index'));
         $response->assertOk();
         $response->assertViewHas('totalVehicles', 2);
-        $response->assertViewHas('openIssuesCount', 1);
-        $response->assertViewHas('completeFleet', 1);
 
         $filtered = $this->actingAs($user)->get(route('admin.vehicles.index', ['filter' => 'incomplete']));
         $filtered->assertOk();
         $filtered->assertViewHas('vehicles', fn ($vehicles) => $vehicles->pluck('id')->all() === [$incompleteVehicle->id]);
+    }
+
+    public function test_index_shows_availability_status_and_filters(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createVehicle();
+        $availableVehicle = $data['vehicle'];
+
+        $provider = Provider::create(['name' => 'Officina Rossi', 'type' => 'Meccanico']);
+        $inWorkshopVehicle = Vehicle::create([
+            'license_plate' => 'XY987ZZ',
+            'vehicle_type_id' => $data['vehicleType']->id,
+            'internal_code' => '5678',
+            'brand_id' => $data['brand']->id,
+            'car_model_id' => $data['carModel']->id,
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        MaintenanceRecord::create([
+            'vehicle_id' => $inWorkshopVehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => now()->subDay(),
+            'return_date' => null,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.index'));
+        $response->assertOk()->assertSee('Disponibile')->assertSee('In officina');
+
+        $available = $this->actingAs($user)->get(route('admin.vehicles.index', ['filter' => 'available']));
+        $available->assertViewHas('vehicles', fn ($vehicles) => $vehicles->pluck('id')->all() === [$availableVehicle->id]);
+
+        $inWorkshop = $this->actingAs($user)->get(route('admin.vehicles.index', ['filter' => 'in_workshop']));
+        $inWorkshop->assertViewHas('vehicles', fn ($vehicles) => $vehicles->pluck('id')->all() === [$inWorkshopVehicle->id]);
     }
 }
