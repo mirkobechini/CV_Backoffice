@@ -81,6 +81,35 @@ class ResourceApiTest extends TestCase
             ->assertJsonPath('brand.name', 'Fiat');
     }
 
+    public function test_vehicles_suggestions_matches_internal_code_and_plate(): void
+    {
+        $vehicle = $this->vehicle();
+        $response = $this->withToken($this->authToken())->getJson('/api/vehicles/suggestions?q=1234');
+        $response->assertOk()
+            ->assertJsonCount(1)
+            ->assertJsonPath('0.id', $vehicle->id)
+            ->assertJsonPath('0.internal_code', '1234');
+
+        $response = $this->withToken($this->authToken())->getJson('/api/vehicles/suggestions?q=AB123CD');
+        $response->assertOk()->assertJsonCount(1);
+    }
+
+    public function test_vehicles_suggestions_does_not_leak_other_groups_vehicles(): void
+    {
+        $vehicle = $this->vehicle();
+
+        $otherGroup = Group::create(['name' => 'Altro Gruppo', 'invite_code' => 'ZZZZ9999']);
+        $otherVehicle = $vehicle->replicate();
+        $otherVehicle->license_plate = 'ZZ999ZZ';
+        $otherVehicle->internal_code = '1239';
+        $otherVehicle->group_id = $otherGroup->id;
+        $otherVehicle->save();
+
+        $response = $this->withToken($this->authToken())->getJson('/api/vehicles/suggestions?q=123');
+
+        $response->assertOk()->assertJsonCount(1)->assertJsonPath('0.id', $vehicle->id);
+    }
+
     public function test_issues_index_returns_list(): void
     {
         $vehicle = $this->vehicle();

@@ -242,10 +242,16 @@ body {
     align-items: center;
     gap: 9px;
     padding: 8px 14px;
+    margin: 0 8px;
+    border-radius: 8px;
     color: #b0b7c4;
     font-size: 13px;
     text-decoration: none;
-    border-left: 2px solid transparent;
+    border: none;
+    background: none;
+    width: calc(100% - 16px);
+    text-align: left;
+    cursor: pointer;
     transition:
         background-color 0.12s,
         color 0.12s;
@@ -256,17 +262,131 @@ body {
     color: #e5e7eb;
 }
 
+/* Stato attivo a sfondo pieno (mockup "Saru"), non più solo bordo
+   sinistro: stesso colore/contrasto di .btn.primary (testo bianco,
+   funziona sia col primary chiaro che scuro). */
 .sidebar-link.active {
-    background: rgba(255, 255, 255, 0.07);
-    border-left-color: var(--primary);
+    background: var(--primary);
     color: #fff;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .sidebar-link i {
     width: 16px;
     text-align: center;
     font-size: 13px;
+}
+
+/* Ricerca rapida veicoli (sigla/targa) — restyle "Saru" ADR §19 */
+.sidebar-search {
+    position: relative;
+    margin: 2px 14px 10px;
+}
+
+.sidebar-search input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 9px;
+    padding: 8px 10px 8px 30px;
+    font-size: 12.5px;
+    color: #e5e7eb;
+}
+
+.sidebar-search input::placeholder {
+    color: #786b54;
+}
+
+.sidebar-search input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.sidebar-search i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #786b54;
+    font-size: 12px;
+}
+
+.sidebar-search-results {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 30;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.sidebar-search-results.is-open {
+    display: block;
+}
+
+.sidebar-search-result {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 8px 12px;
+    color: var(--text);
+    text-decoration: none;
+    font-size: 12.5px;
+}
+
+.sidebar-search-result:hover,
+.sidebar-search-result.is-highlighted {
+    background: var(--surface-3);
+}
+
+.sidebar-search-result .plate {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.sidebar-search-empty {
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Sottomenu a tendina (gruppi "Carburante, Pedaggi, Tessere" e
+   "Attrezzature e guasti" consolidati in una voce sola, ADR §19) */
+.sidebar-link-toggle {
+    justify-content: flex-start;
+}
+
+.sidebar-submenu-caret {
+    margin-left: auto;
+    width: auto !important;
+    font-size: 11px !important;
+    transition: transform 0.15s;
+}
+
+.sidebar-link-toggle.open .sidebar-submenu-caret {
+    transform: rotate(180deg);
+}
+
+.sidebar-submenu {
+    display: none;
+    flex-direction: column;
+    gap: 1px;
+    padding-left: 10px;
+}
+
+.sidebar-submenu.open {
+    display: flex;
+}
+
+.sidebar-submenu .sidebar-link {
+    font-size: 12.5px;
+    padding-left: 24px;
 }
 
 /* Contatori (guasti aperti/scadenze imminenti) sulle voci sidebar — vedi

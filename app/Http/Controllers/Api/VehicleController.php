@@ -17,6 +17,22 @@ class VehicleController extends Controller
         return response()->json($vehicles);
     }
 
+    /**
+     * Suggerimenti per la ricerca rapida in sidebar (sigla/targa, gruppo attivo).
+     */
+    public function suggestions(Request $request)
+    {
+        $request->validate(['q' => 'required|string|min:1']);
+
+        $vehicles = Vehicle::forCurrentUser()
+            ->search($request->q)
+            ->orderBy('internal_code')
+            ->limit(8)
+            ->get(['id', 'internal_code', 'license_plate']);
+
+        return response()->json($vehicles);
+    }
+
     public function show(Request $request, Vehicle $vehicle)
     {
         // Il binding di rotta risolve il veicolo per id senza alcun filtro

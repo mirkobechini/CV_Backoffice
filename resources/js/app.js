@@ -1,4 +1,5 @@
 import './bootstrap';
+import './sidebar-nav';
 import './vehicle-type-equipment';
 import './date-pickers';
 import './tire-size-input';
