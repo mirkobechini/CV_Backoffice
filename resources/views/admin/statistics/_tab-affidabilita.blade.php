@@ -51,6 +51,46 @@
     </div>
 </div>
 
+<div class="table-card" style="margin-bottom:16px;">
+    <div class="toolbar">
+        <h2>{{ __('Veicoli fermi') }}</h2>
+    </div>
+    @if ($staleVehicles->isEmpty())
+        <div class="body" style="padding:16px 20px;">
+            <p class="hint" style="margin:0;">{{ __('Tutti i veicoli hanno un chilometraggio o un rifornimento registrato negli ultimi 30 giorni.') }}</p>
+        </div>
+    @else
+        <div class="body" style="padding:16px 20px 0;">
+            <p class="hint" style="margin:0 0 10px;">{{ __('Nessun chilometraggio o rifornimento registrato negli ultimi 30 giorni.') }}</p>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Veicolo') }}</th>
+                        <th>{{ __('Ultima attività') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($staleVehicles as $row)
+                        <tr>
+                            <td class="code">{{ $row['label'] }}</td>
+                            <td>
+                                @if ($row['last_activity_date'])
+                                    {{ $row['last_activity_date']->format('d/m/Y') }}
+                                    ({{ __(':days giorni fa', ['days' => $row['days_since']]) }})
+                                @else
+                                    {{ __('Mai registrata') }}
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
 <div class="table-card">
     <div class="toolbar">
         <h2>{{ __('Tempo medio di fermo officina') }}</h2>

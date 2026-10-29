@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\FuelLog;
 use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
@@ -276,6 +277,58 @@ class CostAndUsageStatisticsTest extends TestCase
         // condivisa "1726".
         $response->assertSee('21.000 km');
         $response->assertSee('82.989 km');
+    }
+
+    // --- Veicoli fermi ---
+
+    public function test_stale_vehicles_lists_vehicle_never_logged(): void
+    {
+        $user = $this->admin();
+        $this->vehicle('0001');
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Veicoli fermi', '0001', 'Mai registrata']);
+    }
+
+    public function test_stale_vehicles_lists_vehicle_with_old_mileage_log(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle('0001');
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(45), 'mileage' => 1000]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Veicoli fermi', '0001', '45 giorni fa']);
+    }
+
+    public function test_stale_vehicles_excludes_vehicle_with_recent_activity(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle('0001');
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(5), 'mileage' => 1000]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSee('Tutti i veicoli hanno un chilometraggio o un rifornimento registrato');
+    }
+
+    public function test_stale_vehicles_uses_most_recent_of_mileage_or_fuel_log(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle('0001');
+        // Chilometraggio vecchio, ma rifornimento recente: il veicolo
+        // non deve risultare fermo (si guarda l'attività più recente).
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(60), 'mileage' => 1000]);
+        FuelLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(2), 'liters' => 10]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSee('Tutti i veicoli hanno un chilometraggio o un rifornimento registrato');
     }
 
     public function test_statistics_default_tab_is_guasti(): void

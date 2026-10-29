@@ -97,6 +97,7 @@ class StatisticsController extends Controller
                     : $usageStatistics->kmTraveledByVehicle($since),
                 'issueCountByVehicle' => $usageStatistics->issueCountByVehicle($since),
                 'downtime' => $usageStatistics->averageDowntimeByProvider($since),
+                'staleVehicles' => $usageStatistics->staleVehicles(),
             ],
             default => [
                 'partCounts' => $issueStatistics->countsByPart($since),

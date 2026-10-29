@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\FuelLog;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\MileageLog;
@@ -143,6 +144,55 @@ class FleetUsageStatisticsService
             'overall' => round($days->avg(), 1),
             'byProvider' => $byProvider,
         ];
+    }
+
+    /**
+     * Veicoli senza un chilometraggio o un rifornimento registrato da
+     * almeno $days giorni (o mai, se non hanno nessuna delle due
+     * registrazioni): sempre "adesso", non filtrato per periodo — stesso
+     * principio di DeadlineStatisticsService::countByStatus(), l'ultima
+     * attività di un veicolo rispetto a oggi non è un dato storico per
+     * mese. Un veicolo "fermo" è spesso solo un segnale che nessuno sta
+     * registrando i dati, non necessariamente che il mezzo non si muove.
+     *
+     * Ordinato dal più "silenzioso": mai registrato per primo, poi dal
+     * fermo da più tempo.
+     *
+     * @return Collection<int, array{vehicle_id: int, label: string, last_activity_date: ?Carbon, days_since: ?int}>
+     */
+    public function staleVehicles(int $days = 30): Collection
+    {
+        $threshold = Carbon::today()->subDays($days);
+
+        $lastMileageByVehicle = MileageLog::forCurrentUser()
+            ->selectRaw('vehicle_id, MAX(log_date) as last_date')
+            ->groupBy('vehicle_id')
+            ->pluck('last_date', 'vehicle_id');
+
+        $lastFuelByVehicle = FuelLog::forCurrentUser()
+            ->selectRaw('vehicle_id, MAX(log_date) as last_date')
+            ->groupBy('vehicle_id')
+            ->pluck('last_date', 'vehicle_id');
+
+        return Vehicle::forCurrentUser()
+            ->get(['id', 'internal_code'])
+            ->map(function (Vehicle $v) use ($lastMileageByVehicle, $lastFuelByVehicle) {
+                $lastActivity = collect([$lastMileageByVehicle->get($v->id), $lastFuelByVehicle->get($v->id)])
+                    ->filter()
+                    ->map(fn ($date) => Carbon::parse($date))
+                    ->sort()
+                    ->last();
+
+                return [
+                    'vehicle_id' => $v->id,
+                    'label' => $v->internal_code ?? 'N/A',
+                    'last_activity_date' => $lastActivity,
+                    'days_since' => $lastActivity?->diffInDays(Carbon::today()),
+                ];
+            })
+            ->filter(fn ($row) => $row['last_activity_date'] === null || $row['last_activity_date']->lt($threshold))
+            ->sortByDesc(fn ($row) => $row['days_since'] ?? PHP_INT_MAX)
+            ->values();
     }
 
     /**
