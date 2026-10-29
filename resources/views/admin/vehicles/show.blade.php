@@ -140,7 +140,7 @@
             </div>
 
             <div class="tab-pane fade" id="veh-tab-scadenze" role="tabpanel" aria-labelledby="veh-tab-scadenze-btn">
-                <div class="veh-grid">
+                <div class="veh-grid veh-grid-2col">
                     <x-admin.vehicle-show.deadlines-active-card :vehicle="$vehicle" :active-deadlines="$activeDeadlines" />
                     <x-admin.vehicle-show.deadlines-status-card :deadlines="$deadlines" />
                 </div>
@@ -148,24 +148,18 @@
 
             <div class="tab-pane fade" id="veh-tab-manutenzioni" role="tabpanel"
                 aria-labelledby="veh-tab-manutenzioni-btn">
-                <div class="veh-grid">
-                    <x-admin.vehicle-show.issues-card :vehicle="$vehicle" :issue-providers="$issueProviders" />
-                </div>
+                <x-admin.vehicle-show.issues-card :vehicle="$vehicle" :issue-providers="$issueProviders" />
                 <x-admin.vehicle-show.appointments-history-card :appointments="$vehicleAppointments" />
             </div>
 
             <div class="tab-pane fade" id="veh-tab-pneumatici" role="tabpanel" aria-labelledby="veh-tab-pneumatici-btn">
-                <div class="veh-grid">
-                    <x-admin.vehicle-show.tires-card :vehicle="$vehicle" />
-                </div>
+                <x-admin.vehicle-show.tires-card :vehicle="$vehicle" />
             </div>
 
             <div class="tab-pane fade" id="veh-tab-attrezzatura" role="tabpanel"
                 aria-labelledby="veh-tab-attrezzatura-btn">
-                <div class="veh-grid">
-                    <x-admin.vehicle-show.equipment-card :vehicle="$vehicle" :assignable-equipment="$assignableEquipment"
-                        :missing-equipment="$missingEquipment" />
-                </div>
+                <x-admin.vehicle-show.equipment-card :vehicle="$vehicle" :assignable-equipment="$assignableEquipment"
+                    :missing-equipment="$missingEquipment" />
             </div>
 
             <div class="tab-pane fade" id="veh-tab-storico" role="tabpanel" aria-labelledby="veh-tab-storico-btn">
