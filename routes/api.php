@@ -22,6 +22,7 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     Route::get('/vehicles', [VehicleController::class, 'index']);
+    Route::get('/vehicles/suggestions', [VehicleController::class, 'suggestions'])->name('api.vehicles.suggestions');
     Route::get('/vehicles/{vehicle}', [VehicleController::class, 'show']);
 
     Route::get('/issues', [IssueController::class, 'index']);
