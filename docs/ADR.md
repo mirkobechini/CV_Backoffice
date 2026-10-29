@@ -370,6 +370,24 @@ Vehicles and equipment already had a printable QR label (`QrCodeGenerator`, serv
 
 ---
 
+## 18. FullCalendar bundled via npm/Vite, pinned to the latest stable v6
+
+### Decision
+
+The maintenance calendar (`maintenance-records/calendar.blade.php`) loaded FullCalendar from a CDN pinned to v6.1.15, independent of `package.json` — which also listed `@fullcalendar/core`/`daygrid`/`interaction` as npm dependencies that were never actually imported anywhere. Dependabot kept opening PRs against those unused npm entries while the real, CDN-pinned version silently never moved. Moved to a real import in a dedicated Vite entry (`resources/js/maintenance-calendar.js`, same "separate entry, not in the shared bundle" pattern as §17's `html5-qrcode`), pinned to the latest **stable** v6 (6.1.22) for all three packages.
+
+### Rationale
+
+- v7 was rejected for now: `@fullcalendar/core` has a stable 7.1.3, but `@fullcalendar/daygrid`/`@fullcalendar/interaction` only have a `7.0.0-rc.0` — no stable v7 release of the full set yet. Running a release candidate on a fleet app used by public-assistance associations isn't worth it for a version bump with no functional need behind it.
+- Bundling through Vite (instead of CDN `<script>` tags) means Dependabot's version bumps now apply to the version actually running in production, and `npm audit`/CI catch real vulnerabilities in it.
+
+### Consequences
+
+- Revisit the v7 jump once `daygrid`/`interaction` ship a stable release matching `core`.
+- The CDN `<link>`/`<script>` tags and the inline calendar-init `<script>` in `calendar.blade.php` are gone, replaced by `@vite(['resources/js/maintenance-calendar.js'])` and a `data-events-url` attribute read by that module.
+
+---
+
 ## References
 
 - [Laravel SoftDeletes documentation](https://laravel.com/docs/11/eloquent#soft-deleting)
