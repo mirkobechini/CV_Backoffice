@@ -16,7 +16,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Restyle "Saru" (sidebar fedele al mockup)**: ricerca rapida veicoli (sigla/targa) in cima alla sidebar; "Carburante, Pedaggi, Tessere" e "Attrezzature e guasti" consolidati in sottomenu a tendina invece di link diretti separati; stato attivo a sfondo pieno invece di solo bordo sinistro.
 - **Restyle "Saru" (dashboard fedele al mockup)**: saluto dipendente dall'ora del giorno + nome al posto del titolo generico; pulsante "Nuovo" con dropdown azioni rapide (veicolo/guasto/rifornimento/appuntamento); banner "N cose richiedono attenzione oggi" (scadenze scadute + veicoli fermi da 30+ giorni); riordino priorità delle card (guasti/officina in cima).
 - **Restyle "Saru" (Veicoli, lista+scheda, capofila)**: lista veicoli riprogettata — rimossa la riga KPI ridondante con la dashboard, ricerca a tutta larghezza affiancata ai filtri, icona veicolo come chip arrotondata invece di cerchio pieno, nuova colonna/filtri "Disponibile"/"In officina". Stesso badge sulla scheda veicolo. Badge conteggio veicoli in sidebar; icone del menu "Nuovo" con sfondo colorato.
-- **Restyle "Saru" (dashboard, card KPI verticali)**: icona/valore/etichetta di ogni card KPI ora impilati verticalmente come nel mockup, invece di affiancati orizzontalmente.
+- **Restyle "Saru" (dashboard a 3 colonne)**: card KPI con icona/valore/etichetta impilati verticalmente come nel mockup (prima affiancati orizzontalmente); layout a 3 colonne fisse al posto delle righe impilate a coppie — colonna priorità (Guasti aperti/Veicoli in officina), colonna Appuntamenti/Scadenze, colonna Equipaggiamento/Attrezzature/Cambio gomme/Lavaggi. Nessun dato o funzionalità rimossi, solo riorganizzati.
 
 ### Fixed
 
