@@ -703,14 +703,16 @@ body {
     margin-bottom: 18px;
 }
 
+/* Icona/valore/etichetta impilati verticalmente, come nel mockup
+   (restyle "Saru", ADR §19) — prima icona+testo affiancati. */
 .dash-kpi {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 12px;
+    padding: 14px;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
     text-decoration: none;
     color: inherit;
     transition: transform .12s;
@@ -721,19 +723,20 @@ body {
 }
 
 .dash-kpi .ic {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     border-radius: var(--radius);
     display: grid;
     place-items: center;
-    font-size: 16px;
+    font-size: 14px;
     flex-shrink: 0;
+    margin-bottom: 9px;
 }
 
 .dash-kpi .lbl {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-muted);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .dash-kpi .val {
