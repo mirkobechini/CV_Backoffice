@@ -25,30 +25,35 @@
             <details>
                 <summary style="cursor:pointer;color:var(--text-muted);font-size:13px;padding:8px 0;">
                     {{ __('Vedi dettaglio') }}</summary>
-                @if ($carWashMissingVehicles->isNotEmpty())
-                    <div class="meta" style="margin:8px 0 4px;">{{ __('Da lavare') }}</div>
-                    @foreach ($carWashMissingVehicles as $vehicle)
-                        <a href="{{ route('admin.vehicles.show', $vehicle->id) }}" class="dash-list-item">
-                            <div>
-                                <div class="name">{{ $vehicle->internal_code }}</div>
-                                <div class="meta">{{ $vehicle->license_plate }}</div>
-                            </div>
-                            <span class="badge b-amber">{{ __('da lavare') }}</span>
-                        </a>
-                    @endforeach
-                @endif
-                @if ($carWashRecords->isNotEmpty())
-                    <div class="meta" style="margin:8px 0 4px;">{{ __('Già lavati') }}</div>
-                    @foreach ($carWashRecords as $record)
-                        <a href="{{ route('admin.vehicles.show', $record->vehicle_id) }}" class="dash-list-item">
-                            <div>
-                                <div class="name">{{ $record->vehicle->internal_code }}</div>
-                                <div class="meta">{{ $record->vehicle->license_plate }}</div>
-                            </div>
-                            <span class="meta">{{ $record->return_date->format('d/m/Y') }}</span>
-                        </a>
-                    @endforeach
-                @endif
+                {{-- Scroll interno invece di allungare la card (e la colonna
+                     intera, essendo l'ultima — vedi .dash-col >
+                     .dash-card:last-child) quando l'elenco è lungo. --}}
+                <div style="max-height:220px; overflow-y:auto;">
+                    @if ($carWashMissingVehicles->isNotEmpty())
+                        <div class="meta" style="margin:8px 0 4px;">{{ __('Da lavare') }}</div>
+                        @foreach ($carWashMissingVehicles as $vehicle)
+                            <a href="{{ route('admin.vehicles.show', $vehicle->id) }}" class="dash-list-item">
+                                <div>
+                                    <div class="name">{{ $vehicle->internal_code }}</div>
+                                    <div class="meta">{{ $vehicle->license_plate }}</div>
+                                </div>
+                                <span class="badge b-amber">{{ __('da lavare') }}</span>
+                            </a>
+                        @endforeach
+                    @endif
+                    @if ($carWashRecords->isNotEmpty())
+                        <div class="meta" style="margin:8px 0 4px;">{{ __('Già lavati') }}</div>
+                        @foreach ($carWashRecords as $record)
+                            <a href="{{ route('admin.vehicles.show', $record->vehicle_id) }}" class="dash-list-item">
+                                <div>
+                                    <div class="name">{{ $record->vehicle->internal_code }}</div>
+                                    <div class="meta">{{ $record->vehicle->license_plate }}</div>
+                                </div>
+                                <span class="meta">{{ $record->return_date->format('d/m/Y') }}</span>
+                            </a>
+                        @endforeach
+                    @endif
+                </div>
             </details>
         </div>
     </div>

@@ -862,6 +862,26 @@ body {
     margin-bottom: 0;
 }
 
+/* Riquadro mese/giorno a sinistra (card "Prossimi appuntamenti", restyle
+   "Saru" ADR §19) — come nel mockup, al posto del badge data a destra. */
+.dash-date-box {
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.dash-date-box .month {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.dash-date-box .day {
+    font-size: 15px;
+    font-weight: 800;
+}
+
 .dash-list-item .dot {
     width: 9px;
     height: 9px;

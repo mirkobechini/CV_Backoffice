@@ -95,19 +95,18 @@
         :active-insurance-premium-total="$activeInsurancePremiumTotal" />
 
     {{-- 3 colonne fisse come nel mockup (restyle "Saru", ADR §19), al posto
-         delle righe impilate a coppie — 3 card per colonna, raggruppate per
-         urgenza invece che per entità, così le colonne restano equilibrate
-         in altezza: col.1 richiede attenzione ora, col.2 in arrivo a breve,
-         col.3 stato generale/completezza. --}}
+         delle righe impilate a coppie — col.1 guasti + scadenze (tenute
+         insieme), col.2 appuntamenti/officina/attrezzature, col.3 stato
+         generale/completezza. --}}
     <div class="dash-columns">
         <div class="dash-col">
             <x-dashboard.open-issues-card :open-issues="$openIssues" />
-            <x-dashboard.in-workshop-card :in-workshop-records="$inWorkshopRecords" />
+            <x-dashboard.upcoming-deadlines-card :upcoming-deadlines="$upcomingDeadlines" />
             <x-dashboard.expired-deadlines-card :expired-deadlines="$expiredDeadlines" />
         </div>
         <div class="dash-col">
             <x-dashboard.upcoming-appointments-card :upcoming-appointments="$upcomingAppointments" />
-            <x-dashboard.upcoming-deadlines-card :upcoming-deadlines="$upcomingDeadlines" />
+            <x-dashboard.in-workshop-card :in-workshop-records="$inWorkshopRecords" />
             <x-dashboard.expiring-equipment-card :expiring-equipment="$expiringEquipment" />
         </div>
         <div class="dash-col">
