@@ -65,11 +65,13 @@ class StatisticsController extends Controller
                 'costByProvider' => $costStatistics->costByProvider($since),
                 'costPerKm' => $costStatistics->costPerKm($since),
                 'totalCostPerKm' => $costStatistics->totalCostPerKm($since),
+                'costByVehicleType' => $costStatistics->costByVehicleType($since),
             ],
             'carburante' => [
                 'litersAndCostByYear' => $fuelStatistics->litersAndCostByYear($since),
                 'litersAndCostByVehicle' => $fuelStatistics->litersAndCostByVehicle($since),
                 'litersAndCostByFuelType' => $fuelStatistics->litersAndCostByFuelType($since),
+                'litersAndCostByVehicleType' => $fuelStatistics->litersAndCostByVehicleType($since),
                 'averageConsumptionByVehicle' => $fuelStatistics->averageConsumptionByVehicle($since),
             ],
             'pneumatici' => [
@@ -105,6 +107,7 @@ class StatisticsController extends Controller
                 'vehiclePartMatrix' => $issueStatistics->vehiclePartMatrix($since),
                 'monthlyTrend' => $issueStatistics->monthlyTrend($since),
                 'costByPart' => $issueStatistics->costByPart($since),
+                'countsByVehicleType' => $issueStatistics->countsByVehicleType($since),
             ],
         };
 

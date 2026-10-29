@@ -34,6 +34,23 @@ class CostStatisticsService
     }
 
     /**
+     * Spesa manutenzione totale per tipo di veicolo, ordinata dalla più
+     * costosa: se una categoria di mezzi costa sistematicamente più
+     * delle altre, non solo il singolo veicolo più caro.
+     *
+     * @return Collection<string, float> tipo veicolo => costo totale
+     */
+    public function costByVehicleType(?Carbon $since = null): Collection
+    {
+        return $this->baseQuery($since)
+            ->with('vehicle.vehicleType')
+            ->get()
+            ->groupBy(fn (MaintenanceRecord $r) => $r->vehicle?->vehicleType?->name ?? 'N/A')
+            ->map(fn ($group) => (float) $group->sum('cost'))
+            ->sortDesc();
+    }
+
+    /**
      * Spesa totale per anno (anno dell'appuntamento), per vedere il
      * trend di spesa della flotta nel tempo.
      *
