@@ -2,7 +2,6 @@
 
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
-        ['label' => __('Flotta')],
         ['label' => __('Attrezzature'), 'url' => route('admin.equipments.index')],
         ['label' => $equipment->name ?: ($equipment->equipmentType->name ?? 'N/A'), 'url' => route('admin.equipments.show', $equipment->id)],
         ['label' => __('Modifica')],
