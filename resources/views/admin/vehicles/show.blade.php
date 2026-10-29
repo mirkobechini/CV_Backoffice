@@ -78,27 +78,94 @@
         </div>
     </div>
 
-    {{-- Anagrafica, Specifiche, Documenti, Scadenze --}}
-    <div class="veh-grid">
-        <x-admin.vehicle-show.registry-card :vehicle="$vehicle" />
-        <x-admin.vehicle-show.tech-specs-card :vehicle="$vehicle" />
-        <x-admin.vehicle-show.documents-card :vehicle="$vehicle" />
-        <x-admin.vehicle-show.deadlines-active-card :vehicle="$vehicle" :active-deadlines="$activeDeadlines" />
-    </div>
+    {{--
+        Scheda a tab invece di 11 card impilate in scroll continuo (restyle
+        "Saru", ADR §19). Il contenuto di ogni tab resta renderizzato lato
+        server come prima (nessuna rimozione dal DOM): solo mostrato/
+        nascosto via Bootstrap Tab (data-bs-toggle="tab"), così i test
+        Feature che leggono il contenuto della pagina restano validi senza
+        modifiche.
+    --}}
+    <div class="veh-tabs">
+        <ul class="nav veh-tab-nav" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="veh-tab-panoramica-btn" data-bs-toggle="tab"
+                    data-bs-target="#veh-tab-panoramica" type="button" role="tab" aria-controls="veh-tab-panoramica"
+                    aria-selected="true">{{ __('Panoramica') }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="veh-tab-scadenze-btn" data-bs-toggle="tab"
+                    data-bs-target="#veh-tab-scadenze" type="button" role="tab" aria-controls="veh-tab-scadenze"
+                    aria-selected="false">{{ __('Scadenze') }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="veh-tab-manutenzioni-btn" data-bs-toggle="tab"
+                    data-bs-target="#veh-tab-manutenzioni" type="button" role="tab" aria-controls="veh-tab-manutenzioni"
+                    aria-selected="false">{{ __('Manutenzioni') }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="veh-tab-pneumatici-btn" data-bs-toggle="tab"
+                    data-bs-target="#veh-tab-pneumatici" type="button" role="tab" aria-controls="veh-tab-pneumatici"
+                    aria-selected="false">{{ __('Pneumatici') }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="veh-tab-attrezzatura-btn" data-bs-toggle="tab"
+                    data-bs-target="#veh-tab-attrezzatura" type="button" role="tab" aria-controls="veh-tab-attrezzatura"
+                    aria-selected="false">{{ __('Attrezzatura') }}</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="veh-tab-storico-btn" data-bs-toggle="tab"
+                    data-bs-target="#veh-tab-storico" type="button" role="tab" aria-controls="veh-tab-storico"
+                    aria-selected="false">{{ __('Storico') }}</button>
+            </li>
+        </ul>
 
-    {{-- Stato Scadenze (ultima per tipo), Guasti, Equipaggiamento, Pneumatici --}}
-    <div class="veh-grid veh-grid-capped">
-        <x-admin.vehicle-show.deadlines-status-card :deadlines="$deadlines" />
-        <x-admin.vehicle-show.issues-card :vehicle="$vehicle" :issue-providers="$issueProviders" />
-        <x-admin.vehicle-show.equipment-card :vehicle="$vehicle" :assignable-equipment="$assignableEquipment"
-            :missing-equipment="$missingEquipment" />
-        <x-admin.vehicle-show.tires-card :vehicle="$vehicle" />
-        <x-admin.vehicle-show.reliability-trend-card :reliability-trend="$reliabilityTrend" />
-    </div>
+        <div class="tab-content veh-tab-content">
+            <div class="tab-pane fade show active" id="veh-tab-panoramica" role="tabpanel"
+                aria-labelledby="veh-tab-panoramica-btn">
+                <div class="veh-grid">
+                    <x-admin.vehicle-show.registry-card :vehicle="$vehicle" />
+                    <x-admin.vehicle-show.tech-specs-card :vehicle="$vehicle" />
+                    <x-admin.vehicle-show.documents-card :vehicle="$vehicle" />
+                    <x-admin.vehicle-show.reliability-trend-card :reliability-trend="$reliabilityTrend" />
+                </div>
+            </div>
 
-    <x-admin.vehicle-show.deadlines-history-card :vehicle="$vehicle" />
-    <x-admin.vehicle-show.appointments-history-card :appointments="$vehicleAppointments" />
-    <x-admin.vehicle-show.tire-changes-history-card :tire-changes="$vehicle->tireChanges" />
+            <div class="tab-pane fade" id="veh-tab-scadenze" role="tabpanel" aria-labelledby="veh-tab-scadenze-btn">
+                <div class="veh-grid">
+                    <x-admin.vehicle-show.deadlines-active-card :vehicle="$vehicle" :active-deadlines="$activeDeadlines" />
+                    <x-admin.vehicle-show.deadlines-status-card :deadlines="$deadlines" />
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="veh-tab-manutenzioni" role="tabpanel"
+                aria-labelledby="veh-tab-manutenzioni-btn">
+                <div class="veh-grid">
+                    <x-admin.vehicle-show.issues-card :vehicle="$vehicle" :issue-providers="$issueProviders" />
+                </div>
+                <x-admin.vehicle-show.appointments-history-card :appointments="$vehicleAppointments" />
+            </div>
+
+            <div class="tab-pane fade" id="veh-tab-pneumatici" role="tabpanel" aria-labelledby="veh-tab-pneumatici-btn">
+                <div class="veh-grid">
+                    <x-admin.vehicle-show.tires-card :vehicle="$vehicle" />
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="veh-tab-attrezzatura" role="tabpanel"
+                aria-labelledby="veh-tab-attrezzatura-btn">
+                <div class="veh-grid">
+                    <x-admin.vehicle-show.equipment-card :vehicle="$vehicle" :assignable-equipment="$assignableEquipment"
+                        :missing-equipment="$missingEquipment" />
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="veh-tab-storico" role="tabpanel" aria-labelledby="veh-tab-storico-btn">
+                <x-admin.vehicle-show.deadlines-history-card :vehicle="$vehicle" />
+                <x-admin.vehicle-show.tire-changes-history-card :tire-changes="$vehicle->tireChanges" />
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

@@ -182,3 +182,43 @@
         @endauth
     </div>
 </aside>
+
+{{--
+    Nav mobile (<768px): sidebar sostituita da top bar + bottom nav
+    (restyle "Saru", ADR §19), con safe-area per notch/home indicator.
+--}}
+<nav class="bottom-nav" aria-label="{{ __('Navigazione principale') }}">
+    <a class="bottom-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+        <i class="fa-solid fa-gauge-high"></i><span>{{ __('Dashboard') }}</span>
+    </a>
+    <a class="bottom-nav-link {{ request()->routeIs('admin.vehicles.*') ? 'active' : '' }}"
+        href="{{ route('admin.vehicles.index') }}">
+        <i class="fa-solid fa-truck"></i><span>{{ __('Veicoli') }}</span>
+    </a>
+    <div class="bottom-nav-add">
+        <button type="button" class="bottom-nav-add-btn" id="bottom-nav-add-toggle" aria-haspopup="true"
+            aria-expanded="false" aria-label="{{ __('Azione rapida') }}">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+        <div class="bottom-nav-add-menu" id="bottom-nav-add-menu">
+            <a href="{{ route('admin.vehicles.create') }}"><i class="fa-solid fa-truck"></i>
+                {{ __('Nuovo veicolo') }}</a>
+            <a href="{{ route('admin.issues.create') }}"><i class="fa-solid fa-triangle-exclamation"></i>
+                {{ __('Nuovo guasto') }}</a>
+            <a href="{{ route('admin.fuel-logs.create') }}"><i class="fa-solid fa-gas-pump"></i>
+                {{ __('Nuovo rifornimento') }}</a>
+            <a href="{{ route('admin.maintenance-records.create') }}"><i class="fa-solid fa-calendar-check"></i>
+                {{ __('Nuovo appuntamento') }}</a>
+        </div>
+    </div>
+    <a class="bottom-nav-link {{ request()->routeIs('admin.issues.*') ? 'active' : '' }}"
+        href="{{ route('admin.issues.index') }}">
+        <i class="fa-solid fa-triangle-exclamation"></i><span>{{ __('Guasti') }}</span>
+        @if ($sidebarOpenIssuesCount > 0)
+            <span class="bottom-nav-badge">{{ $sidebarOpenIssuesCount }}</span>
+        @endif
+    </a>
+    <button type="button" class="bottom-nav-link" id="bottom-nav-menu-toggle">
+        <i class="fa-solid fa-bars"></i><span>{{ __('Menu') }}</span>
+    </button>
+</nav>

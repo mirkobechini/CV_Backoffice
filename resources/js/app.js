@@ -49,25 +49,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Sidebar off-canvas su mobile (<992px): hamburger nella topbar
+    // Sidebar off-canvas su tablet/mobile (<992px): hamburger nella topbar
+    // (768-991px) o voce "Menu" della bottom nav (<768px, restyle "Saru").
     const sidebar = document.querySelector('.sidebar-dp');
     const sidebarToggle = document.getElementById('sidebar-toggle');
+    const bottomNavMenuToggle = document.getElementById('bottom-nav-menu-toggle');
     const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+    const bottomNav = document.querySelector('.bottom-nav');
+
+    const openSidebar = () => {
+        sidebar.classList.add('is-open');
+        sidebarBackdrop.classList.add('is-open');
+        // Nasconde l'hamburger mentre il menu è aperto: la sidebar
+        // stessa resta l'unico modo per navigare o chiuderla.
+        if (sidebarToggle) sidebarToggle.hidden = true;
+        bottomNav?.classList.add('is-hidden');
+    };
 
     const closeSidebar = () => {
         sidebar?.classList.remove('is-open');
         sidebarBackdrop?.classList.remove('is-open');
-        sidebarToggle.hidden = false;
+        if (sidebarToggle) sidebarToggle.hidden = false;
+        bottomNav?.classList.remove('is-hidden');
     };
 
-    if (sidebar && sidebarToggle && sidebarBackdrop) {
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.add('is-open');
-            sidebarBackdrop.classList.add('is-open');
-            // Nasconde l'hamburger mentre il menu è aperto: la sidebar
-            // stessa resta l'unico modo per navigare o chiuderla.
-            sidebarToggle.hidden = true;
-        });
+    if (sidebar && sidebarBackdrop) {
+        sidebarToggle?.addEventListener('click', openSidebar);
+        bottomNavMenuToggle?.addEventListener('click', openSidebar);
 
         sidebarBackdrop.addEventListener('click', closeSidebar);
 
@@ -80,6 +88,33 @@ document.addEventListener('DOMContentLoaded', () => {
             if (event.key === 'Escape') {
                 closeSidebar();
             }
+        });
+    }
+
+    // Bottom nav: menu azione rapida ("+")
+    const addToggle = document.getElementById('bottom-nav-add-toggle');
+    const addMenu = document.getElementById('bottom-nav-add-menu');
+
+    if (addToggle && addMenu) {
+        const closeAddMenu = () => {
+            addMenu.classList.remove('is-open');
+            addToggle.setAttribute('aria-expanded', 'false');
+        };
+
+        addToggle.addEventListener('click', (event) => {
+            event.stopPropagation();
+            const isOpen = addMenu.classList.toggle('is-open');
+            addToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!addMenu.contains(event.target) && event.target !== addToggle) {
+                closeAddMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeAddMenu();
         });
     }
 
