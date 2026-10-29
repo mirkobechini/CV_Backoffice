@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Statistiche: nuova tab "Pneumatici" con spesa cambio gomme per anno/veicolo, numero cambi per veicolo e km medi tra due cambi consecutivi.
+
 ## [v1.21.1] - 2026-10-29
 
 ### Changed

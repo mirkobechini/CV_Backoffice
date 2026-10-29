@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasVehicleGroupScoping;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
@@ -9,7 +10,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class TireChange extends Model
 {
-    use HasActivity, SoftDeletes;
+    use HasActivity, HasVehicleGroupScoping, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
