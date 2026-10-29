@@ -15,6 +15,7 @@ class CostStatisticsService
 {
     public function __construct(
         private readonly FleetUsageStatisticsService $usageStatistics,
+        private readonly FuelStatisticsService $fuelStatistics,
     ) {}
 
     /**
@@ -111,6 +112,44 @@ class CostStatisticsService
                 'label' => $row['label'],
                 'per_km' => round($row['cost'] / $kmByVehicleId->get($row['vehicle_id'])['km'], 2),
             ])
+            ->sortByDesc('per_km')
+            ->values();
+    }
+
+    /**
+     * Costo totale per km percorso, per veicolo: come costPerKm() ma
+     * sommando anche la spesa carburante (FuelStatisticsService::
+     * litersAndCostByVehicle()), non solo le manutenzioni — quanto costa
+     * davvero tenere in strada il veicolo, non solo "quanto costano le
+     * riparazioni". Un veicolo con manutenzioni ma senza alcuna spesa
+     * carburante registrata nel periodo resta incluso (0 di carburante),
+     * il contrario (solo carburante, nessuna manutenzione) idem: si somma
+     * quello che c'è, non si esclude per mancanza dell'altra fonte.
+     *
+     * @return Collection<int, array{vehicle_id: int, label: string, per_km: float}>
+     */
+    public function totalCostPerKm(?Carbon $since = null): Collection
+    {
+        $kmByVehicleId = $this->usageStatistics->kmTraveledByVehicle($since)->keyBy('vehicle_id');
+        $maintenanceCostByVehicleId = $this->costByVehicle($since)->keyBy('vehicle_id');
+        $fuelCostByVehicleId = $this->fuelStatistics->litersAndCostByVehicle($since)->keyBy('vehicle_id');
+
+        $vehicleIds = $maintenanceCostByVehicleId->keys()->merge($fuelCostByVehicleId->keys())->unique();
+
+        return $vehicleIds
+            ->filter(fn ($vehicleId) => ($kmByVehicleId->get($vehicleId)['km'] ?? 0) >= self::MIN_KM_FOR_COST_PER_KM)
+            ->map(function ($vehicleId) use ($kmByVehicleId, $maintenanceCostByVehicleId, $fuelCostByVehicleId) {
+                $totalCost = ($maintenanceCostByVehicleId->get($vehicleId)['cost'] ?? 0)
+                    + ($fuelCostByVehicleId->get($vehicleId)['cost'] ?? 0);
+
+                return [
+                    'vehicle_id' => $vehicleId,
+                    'label' => $maintenanceCostByVehicleId->get($vehicleId)['label']
+                        ?? $fuelCostByVehicleId->get($vehicleId)['label']
+                        ?? 'N/A',
+                    'per_km' => round($totalCost / $kmByVehicleId->get($vehicleId)['km'], 2),
+                ];
+            })
             ->sortByDesc('per_km')
             ->values();
     }
