@@ -4,33 +4,17 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
-### Added
-
-- Statistiche: nuova card "Età flotta" (tab Affidabilità e utilizzo) con età media e per veicolo, dal più vecchio.
-
-### Added
-
-- Statistiche: nuova card "per tipo di veicolo" nelle tab Guasti, Costi e Carburante.
-
-### Added
-
-- Statistiche: nuova card "Costo totale per km percorso" (tab Costi) che somma manutenzione e carburante, affiancata a quella già esistente (ora "Costo manutenzioni per km percorso").
-
-### Added
-
-- Statistiche: nuova card "Veicoli fermi" (tab Affidabilità e utilizzo) con i veicoli senza chilometraggio o rifornimento registrato da almeno 30 giorni.
-
-### Added
-
-- Statistiche: nuova tab "Scadenze" con conteggio per stato attuale, scadute per tipo, e costo medio rinnovo assicurazione.
-
-### Added
-
-- Statistiche: nuova tab "Attrezzature" con guasti per attrezzatura/tipo e spesa manutenzione per anno/attrezzatura (stesso impianto delle tab esistenti per i veicoli).
+## [v1.22.0] - 2026-10-29
 
 ### Added
 
 - Statistiche: nuova tab "Pneumatici" con spesa cambio gomme per anno/veicolo, numero cambi per veicolo e km medi tra due cambi consecutivi.
+- Statistiche: nuova tab "Attrezzature" con guasti per attrezzatura/tipo e spesa manutenzione per anno/attrezzatura (stesso impianto delle tab esistenti per i veicoli).
+- Statistiche: nuova tab "Scadenze" con conteggio per stato attuale, scadute per tipo, e costo medio rinnovo assicurazione.
+- Statistiche: nuova card "Veicoli fermi" (tab Affidabilità e utilizzo) con i veicoli senza chilometraggio o rifornimento registrato da almeno 30 giorni.
+- Statistiche: nuova card "Costo totale per km percorso" (tab Costi) che somma manutenzione e carburante, affiancata a quella già esistente (ora "Costo manutenzioni per km percorso").
+- Statistiche: nuova card "per tipo di veicolo" nelle tab Guasti, Costi e Carburante.
+- Statistiche: nuova card "Età flotta" (tab Affidabilità e utilizzo) con età media e per veicolo, dal più vecchio.
 
 ## [v1.21.1] - 2026-10-29
 
