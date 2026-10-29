@@ -6,6 +6,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- Statistiche: nuova card "Età flotta" (tab Affidabilità e utilizzo) con età media e per veicolo, dal più vecchio.
+
+### Added
+
 - Statistiche: nuova card "per tipo di veicolo" nelle tab Guasti, Costi e Carburante.
 
 ### Added
