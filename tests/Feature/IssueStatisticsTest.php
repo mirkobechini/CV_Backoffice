@@ -182,4 +182,32 @@ class IssueStatisticsTest extends TestCase
         // 200€ diviso tra 2 guasti = 100€ a testa.
         $response->assertSee('100,00');
     }
+
+    public function test_counts_by_vehicle_type_groups_issues_by_type(): void
+    {
+        $user = $this->admin();
+        $ambulanza = $this->vehicle();
+
+        $brand = Brand::create(['name' => 'Iveco']);
+        $model = CarModel::create(['name' => 'Daily', 'brand_id' => $brand->id]);
+        $pulminoType = VehicleType::create(['name' => 'Pulmino', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $pulmino = Vehicle::create([
+            'license_plate' => 'EF456GH',
+            'internal_code' => '0002',
+            'vehicle_type_id' => $pulminoType->id,
+            'brand_id' => $brand->id,
+            'car_model_id' => $model->id,
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+
+        Issue::create(['vehicle_id' => $ambulanza->id, 'part' => Issue::PART_FRENI, 'description' => 'a', 'status' => 'open', 'event_date' => '2026-01-01']);
+        Issue::create(['vehicle_id' => $ambulanza->id, 'part' => Issue::PART_MOTORE, 'description' => 'b', 'status' => 'open', 'event_date' => '2026-01-02']);
+        Issue::create(['vehicle_id' => $pulmino->id, 'part' => Issue::PART_FRENI, 'description' => 'c', 'status' => 'open', 'event_date' => '2026-01-03']);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'guasti', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Guasti per tipo di veicolo', 'Ambulanza', 'Pulmino']);
+    }
 }

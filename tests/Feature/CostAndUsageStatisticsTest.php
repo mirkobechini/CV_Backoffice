@@ -35,12 +35,12 @@ class CostAndUsageStatisticsTest extends TestCase
         );
     }
 
-    private function vehicle(string $internalCode = '0001', ?Group $group = null, ?string $licensePlate = null): Vehicle
+    private function vehicle(string $internalCode = '0001', ?Group $group = null, ?string $licensePlate = null, string $typeName = 'Ambulanza'): Vehicle
     {
         $brand = Brand::firstOrCreate(['name' => 'Fiat']);
         $model = CarModel::firstOrCreate(['name' => 'Ducato', 'brand_id' => $brand->id]);
         $type = VehicleType::firstOrCreate(
-            ['name' => 'Ambulanza'],
+            ['name' => $typeName],
             ['first_inspection_months' => 48, 'regular_inspection_months' => 24]
         );
 
@@ -277,6 +277,22 @@ class CostAndUsageStatisticsTest extends TestCase
         // condivisa "1726".
         $response->assertSee('21.000 km');
         $response->assertSee('82.989 km');
+    }
+
+    public function test_cost_by_vehicle_type_groups_by_type(): void
+    {
+        $user = $this->admin();
+        $ambulanza = $this->vehicle('0001', typeName: 'Ambulanza');
+        $pulmino = $this->vehicle('0002', typeName: 'Pulmino');
+        $provider = $this->provider();
+
+        MaintenanceRecord::create(['vehicle_id' => $ambulanza->id, 'provider_id' => $provider->id, 'appointment_date' => '2026-01-01', 'cost' => 100]);
+        MaintenanceRecord::create(['vehicle_id' => $pulmino->id, 'provider_id' => $provider->id, 'appointment_date' => '2026-01-02', 'cost' => 40]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'costi', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Spesa per tipo di veicolo', 'Ambulanza', '100,00', 'Pulmino', '40,00']);
     }
 
     public function test_total_cost_per_km_sums_maintenance_and_fuel(): void

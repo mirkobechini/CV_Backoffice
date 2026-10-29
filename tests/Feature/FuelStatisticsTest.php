@@ -29,12 +29,12 @@ class FuelStatisticsTest extends TestCase
         );
     }
 
-    private function vehicle(string $internalCode = '0001', ?string $fuelType = 'diesel', ?Group $group = null): Vehicle
+    private function vehicle(string $internalCode = '0001', ?string $fuelType = 'diesel', ?Group $group = null, string $typeName = 'Ambulanza'): Vehicle
     {
         $brand = Brand::firstOrCreate(['name' => 'Fiat']);
         $model = CarModel::firstOrCreate(['name' => 'Ducato', 'brand_id' => $brand->id]);
         $type = VehicleType::firstOrCreate(
-            ['name' => 'Ambulanza'],
+            ['name' => $typeName],
             ['first_inspection_months' => 48, 'regular_inspection_months' => 24]
         );
 
@@ -77,6 +77,21 @@ class FuelStatisticsTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeInOrder(['Litri e spesa per veicolo', '0001', '45,50 L', '68,90']);
+    }
+
+    public function test_liters_and_cost_by_vehicle_type(): void
+    {
+        $user = $this->admin();
+        $ambulanza = $this->vehicle('0001', typeName: 'Ambulanza');
+        $pulmino = $this->vehicle('0002', typeName: 'Pulmino');
+
+        FuelLog::create(['vehicle_id' => $ambulanza->id, 'log_date' => '2026-01-01', 'liters' => 40, 'cost_total' => 60]);
+        FuelLog::create(['vehicle_id' => $pulmino->id, 'log_date' => '2026-01-02', 'liters' => 10, 'cost_total' => 15]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'carburante', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Litri e spesa per tipo di veicolo', 'Ambulanza', '40,00 L', 'Pulmino', '10,00 L']);
     }
 
     public function test_liters_and_cost_by_fuel_type(): void
