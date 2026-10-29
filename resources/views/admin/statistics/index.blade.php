@@ -27,6 +27,12 @@
             class="chip {{ $tab === 'costi' ? 'on' : '' }}">{{ __('Costi') }}</a>
         <a href="{{ route('admin.statistics.index', ['tab' => 'carburante', 'period' => $period]) }}"
             class="chip {{ $tab === 'carburante' ? 'on' : '' }}">{{ __('Carburante') }}</a>
+        <a href="{{ route('admin.statistics.index', ['tab' => 'pneumatici', 'period' => $period]) }}"
+            class="chip {{ $tab === 'pneumatici' ? 'on' : '' }}">{{ __('Pneumatici') }}</a>
+        <a href="{{ route('admin.statistics.index', ['tab' => 'attrezzature', 'period' => $period]) }}"
+            class="chip {{ $tab === 'attrezzature' ? 'on' : '' }}">{{ __('Attrezzature') }}</a>
+        <a href="{{ route('admin.statistics.index', ['tab' => 'scadenze', 'period' => $period]) }}"
+            class="chip {{ $tab === 'scadenze' ? 'on' : '' }}">{{ __('Scadenze') }}</a>
         <a href="{{ route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => $period]) }}"
             class="chip {{ $tab === 'affidabilita' ? 'on' : '' }}">{{ __('Affidabilità e utilizzo') }}</a>
     </div>
@@ -35,6 +41,12 @@
         @include('admin.statistics._tab-costi')
     @elseif ($tab === 'carburante')
         @include('admin.statistics._tab-carburante')
+    @elseif ($tab === 'pneumatici')
+        @include('admin.statistics._tab-pneumatici')
+    @elseif ($tab === 'attrezzature')
+        @include('admin.statistics._tab-attrezzature')
+    @elseif ($tab === 'scadenze')
+        @include('admin.statistics._tab-scadenze')
     @elseif ($tab === 'affidabilita')
         @include('admin.statistics._tab-affidabilita')
     @else

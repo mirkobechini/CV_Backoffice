@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Brand;
 use App\Models\CarModel;
+use App\Models\FuelLog;
 use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
@@ -34,12 +35,12 @@ class CostAndUsageStatisticsTest extends TestCase
         );
     }
 
-    private function vehicle(string $internalCode = '0001', ?Group $group = null, ?string $licensePlate = null): Vehicle
+    private function vehicle(string $internalCode = '0001', ?Group $group = null, ?string $licensePlate = null, string $typeName = 'Ambulanza'): Vehicle
     {
         $brand = Brand::firstOrCreate(['name' => 'Fiat']);
         $model = CarModel::firstOrCreate(['name' => 'Ducato', 'brand_id' => $brand->id]);
         $type = VehicleType::firstOrCreate(
-            ['name' => 'Ambulanza'],
+            ['name' => $typeName],
             ['first_inspection_months' => 48, 'regular_inspection_months' => 24]
         );
 
@@ -276,6 +277,127 @@ class CostAndUsageStatisticsTest extends TestCase
         // condivisa "1726".
         $response->assertSee('21.000 km');
         $response->assertSee('82.989 km');
+    }
+
+    public function test_cost_by_vehicle_type_groups_by_type(): void
+    {
+        $user = $this->admin();
+        $ambulanza = $this->vehicle('0001', typeName: 'Ambulanza');
+        $pulmino = $this->vehicle('0002', typeName: 'Pulmino');
+        $provider = $this->provider();
+
+        MaintenanceRecord::create(['vehicle_id' => $ambulanza->id, 'provider_id' => $provider->id, 'appointment_date' => '2026-01-01', 'cost' => 100]);
+        MaintenanceRecord::create(['vehicle_id' => $pulmino->id, 'provider_id' => $provider->id, 'appointment_date' => '2026-01-02', 'cost' => 40]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'costi', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Spesa per tipo di veicolo', 'Ambulanza', '100,00', 'Pulmino', '40,00']);
+    }
+
+    public function test_total_cost_per_km_sums_maintenance_and_fuel(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+        $provider = $this->provider();
+
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 1000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-15', 'mileage' => 1200]);
+        MaintenanceRecord::create(['vehicle_id' => $vehicle->id, 'provider_id' => $provider->id, 'appointment_date' => '2026-01-10', 'cost' => 60]);
+        FuelLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-12', 'liters' => 20, 'cost_total' => 40]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'costi', 'period' => 'all']));
+
+        $response->assertOk();
+        // (60€ manutenzione + 40€ carburante) / 200km = 0,50 €/km.
+        $response->assertSeeInOrder(['Costo totale per km percorso', '0,50']);
+    }
+
+    public function test_total_cost_per_km_includes_vehicle_with_only_fuel_cost(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 1000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-15', 'mileage' => 1200]);
+        FuelLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-12', 'liters' => 20, 'cost_total' => 50]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'costi', 'period' => 'all']));
+
+        $response->assertOk();
+        // 50€ carburante (nessuna manutenzione) / 200km = 0,25 €/km.
+        $response->assertSeeInOrder(['Costo totale per km percorso', '0,25']);
+    }
+
+    // --- Età flotta ---
+
+    public function test_average_fleet_age_averages_vehicle_ages(): void
+    {
+        $user = $this->admin();
+        // Giorni (non anni di calendario) per un risultato deterministico
+        // indipendente dai giorni bisestili nell'intervallo: 3650/365,25
+        // arrotonda a 10,0 anni, 730/365,25 a 2,0 anni, media 6,0.
+        $vehicleA = $this->vehicle('0001');
+        $vehicleA->update(['immatricolation_date' => Carbon::today()->subDays(3650)]);
+        $vehicleB = $this->vehicle('0002');
+        $vehicleB->update(['immatricolation_date' => Carbon::today()->subDays(730)]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Età flotta', 'Media flotta', '6,0 anni']);
+    }
+
+    // --- Veicoli fermi ---
+
+    public function test_stale_vehicles_lists_vehicle_never_logged(): void
+    {
+        $user = $this->admin();
+        $this->vehicle('0001');
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Veicoli fermi', '0001', 'Mai registrata']);
+    }
+
+    public function test_stale_vehicles_lists_vehicle_with_old_mileage_log(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle('0001');
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(45), 'mileage' => 1000]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Veicoli fermi', '0001', '45 giorni fa']);
+    }
+
+    public function test_stale_vehicles_excludes_vehicle_with_recent_activity(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle('0001');
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(5), 'mileage' => 1000]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSee('Tutti i veicoli hanno un chilometraggio o un rifornimento registrato');
+    }
+
+    public function test_stale_vehicles_uses_most_recent_of_mileage_or_fuel_log(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle('0001');
+        // Chilometraggio vecchio, ma rifornimento recente: il veicolo
+        // non deve risultare fermo (si guarda l'attività più recente).
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(60), 'mileage' => 1000]);
+        FuelLog::create(['vehicle_id' => $vehicle->id, 'log_date' => Carbon::today()->subDays(2), 'liters' => 10]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSee('Tutti i veicoli hanno un chilometraggio o un rifornimento registrato');
     }
 
     public function test_statistics_default_tab_is_guasti(): void

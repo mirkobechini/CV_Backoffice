@@ -22,6 +22,24 @@ class IssueStatisticsService
     }
 
     /**
+     * Guasti per tipo di veicolo (Ambulanza, Pulmino, ecc.), ordinato dal
+     * tipo più colpito: se una categoria di mezzi si guasta
+     * sistematicamente più delle altre, non solo il singolo veicolo
+     * "sfortunato". Stesso universo di countsByPart() (solo guasti con
+     * parte assegnata).
+     *
+     * @return Collection<string, int> tipo veicolo => conteggio
+     */
+    public function countsByVehicleType(?Carbon $since = null): Collection
+    {
+        return $this->baseQuery($since)
+            ->with('vehicle.vehicleType')
+            ->get()
+            ->countBy(fn (Issue $issue) => $issue->vehicle?->vehicleType?->name ?? 'N/A')
+            ->sortDesc();
+    }
+
+    /**
      * Quante volte ogni parte compare tra i guasti, ordinato dal più
      * frequente. Conta tutti i guasti indipendentemente dallo stato: la
      * domanda è "quale parte si guasta più spesso", non "quanti sono

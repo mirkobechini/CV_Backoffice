@@ -27,6 +27,42 @@
     </div>
 </div>
 
+<div class="table-card" style="margin-bottom:16px;">
+    <div class="toolbar">
+        <h2>{{ __('Età flotta') }}</h2>
+    </div>
+    @if ($fleetAgeByVehicle->isEmpty())
+        <div class="body" style="padding:16px 20px;">
+            <p class="hint" style="margin:0;">{{ __('Nessun veicolo con data di immatricolazione registrata.') }}</p>
+        </div>
+    @else
+        <div class="body" style="padding:16px 20px;">
+            <div class="dash-list-item" style="align-items:baseline;">
+                <span class="name">{{ __('Media flotta') }}</span>
+                <span class="meta" style="margin-left:auto;font-weight:700;">{{ __(':years anni', ['years' => number_format($averageFleetAge, 1, ',', '.')]) }}</span>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Veicolo') }}</th>
+                        <th>{{ __('Età') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($fleetAgeByVehicle as $row)
+                        <tr>
+                            <td class="code">{{ $row['label'] }}</td>
+                            <td>{{ __(':years anni', ['years' => number_format($row['age_years'], 1, ',', '.')]) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
 @php($maxIssueCount = $issueCountByVehicle->max('count') ?: 1)
 
 <div class="table-card" style="margin-bottom:16px;">
@@ -49,6 +85,46 @@
             <p class="hint" style="margin:0;">{{ __('Nessun guasto nel periodo selezionato.') }}</p>
         @endforelse
     </div>
+</div>
+
+<div class="table-card" style="margin-bottom:16px;">
+    <div class="toolbar">
+        <h2>{{ __('Veicoli fermi') }}</h2>
+    </div>
+    @if ($staleVehicles->isEmpty())
+        <div class="body" style="padding:16px 20px;">
+            <p class="hint" style="margin:0;">{{ __('Tutti i veicoli hanno un chilometraggio o un rifornimento registrato negli ultimi 30 giorni.') }}</p>
+        </div>
+    @else
+        <div class="body" style="padding:16px 20px 0;">
+            <p class="hint" style="margin:0 0 10px;">{{ __('Nessun chilometraggio o rifornimento registrato negli ultimi 30 giorni.') }}</p>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ __('Veicolo') }}</th>
+                        <th>{{ __('Ultima attività') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($staleVehicles as $row)
+                        <tr>
+                            <td class="code">{{ $row['label'] }}</td>
+                            <td>
+                                @if ($row['last_activity_date'])
+                                    {{ $row['last_activity_date']->format('d/m/Y') }}
+                                    ({{ __(':days giorni fa', ['days' => $row['days_since']]) }})
+                                @else
+                                    {{ __('Mai registrata') }}
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
 </div>
 
 <div class="table-card">

@@ -22,6 +22,30 @@
     </div>
 </div>
 
+@php($maxTypeCount = $countsByVehicleType->max() ?: 1)
+
+<div class="table-card" style="margin-bottom:16px;">
+    <div class="toolbar">
+        <h2>{{ __('Guasti per tipo di veicolo') }}</h2>
+    </div>
+    <div class="body" style="padding:16px 20px;">
+        @forelse ($countsByVehicleType as $type => $count)
+            <div class="dash-list-item" style="align-items:flex-start;flex-direction:column;gap:4px;">
+                <div style="display:flex;align-items:baseline;gap:6px;width:100%;">
+                    <span class="name">{{ $type }}</span>
+                    <span class="meta" style="margin-left:auto;">{{ $count }}</span>
+                </div>
+                <div style="width:100%;height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden;">
+                    <div style="height:100%;background:var(--blue);width:{{ ($count / $maxTypeCount) * 100 }}%;">
+                    </div>
+                </div>
+            </div>
+        @empty
+            <p class="hint" style="margin:0;">{{ __('Nessun guasto con parte assegnata nel periodo selezionato.') }}</p>
+        @endforelse
+    </div>
+</div>
+
 <div class="table-card" style="margin-bottom:16px;">
     <div class="toolbar">
         <h2>{{ __('Guasti per parte e veicolo') }}</h2>
