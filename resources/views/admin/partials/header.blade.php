@@ -1,9 +1,12 @@
 {{--
     Riorganizzata da 5 sezioni con 22 voci piatte a gruppi per flusso di
     lavoro (restyle "Saru", ADR §19): "Servizi" diventa "Manutenzione" con
-    badge sul numero di guasti aperti/scadenze imminenti, Carburante/
-    Pedaggi/Tessere raggruppati sotto Flotta invece che linee indipendenti.
-    Nessuna voce di navigazione rimossa o aggiunta rispetto a prima.
+    badge sul numero di guasti aperti/scadenze imminenti. Allineata al
+    mockup validato con Mirko: Carburante/Pedaggi/Tessere/Km/Tipi e le 4
+    voci Attrezzature sono consolidate ciascuna in un sottomenu a tendina
+    invece di linee indipendenti; ricerca rapida veicoli (sigla/targa) in
+    cima; stato attivo a sfondo pieno invece che bordo sinistro. Nessuna
+    voce di navigazione rimossa rispetto a prima, solo raggruppata.
 --}}
 @php
     $sidebarOpenIssuesCount = \App\Models\Issue::forCurrentUser()->open()->count();
@@ -15,6 +18,20 @@
         ->where('is_renewed', false)
         ->where('due_date', '<=', now()->addDays(30))
         ->count();
+
+    $fuelGroupActive = request()->routeIs([
+        'admin.fuel-logs.*',
+        'admin.fleet-devices.*',
+        'admin.fuel-cards.*',
+        'admin.mileage-logs.*',
+        'admin.vehicle-types.*',
+    ]);
+    $equipmentGroupActive = request()->routeIs([
+        'admin.equipments.*',
+        'admin.equipment-types.*',
+        'admin.equipment-issues.*',
+        'admin.equipment-maintenance-records.*',
+    ]);
 @endphp
 
 <aside class="sidebar-dp">
@@ -32,6 +49,16 @@
         <span class="brand-text">{{ config('app.name', 'Gestione Flotta') }}</span>
         <span class="badge text-bg-secondary ms-auto small" style="font-size: 0.6rem;">{{ config('app.version') }}</span>
     </a>
+
+    {{-- Ricerca rapida veicoli (sigla/targa), ADR §19 --}}
+    <div class="sidebar-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" id="sidebar-vehicle-search" autocomplete="off"
+            placeholder="{{ __('Cerca veicolo…') }}" aria-label="{{ __('Cerca veicolo per sigla o targa') }}"
+            data-suggestions-url="{{ route('api.vehicles.suggestions') }}"
+            data-vehicle-url-base="{{ url('admin/vehicles') }}">
+        <div class="sidebar-search-results" id="sidebar-vehicle-search-results"></div>
+    </div>
 
     <nav class="sidebar-nav">
         <a class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"
@@ -51,26 +78,34 @@
             href="{{ route('admin.tires.index') }}" title="{{ __('Pneumatici') }}">
             <i class="fa-solid fa-circle-dot"></i><span>{{ __('Pneumatici') }}</span>
         </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.fuel-logs.*') ? 'active' : '' }}"
-            href="{{ route('admin.fuel-logs.index') }}" title="{{ __('Carburante') }}">
-            <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante') }}</span>
-        </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.fleet-devices.*') ? 'active' : '' }}"
-            href="{{ route('admin.fleet-devices.index') }}" title="{{ __('Dispositivi pedaggio') }}">
-            <i class="fa-solid fa-road-barrier"></i><span>{{ __('Pedaggi') }}</span>
-        </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.fuel-cards.*') ? 'active' : '' }}"
-            href="{{ route('admin.fuel-cards.index') }}" title="{{ __('Tessere carburante') }}">
-            <i class="fa-solid fa-credit-card"></i><span>{{ __('Tessere') }}</span>
-        </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.mileage-logs.*') ? 'active' : '' }}"
-            href="{{ route('admin.mileage-logs.index') }}" title="{{ __('Chilometraggi') }}">
-            <i class="fa-solid fa-road"></i><span>{{ __('Km') }}</span>
-        </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.vehicle-types.*') ? 'active' : '' }}"
-            href="{{ route('admin.vehicle-types.index') }}" title="{{ __('Tipi di veicoli') }}">
-            <i class="fa-solid fa-tags"></i><span>{{ __('Tipi') }}</span>
-        </a>
+        <button type="button"
+            class="sidebar-link sidebar-link-toggle {{ $fuelGroupActive ? 'active open' : '' }}"
+            data-sidebar-submenu-toggle="fuel-group">
+            <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante, Pedaggi, Tessere') }}</span>
+            <i class="fa-solid fa-chevron-down sidebar-submenu-caret"></i>
+        </button>
+        <div class="sidebar-submenu {{ $fuelGroupActive ? 'open' : '' }}" id="fuel-group">
+            <a class="sidebar-link {{ request()->routeIs('admin.fuel-logs.*') ? 'active' : '' }}"
+                href="{{ route('admin.fuel-logs.index') }}" title="{{ __('Carburante') }}">
+                <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.fleet-devices.*') ? 'active' : '' }}"
+                href="{{ route('admin.fleet-devices.index') }}" title="{{ __('Dispositivi pedaggio') }}">
+                <i class="fa-solid fa-road-barrier"></i><span>{{ __('Pedaggi') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.fuel-cards.*') ? 'active' : '' }}"
+                href="{{ route('admin.fuel-cards.index') }}" title="{{ __('Tessere carburante') }}">
+                <i class="fa-solid fa-credit-card"></i><span>{{ __('Tessere') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.mileage-logs.*') ? 'active' : '' }}"
+                href="{{ route('admin.mileage-logs.index') }}" title="{{ __('Chilometraggi') }}">
+                <i class="fa-solid fa-road"></i><span>{{ __('Km') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.vehicle-types.*') ? 'active' : '' }}"
+                href="{{ route('admin.vehicle-types.index') }}" title="{{ __('Tipi di veicoli') }}">
+                <i class="fa-solid fa-tags"></i><span>{{ __('Tipi') }}</span>
+            </a>
+        </div>
     </nav>
 
     {{-- Sezione: Manutenzione (prima "Servizi") --}}
@@ -103,22 +138,31 @@
     {{-- Sezione: Attrezzature --}}
     <div class="sidebar-section">{{ __('Attrezzature') }}</div>
     <nav class="sidebar-nav">
-        <a class="sidebar-link {{ request()->routeIs('admin.equipments.*') ? 'active' : '' }}"
-            href="{{ route('admin.equipments.index') }}" title="{{ __('Attrezzature') }}">
-            <i class="fa-solid fa-toolbox"></i><span>{{ __('Attrezzature') }}</span>
-        </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.equipment-types.*') ? 'active' : '' }}"
-            href="{{ route('admin.equipment-types.index') }}" title="{{ __('Tipi di Attrezzature') }}">
-            <i class="fa-solid fa-tag"></i><span>{{ __('Tipi Attrezzature') }}</span>
-        </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.equipment-issues.*') ? 'active' : '' }}"
-            href="{{ route('admin.equipment-issues.index') }}" title="{{ __('Guasti Attrezzature') }}">
-            <i class="fa-solid fa-triangle-exclamation"></i><span>{{ __('Guasti Attrezzature') }}</span>
-        </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.equipment-maintenance-records.*') ? 'active' : '' }}"
-            href="{{ route('admin.equipment-maintenance-records.index') }}" title="{{ __('Appuntamenti Attrezzature') }}">
-            <i class="fa-solid fa-calendar-check"></i><span>{{ __('Appuntamenti Attrezzature') }}</span>
-        </a>
+        <button type="button"
+            class="sidebar-link sidebar-link-toggle {{ $equipmentGroupActive ? 'active open' : '' }}"
+            data-sidebar-submenu-toggle="equipment-group">
+            <i class="fa-solid fa-toolbox"></i><span>{{ __('Attrezzature e guasti') }}</span>
+            <i class="fa-solid fa-chevron-down sidebar-submenu-caret"></i>
+        </button>
+        <div class="sidebar-submenu {{ $equipmentGroupActive ? 'open' : '' }}" id="equipment-group">
+            <a class="sidebar-link {{ request()->routeIs('admin.equipments.*') ? 'active' : '' }}"
+                href="{{ route('admin.equipments.index') }}" title="{{ __('Attrezzature') }}">
+                <i class="fa-solid fa-toolbox"></i><span>{{ __('Attrezzature') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.equipment-types.*') ? 'active' : '' }}"
+                href="{{ route('admin.equipment-types.index') }}" title="{{ __('Tipi di Attrezzature') }}">
+                <i class="fa-solid fa-tag"></i><span>{{ __('Tipi Attrezzature') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.equipment-issues.*') ? 'active' : '' }}"
+                href="{{ route('admin.equipment-issues.index') }}" title="{{ __('Guasti Attrezzature') }}">
+                <i class="fa-solid fa-triangle-exclamation"></i><span>{{ __('Guasti Attrezzature') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.equipment-maintenance-records.*') ? 'active' : '' }}"
+                href="{{ route('admin.equipment-maintenance-records.index') }}"
+                title="{{ __('Appuntamenti Attrezzature') }}">
+                <i class="fa-solid fa-calendar-check"></i><span>{{ __('Appuntamenti Attrezzature') }}</span>
+            </a>
+        </div>
     </nav>
 
     {{-- Sezione: Report --}}
