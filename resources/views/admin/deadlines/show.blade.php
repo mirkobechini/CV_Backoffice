@@ -2,7 +2,7 @@
 
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
-        ['label' => __('Servizi')],
+        ['label' => __('Manutenzione')],
         ['label' => __('Scadenze'), 'url' => route('admin.deadlines.index')],
         ['label' => $deadline->type],
     ]" />
