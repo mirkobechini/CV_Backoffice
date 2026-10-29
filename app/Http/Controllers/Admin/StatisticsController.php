@@ -101,6 +101,8 @@ class StatisticsController extends Controller
                 'issueCountByVehicle' => $usageStatistics->issueCountByVehicle($since),
                 'downtime' => $usageStatistics->averageDowntimeByProvider($since),
                 'staleVehicles' => $usageStatistics->staleVehicles(),
+                'fleetAgeByVehicle' => $usageStatistics->fleetAgeByVehicle(),
+                'averageFleetAge' => $usageStatistics->averageFleetAge(),
             ],
             default => [
                 'partCounts' => $issueStatistics->countsByPart($since),
