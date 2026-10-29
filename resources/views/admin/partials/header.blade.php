@@ -210,7 +210,9 @@
         @endif
     </nav>
 
-    {{-- Footer sidebar: utente + logout --}}
+    {{-- Footer sidebar: utente + menu account (restyle "Saru", ADR §19:
+         ingranaggio come nel mockup invece del solo logout — logout resta
+         raggiungibile dal menu, nessuna funzione rimossa). --}}
     <div class="sidebar-footer">
         @auth
             <div class="sidebar-user">
@@ -222,10 +224,23 @@
                     data-single-submit="true">
                     @csrf
                 </form>
-                <a href="{{ route('logout') }}" class="sidebar-logout" title="{{ __('Logout') }}"
-                    onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </a>
+                <div class="dropdown">
+                    <button type="button" class="sidebar-logout" title="{{ __('Account') }}"
+                        aria-label="{{ __('Menu account') }}" data-bs-toggle="dropdown" data-bs-auto-close="true"
+                        aria-expanded="false">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ route('profile.edit') }}"><i
+                                    class="fa-solid fa-circle-user" style="width:16px;"></i>
+                                {{ __('Impostazioni account') }}</a></li>
+                        <li>
+                            <a class="dropdown-item" href="{{ route('logout') }}"
+                                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"><i
+                                    class="fa-solid fa-right-from-bracket" style="width:16px;"></i> {{ __('Esci') }}</a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         @endauth
     </div>
