@@ -388,6 +388,35 @@ The maintenance calendar (`maintenance-records/calendar.blade.php`) loaded FullC
 
 ---
 
+## 19. Full UI restyle ("Saru"): orange brand, dark-first, reorganized navigation
+
+### Decision
+
+Mirko asked for a complete visual and information-architecture redesign of the admin UI — not a cosmetic pass, a rethink of how the app is organized, validated upfront with a throwaway visual mockup (Dashboard, Veicoli, vehicle detail, each in a desktop and mobile variant) before any real code changed. Agreed direction:
+
+- **Palette**: orange as the brand accent (`#e2792d`, the color already used in the Saru monkey favicon) replacing the previous indigo, on a warm neutral background instead of the previous cool gray — both light and dark variants re-themed, not just dark.
+- **Dark theme is the priority**: Mirko reviews and works in dark mode by default; light mode stays available (the existing Auto/Light/Dark switch is unchanged) but dark gets first attention in every phase.
+- **Sidebar**: reorganized from ~22 flat links across 5 groups into fewer, workflow-based groups (Flotta/Manutenzione/Attrezzature/Report/Sistema) with badge counters, instead of one link per entity type.
+- **Detail pages restructured into tabs**: the vehicle show page (11 stacked cards, a long scroll) becomes tab sections (Panoramica/Scadenze/Manutenzioni/Pneumatici/Attrezzatura/Storico) — same pattern to be applied to other long detail pages as they're redone.
+- **Mobile**: same design language adapted at breakpoints (sidebar → top bar + bottom nav), not a separate design, with explicit safe-area handling (`env(safe-area-inset-top/bottom)`) for the notch/Dynamic Island and the home indicator/gesture bar.
+
+Rolled out in phases, each its own issue/PR: foundations (CSS tokens + sidebar/topbar, shared by every page) first, then page groups by domain (Veicoli, Manutenzione, Carburante/Pneumatici/Pedaggi/Tessere, Attrezzature, Sistema, Statistiche), mobile safe-area alongside each group. Existing CSS custom-property **names** (`--primary`, `--bg`, `--tagliando`, etc.) are kept as-is in the foundations phase — only their values change — so the rollout doesn't require touching every one of the ~93 admin Blade views at once; individual pages still get redone in later phases for layout/reorganization, but already inherit the new palette and sidebar from the shared layout.
+
+### Rationale
+
+- Changing CSS variable *values* instead of renaming them means the foundations PR alone re-themes every page that extends the shared layout (all of them), without a single, unreviewable mega-diff touching 93 files — the reorg of each page's own layout is deliberately a separate, later phase.
+- `--assicurazione` (deadline-type accent, previously orange `#ea580c`/`#fb923c`) is recolored to a pink/rose family in this phase: with `--primary` now orange, keeping assicurazione orange too would make "scadenza assicurazione" badges visually indistinguishable from ordinary brand-colored UI elements, undermining the whole point of the deadline-type color coding introduced earlier in the project.
+- `--primary`'s light-mode value is a darker, accessible orange (`#c2410c`, ~4.5:1 on white) rather than the vivid favicon orange (`#e2792d`): `--primary` is used throughout the CSS as plain text/icon/border color on light surfaces (links, "vedi tutti" labels, outline buttons), not only as a button background — the vivid orange fails WCAG AA as text-on-white. The favicon/logo mark itself keeps the vivid color (decorative, not subject to text-contrast rules). Dark mode's background is dark enough that the vivid orange passes contrast directly, so no split is needed there.
+- Tabs on long detail pages are implemented as client-side show/hide over content that's still fully present in the server-rendered HTML (not conditionally rendered per tab), specifically so existing Feature tests asserting on page content keep passing without rewrites — only tests asserting exact *visible* UI text that changes wording need updating.
+
+### Consequences
+
+- Every Blade view that renders its own hardcoded hex color (bypassing the CSS variables) needs to be found and fixed case-by-case as that page is redone, not all at once — the foundations phase only fixes the ones that affect global/shared chrome (PWA `theme-color` in `layouts/app.blade.php` and `manifest.json`, any hardcoded gradient using the old indigo).
+- A long rollout (weeks, not days) across ~93 admin views plus auth/profile/superadmin/public pages — the app intentionally looks inconsistent (old pages next to restyled ones) for the duration, phase by phase, rather than shipping a single giant change.
+- `docs/ROADMAP_IDEE.md`'s already-closed "redesign" note (audit 2026-10-22) is superseded by this ADR entry as the actual, in-progress decision.
+
+---
+
 ## References
 
 - [Laravel SoftDeletes documentation](https://laravel.com/docs/11/eloquent#soft-deleting)

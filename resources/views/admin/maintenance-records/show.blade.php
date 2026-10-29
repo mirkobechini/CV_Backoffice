@@ -56,7 +56,7 @@
     </div>
 
     <div class="dl-header">
-        <div class="dl-avatar" style="background:linear-gradient(135deg,#818cf8,#4f46e5);"><i
+        <div class="dl-avatar" style="background:linear-gradient(135deg,var(--primary),var(--amber));"><i
                 class="fa-solid fa-calendar-check"></i></div>
         <div class="dl-title">
             <h1>{{ $title }}</h1>
