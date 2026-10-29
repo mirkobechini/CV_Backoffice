@@ -6,6 +6,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- Statistiche: nuova card "per tipo di veicolo" nelle tab Guasti, Costi e Carburante.
+
+### Added
+
 - Statistiche: nuova card "Costo totale per km percorso" (tab Costi) che somma manutenzione e carburante, affiancata a quella già esistente (ora "Costo manutenzioni per km percorso").
 
 ### Added
