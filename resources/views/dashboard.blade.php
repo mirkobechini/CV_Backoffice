@@ -29,17 +29,25 @@
                 <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="{{ route('admin.vehicles.create') }}"><i
-                            class="fa-solid fa-truck" style="color:var(--primary);width:16px;"></i>
+                <li><a class="dropdown-item" href="{{ route('admin.vehicles.create') }}"
+                        style="display:flex;align-items:center;gap:10px;">
+                        <span class="dropdown-item-icon" style="background:var(--primary-soft);color:var(--primary);"><i
+                                class="fa-solid fa-truck"></i></span>
                         {{ __('Nuovo veicolo') }}</a></li>
-                <li><a class="dropdown-item" href="{{ route('admin.issues.create') }}"><i
-                            class="fa-solid fa-triangle-exclamation" style="color:var(--red);width:16px;"></i>
+                <li><a class="dropdown-item" href="{{ route('admin.issues.create') }}"
+                        style="display:flex;align-items:center;gap:10px;">
+                        <span class="dropdown-item-icon" style="background:var(--red-soft);color:var(--red);"><i
+                                class="fa-solid fa-triangle-exclamation"></i></span>
                         {{ __('Nuovo guasto') }}</a></li>
-                <li><a class="dropdown-item" href="{{ route('admin.fuel-logs.create') }}"><i
-                            class="fa-solid fa-gas-pump" style="color:var(--blue);width:16px;"></i>
+                <li><a class="dropdown-item" href="{{ route('admin.fuel-logs.create') }}"
+                        style="display:flex;align-items:center;gap:10px;">
+                        <span class="dropdown-item-icon" style="background:var(--blue-soft);color:var(--blue);"><i
+                                class="fa-solid fa-gas-pump"></i></span>
                         {{ __('Nuovo rifornimento') }}</a></li>
-                <li><a class="dropdown-item" href="{{ route('admin.maintenance-records.create') }}"><i
-                            class="fa-solid fa-calendar-check" style="color:var(--amber);width:16px;"></i>
+                <li><a class="dropdown-item" href="{{ route('admin.maintenance-records.create') }}"
+                        style="display:flex;align-items:center;gap:10px;">
+                        <span class="dropdown-item-icon" style="background:var(--amber-soft);color:var(--amber);"><i
+                                class="fa-solid fa-calendar-check"></i></span>
                         {{ __('Nuovo appuntamento') }}</a></li>
             </ul>
         </div>

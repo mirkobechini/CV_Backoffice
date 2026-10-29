@@ -7,7 +7,7 @@ use App\Http\Requests\StoreVehicleRequest;
 use App\Http\Requests\UpdateVehicleRequest;
 use App\Models\Deadline;
 use App\Models\Equipment;
-use App\Models\Issue;
+use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use App\Services\DeadlineService;
@@ -34,15 +34,17 @@ class VehicleController extends Controller
     {
         $filter = $request->get('filter', 'all');
 
-        // Usata sia dal filtro "da integrare" sia dalla stat $completeFleet
-        // sotto: prima venivano eseguite due query identiche (get() di tutti
-        // i veicoli con vehicleType.equipmentTypes+equipment) per calcolare
-        // la stessa cosa (hasAllRequiredEquipment()) in due punti diversi —
-        // una condizionata al filtro, una sempre, ad ogni caricamento pagina.
+        // Serve al filtro "da integrare" sotto (whereIn sugli id esclusi).
         $vehiclesWithEquipment = Vehicle::forCurrentUser()
             ->with('vehicleType.equipmentTypes', 'equipment')
             ->get();
-        $completeFleet = $vehiclesWithEquipment->filter(fn ($v) => $v->hasAllRequiredEquipment())->count();
+
+        // Stato "Disponibile"/"In officina" (restyle "Saru", ADR §19): stesso
+        // scope già usato da dashboard/stato pubblico, qui raccolto in un
+        // unico set di id per evitare una query per riga.
+        $inWorkshopVehicleIds = MaintenanceRecord::forCurrentUser()
+            ->currentlyInWorkshop()
+            ->pluck('vehicle_id');
 
         $vehicles = Vehicle::query()
             ->forCurrentUser()
@@ -60,7 +62,8 @@ class VehicleController extends Controller
             ])
             ->search($request->get('q'));
 
-        // Filtri chip (Tutti, Guasti, Scadenza prossima, Da integrare)
+        // Filtri chip (Tutti, Disponibili, In officina, Guasti, Scadenza
+        // prossima, Da integrare)
         if ($filter === 'issues') {
             $vehicles = $vehicles->whereHas('issues', fn ($q) => $q->whereIn('status', ['open', 'in_progress']));
         } elseif ($filter === 'deadline') {
@@ -70,27 +73,21 @@ class VehicleController extends Controller
                 ->reject(fn ($v) => $v->hasAllRequiredEquipment())
                 ->pluck('id');
             $vehicles = $vehicles->whereIn('id', $incompleteIds);
+        } elseif ($filter === 'available') {
+            $vehicles = $vehicles->whereNotIn('id', $inWorkshopVehicleIds);
+        } elseif ($filter === 'in_workshop') {
+            $vehicles = $vehicles->whereIn('id', $inWorkshopVehicleIds);
         }
 
         $vehicles = $vehicles->paginate(20);
 
-        // Stats per la toolbar
         $totalVehicles = Vehicle::forCurrentUser()->count();
-        $openIssuesCount = Issue::whereIn('status', ['open', 'in_progress'])
-            ->forCurrentUser()
-            ->count();
-        $deadlinesIn30 = Deadline::where('is_renewed', false)
-            ->forCurrentUser()
-            ->upcoming(30)
-            ->count();
 
         return view('admin.vehicles.index', compact(
             'vehicles',
             'totalVehicles',
-            'openIssuesCount',
-            'deadlinesIn30',
-            'completeFleet',
-            'filter'
+            'filter',
+            'inWorkshopVehicleIds'
         ));
     }
 

@@ -9,79 +9,59 @@
 
 @section('content')
 
-    {{-- Stats KPI --}}
-    <div class="stats">
-        <div class="stat">
-            <div class="kpi k1"><i class="fa-solid fa-truck"></i></div>
-            <div>
-                <div class="lbl">{{ __('Veicoli attivi') }}</div>
-                <div class="val">{{ $totalVehicles }}</div>
+    {{-- Header: titolo + conteggio flotta + esportazioni/nuovo (restyle "Saru", ADR §19) --}}
+    <div class="page-header">
+        <div>
+            <h1>{{ __('Veicoli') }}</h1>
+            <div class="date">{{ trans_choice(':count veicolo nella flotta|:count veicoli nella flotta', $totalVehicles, ['count' => $totalVehicles]) }}
             </div>
         </div>
-        <div class="stat">
-            <div class="kpi k2"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <div>
-                <div class="lbl">{{ __('Guasti aperti') }}</div>
-                <div class="val">{{ $openIssuesCount }}</div>
-            </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a href="{{ route('admin.csv.export', 'vehicles') }}" class="btn" title="{{ __('Scarica CSV') }}">
+                <i class="fa-solid fa-download"></i> CSV
+            </a>
+            <a href="{{ route('admin.vehicles.pdf.fleet-overview') }}" class="btn"
+                title="{{ __('Scarica PDF riepilogo flotta') }}">
+                <i class="fa-solid fa-file-pdf"></i> PDF
+            </a>
+            <a href="{{ route('admin.vehicles.create') }}" class="btn primary">
+                <i class="fa-solid fa-plus"></i> {{ __('Nuovo veicolo') }}
+            </a>
         </div>
-        <div class="stat">
-            <div class="kpi k3"><i class="fa-solid fa-clock"></i></div>
-            <div>
-                <div class="lbl">{{ __('Scadenze in 30gg') }}</div>
-                <div class="val">{{ $deadlinesIn30 }}</div>
-            </div>
-        </div>
-        <div class="stat">
-            <div class="kpi k4"><i class="fa-solid fa-check"></i></div>
-            <div>
-                <div class="lbl">{{ __('Flotta completa') }}</div>
-                <div class="val">{{ $completeFleet }}</div>
-            </div>
+    </div>
+
+    {{-- Ricerca + filtri, affiancati e prominenti (mockup validato con Mirko) --}}
+    <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
+        <form action="{{ route('admin.vehicles.index') }}" method="GET" class="search" style="flex:1; min-width:240px;">
+            @foreach (request()->except('q', 'page') as $key => $value)
+                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+            @endforeach
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="q" placeholder="{{ __('Cerca per sigla, targa, modello…') }}"
+                value="{{ request('q') }}" style="width:100%;">
+            @if (request('q'))
+                <a href="{{ route('admin.vehicles.index') }}" class="clear-search"><i
+                        class="fa-solid fa-xmark"></i></a>
+            @endif
+        </form>
+        <div class="filters">
+            @php($chipBase = request()->except(['filter', 'page']))
+            <a href="{{ route('admin.vehicles.index', $chipBase) }}"
+                class="chip {{ $filter === 'all' ? 'on' : '' }}">{{ __('Tutti') }}</a>
+            <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'available'])) }}"
+                class="chip {{ $filter === 'available' ? 'on' : '' }}">{{ __('Disponibili') }}</a>
+            <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'in_workshop'])) }}"
+                class="chip {{ $filter === 'in_workshop' ? 'on' : '' }}">{{ __('In officina') }}</a>
+            <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'deadline'])) }}"
+                class="chip {{ $filter === 'deadline' ? 'on' : '' }}">{{ __('Con scadenze') }}</a>
+            <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'issues'])) }}"
+                class="chip {{ $filter === 'issues' ? 'on' : '' }}">{{ __('Guasti') }}</a>
+            <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'incomplete'])) }}"
+                class="chip {{ $filter === 'incomplete' ? 'on' : '' }}">{{ __('Da integrare') }}</a>
         </div>
     </div>
 
     <div class="table-card">
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <h2>{{ __('Veicoli') }}</h2>
-                <div class="filters">
-                    @php($chipBase = request()->except(['filter', 'page']))
-                    <a href="{{ route('admin.vehicles.index', $chipBase) }}"
-                        class="chip {{ $filter === 'all' ? 'on' : '' }}">{{ __('Tutti') }}</a>
-                    <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'issues'])) }}"
-                        class="chip {{ $filter === 'issues' ? 'on' : '' }}">{{ __('Guasti') }}</a>
-                    <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'deadline'])) }}"
-                        class="chip {{ $filter === 'deadline' ? 'on' : '' }}">{{ __('Scadenza prossima') }}</a>
-                    <a href="{{ route('admin.vehicles.index', array_merge($chipBase, ['filter' => 'incomplete'])) }}"
-                        class="chip {{ $filter === 'incomplete' ? 'on' : '' }}">{{ __('Da integrare') }}</a>
-                </div>
-            </div>
-            <div class="filters">
-                <form action="{{ route('admin.vehicles.index') }}" method="GET" class="search">
-                    @foreach (request()->except('q', 'page') as $key => $value)
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endforeach
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" name="q" placeholder="{{ __('cerca sigla o targa') }}"
-                        value="{{ request('q') }}">
-                    @if (request('q'))
-                        <a href="{{ route('admin.vehicles.index') }}" class="clear-search"><i
-                                class="fa-solid fa-xmark"></i></a>
-                    @endif
-                </form>
-                <a href="{{ route('admin.csv.export', 'vehicles') }}" class="btn" title="{{ __('Scarica CSV') }}">
-                    <i class="fa-solid fa-download"></i> CSV
-                </a>
-                <a href="{{ route('admin.vehicles.pdf.fleet-overview') }}" class="btn" title="{{ __('Scarica PDF riepilogo flotta') }}">
-                    <i class="fa-solid fa-file-pdf"></i> PDF
-                </a>
-                <a href="{{ route('admin.vehicles.create') }}" class="btn primary">
-                    <i class="fa-solid fa-plus"></i> {{ __('Nuovo') }}
-                </a>
-            </div>
-        </div>
-
         <div class="legend">
             <span class="legend-item"><span class="dot-type leg-tagliando"></span>{{ __('Tagliando') }}</span>
             <span class="legend-item"><span class="dot-type leg-cinghia"></span>{{ __('Cinghia') }}</span>
@@ -98,6 +78,7 @@
                         <th>{{ __('Km attuali') }}</th>
                         <th>{{ __('Prossima scadenza') }}</th>
                         <th>{{ __('Stato') }}</th>
+                        <th>{{ __('Guasti') }}</th>
                         <th>{{ __('Equip.') }}</th>
                         <th></th>
                     </tr>
@@ -153,6 +134,13 @@
                                 @endif
                             </td>
                             <td>
+                                @if ($inWorkshopVehicleIds->contains($vehicle->id))
+                                    <span class="badge b-red">{{ __('In officina') }}</span>
+                                @else
+                                    <span class="badge b-green">{{ __('Disponibile') }}</span>
+                                @endif
+                            </td>
+                            <td>
                                 @if ($vehicle->open_issues_count > 0 && $vehicle->in_progress_issues_count > 0)
                                     <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
                                         <span class="badge b-red">⚠ {{ __('Aperti') }}
@@ -191,7 +179,7 @@
                         <x-admin.delete-modal type="vehicle" :object="$vehicle" />
                     @empty
                         <tr>
-                            <td colspan="7" class="empty">{{ __('Nessun veicolo trovato.') }}</td>
+                            <td colspan="8" class="empty">{{ __('Nessun veicolo trovato.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>

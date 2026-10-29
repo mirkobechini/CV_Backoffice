@@ -52,6 +52,11 @@ class VehicleShowDataService
 
         $reliabilityTrend = $this->reliabilityTrendService->analyze($vehicle);
 
+        // Stato "Disponibile"/"In officina" nell'header (restyle "Saru",
+        // ADR §19): stesso scope già usato da dashboard/elenco veicoli/stato
+        // pubblico.
+        $inWorkshop = $vehicle->maintenanceRecords()->currentlyInWorkshop()->exists();
+
         return compact(
             'vehicle',
             'vehicleAppointments',
@@ -59,7 +64,8 @@ class VehicleShowDataService
             'deadlinesTypes',
             'issueProviders',
             'assignableEquipment',
-            'reliabilityTrend'
+            'reliabilityTrend',
+            'inWorkshop'
         );
     }
 }

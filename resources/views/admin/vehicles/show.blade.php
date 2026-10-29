@@ -49,6 +49,11 @@
                 {{ $vehicle->fuel_type ?? '—' }}</div>
         </div>
         <div class="veh-badges">
+            @if ($inWorkshop)
+                <span class="badge b-red">{{ __('In officina') }}</span>
+            @else
+                <span class="badge b-green">{{ __('Disponibile') }}</span>
+            @endif
             @if ($vehicle->open_issues->isNotEmpty())
                 <span class="badge b-red">⚠
                     {{ __(':count guasto/i aperto/i', ['count' => $vehicle->open_issues->count()]) }}</span>
