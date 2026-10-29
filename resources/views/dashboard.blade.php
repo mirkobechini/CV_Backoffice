@@ -95,22 +95,24 @@
         :active-insurance-premium-total="$activeInsurancePremiumTotal" />
 
     {{-- 3 colonne fisse come nel mockup (restyle "Saru", ADR §19), al posto
-         delle righe impilate a coppie: col.1 priorità (guasti/officina),
-         col.2 appuntamenti/scadenze, col.3 equipaggiamento/stagionali. --}}
+         delle righe impilate a coppie — 3 card per colonna, raggruppate per
+         urgenza invece che per entità, così le colonne restano equilibrate
+         in altezza: col.1 richiede attenzione ora, col.2 in arrivo a breve,
+         col.3 stato generale/completezza. --}}
     <div class="dash-columns">
         <div class="dash-col">
             <x-dashboard.open-issues-card :open-issues="$openIssues" />
             <x-dashboard.in-workshop-card :in-workshop-records="$inWorkshopRecords" />
+            <x-dashboard.expired-deadlines-card :expired-deadlines="$expiredDeadlines" />
         </div>
         <div class="dash-col">
             <x-dashboard.upcoming-appointments-card :upcoming-appointments="$upcomingAppointments" />
-            <x-dashboard.expired-deadlines-card :expired-deadlines="$expiredDeadlines" />
             <x-dashboard.upcoming-deadlines-card :upcoming-deadlines="$upcomingDeadlines" />
+            <x-dashboard.expiring-equipment-card :expiring-equipment="$expiringEquipment" />
         </div>
         <div class="dash-col">
             <x-dashboard.equipment-completeness-card :total-vehicles="$totalVehicles"
                 :incomplete-vehicles="$incompleteVehicles" />
-            <x-dashboard.expiring-equipment-card :expiring-equipment="$expiringEquipment" />
             <x-dashboard.tire-season-card :tire-season-expected="$tireSeasonExpected"
                 :tire-season-next-switch="$tireSeasonNextSwitch" :tire-season-compliant-count="$tireSeasonCompliantCount"
                 :tire-season-pending="$tireSeasonPending" :tire-season-overdue="$tireSeasonOverdue" />

@@ -743,6 +743,14 @@ body {
     font-size: 17px;
     font-weight: 700;
     line-height: 1.1;
+    white-space: nowrap;
+}
+
+/* Valore in euro (premio assicurativo): più lungo delle altre KPI, a
+   rischio di andare a capo tra "€" e la cifra nella card stretta —
+   font più piccolo invece che spezzare su due righe. */
+.dash-kpi .val.val-currency {
+    font-size: 14px;
 }
 
 .dash-grid2 {

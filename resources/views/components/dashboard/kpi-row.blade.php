@@ -34,7 +34,7 @@
     </a>
     <a href="{{ route('admin.deadlines.insurances') }}" class="dash-kpi">
         <div class="ic k7"><i class="fa-solid fa-shield-halved"></i></div>
-        <div class="val">€ {{ number_format($activeInsurancePremiumTotal, 2, ',', '.') }}</div>
+        <div class="val val-currency">€ {{ number_format($activeInsurancePremiumTotal, 2, ',', '.') }}</div>
         <div class="lbl">{{ __('Premio assicurativo annuo') }}</div>
     </a>
 </div>
