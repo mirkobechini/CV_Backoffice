@@ -690,6 +690,46 @@ body {
     color: var(--text-muted);
 }
 
+/* Banner "cose da gestire oggi" (restyle "Saru", ADR §19) */
+.dash-attention-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--primary-soft);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 18px;
+}
+
+.dash-attention-banner .ic {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--primary);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.dash-attention-banner .body {
+    flex: 1;
+    min-width: 0;
+}
+
+.dash-attention-banner .title {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.dash-attention-banner .sub {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
 .dash-kpis {
     display: grid;
     grid-template-columns: repeat(7, 1fr);

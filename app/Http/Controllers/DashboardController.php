@@ -8,6 +8,7 @@ use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
 use App\Services\DashboardCache;
+use App\Services\FleetUsageStatisticsService;
 use App\Services\TireSeasonService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -17,7 +18,7 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(TireSeasonService $tireSeasonService)
+    public function index(TireSeasonService $tireSeasonService, FleetUsageStatisticsService $fleetUsageStatisticsService)
     {
         // La cache va segmentata per gruppo: quasi nessuna delle query sotto
         // era filtrata per gruppo (solo incompleteVehicles lo era), e la
@@ -29,7 +30,7 @@ class DashboardController extends Controller
         $groupId = $activeGroup?->id;
         $cacheKey = DashboardCache::key($groupId);
 
-        $data = Cache::remember($cacheKey, 300, function () use ($groupId, $activeGroup, $tireSeasonService) {
+        $data = Cache::remember($cacheKey, 300, function () use ($groupId, $activeGroup, $tireSeasonService, $fleetUsageStatisticsService) {
             // Riusata anche per carWashMissingVehicles sotto: evita una
             // seconda query identica per lo stesso insieme di veicoli.
             $groupVehicles = Vehicle::forCurrentUser()->get(['id', 'internal_code', 'license_plate']);
@@ -150,6 +151,11 @@ class DashboardController extends Controller
                 ->values();
             $carWashWashedCount = $carWashedVehicleIds->count();
 
+            // Banner "cose da gestire oggi" (restyle "Saru", ADR §19): stesso
+            // conteggio "veicoli fermi" già calcolato per /admin/statistics
+            // (nessun chilometraggio/rifornimento negli ultimi 30 giorni).
+            $staleVehiclesCount = $fleetUsageStatisticsService->staleVehicles()->count();
+
             return compact(
                 'totalVehicles',
                 'openIssues',
@@ -169,7 +175,8 @@ class DashboardController extends Controller
                 'carWashRecords',
                 'carWashTotal',
                 'carWashMissingVehicles',
-                'carWashWashedCount'
+                'carWashWashedCount',
+                'staleVehiclesCount'
             );
         });
 

@@ -1,12 +1,71 @@
 @extends('layouts.app')
 
+@php
+    // Saluto in base all'ora del giorno + nome di battesimo (restyle "Saru",
+    // ADR §19), ispirato al mockup validato con Mirko.
+    $greetingHour = now()->hour;
+    $greeting = match (true) {
+        $greetingHour < 12 => __('Buongiorno'),
+        $greetingHour < 18 => __('Buon pomeriggio'),
+        default => __('Buonasera'),
+    };
+    $firstName = explode(' ', trim(auth()->user()->name))[0] ?? auth()->user()->name;
+
+    $attentionCount = $expiredDeadlines->count() + $staleVehiclesCount;
+@endphp
+
 @section('content')
 
-    {{-- Header: titolo + data odierna --}}
+    {{-- Header: saluto + data odierna + azione rapida --}}
     <div class="page-header">
-        <h1><i class="fa-solid fa-gauge-high"></i> {{ __('Dashboard') }}</h1>
-        <div class="date">{{ __('Oggi,') }} {{ now()->translatedFormat('l j F Y') }}</div>
+        <div>
+            <div class="date">{{ __('Oggi,') }} {{ now()->translatedFormat('l j F Y') }}</div>
+            <h1>{{ $greeting }}, {{ $firstName }} 👋</h1>
+        </div>
+        <div class="dropdown">
+            <button type="button" class="btn primary" data-bs-toggle="dropdown" data-bs-auto-close="true"
+                aria-expanded="false">
+                <i class="fa-solid fa-plus"></i> {{ __('Nuovo') }}
+                <i class="fa-solid fa-chevron-down" style="font-size:10px;"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{{ route('admin.vehicles.create') }}"><i
+                            class="fa-solid fa-truck" style="color:var(--primary);width:16px;"></i>
+                        {{ __('Nuovo veicolo') }}</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.issues.create') }}"><i
+                            class="fa-solid fa-triangle-exclamation" style="color:var(--red);width:16px;"></i>
+                        {{ __('Nuovo guasto') }}</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.fuel-logs.create') }}"><i
+                            class="fa-solid fa-gas-pump" style="color:var(--blue);width:16px;"></i>
+                        {{ __('Nuovo rifornimento') }}</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.maintenance-records.create') }}"><i
+                            class="fa-solid fa-calendar-check" style="color:var(--amber);width:16px;"></i>
+                        {{ __('Nuovo appuntamento') }}</a></li>
+            </ul>
+        </div>
     </div>
+
+    @if ($attentionCount > 0)
+        <div class="dash-attention-banner">
+            <div class="ic"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div class="body">
+                <div class="title">
+                    {{ trans_choice(':count cosa richiede attenzione oggi|:count cose richiedono attenzione oggi', $attentionCount, ['count' => $attentionCount]) }}
+                </div>
+                <div class="sub">
+                    @if ($expiredDeadlines->count() > 0 && $staleVehiclesCount > 0)
+                        {{ trans_choice(':count scadenza già scaduta|:count scadenze già scadute', $expiredDeadlines->count(), ['count' => $expiredDeadlines->count()]) }},
+                        {{ trans_choice(':count veicolo fermo da tempo senza registrazioni|:count veicoli fermi da tempo senza registrazioni', $staleVehiclesCount, ['count' => $staleVehiclesCount]) }}
+                    @elseif ($expiredDeadlines->count() > 0)
+                        {{ trans_choice(':count scadenza già scaduta|:count scadenze già scadute', $expiredDeadlines->count(), ['count' => $expiredDeadlines->count()]) }}
+                    @else
+                        {{ trans_choice(':count veicolo fermo da tempo senza registrazioni|:count veicoli fermi da tempo senza registrazioni', $staleVehiclesCount, ['count' => $staleVehiclesCount]) }}
+                    @endif
+                </div>
+            </div>
+            <a href="{{ route('admin.deadlines.index') }}" class="btn outline-solid">{{ __('Vedi tutto') }}</a>
+        </div>
+    @endif
 
     @if (auth()->user()->isManager() && ! auth()->user()->hasTwoFactorEnabled())
         <div class="alert warning" style="margin-bottom:16px;">
@@ -27,11 +86,11 @@
         :in-workshop-count="$inWorkshopCount" :expiring-equipment="$expiringEquipment"
         :active-insurance-premium-total="$activeInsurancePremiumTotal" />
 
-    <x-dashboard.deadlines-row :upcoming-deadlines="$upcomingDeadlines" :expired-deadlines="$expiredDeadlines" />
+    <x-dashboard.open-issues-card :open-issues="$openIssues" />
 
     <x-dashboard.workshop-row :in-workshop-records="$inWorkshopRecords" :upcoming-appointments="$upcomingAppointments" />
 
-    <x-dashboard.open-issues-card :open-issues="$openIssues" />
+    <x-dashboard.deadlines-row :upcoming-deadlines="$upcomingDeadlines" :expired-deadlines="$expiredDeadlines" />
 
     <x-dashboard.equipment-row :total-vehicles="$totalVehicles" :incomplete-vehicles="$incompleteVehicles"
         :expiring-equipment="$expiringEquipment" />
