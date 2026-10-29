@@ -64,6 +64,7 @@ class StatisticsController extends Controller
                 'costByVehicle' => $costStatistics->costByVehicle($since),
                 'costByProvider' => $costStatistics->costByProvider($since),
                 'costPerKm' => $costStatistics->costPerKm($since),
+                'totalCostPerKm' => $costStatistics->totalCostPerKm($since),
             ],
             'carburante' => [
                 'litersAndCostByYear' => $fuelStatistics->litersAndCostByYear($since),

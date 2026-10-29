@@ -279,6 +279,40 @@ class CostAndUsageStatisticsTest extends TestCase
         $response->assertSee('82.989 km');
     }
 
+    public function test_total_cost_per_km_sums_maintenance_and_fuel(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+        $provider = $this->provider();
+
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 1000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-15', 'mileage' => 1200]);
+        MaintenanceRecord::create(['vehicle_id' => $vehicle->id, 'provider_id' => $provider->id, 'appointment_date' => '2026-01-10', 'cost' => 60]);
+        FuelLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-12', 'liters' => 20, 'cost_total' => 40]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'costi', 'period' => 'all']));
+
+        $response->assertOk();
+        // (60€ manutenzione + 40€ carburante) / 200km = 0,50 €/km.
+        $response->assertSeeInOrder(['Costo totale per km percorso', '0,50']);
+    }
+
+    public function test_total_cost_per_km_includes_vehicle_with_only_fuel_cost(): void
+    {
+        $user = $this->admin();
+        $vehicle = $this->vehicle();
+
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-01', 'mileage' => 1000]);
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-15', 'mileage' => 1200]);
+        FuelLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-12', 'liters' => 20, 'cost_total' => 50]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'costi', 'period' => 'all']));
+
+        $response->assertOk();
+        // 50€ carburante (nessuna manutenzione) / 200km = 0,25 €/km.
+        $response->assertSeeInOrder(['Costo totale per km percorso', '0,25']);
+    }
+
     // --- Veicoli fermi ---
 
     public function test_stale_vehicles_lists_vehicle_never_logged(): void
