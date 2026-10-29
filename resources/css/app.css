@@ -74,15 +74,20 @@
        input[type=date/month], scrollbar, ecc.) seguano il tema invece
        di restare sempre chiari. */
     color-scheme: light;
-    --bg: #eef0f4;
+    --bg: #f6f3ee;
     --surface: #ffffff;
-    --surface-2: #f4f6f9;
-    --surface-3: #e9edf2;
-    --text: #0f172a;
-    --text-muted: #5b6472;
-    --border: #dbe0e8;
-    --primary: #4f46e5;
-    --primary-soft: #eef0ff;
+    --surface-2: #faf7f2;
+    --surface-3: #f1ebe2;
+    --text: #241f18;
+    --text-muted: #6b6354;
+    --border: #e3dcd0;
+    /* Arancione Saru scurito per restare leggibile come testo/icona su
+       sfondo chiaro (~4.5:1 su bianco, WCAG AA) — --primary non è solo
+       sfondo bottone, è anche colore di link/icone/bordi in tutto il
+       CSS. Il logo (mascotte Saru) resta nel tono vivo #e2792d, non
+       soggetto alle regole di contrasto testo (restyle "Saru", ADR §19). */
+    --primary: #c2410c;
+    --primary-soft: #fdece0;
     /* Scurite rispetto alle versioni originali (#059669/#dc2626/#d97706):
        testo su sfondo "-soft" (badge, pillole, valori countdown) era sotto
        la soglia WCAG AA 4.5:1 in tema chiaro (audit 2026-10-19). */
@@ -92,7 +97,7 @@
     --red-soft: #fdecec;
     --amber: #92400e;
     --amber-soft: #fdf3e3;
-    --gray-soft: #eef0f4;
+    --gray-soft: #f6f3ee;
     --blue: #2563eb;
     --blue-soft: #eff4ff;
     --purple: #7c3aed;
@@ -101,44 +106,49 @@
     --cinghia: #7c3aed;
     --ministeriale: #0891b2;
     --ossigeno: #16a34a;
-    --assicurazione: #ea580c;
+    /* Non più arancione (scelta originale): con --primary ora arancione,
+       restava indistinguibile dagli elementi di brand ordinari — vedi
+       ADR §19. */
+    --assicurazione: #be185d;
     --guasto: #dc2626;
-    --sidebar-bg: #111827;
-    --radius: 6px;
-    --shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+    --sidebar-bg: #17120b;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(40, 28, 10, 0.08);
 }
 
 [data-bs-theme="dark"] {
     color-scheme: dark;
-    --bg: #0b0f17;
-    --surface: #151a24;
-    --surface-2: #1a202c;
-    --surface-3: #222a38;
-    --text: #e5e9f0;
-    --text-muted: #8b93a3;
-    --border: #273043;
-    --primary: #6366f1;
-    --primary-soft: #23294a;
-    --green: #10b981;
-    --green-soft: #17392f;
+    --bg: #17120b;
+    --surface: #201a12;
+    --surface-2: #271f15;
+    --surface-3: #312819;
+    --text: #f3ede1;
+    --text-muted: #a89a85;
+    --border: #3a3022;
+    /* Sfondo scuro abbastanza da far passare il contrasto anche con il
+       tono vivo del brand: niente bisogno di scurirlo come in chiaro. */
+    --primary: #e2792d;
+    --primary-soft: #3a2615;
+    --green: #4ade80;
+    --green-soft: #17301f;
     --red: #f87171;
-    --red-soft: #3b1f1f;
-    --amber: #f59e0b;
-    --amber-soft: #3b2f17;
-    --gray-soft: #1e2530;
-    --blue: #60a5fa;
-    --blue-soft: #1e2f45;
-    --purple: #a78bfa;
-    --purple-soft: #2b2440;
+    --red-soft: #3a1c1c;
+    --amber: #fbbf40;
+    --amber-soft: #3a2d12;
+    --gray-soft: #271f15;
+    --blue: #7aa8fb;
+    --blue-soft: #1b2740;
+    --purple: #c4a0fa;
+    --purple-soft: #2a2140;
     --tagliando: #818cf8;
     --cinghia: #a78bfa;
     --ministeriale: #22d3ee;
     --ossigeno: #34d399;
-    --assicurazione: #fb923c;
+    --assicurazione: #f472b6;
     --guasto: #f87171;
-    --sidebar-bg: #0d1117;
-    --radius: 6px;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sidebar-bg: #0f0b06;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 /* =============================================
@@ -208,12 +218,8 @@ body {
 .sidebar-logo {
     width: 26px;
     height: 26px;
-    border-radius: 6px;
-    background: var(--primary);
     display: grid;
     place-items: center;
-    font-size: 13px;
-    color: #fff;
     flex-shrink: 0;
 }
 
@@ -261,6 +267,26 @@ body {
     width: 16px;
     text-align: center;
     font-size: 13px;
+}
+
+/* Contatori (guasti aperti/scadenze imminenti) sulle voci sidebar — vedi
+   admin/partials/header.blade.php, restyle "Saru" (ADR §19). */
+.sidebar-badge {
+    margin-left: auto;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.sidebar-badge-danger {
+    background: var(--red);
+}
+
+.sidebar-badge-amber {
+    background: var(--amber);
 }
 
 .sidebar-footer {
