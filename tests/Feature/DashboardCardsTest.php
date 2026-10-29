@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Deadline;
 use App\Models\Group;
 use App\Models\MaintenanceRecord;
+use App\Models\MileageLog;
 use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
@@ -26,6 +27,52 @@ class DashboardCardsTest extends TestCase
             ['name' => 'Associazione di default'],
             ['invite_code' => Group::generateInviteCode()]
         );
+    }
+
+    public function test_dashboard_shows_attention_banner_for_expired_deadline_and_stale_vehicle(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        // Nessun MileageLog/FuelLog registrato: il veicolo è "fermo" per
+        // FleetUsageStatisticsService::staleVehicles() (restyle "Saru").
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => 'Revisione',
+            'due_date' => now()->subDays(5),
+            'is_renewed' => false,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk()
+            ->assertSee('2 cose richiedono attenzione oggi')
+            ->assertSee('1 scadenza già scaduta')
+            ->assertSee('1 veicolo fermo da tempo senza registrazioni');
+    }
+
+    public function test_dashboard_hides_attention_banner_when_nothing_needs_attention(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        MileageLog::create([
+            'vehicle_id' => $vehicle->id,
+            'log_date' => now(),
+            'mileage' => 1000,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk()->assertDontSee('cose richiedono attenzione oggi');
     }
 
     public function test_dashboard_shows_which_vehicle_is_in_workshop_and_where(): void

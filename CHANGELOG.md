@@ -14,6 +14,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Restyle "Saru" (fase 6, gruppo Sistema)**: rimosso l'ultimo leftover della vecchia palette indigo in `app.css`, l'avatar gruppo (`.g-avatar`, card e scheda gruppo) — ora sulle stesse variabili tema (`var(--primary)`/`var(--purple)`) già usate per tutti gli altri avatar dell'app.
 - **Restyle "Saru" (fase 7, ultima, gruppo Statistiche/Stato documenti/pubblico)**: aggiunto il prefisso "Report" mancante nel breadcrumb di `admin/statistics/index`, incoerente con `admin/documents/index` (stessa sezione sidebar). Verificato che la pagina pubblica di stato flotta (`/status/{token}`) eredita già correttamente la nuova palette. Con questa fase si conclude il rollout a fasi del restyle, vedi `docs/ADR.md` §19.
 - **Restyle "Saru" (sidebar fedele al mockup)**: ricerca rapida veicoli (sigla/targa) in cima alla sidebar; "Carburante, Pedaggi, Tessere" e "Attrezzature e guasti" consolidati in sottomenu a tendina invece di link diretti separati; stato attivo a sfondo pieno invece di solo bordo sinistro.
+- **Restyle "Saru" (dashboard fedele al mockup)**: saluto dipendente dall'ora del giorno + nome al posto del titolo generico; pulsante "Nuovo" con dropdown azioni rapide (veicolo/guasto/rifornimento/appuntamento); banner "N cose richiedono attenzione oggi" (scadenze scadute + veicoli fermi da 30+ giorni); riordino priorità delle card (guasti/officina in cima).
 
 ### Fixed
 
