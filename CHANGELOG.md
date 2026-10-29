@@ -6,6 +6,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Added
 
+- Statistiche: nuova tab "Scadenze" con conteggio per stato attuale, scadute per tipo, e costo medio rinnovo assicurazione.
+
+### Added
+
 - Statistiche: nuova tab "Attrezzature" con guasti per attrezzatura/tipo e spesa manutenzione per anno/attrezzatura (stesso impianto delle tab esistenti per i veicoli).
 
 ### Added
