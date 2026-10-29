@@ -329,6 +329,25 @@ class CostAndUsageStatisticsTest extends TestCase
         $response->assertSeeInOrder(['Costo totale per km percorso', '0,25']);
     }
 
+    // --- Età flotta ---
+
+    public function test_average_fleet_age_averages_vehicle_ages(): void
+    {
+        $user = $this->admin();
+        // Giorni (non anni di calendario) per un risultato deterministico
+        // indipendente dai giorni bisestili nell'intervallo: 3650/365,25
+        // arrotonda a 10,0 anni, 730/365,25 a 2,0 anni, media 6,0.
+        $vehicleA = $this->vehicle('0001');
+        $vehicleA->update(['immatricolation_date' => Carbon::today()->subDays(3650)]);
+        $vehicleB = $this->vehicle('0002');
+        $vehicleB->update(['immatricolation_date' => Carbon::today()->subDays(730)]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'affidabilita', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSeeInOrder(['Età flotta', 'Media flotta', '6,0 anni']);
+    }
+
     // --- Veicoli fermi ---
 
     public function test_stale_vehicles_lists_vehicle_never_logged(): void
