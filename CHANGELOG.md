@@ -8,6 +8,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 - **Restyle "Saru" (fase 1/fondamenta)**: nuova palette arancione (tema chiaro e scuro) al posto dell'indigo precedente, sidebar riorganizzata per flusso di lavoro (Flotta/Manutenzione/Attrezzature/Report/Sistema) con contatori badge per guasti aperti e scadenze imminenti, logo scimmia Saru al posto dell'icona generica. Vedi `docs/ADR.md` §19. Solo fondamenta condivise (layout, variabili CSS, sidebar/topbar): le singole pagine saranno ridisegnate nelle fasi successive.
 - **Restyle "Saru" (fase 2)**: scheda veicolo riorganizzata da 11 card impilate in scheda a tab (Panoramica/Scadenze/Manutenzioni/Pneumatici/Attrezzatura/Storico). Navigazione mobile (<768px): sidebar off-canvas sostituita da top bar + bottom nav (Dashboard/Veicoli/azione rapida/Guasti/Menu), con supporto a `env(safe-area-inset-top/bottom)` per notch/Dynamic Island e home indicator.
+- **Restyle "Saru" (fase 3, gruppo Manutenzione)**: corretto il breadcrumb "Servizi" (residuo dalla sezione sidebar rinominata "Manutenzione" in fase 1) su 19 viste di Officine/Guasti/Appuntamenti/Scadenze, e "Report" su `admin/documents/index`. Rimosso un gradiente con colori hardcoded nella scheda guasto (ora sulle variabili tema).
 
 ## [v1.22.0] - 2026-10-29
 
