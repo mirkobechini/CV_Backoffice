@@ -1054,7 +1054,7 @@ body {
 
 .btn.primary {
     background: var(--primary);
-    color: #fff;
+    color: #1a1108;
     border-color: var(--primary);
 }
 
@@ -2158,7 +2158,7 @@ body {
     height: 22px;
     border-radius: 6px;
     background: var(--primary);
-    color: #fff;
+    color: #1a1108;
     display: grid;
     place-items: center;
     font-size: 12px;
@@ -3619,6 +3619,7 @@ body.modal-open {
 
     .form-actions .btn.primary.lg {
         flex: 1;
+        justify-content: center;
     }
 
     /* "Annulla" già presente nel page-header in alto su ogni form: il
@@ -3628,15 +3629,26 @@ body.modal-open {
         display: none;
     }
 
-    /* `.form-card` (sfondo/bordo esterno) avvolgeva `.form-section` (che ha
-       già il proprio sfondo/bordo), un effetto "card dentro la card" come
-       per le liste — qui basta la card interna con lo step numerato. */
+    /* Niente card per i campi del form su mobile, come nel mockup: né
+       il bordo/sfondo esterno (`.form-card`) né quello della sezione
+       interna (`.form-section`, con lo step numerato "1 Dettagli ...")
+       — i campi stanno direttamente sullo sfondo della pagina. */
     .form-card {
         background: transparent;
         border: none;
         box-shadow: none;
         padding: 0;
         margin-bottom: 90px;
+    }
+
+    .form-section {
+        background: transparent;
+        border: none;
+        padding: 0;
+    }
+
+    .form-section h2 {
+        display: none;
     }
 }
 

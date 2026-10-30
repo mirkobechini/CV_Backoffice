@@ -149,7 +149,7 @@
             <div class="form-actions">
                 <button id="issue-submit-btn" type="submit" class="btn primary lg"
                     data-loading-text="{{ __('Salvataggio...') }}">
-                    <i class="fa-solid fa-check"></i> {{ __('Salva') }}
+                    <i class="fa-solid fa-check"></i> {{ __('Salva guasto') }}
                 </button>
                 <a href="{{ request('back', route('admin.issues.index')) }}" class="btn">{{ __('Annulla') }}</a>
             </div>
