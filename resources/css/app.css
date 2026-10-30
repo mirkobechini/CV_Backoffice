@@ -1254,6 +1254,9 @@ body {
    semplice, non uno stato colorato come i badge. */
 .card-list-item-side {
     flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     font-size: 11.5px;
     font-weight: 600;
     color: var(--text-muted);
@@ -1278,6 +1281,37 @@ body {
 .dash-date-box .day {
     font-size: 15px;
     font-weight: 800;
+}
+
+/* Appuntamenti: data+ora affiancate, luogo sotto. */
+.appt-card-side {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    text-align: right;
+}
+
+.appt-card-datetime {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.appt-card-time {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.appt-card-location {
+    font-size: 11px;
+    color: var(--text-muted);
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Riga secondaria generica per celle tabella (es. email sotto al telefono) */

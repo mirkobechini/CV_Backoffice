@@ -149,7 +149,13 @@
                     </div>
                     @if ($deadline->date_remaining_label || $deadline->km_remaining_label)
                         <div class="card-list-item-side">
-                            {{ $deadline->date_remaining_label ?? $deadline->km_remaining_label }}</div>
+                            @if ($deadline->date_remaining_label)
+                                <div>{{ $deadline->date_remaining_label }}</div>
+                            @endif
+                            @if ($deadline->km_remaining_label)
+                                <div>{{ $deadline->km_remaining_label }}</div>
+                            @endif
+                        </div>
                     @endif
                 </a>
             @empty

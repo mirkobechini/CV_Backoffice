@@ -219,11 +219,7 @@
                     <span class="thumb t{{ ($record->vehicle_id % 5) + 1 }}"><i class="fa-solid fa-truck"></i></span>
                     <div class="card-list-item-body">
                         <div class="card-list-item-title">{{ $description }}</div>
-                        <div class="card-list-item-sub">{{ $record->vehicle->internal_code ?? 'N/A' }}
-                            @if ($record->provider)
-                                · {{ $record->provider->name }}
-                            @endif
-                        </div>
+                        <div class="card-list-item-sub">{{ $record->vehicle->internal_code ?? 'N/A' }}</div>
                         @if ($record->activity_type)
                             <div class="card-list-item-tag">
                                 <span
@@ -232,9 +228,19 @@
                         @endif
                     </div>
                     @if ($record->appointment_date)
-                        <div class="dash-date-box">
-                            <div class="month">{{ $record->appointment_date->translatedFormat('M') }}</div>
-                            <div class="day">{{ $record->appointment_date->format('d') }}</div>
+                        <div class="appt-card-side">
+                            <div class="appt-card-datetime">
+                                <div class="dash-date-box">
+                                    <div class="month">{{ $record->appointment_date->translatedFormat('M') }}</div>
+                                    <div class="day">{{ $record->appointment_date->format('d') }}</div>
+                                </div>
+                                @if ($record->appointment_time)
+                                    <span class="appt-card-time">{{ substr($record->appointment_time, 0, 5) }}</span>
+                                @endif
+                            </div>
+                            @if ($record->provider)
+                                <div class="appt-card-location">{{ $record->provider->name }}</div>
+                            @endif
                         </div>
                     @endif
                 </a>
