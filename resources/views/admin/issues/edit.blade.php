@@ -9,6 +9,9 @@
     ]" />
 @endsection
 
+@section('form-topbar-title', __('Modifica guasto'))
+@section('form-topbar-cancel-url', request('back', route('admin.issues.index')))
+
 @section('content')
 
     <div class="page-header">

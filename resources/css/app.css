@@ -512,6 +512,13 @@ body {
     min-width: 0;
 }
 
+/* Topbar dei form (create/edit) su mobile, come nel mockup: "Annulla" +
+   titolo centrato al posto di hamburger+logo+breadcrumb — nascosta di
+   default, mostrata via media query (restyle "Saru", ADR §19). */
+.topbar-form-bar {
+    display: none;
+}
+
 .topbar-btn.menu-toggle {
     display: none;
 }
@@ -3595,6 +3602,69 @@ body.modal-open {
 
     .topbar-btn.menu-toggle {
         display: none !important;
+    }
+
+    /* Topbar dei form: "Annulla" + titolo centrato al posto di
+       hamburger+logo+breadcrumb e dello switch tema/campanella, come nel
+       mockup. Bottom nav e lo spazio riservato per lei spariscono mentre
+       si compila un form — resta solo il pulsante "Salva" fisso. */
+    .topbar-dp-form .topbar-start-default,
+    .topbar-dp-form .topbar-actions {
+        display: none;
+    }
+
+    .topbar-dp-form .topbar-form-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .topbar-form-cancel {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-muted);
+        flex-shrink: 0;
+        text-decoration: none;
+    }
+
+    .topbar-form-title {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+        font-weight: 800;
+        font-size: 15px;
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .topbar-form-spacer {
+        width: 52px;
+        flex-shrink: 0;
+    }
+
+    .is-form-page .bottom-nav {
+        display: none;
+    }
+
+    .is-form-page .main-dp {
+        padding-bottom: 14px;
+    }
+
+    .is-form-page .page-header {
+        display: none;
+    }
+
+    .is-form-page .form-actions {
+        bottom: 0;
+    }
+
+    .is-form-page .form-card {
+        margin-bottom: 76px;
     }
 
     .main-dp {
