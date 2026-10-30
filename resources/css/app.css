@@ -3592,6 +3592,21 @@ body.modal-open {
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
+
+    /* Le card delle liste mobile hanno già il proprio bordo: senza,
+       `.table-card` (lo sfondo/bordo che avvolge toolbar + lista) aggiunge
+       un secondo bordo attorno a tutte, un effetto "card dentro la card"
+       assente nel mockup (restyle "Saru", ADR §19). */
+    .table-card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .table-card .toolbar {
+        padding: 0 0 12px;
+        border-bottom: none;
+    }
 }
 
 .bottom-nav-link {
@@ -3640,17 +3655,17 @@ body.modal-open {
 }
 
 .bottom-nav-add-btn {
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     border: none;
     background: var(--primary);
-    color: #fff;
+    color: #1a1108;
     font-size: 18px;
     display: grid;
     place-items: center;
-    margin-top: -22px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    margin-top: -26px;
+    box-shadow: 0 6px 16px rgba(226, 121, 45, 0.4);
     cursor: pointer;
 }
 
