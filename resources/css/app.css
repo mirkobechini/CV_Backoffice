@@ -1208,6 +1208,123 @@ body {
     color: var(--text-muted);
 }
 
+/* Liste a card <768px al posto delle tabelle con scroll orizzontale
+   (restyle "Saru", ADR §19) — nascoste di default, mostrate via media
+   query. Condivise da Guasti/Scadenze/Appuntamenti (e future liste),
+   stessa forma: icona/dot + titolo/sottotitolo + tag a destra. */
+.card-list-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.card-list-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.card-list-item-title {
+    font-weight: 700;
+    font-size: 13.5px;
+}
+
+.card-list-item-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+.card-list-item-tag {
+    margin-top: 5px;
+}
+
+/* Colonna destra (categoria/countdown) nelle liste a card mobile — testo
+   semplice, non uno stato colorato come i badge. */
+.card-list-item-side {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+/* Etichetta sopra il valore nella colonna destra delle card mobile (es.
+   "Parte", "Manca"): senza, il valore da solo (una data, un numero) non
+   dice a cosa si riferisce. */
+.card-list-item-side-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #786b54;
+}
+
+/* Riquadro mese/giorno a destra (card appuntamenti nelle liste mobile,
+   restyle "Saru" ADR §19). */
+.dash-date-box {
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.dash-date-box .month {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.dash-date-box .day {
+    font-size: 15px;
+    font-weight: 800;
+}
+
+/* Appuntamenti: data+ora affiancate, luogo sotto. */
+.appt-card-side {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    text-align: right;
+}
+
+.appt-card-datetime {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.appt-card-time {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.appt-card-location {
+    font-size: 11px;
+    color: var(--text-muted);
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Riga secondaria generica per celle tabella (es. email sotto al telefono) */
 .cell-sub {
     font-size: 11px;
@@ -3591,6 +3708,23 @@ body.modal-open {
 
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Nuovo guasto/appuntamento: nascosti <768px, duplicano il FAB già
+       nella bottom nav (restyle "Saru", ADR §19). "Nuova scadenza" resta
+       visibile: non è tra le azioni rapide del FAB. */
+    .page-header-quick-add {
+        display: none;
+    }
+
+    /* Guasti/Scadenze/Appuntamenti: lista a card al posto della tabella
+       con scroll orizzontale. */
+    .table-desktop-only {
+        display: none;
+    }
+
+    .card-list-mobile {
+        display: flex;
     }
 }
 

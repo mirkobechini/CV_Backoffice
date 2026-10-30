@@ -77,13 +77,15 @@
                     title="{{ __('Scarica CSV') }}">
                     <i class="fa-solid fa-download"></i> CSV
                 </a>
-                <a href="{{ route('admin.maintenance-records.create') }}" class="btn primary">
+                {{-- Nascosto <768px: duplica il FAB "+" già nella bottom nav
+                (restyle "Saru", ADR §19). --}}
+                <a href="{{ route('admin.maintenance-records.create') }}" class="btn primary page-header-quick-add">
                     <i class="fa-solid fa-plus"></i> {{ __('Nuovo appuntamento') }}
                 </a>
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -202,6 +204,49 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di
+        `$maintenanceRecords` (non raggruppati — il raggruppamento resta
+        una funzione desktop). --}}
+        <div class="card-list-mobile">
+            @forelse ($maintenanceRecords as $record)
+                @php
+                    $description = $record->item_descriptions !== '' ? $record->item_descriptions : $record->activity_type ?? __('N/D');
+                @endphp
+                <a href="{{ route('admin.maintenance-records.show', $record->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($record->vehicle_id % 5) + 1 }}"><i class="fa-solid fa-truck"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $description }}</div>
+                        <div class="card-list-item-sub">{{ $record->vehicle->internal_code ?? 'N/A' }}</div>
+                        @if ($record->activity_type)
+                            <div class="card-list-item-tag">
+                                <span
+                                    class="badge {{ $activityBadge($record->activity_type) }}">{{ $record->activity_type }}</span>
+                            </div>
+                        @endif
+                    </div>
+                    @if ($record->appointment_date)
+                        <div class="appt-card-side">
+                            <div class="appt-card-datetime">
+                                <div class="dash-date-box">
+                                    <div class="month">{{ $record->appointment_date->translatedFormat('M') }}</div>
+                                    <div class="day">{{ $record->appointment_date->format('d') }}</div>
+                                </div>
+                                @if ($record->appointment_time)
+                                    <span class="appt-card-time">{{ substr($record->appointment_time, 0, 5) }}</span>
+                                @endif
+                            </div>
+                            @if ($record->provider)
+                                <div class="appt-card-location">{{ $record->provider->name }}</div>
+                            @endif
+                        </div>
+                    @endif
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun appuntamento trovato.') }}</p>
+            @endforelse
         </div>
     </div>
 @endsection

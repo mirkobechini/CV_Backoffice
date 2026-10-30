@@ -71,7 +71,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -129,6 +129,39 @@
                     @endif
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di `$deadlines`
+        (non raggruppati — il raggruppamento resta una funzione desktop). --}}
+        <div class="card-list-mobile">
+            @forelse ($deadlines as $deadline)
+                <a href="{{ route('admin.deadlines.show', $deadline->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($deadline->vehicle_id % 5) + 1 }}"><i class="fa-solid fa-clock"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title"><span
+                                class="dot-type leg-{{ $deadline->type_slug }}"></span> {{ $deadline->type }}</div>
+                        <div class="card-list-item-sub">{{ $deadline->vehicle->internal_code ?? 'N/A' }}</div>
+                        <div class="card-list-item-tag">
+                            <x-admin.status-badge
+                                :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge>
+                        </div>
+                    </div>
+                    @if ($deadline->date_remaining_label || $deadline->km_remaining_label)
+                        <div class="card-list-item-side">
+                            <div class="card-list-item-side-label">{{ __('Manca') }}</div>
+                            @if ($deadline->date_remaining_label)
+                                <div>{{ $deadline->date_remaining_label }}</div>
+                            @endif
+                            @if ($deadline->km_remaining_label)
+                                <div>{{ $deadline->km_remaining_label }}</div>
+                            @endif
+                        </div>
+                    @endif
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessuna scadenza trovata.') }}</p>
+            @endforelse
         </div>
     </div>
 @endsection
