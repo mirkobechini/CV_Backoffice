@@ -172,7 +172,10 @@
                                 :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
                         </div>
                     </div>
-                    <div class="card-list-item-side">{{ $issue->part ?? 'N/A' }}</div>
+                    <div class="card-list-item-side">
+                        <div class="card-list-item-side-label">{{ __('Parte') }}</div>
+                        <div>{{ $issue->part ?? 'N/A' }}</div>
+                    </div>
                 </a>
             @empty
                 <p class="empty">{{ __('Nessun guasto trovato.') }}</p>

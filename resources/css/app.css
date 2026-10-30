@@ -1263,6 +1263,17 @@ body {
     text-align: right;
 }
 
+/* Etichetta sopra il valore nella colonna destra delle card mobile (es.
+   "Parte", "Manca"): senza, il valore da solo (una data, un numero) non
+   dice a cosa si riferisce. */
+.card-list-item-side-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #786b54;
+}
+
 /* Riquadro mese/giorno a destra (card appuntamenti nelle liste mobile,
    restyle "Saru" ADR §19). */
 .dash-date-box {
