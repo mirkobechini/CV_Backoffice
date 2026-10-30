@@ -219,8 +219,11 @@
                     <span class="thumb t{{ ($record->vehicle_id % 5) + 1 }}"><i class="fa-solid fa-truck"></i></span>
                     <div class="card-list-item-body">
                         <div class="card-list-item-title">{{ $description }}</div>
-                        <div class="card-list-item-sub">{{ $record->vehicle->internal_code ?? 'N/A' }} ·
-                            {{ $record->appointment_date_time_formatted ?? 'N/A' }}</div>
+                        <div class="card-list-item-sub">{{ $record->vehicle->internal_code ?? 'N/A' }}
+                            @if ($record->provider)
+                                · {{ $record->provider->name }}
+                            @endif
+                        </div>
                         @if ($record->activity_type)
                             <div class="card-list-item-tag">
                                 <span
@@ -228,6 +231,12 @@
                             </div>
                         @endif
                     </div>
+                    @if ($record->appointment_date)
+                        <div class="dash-date-box">
+                            <div class="month">{{ $record->appointment_date->translatedFormat('M') }}</div>
+                            <div class="day">{{ $record->appointment_date->format('d') }}</div>
+                        </div>
+                    @endif
                 </a>
             @empty
                 <p class="empty">{{ __('Nessun appuntamento trovato.') }}</p>
