@@ -24,7 +24,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -86,6 +86,32 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di `$fuelCards`. --}}
+        <div class="card-list-mobile">
+            @forelse ($fuelCards as $fuelCard)
+                <a href="{{ route('admin.fuel-cards.show', $fuelCard->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($fuelCard->id % 5) + 1 }}"><i
+                            class="fa-solid fa-credit-card"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $fuelCard->card_number }}</div>
+                        <div class="card-list-item-sub">{{ $fuelCard->provider ?? '—' }}</div>
+                        <div class="card-list-item-tag">
+                            <span
+                                class="badge {{ $fuelCard->status === 'assigned' ? 'b-green' : ($fuelCard->status === 'jolly' ? 'b-blue' : 'b-gray') }}">
+                                {{ $fuelCard->status_label }}
+                            </span>
+                        </div>
+                    </div>
+                    @if ($fuelCard->vehicle)
+                        <div class="card-list-item-side">{{ $fuelCard->vehicle->internal_code }}</div>
+                    @endif
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessuna tessera registrata.') }}</p>
+            @endforelse
         </div>
     </div>
 

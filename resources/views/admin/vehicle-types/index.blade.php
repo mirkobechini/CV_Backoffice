@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -71,6 +71,31 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di
+        `$vehicleTypes`. --}}
+        <div class="card-list-mobile">
+            @forelse ($vehicleTypes as $vehicleType)
+                <a href="{{ route('admin.vehicle-types.show', $vehicleType->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($vehicleType->id % 5) + 1 }}"><i class="fa-solid fa-truck"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $vehicleType->name }}</div>
+                        <div class="card-list-item-tag">
+                            @if ($vehicleType->needs_oxygen_check)
+                                <span class="badge b-green"><i class="fa-solid fa-check"></i>
+                                    {{ __('Revisione ossigeno richiesta') }}</span>
+                            @else
+                                <span class="badge b-gray"><i class="fa-solid fa-xmark"></i>
+                                    {{ __('Revisione ossigeno non richiesta') }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun tipo di veicolo trovato.') }}</p>
+            @endforelse
         </div>
 
         @if ($vehicleTypes->hasPages())
