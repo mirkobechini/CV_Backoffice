@@ -13,9 +13,9 @@
     @endphp
 
     <div class="table-card">
-        <div class="toolbar">
+        <div class="toolbar toolbar-reorder-mobile">
             <div class="toolbar-left">
-                <h2>{{ __('Elenco guasti') }}</h2>
+                <h2 class="toolbar-title-redundant">{{ __('Elenco guasti') }}</h2>
                 <div class="filters">
                     <a href="{{ $statusFilterUrl('all') }}"
                         class="chip {{ $statusFilter === 'all' ? 'on' : '' }}">{{ __('Tutti') }}</a>
@@ -40,17 +40,23 @@
                                 class="fa-solid fa-xmark"></i></a>
                     @endif
                 </form>
-                @if ($issuesWithoutPartCount > 0 && auth()->user()->canUseLicenseFeature(\App\Models\License::FEATURE_AI_BACKFILL))
-                    <a href="{{ route('admin.issues.backfill-parts.index') }}" class="btn" title="{{ __('Assegna la parte del veicolo ai guasti che ne sono ancora privi') }}">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Allinea parti') }} ({{ $issuesWithoutPartCount }})
+                {{-- Scroll orizzontale invece di a capo sotto i 768px: tre
+                pulsanti con etichetta lunga impilati verticalmente
+                prendevano troppo spazio sopra la lista (restyle "Saru",
+                issue-563). --}}
+                <div class="toolbar-icon-actions">
+                    @if ($issuesWithoutPartCount > 0 && auth()->user()->canUseLicenseFeature(\App\Models\License::FEATURE_AI_BACKFILL))
+                        <a href="{{ route('admin.issues.backfill-parts.index') }}" class="btn" title="{{ __('Assegna la parte del veicolo ai guasti che ne sono ancora privi') }}">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> {{ __('Allinea parti') }} ({{ $issuesWithoutPartCount }})
+                        </a>
+                    @endif
+                    <a href="{{ route('admin.csv.export', 'issues') }}" class="btn" title="{{ __('Scarica CSV') }}">
+                        <i class="fa-solid fa-download"></i> CSV
                     </a>
-                @endif
-                <a href="{{ route('admin.csv.export', 'issues') }}" class="btn" title="{{ __('Scarica CSV') }}">
-                    <i class="fa-solid fa-download"></i> CSV
-                </a>
-                <a href="{{ route('admin.csv-import.index') }}" class="btn">
-                    <i class="fa-solid fa-file-import"></i> {{ __('Importa CSV') }}
-                </a>
+                    <a href="{{ route('admin.csv-import.index') }}" class="btn">
+                        <i class="fa-solid fa-file-import"></i> {{ __('Importa CSV') }}
+                    </a>
+                </div>
                 <a href="{{ route('admin.issues.create') }}" class="btn primary">
                     <i class="fa-solid fa-plus"></i> {{ __('Nuovo guasto') }}
                 </a>

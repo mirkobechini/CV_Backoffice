@@ -1476,6 +1476,37 @@ body {
         width: 100%;
     }
 
+    /* Ricerca+azioni sopra ai chip di stato, come richiesto per la lista
+       Guasti (restyle "Saru", issue-563): solo qui, non su tutte le
+       liste che condividono .toolbar/.toolbar-left. */
+    .toolbar-reorder-mobile .toolbar-left {
+        order: 2;
+    }
+
+    .toolbar-reorder-mobile>.filters:last-child {
+        order: 1;
+    }
+
+    /* "Elenco guasti" ridondante col titolo "Guasti" già mostrato nella
+       topbar compatta sotto i 768px (restyle "Saru", issue-563). Solo
+       sulle liste già riviste: altri usi di `.toolbar h2` (es. tab
+       "Membri" nella scheda gruppo) non sono un doppione di nulla e
+       restano visibili. */
+    .toolbar-title-redundant {
+        display: none;
+    }
+
+    .toolbar-icon-actions {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .toolbar-icon-actions .btn {
+        flex-shrink: 0;
+    }
+
     .pagination {
         flex-direction: column;
         gap: 8px;
@@ -3587,6 +3618,23 @@ body.modal-open {
 
     .topbar-btn.menu-toggle {
         display: none !important;
+    }
+
+    /* Più respiro tra la topbar e il contenuto sotto, come nel mockup —
+       sotto i 768px il breadcrumb è ridotto al solo titolo e lascia
+       troppo poco spazio con il margine di base (restyle "Saru",
+       issue-563). */
+    .topbar-dp {
+        margin-bottom: 20px;
+    }
+
+    /* Sotto i 768px il breadcrumb mostra solo il nome della pagina
+       corrente: nel mockup la topbar compatta non porta la catena
+       Manutenzione/Guasti/ecc., ridondante col tab attivo in bottom-nav
+       (restyle "Saru", ADR §19). */
+    .breadcrumb-parent,
+    .breadcrumb-sep {
+        display: none;
     }
 
     .main-dp {
