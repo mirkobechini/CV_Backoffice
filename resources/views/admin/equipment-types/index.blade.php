@@ -28,7 +28,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -65,6 +65,30 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di
+        `$equipmentTypes`. --}}
+        <div class="card-list-mobile">
+            @forelse ($equipmentTypes as $equipmentType)
+                <a href="{{ route('admin.equipment-types.show', $equipmentType->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($equipmentType->id % 5) + 1 }}"><i
+                            class="fa-solid fa-toolbox"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $equipmentType->name ?? 'N/A' }}</div>
+                        <div class="card-list-item-sub">
+                            {{ __('Prima revisione') }}: {{ $equipmentType->first_inspection_months_formatted ?? 'N/A' }}
+                        </div>
+                    </div>
+                    <div class="card-list-item-side">
+                        <div class="card-list-item-side-label">{{ __('Revisione regolare') }}</div>
+                        <div>{{ $equipmentType->regular_inspection_months_formatted ?? 'N/A' }}</div>
+                    </div>
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun tipo di attrezzatura trovato.') }}</p>
+            @endforelse
         </div>
 
         @if ($equipmentTypes->hasPages())
