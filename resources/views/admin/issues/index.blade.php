@@ -13,7 +13,7 @@
     @endphp
 
     <div class="table-card">
-        <div class="toolbar">
+        <div class="toolbar toolbar-reorder-mobile">
             <div class="toolbar-left">
                 <h2 class="toolbar-title-redundant">{{ __('Elenco guasti') }}</h2>
                 <div class="filters">

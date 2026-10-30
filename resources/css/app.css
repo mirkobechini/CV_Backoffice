@@ -1476,6 +1476,17 @@ body {
         width: 100%;
     }
 
+    /* Ricerca+azioni sopra ai chip di stato, come richiesto per la lista
+       Guasti (restyle "Saru", issue-563): solo qui, non su tutte le
+       liste che condividono .toolbar/.toolbar-left. */
+    .toolbar-reorder-mobile .toolbar-left {
+        order: 2;
+    }
+
+    .toolbar-reorder-mobile>.filters:last-child {
+        order: 1;
+    }
+
     /* "Elenco guasti" ridondante col titolo "Guasti" già mostrato nella
        topbar compatta sotto i 768px (restyle "Saru", issue-563). Solo
        sulle liste già riviste: altri usi di `.toolbar h2` (es. tab

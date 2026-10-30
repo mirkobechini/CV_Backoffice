@@ -19,7 +19,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Restyle "Saru" (scheda veicolo, Panoramica completa e mobile compatto)**: tab Panoramica a 2 colonne con riepilogo di Scadenze/Pneumatici/Equipaggiamento (prima solo Anagrafica/Specifiche/Documenti/Affidabilità), oltre al dettaglio completo nelle rispettive tab dedicate. Header scheda veicolo più compatto su mobile.
 - **Restyle "Saru" (allineamento larghezza card tab + ingranaggio sidebar)**: le tab con una sola card ora occupano tutta la larghezza invece di un terzo; la tab Scadenze (2 card) passa a 2 colonne piene. Pannello utente in sidebar: icona a ingranaggio con menu (Impostazioni account/Esci) invece del solo pulsante di logout diretto, come nel mockup.
 - **Restyle "Saru" (breadcrumb compatto su mobile)**: sotto i 768px il breadcrumb mostra solo il nome della pagina corrente (es. "Guasti"), non più l'intera catena (es. "Manutenzione / Guasti") — ridondante col tab attivo nella bottom-nav, come nel mockup.
-- **Restyle "Saru" (lista Guasti, toolbar riorganizzata su mobile)**: sotto i 768px il titolo "Elenco guasti" è nascosto (ridondante col titolo "Guasti" già nella topbar compatta); "Allinea parti"/CSV/"Importa CSV" passano da riga verticale a riga orizzontale scorrevole, come nel mockup.
+- **Restyle "Saru" (lista Guasti, toolbar riorganizzata su mobile)**: sotto i 768px il titolo "Elenco guasti" è nascosto (ridondante col titolo "Guasti" già nella topbar compatta); "Allinea parti"/CSV/"Importa CSV" passano da riga verticale a riga orizzontale scorrevole, come nel mockup; ricerca+azioni ora sopra ai chip di stato (Tutti/Aperti/In lavorazione/Risolti), scambiati di posizione.
 
 ### Fixed
 
