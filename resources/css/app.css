@@ -3592,6 +3592,30 @@ body.modal-open {
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
+
+    /* Pulsante "Salva" fisso in fondo nei form, come nel mockup — solo su
+       mobile, sopra la bottom nav (restyle "Saru", ADR §19). Su desktop il
+       form-actions resta nel flusso della pagina. */
+    .form-actions {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+        z-index: 110;
+        margin: 0;
+        padding: 10px 14px;
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .form-actions .btn.primary.lg {
+        flex: 1;
+    }
+
+    .form-card {
+        margin-bottom: 90px;
+    }
 }
 
 .bottom-nav-link {
