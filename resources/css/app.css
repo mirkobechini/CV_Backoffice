@@ -3620,6 +3620,14 @@ body.modal-open {
         display: none !important;
     }
 
+    /* Più respiro tra la topbar e il contenuto sotto, come nel mockup —
+       sotto i 768px il breadcrumb è ridotto al solo titolo e lascia
+       troppo poco spazio con il margine di base (restyle "Saru",
+       issue-563). */
+    .topbar-dp {
+        margin-bottom: 20px;
+    }
+
     /* Sotto i 768px il breadcrumb mostra solo il nome della pagina
        corrente: nel mockup la topbar compatta non porta la catena
        Manutenzione/Guasti/ecc., ridondante col tab attivo in bottom-nav
