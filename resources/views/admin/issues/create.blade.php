@@ -108,7 +108,7 @@
                     </div>
                 </div>
 
-                <div class="row2">
+                <div class="row2 row2-tight">
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" required />
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>

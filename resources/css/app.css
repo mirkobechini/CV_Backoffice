@@ -2432,6 +2432,14 @@ textarea.input {
     gap: 14px;
 }
 
+/* Coppie di campi corte (es. Data + Stato) che restano affiancate anche
+   sotto i 1000px, a differenza di `.row2` normale (restyle "Saru",
+   ADR §19): un campo data e una select breve stanno comodi in due
+   colonne anche a 390px, come nel mockup. */
+.row2-tight {
+    grid-template-columns: 1fr 1fr !important;
+}
+
 .row3 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -3613,7 +3621,21 @@ body.modal-open {
         flex: 1;
     }
 
+    /* "Annulla" già presente nel page-header in alto su ogni form: il
+       secondo "Annulla" dentro `.form-actions` duplicherebbe l'azione nel
+       pulsante fisso in fondo. */
+    .form-actions .btn:not(.primary) {
+        display: none;
+    }
+
+    /* `.form-card` (sfondo/bordo esterno) avvolgeva `.form-section` (che ha
+       già il proprio sfondo/bordo), un effetto "card dentro la card" come
+       per le liste — qui basta la card interna con lo step numerato. */
     .form-card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
         margin-bottom: 90px;
     }
 }
