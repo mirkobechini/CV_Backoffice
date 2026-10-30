@@ -516,6 +516,14 @@ body {
     display: none;
 }
 
+/* Logo Saru nella topbar mobile (restyle "Saru", ADR §19): identità di
+   pagina accanto all'hamburger, come nel mockup — nascosto quando la
+   sidebar col brand è già visibile (desktop/tablet). */
+.topbar-logo {
+    display: none;
+    flex-shrink: 0;
+}
+
 .sidebar-backdrop {
     display: none;
 }
@@ -3585,8 +3593,15 @@ body.modal-open {
         display: none;
     }
 
+    /* Hamburger + logo Saru nella topbar, come nel mockup: sotto i 768px
+       la bottom nav ha comunque il suo tab "Menu" equivalente, i due
+       convivono perché così fa anche il mockup. */
     .topbar-btn.menu-toggle {
-        display: none !important;
+        display: grid !important;
+    }
+
+    .topbar-logo {
+        display: flex;
     }
 
     .main-dp {
@@ -3655,16 +3670,16 @@ body.modal-open {
 }
 
 .bottom-nav-add-btn {
-    width: 46px;
-    height: 46px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: none;
     background: var(--primary);
     color: #1a1108;
-    font-size: 18px;
+    font-size: 16px;
     display: grid;
     place-items: center;
-    margin-top: -26px;
+    margin-top: -14px;
     box-shadow: 0 6px 16px rgba(226, 121, 45, 0.4);
     cursor: pointer;
 }
