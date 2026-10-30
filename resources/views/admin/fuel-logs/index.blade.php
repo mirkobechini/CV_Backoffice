@@ -106,6 +106,14 @@
                         <div class="card-list-item-title">{{ $fuelLog->vehicle->internal_code ?? 'N/A' }}</div>
                         <div class="card-list-item-sub">{{ $fuelLog->log_date_formatted ?? 'N/A' }} ·
                             {{ number_format($fuelLog->liters, 2, ',', '.') }} L</div>
+                        @if ($fuelLog->vehicle?->fuel_type)
+                            <div class="card-list-item-tag">
+                                <x-admin.status-badge
+                                    :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$fuelLog->vehicle->fuel_type] ?? 'gray'">
+                                    {{ $fuelLog->vehicle->fuel_type_label }}
+                                </x-admin.status-badge>
+                            </div>
+                        @endif
                     </div>
                     <div class="card-list-item-side">
                         <div class="card-list-item-side-label">{{ __('Costo') }}</div>
