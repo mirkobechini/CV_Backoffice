@@ -48,7 +48,7 @@
                 </div>
             </div>
 
-            <div class="table-responsive">
+            <div class="table-responsive table-desktop-only">
                 <table>
                     <thead>
                         <tr>
@@ -113,6 +113,33 @@
                         @endforelse
                     </tbody>
                 </table>
+            </div>
+
+            {{-- Lista a card <768px al posto della tabella con scroll
+            orizzontale (restyle "Saru", ADR §19): stessi dati di
+            `$mileageLogs` — selezione multipla resta una funzione
+            desktop. --}}
+            <div class="card-list-mobile">
+                @forelse ($mileageLogs as $mileageLog)
+                    <a href="{{ route('admin.mileage-logs.show', $mileageLog->id) }}" class="card-list-item">
+                        <span class="thumb t{{ ($mileageLog->vehicle_id % 5) + 1 }}"><i
+                                class="fa-solid fa-road"></i></span>
+                        <div class="card-list-item-body">
+                            <div class="card-list-item-title">{{ $mileageLog->vehicle->internal_code ?? 'N/A' }}</div>
+                            <div class="card-list-item-sub">{{ $mileageLog->log_date_formatted ?? 'N/A' }}</div>
+                        </div>
+                        <div class="card-list-item-side">
+                            <div class="card-list-item-side-label">{{ __('Km') }}</div>
+                            <div>{{ number_format($mileageLog->mileage, 0, ',', '.') }}</div>
+                            @php($delta = $deltaByLogId[$mileageLog->id] ?? null)
+                            @if ($delta !== null)
+                                <div>{{ $delta >= 0 ? '+' : '' }}{{ number_format($delta, 0, ',', '.') }}</div>
+                            @endif
+                        </div>
+                    </a>
+                @empty
+                    <p class="empty">{{ __('Nessun chilometraggio registrato.') }}</p>
+                @endforelse
             </div>
         </div>
     </form>
