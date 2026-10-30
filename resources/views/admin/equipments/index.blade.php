@@ -3,6 +3,7 @@
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
         ['label' => __('Attrezzature')],
+        ['label' => __('Attrezzatura')],
     ]" />
 @endsection
 

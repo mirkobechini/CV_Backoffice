@@ -58,7 +58,6 @@
             </svg>
         </span>
         <span class="brand-text">{{ config('app.name', 'Gestione Flotta') }}</span>
-        <span class="badge text-bg-secondary ms-auto small" style="font-size: 0.6rem;">{{ config('app.version') }}</span>
     </a>
 
     {{-- Ricerca rapida veicoli (sigla/targa), ADR §19 --}}
