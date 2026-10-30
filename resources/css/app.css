@@ -597,6 +597,10 @@ body {
     color: #fff;
 }
 
+.theme-switch-icon {
+    display: none;
+}
+
 /* =============================================
    KPI color chips (k1-k7) — condivise da dashboard e altre pagine
    ============================================= */
@@ -3591,6 +3595,25 @@ body.modal-open {
 
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Topbar compatta: lo switch tema perde l'etichetta testuale "Auto" a
+       favore di un'icona (stesso pulsante, stessa funzione), il pulsante
+       "+ Nuovo" sparisce perché duplica il FAB della bottom nav. */
+    .theme-switch-label {
+        display: none;
+    }
+
+    .theme-switch-icon {
+        display: inline;
+    }
+
+    .theme-switch button {
+        padding: 0 7px;
+    }
+
+    .page-header-quick-add {
+        display: none;
     }
 }
 
