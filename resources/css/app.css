@@ -1208,6 +1208,46 @@ body {
     color: var(--text-muted);
 }
 
+/* Veicoli: lista a card <768px al posto della tabella (restyle "Saru",
+   ADR §19) — nascosta di default, mostrata via media query. */
+.veh-list-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.veh-card-mobile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.veh-card-mobile-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.veh-card-mobile-name {
+    font-weight: 700;
+    font-size: 13.5px;
+}
+
+.veh-card-mobile-km {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+.veh-card-mobile-deadline {
+    margin-top: 5px;
+}
+
 /* Riga secondaria generica per celle tabella (es. email sotto al telefono) */
 .cell-sub {
     font-size: 11px;
@@ -3591,6 +3631,22 @@ body.modal-open {
 
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Nuovo veicolo: nascosto <768px, duplica il FAB già nella bottom nav
+       (restyle "Saru", ADR §19). */
+    .page-header-quick-add {
+        display: none;
+    }
+
+    /* Veicoli: lista a card al posto della tabella con scroll orizzontale
+       (restyle "Saru", ADR §19). */
+    .veh-table-desktop {
+        display: none;
+    }
+
+    .veh-list-mobile {
+        display: flex;
     }
 }
 

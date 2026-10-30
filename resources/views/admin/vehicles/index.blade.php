@@ -24,7 +24,9 @@
                 title="{{ __('Scarica PDF riepilogo flotta') }}">
                 <i class="fa-solid fa-file-pdf"></i> PDF
             </a>
-            <a href="{{ route('admin.vehicles.create') }}" class="btn primary">
+            {{-- Nascosto <768px: duplica il FAB "+" già nella bottom nav (restyle
+            "Saru", ADR §19). --}}
+            <a href="{{ route('admin.vehicles.create') }}" class="btn primary page-header-quick-add">
                 <i class="fa-solid fa-plus"></i> {{ __('Nuovo veicolo') }}
             </a>
         </div>
@@ -69,7 +71,7 @@
             <span class="legend-item"><span class="dot-type leg-ossigeno"></span>{{ __('Ossigeno') }}</span>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive veh-table-desktop">
             <table>
                 <thead>
                     <tr>
@@ -184,6 +186,46 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella desktop con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati, stesso
+        `$vehicles`, solo layout diverso. --}}
+        <div class="veh-list-mobile">
+            @forelse ($vehicles as $vehicle)
+                @php($activeDeadlines = $vehicle->deadlines->filter(fn($d) => in_array($d->automatic_status, ['pending', 'expired']))->sortBy('due_date')->take(1))
+                <a href="{{ route('admin.vehicles.show', $vehicle->id) }}" class="veh-card-mobile">
+                    <span class="thumb t{{ ($vehicle->id % 5) + 1 }}"><i class="fa-solid fa-truck"></i></span>
+                    <div class="veh-card-mobile-body">
+                        <div class="veh-card-mobile-name">{{ $vehicle->internal_code }} ·
+                            {{ $vehicle->brand->name ?? '' }} {{ $vehicle->carModel->name ?? 'N/A' }}</div>
+                        <div class="veh-card-mobile-km">{{ number_format($vehicle->mileage ?? 0, 0, ',', '.') }} km
+                        </div>
+                        @if ($activeDeadlines->isNotEmpty())
+                            @php($deadline = $activeDeadlines->first())
+                            <span
+                                class="badge {{ match ($deadline->status_color) {
+                                    'red' => 'b-red',
+                                    'yellow' => 'b-amber',
+                                    default => 'b-green',
+                                } }} veh-card-mobile-deadline">{{ $deadline->type }}
+                                {{ $deadline->days_label }}</span>
+                        @elseif($vehicle->open_issues_count > 0)
+                            <span class="badge b-red veh-card-mobile-deadline">⚠ {{ __('Guasti aperti') }}
+                                {{ $vehicle->open_issues_count }}</span>
+                        @else
+                            <span class="badge b-green veh-card-mobile-deadline">{{ __('Nessuna scadenza vicina') }}</span>
+                        @endif
+                    </div>
+                    @if ($inWorkshopVehicleIds->contains($vehicle->id))
+                        <span class="badge b-red">{{ __('Officina') }}</span>
+                    @else
+                        <span class="badge b-green">{{ __('Disp.') }}</span>
+                    @endif
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun veicolo trovato.') }}</p>
+            @endforelse
         </div>
 
         @if ($vehicles->hasPages())
