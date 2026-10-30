@@ -226,6 +226,7 @@
                     </div>
                     @if ($tire->next_change_date_formatted || $tire->suggested_next_change_date)
                         <div class="card-list-item-side">
+                            <div class="card-list-item-side-label">{{ __('Prossimo cambio') }}</div>
                             <div>{{ $tire->next_change_date_formatted ?? $tire->suggested_next_change_date->format('d/m/Y') }}
                             </div>
                             @if ($tire->change_due)

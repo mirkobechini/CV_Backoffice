@@ -3,6 +3,7 @@
 @section('breadcrumb')
     <x-admin.breadcrumb :items="[
         ['label' => __('Attrezzature')],
+        ['label' => __('Attrezzatura')],
     ]" />
 @endsection
 
@@ -173,7 +174,10 @@
                         </div>
                     </div>
                     @if ($equipment->expiration_date_formatted)
-                        <div class="card-list-item-side">{{ $equipment->expiration_date_formatted }}</div>
+                        <div class="card-list-item-side">
+                            <div class="card-list-item-side-label">{{ __('Scadenza') }}</div>
+                            <div>{{ $equipment->expiration_date_formatted }}</div>
+                        </div>
                     @endif
                 </a>
             @empty
