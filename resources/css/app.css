@@ -3622,6 +3622,12 @@ body.modal-open {
         min-width: 0;
     }
 
+    /* Più respiro tra la topbar form e il primo campo, come nel mockup
+       (la topbar normale ha solo 8px, pensati per il breadcrumb). */
+    .topbar-dp-form {
+        margin-bottom: 20px;
+    }
+
     .topbar-form-cancel {
         font-size: 13px;
         font-weight: 600;
