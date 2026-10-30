@@ -18,6 +18,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Restyle "Saru" (Veicoli, lista+scheda, capofila)**: lista veicoli riprogettata — rimossa la riga KPI ridondante con la dashboard, ricerca a tutta larghezza affiancata ai filtri, icona veicolo come chip arrotondata invece di cerchio pieno, nuova colonna/filtri "Disponibile"/"In officina". Stesso badge sulla scheda veicolo. Badge conteggio veicoli in sidebar; icone del menu "Nuovo" con sfondo colorato.
 - **Restyle "Saru" (scheda veicolo, Panoramica completa e mobile compatto)**: tab Panoramica a 2 colonne con riepilogo di Scadenze/Pneumatici/Equipaggiamento (prima solo Anagrafica/Specifiche/Documenti/Affidabilità), oltre al dettaglio completo nelle rispettive tab dedicate. Header scheda veicolo più compatto su mobile.
 - **Restyle "Saru" (allineamento larghezza card tab + ingranaggio sidebar)**: le tab con una sola card ora occupano tutta la larghezza invece di un terzo; la tab Scadenze (2 card) passa a 2 colonne piene. Pannello utente in sidebar: icona a ingranaggio con menu (Impostazioni account/Esci) invece del solo pulsante di logout diretto, come nel mockup.
+- **Restyle "Saru" (topbar mobile compatta)**: sotto i 768px lo switch tema perde l'etichetta testuale "Auto" a favore di un'icona (stessa funzione, meno spazio); il pulsante "+ Nuovo" della dashboard non viene più mostrato perché duplica il FAB già presente al centro della bottom nav.
 
 ### Fixed
 
