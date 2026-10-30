@@ -119,7 +119,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -205,6 +205,38 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di `$tires`
+        — selezione/modifica multipla resta una funzione desktop. --}}
+        <div class="card-list-mobile">
+            @forelse ($tires as $tire)
+                <a href="{{ route('admin.tires.show', $tire->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($tire->id % 5) + 1 }}"><i class="fa-solid fa-circle-dot"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $tire->vehicle?->internal_code ?? 'N/A' }} ·
+                            {{ $tire->season_label }}</div>
+                        <div class="card-list-item-sub">{{ $tire->position_label }} ·
+                            {{ trim(($tire->brand ?? '') . ' ' . ($tire->model_name ?? '')) ?: '—' }}
+                            ({{ $tire->size ?: '—' }})</div>
+                        <div class="card-list-item-tag">
+                            <span class="badge {{ $badgeClass($tire->status) }}">{{ $tire->status_label }}</span>
+                        </div>
+                    </div>
+                    @if ($tire->next_change_date_formatted || $tire->suggested_next_change_date)
+                        <div class="card-list-item-side">
+                            <div>{{ $tire->next_change_date_formatted ?? $tire->suggested_next_change_date->format('d/m/Y') }}
+                            </div>
+                            @if ($tire->change_due)
+                                <div>{{ __('da cambiare') }}</div>
+                            @endif
+                        </div>
+                    @endif
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun set di gomme trovato.') }}</p>
+            @endforelse
         </div>
 
         @if ($tires->hasPages())

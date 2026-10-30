@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -151,6 +151,34 @@
                     @endif
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di `$equipments`
+        (non raggruppati — raggruppamento/selezione multipla restano
+        funzioni desktop). --}}
+        <div class="card-list-mobile">
+            @forelse ($equipments as $equipment)
+                <a href="{{ route('admin.equipments.show', $equipment->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($equipment->id % 5) + 1 }}"><i
+                            class="fa-solid fa-fire-extinguisher"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">
+                            {{ $equipment->name ?: ($equipment->equipmentType->name ?? 'N/A') }}</div>
+                        <div class="card-list-item-sub">{{ $equipment->vehicle?->internal_code ?? 'N/A' }} ·
+                            {{ $equipment->equipmentType->name ?? 'N/A' }}</div>
+                        <div class="card-list-item-tag">
+                            <x-admin.status-badge
+                                :color="$equipment->overall_status_color">{{ $equipment->overall_status_label }}</x-admin.status-badge>
+                        </div>
+                    </div>
+                    @if ($equipment->expiration_date_formatted)
+                        <div class="card-list-item-side">{{ $equipment->expiration_date_formatted }}</div>
+                    @endif
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessuna attrezzatura trovata.') }}</p>
+            @endforelse
         </div>
 
         @if ($groupedEquipments === null && $equipments->hasPages())
