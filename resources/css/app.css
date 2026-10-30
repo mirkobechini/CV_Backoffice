@@ -3589,6 +3589,15 @@ body.modal-open {
         display: none !important;
     }
 
+    /* Sotto i 768px il breadcrumb mostra solo il nome della pagina
+       corrente: nel mockup la topbar compatta non porta la catena
+       Manutenzione/Guasti/ecc., ridondante col tab attivo in bottom-nav
+       (restyle "Saru", ADR §19). */
+    .breadcrumb-parent,
+    .breadcrumb-sep {
+        display: none;
+    }
+
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
