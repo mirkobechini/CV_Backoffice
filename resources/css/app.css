@@ -1208,6 +1208,71 @@ body {
     color: var(--text-muted);
 }
 
+/* Liste a card <768px al posto delle tabelle con scroll orizzontale
+   (restyle "Saru", ADR §19) — nascoste di default, mostrate via media
+   query. Condivise da Guasti/Scadenze/Appuntamenti/Pneumatici/
+   Attrezzature (e future liste), stessa forma: icona/dot +
+   titolo/sottotitolo + colonna destra. */
+.card-list-mobile {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.card-list-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
+}
+
+.card-list-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.card-list-item-title {
+    font-weight: 700;
+    font-size: 13.5px;
+}
+
+.card-list-item-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+.card-list-item-tag {
+    margin-top: 5px;
+}
+
+.card-list-item-side {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+/* Etichetta sopra il valore nella colonna destra delle card mobile (es.
+   "Prossimo cambio", "Scadenza"): senza, il valore da solo (una data, un
+   numero) non dice a cosa si riferisce. */
+.card-list-item-side-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #786b54;
+}
+
 /* Riga secondaria generica per celle tabella (es. email sotto al telefono) */
 .cell-sub {
     font-size: 11px;
@@ -3591,6 +3656,16 @@ body.modal-open {
 
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Pneumatici/Attrezzature: lista a card al posto della tabella con
+       scroll orizzontale (restyle "Saru", ADR §19). */
+    .table-desktop-only {
+        display: none;
+    }
+
+    .card-list-mobile {
+        display: flex;
     }
 }
 
