@@ -516,6 +516,14 @@ body {
     display: none;
 }
 
+/* Logo Saru nella topbar mobile (restyle "Saru", ADR §19): identità di
+   pagina accanto all'hamburger, come nel mockup — nascosto quando la
+   sidebar col brand è già visibile (desktop/tablet). */
+.topbar-logo {
+    display: none;
+    flex-shrink: 0;
+}
+
 .sidebar-backdrop {
     display: none;
 }
@@ -3575,8 +3583,8 @@ body.modal-open {
         right: 0;
         bottom: 0;
         z-index: 115;
-        background: var(--surface);
-        border-top: 1px solid var(--border);
+        background: var(--sidebar-bg);
+        border-top: 1px solid #241c12;
         padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
         box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
     }
@@ -3585,12 +3593,49 @@ body.modal-open {
         display: none;
     }
 
+    /* Hamburger nascosto sotto i 768px: la bottom nav ha già il suo tab
+       "Menu" con la stessa funzione, un secondo controllo è ridondante.
+       Il logo Saru resta, come identità di pagina. */
     .topbar-btn.menu-toggle {
         display: none !important;
     }
 
+    .topbar-logo {
+        display: flex;
+    }
+
+    /* Topbar sullo stesso sfondo scuro di bottom-nav/sidebar (restyle
+       "Saru", ADR §19) invece di confondersi col contenuto: nel mockup
+       le due barre di navigazione sono sempre distinguibili dal resto
+       della pagina. Margine orizzontale negativo riallineato al padding
+       di `.main-dp` a questa larghezza (14px, non i 20px desktop):
+       altrimenti la barra sporge di 6px oltre il bordo e causa scroll
+       orizzontale. */
+    .topbar-dp {
+        background-color: var(--sidebar-bg);
+        margin-left: -14px;
+        margin-right: -14px;
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
     .main-dp {
         padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Le card delle liste mobile hanno già il proprio bordo: senza,
+       `.table-card` (lo sfondo/bordo che avvolge toolbar + lista) aggiunge
+       un secondo bordo attorno a tutte, un effetto "card dentro la card"
+       assente nel mockup (restyle "Saru", ADR §19). */
+    .table-card {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .table-card .toolbar {
+        padding: 0 0 12px;
+        border-bottom: none;
     }
 }
 
@@ -3640,17 +3685,17 @@ body.modal-open {
 }
 
 .bottom-nav-add-btn {
-    width: 44px;
-    height: 44px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     border: none;
     background: var(--primary);
-    color: #fff;
-    font-size: 18px;
+    color: #1a1108;
+    font-size: 16px;
     display: grid;
     place-items: center;
-    margin-top: -22px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    margin-top: -14px;
+    box-shadow: 0 6px 16px rgba(226, 121, 45, 0.4);
     cursor: pointer;
 }
 
