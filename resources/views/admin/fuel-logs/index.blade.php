@@ -18,13 +18,15 @@
                 <a href="{{ route('admin.csv.export', 'fuel-logs') }}" class="btn" title="{{ __('Scarica CSV') }}">
                     <i class="fa-solid fa-download"></i> CSV
                 </a>
-                <a href="{{ route('admin.fuel-logs.create') }}" class="btn primary">
+                {{-- Nascosto <768px: duplica il FAB "+" già nella bottom nav
+                (restyle "Saru", ADR §19). --}}
+                <a href="{{ route('admin.fuel-logs.create') }}" class="btn primary page-header-quick-add">
                     <i class="fa-solid fa-plus"></i> {{ __('Nuovo rifornimento') }}
                 </a>
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -91,6 +93,37 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di `$fuelLogs`. --}}
+        <div class="card-list-mobile">
+            @forelse ($fuelLogs as $fuelLog)
+                <a href="{{ route('admin.fuel-logs.show', $fuelLog->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($fuelLog->vehicle_id % 5) + 1 }}"><i
+                            class="fa-solid fa-gas-pump"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $fuelLog->vehicle->internal_code ?? 'N/A' }}</div>
+                        <div class="card-list-item-sub">{{ $fuelLog->log_date_formatted ?? 'N/A' }} ·
+                            {{ number_format($fuelLog->liters, 2, ',', '.') }} L</div>
+                        @if ($fuelLog->vehicle?->fuel_type)
+                            <div class="card-list-item-tag">
+                                <x-admin.status-badge
+                                    :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$fuelLog->vehicle->fuel_type] ?? 'gray'">
+                                    {{ $fuelLog->vehicle->fuel_type_label }}
+                                </x-admin.status-badge>
+                            </div>
+                        @endif
+                    </div>
+                    <div class="card-list-item-side">
+                        <div class="card-list-item-side-label">{{ __('Costo') }}</div>
+                        <div>{{ $fuelLog->cost_total ? '€ '.number_format($fuelLog->cost_total, 2, ',', '.') : 'N/A' }}
+                        </div>
+                    </div>
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun rifornimento registrato.') }}</p>
+            @endforelse
         </div>
     </div>
 

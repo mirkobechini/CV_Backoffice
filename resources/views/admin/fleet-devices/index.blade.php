@@ -24,7 +24,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -77,6 +77,31 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di
+        `$fleetDevices`. --}}
+        <div class="card-list-mobile">
+            @forelse ($fleetDevices as $fleetDevice)
+                <a href="{{ route('admin.fleet-devices.show', $fleetDevice->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($fleetDevice->id % 5) + 1 }}"><i
+                            class="fa-solid fa-road-barrier"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $fleetDevice->type_label }}</div>
+                        <div class="card-list-item-sub">{{ $fleetDevice->code }}</div>
+                    </div>
+                    <div class="card-list-item-side">
+                        @if ($fleetDevice->vehicle)
+                            <div>{{ $fleetDevice->vehicle->internal_code }}</div>
+                        @else
+                            <div>{{ __('Non assegnato') }}</div>
+                        @endif
+                    </div>
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun dispositivo registrato.') }}</p>
+            @endforelse
         </div>
     </div>
 
