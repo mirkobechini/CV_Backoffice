@@ -14,9 +14,9 @@ visivamente ma letto normalmente. --}}
         @if ($loop->last)
             <b>{{ $item['label'] }}</b>
         @elseif (!empty($item['url']))
-            <a href="{{ $item['url'] }}">{{ $item['label'] }}</a>
+            <a href="{{ $item['url'] }}" class="breadcrumb-parent">{{ $item['label'] }}</a>
         @else
-            {{ $item['label'] }}
+            <span class="breadcrumb-parent">{{ $item['label'] }}</span>
         @endif
     @endforeach
 </nav>
