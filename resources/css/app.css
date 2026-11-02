@@ -1889,6 +1889,14 @@ body {
     border-bottom: 1px solid var(--border);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* Scroll touch funzionante, ma senza la scrollbar visibile del
+       browser sotto le tab — assente nel mockup (restyle "Saru", ADR
+       §19). */
+    scrollbar-width: none;
+}
+
+.veh-tab-nav::-webkit-scrollbar {
+    display: none;
 }
 
 .veh-tab-nav .nav-link {
@@ -4057,11 +4065,16 @@ body.modal-open {
         flex-shrink: 0;
     }
 
-    .topbar-detail-actions a {
+    .topbar-detail-actions a,
+    .topbar-detail-actions button {
         color: var(--primary);
         font-size: 16px;
         display: flex;
         align-items: center;
+        background: none;
+        border: none;
+        padding: 0;
+        cursor: pointer;
     }
 
     /* "Torna" e azioni secondarie (es. "Prenota appuntamento") si
@@ -4070,6 +4083,13 @@ body.modal-open {
        fondo allo schermo come il pulsante "Salva" dei form. */
     .is-detail-page .page-actions-back,
     .is-detail-page .page-actions-extra {
+        display: none;
+    }
+
+    /* Pagine dove ogni azione è già coperta dalla topbar di dettaglio
+       (es. scheda veicolo: Modifica come icona, PDF/QR nel kebab) non
+       hanno bisogno di una barra fissa vuota in fondo. */
+    .is-detail-page .page-actions.page-actions-topbar-only {
         display: none;
     }
 

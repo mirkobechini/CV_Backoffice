@@ -8,20 +8,42 @@
     ]" />
 @endsection
 
+@section('detail-topbar-title', $vehicle->internal_code.' · '.($vehicle->carModel?->name ?? ''))
+@section('detail-topbar-back-url', request('back', route('admin.vehicles.index')))
+@section('detail-topbar-actions')
+    <a href="{{ route('admin.vehicles.edit', $vehicle->id) }}" title="{{ __('Modifica') }}"
+        aria-label="{{ __('Modifica') }}">
+        <i class="fa-solid fa-pen"></i>
+    </a>
+    <div class="dropdown topbar-detail-kebab">
+        <button type="button" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false"
+            aria-label="{{ __('Altre azioni') }}">
+            <i class="fa-solid fa-ellipsis-vertical"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ route('admin.vehicles.pdf', $vehicle->id) }}" target="_blank"><i
+                        class="fa-solid fa-file-pdf" style="width:16px;"></i> PDF</a></li>
+            <li><a class="dropdown-item" href="{{ route('admin.vehicles.qr-label', $vehicle->id) }}"
+                    target="_blank"><i class="fa-solid fa-qrcode" style="width:16px;"></i> QR</a></li>
+        </ul>
+    </div>
+@endsection
+
 @section('content')
 
-    <div class="page-actions">
-        <a href="{{ request('back', route('admin.vehicles.index')) }}" class="btn">
+    <div class="page-actions page-actions-topbar-only">
+        <a href="{{ request('back', route('admin.vehicles.index')) }}" class="btn page-actions-back">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}
         </a>
-        <a href="{{ route('admin.vehicles.pdf', $vehicle->id) }}" class="btn outline-solid" target="_blank">
+        <a href="{{ route('admin.vehicles.pdf', $vehicle->id) }}" class="btn outline-solid page-actions-extra"
+            target="_blank">
             <i class="fa-solid fa-file-pdf"></i> PDF
         </a>
-        <a href="{{ route('admin.vehicles.qr-label', $vehicle->id) }}" class="btn outline-solid" target="_blank"
-            title="{{ __('Etichetta QR da stampare e attaccare sul mezzo') }}">
+        <a href="{{ route('admin.vehicles.qr-label', $vehicle->id) }}" class="btn outline-solid page-actions-extra"
+            target="_blank" title="{{ __('Etichetta QR da stampare e attaccare sul mezzo') }}">
             <i class="fa-solid fa-qrcode"></i> QR
         </a>
-        <a href="{{ route('admin.vehicles.edit', $vehicle->id) }}" class="btn primary">
+        <a href="{{ route('admin.vehicles.edit', $vehicle->id) }}" class="btn primary page-actions-extra">
             <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}
         </a>
     </div>
