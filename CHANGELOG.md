@@ -21,6 +21,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Restyle "Saru" (dashboard a 3 colonne)**: card KPI con icona/valore/etichetta impilati verticalmente come nel mockup (prima affiancati orizzontalmente); layout a 3 colonne fisse al posto delle righe impilate a coppie, 3 card per colonna raggruppate per urgenza (richiede attenzione ora/in arrivo a breve/stato generale) invece che per entità, per restare bilanciate in altezza. Nessun dato o funzionalità rimossi, solo riorganizzati.
 - **Restyle "Saru" (pannello utente sidebar con iniziale e ruolo)**: l'avatar in fondo alla sidebar mostra l'iniziale del nome invece dell'icona generica; aggiunto il ruolo (Capo/Sottocapo/Membro) sotto il nome, come nel mockup.
 - **Restyle "Saru" (palette sidebar fedele al mockup)**: colori sidebar allineati ai toni caldi del mockup invece del grigio-blu precedente (link, sezioni, stato attivo, badge guasti/scadenze, ricerca); rimossa la versione app dal brand sidebar (non presente nel mockup); contatore scadenze attive sulla tab "Scadenze" della scheda veicolo; breadcrumb mancante su `admin/equipments/index` ("Attrezzature / Attrezzatura", coerente con le altre viste del gruppo).
+- **Restyle "Saru" (topbar mobile compatta)**: sotto i 768px lo switch tema perde l'etichetta testuale "Auto" a favore di un'icona (stessa funzione, meno spazio); il pulsante "+ Nuovo" della dashboard non viene più mostrato perché duplica il FAB già presente al centro della bottom nav.
 
 ### Fixed
 

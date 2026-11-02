@@ -78,7 +78,10 @@
                 </div>
                 <div class="topbar-actions">
                     <div class="theme-switch" id="theme-switch" role="group" aria-label="{{ __('Cambia tema') }}">
-                        <button type="button" data-theme="auto" class="on">{{ __('Auto') }}</button>
+                        <button type="button" data-theme="auto" class="on">
+                            <i class="fa-solid fa-circle-half-stroke theme-switch-icon" aria-hidden="true"></i>
+                            <span class="theme-switch-label">{{ __('Auto') }}</span>
+                        </button>
                         <button type="button" data-theme="light" title="{{ __('Chiaro') }}"
                             aria-label="{{ __('Chiaro') }}">☀️</button>
                         <button type="button" data-theme="dark" title="{{ __('Scuro') }}"

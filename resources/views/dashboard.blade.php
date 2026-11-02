@@ -22,7 +22,9 @@
             <div class="date">{{ __('Oggi,') }} {{ now()->translatedFormat('l j F Y') }}</div>
             <h1>{{ $greeting }}, {{ $firstName }} 👋</h1>
         </div>
-        <div class="dropdown">
+        {{-- Nascosto <768px: duplica il FAB "+" già nella bottom nav (restyle
+        "Saru", ADR §19). --}}
+        <div class="dropdown page-header-quick-add">
             <button type="button" class="btn primary" data-bs-toggle="dropdown" data-bs-auto-close="true"
                 aria-expanded="false">
                 <i class="fa-solid fa-plus"></i> {{ __('Nuovo') }}
