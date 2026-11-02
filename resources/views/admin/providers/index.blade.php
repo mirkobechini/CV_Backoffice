@@ -60,7 +60,7 @@
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -113,6 +113,30 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di `$providers`. --}}
+        <div class="card-list-mobile">
+            @forelse ($providers as $provider)
+                <a href="{{ route('admin.providers.show', $provider->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($provider->id % 5) + 1 }}"><i class="fa-solid fa-wrench"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $provider->name }}</div>
+                        <div class="card-list-item-sub">{{ $provider->address ?: ($provider->contact_info ?: '—') }}
+                        </div>
+                        <div class="card-list-item-tag">
+                            @if ($provider->type)
+                                <span class="badge {{ $typeBadge($provider->type) }}">{{ $provider->type }}</span>
+                            @else
+                                <span class="badge b-gray">—</span>
+                            @endif
+                        </div>
+                    </div>
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessuna officina trovata.') }}</p>
+            @endforelse
         </div>
 
         @if ($providers->hasPages())

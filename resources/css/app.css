@@ -3825,10 +3825,11 @@ body.modal-open {
     }
 
     /* Veicoli/Guasti/Scadenze/Appuntamenti/Pneumatici/Attrezzature/
-       Carburante/Pedaggi/Tessere/Km/Tipi veicolo: lista a card al posto
-       della tabella con scroll orizzontale (restyle "Saru", ADR §19).
-       Veicoli usa un proprio set di classi (`.veh-*`), non ancora
-       riconciliato con quello condiviso dalle altre liste. */
+       Carburante/Pedaggi/Tessere/Km/Tipi veicolo/Officine/Tipi
+       Attrezzature: lista a card al posto della tabella con scroll
+       orizzontale (restyle "Saru", ADR §19). Veicoli usa un proprio set
+       di classi (`.veh-*`), non ancora riconciliato con quello
+       condiviso dalle altre liste. */
     .veh-table-desktop,
     .table-desktop-only {
         display: none;
