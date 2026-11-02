@@ -33,6 +33,16 @@
         'admin.equipment-issues.*',
         'admin.equipment-maintenance-records.*',
     ]);
+
+    // Pannello utente in fondo alla sidebar (restyle "Saru", ADR §19):
+    // iniziale + ruolo nel gruppo attivo, come nel mockup — stessa
+    // etichetta ruolo già usata in admin.groups._tab-panoramica.
+    $sidebarUserRole = match (auth()->user()?->roleIn(auth()->user()?->activeGroup())) {
+        'capo' => __('Capo'),
+        'sottocapo' => __('Sottocapo'),
+        default => __('Membro'),
+    };
+    $sidebarUserInitial = mb_strtoupper(mb_substr(trim(auth()->user()->name ?? '?'), 0, 1));
 @endphp
 
 <aside class="sidebar-dp">
@@ -48,7 +58,6 @@
             </svg>
         </span>
         <span class="brand-text">{{ config('app.name', 'Gestione Flotta') }}</span>
-        <span class="badge text-bg-secondary ms-auto small" style="font-size: 0.6rem;">{{ config('app.version') }}</span>
     </a>
 
     {{-- Ricerca rapida veicoli (sigla/targa), ADR §19 --}}
@@ -217,8 +226,11 @@
         @auth
             <div class="sidebar-user">
                 <a href="{{ route('profile.edit') }}" class="sidebar-user-link" title="{{ __('Il tuo account') }}">
-                    <span class="sidebar-user-avatar"><i class="fa-solid fa-circle-user"></i></span>
-                    <span class="sidebar-user-name">{{ Auth::user()->name }}</span>
+                    <span class="sidebar-user-avatar">{{ $sidebarUserInitial }}</span>
+                    <span class="sidebar-user-info">
+                        <span class="sidebar-user-name">{{ Auth::user()->name }}</span>
+                        <span class="sidebar-user-role">{{ $sidebarUserRole }}</span>
+                    </span>
                 </a>
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none"
                     data-single-submit="true">

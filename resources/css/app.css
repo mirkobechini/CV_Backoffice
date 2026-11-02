@@ -228,7 +228,7 @@ body {
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #6b7280;
+    color: #786b54;
 }
 
 .sidebar-nav {
@@ -244,7 +244,7 @@ body {
     padding: 8px 14px;
     margin: 0 8px;
     border-radius: 8px;
-    color: #b0b7c4;
+    color: #b4a68d;
     font-size: 13px;
     text-decoration: none;
     border: none;
@@ -259,15 +259,14 @@ body {
 
 .sidebar-link:hover {
     background: rgba(255, 255, 255, 0.05);
-    color: #e5e7eb;
+    color: #fff;
 }
 
-/* Stato attivo a sfondo pieno (mockup "Saru"), non più solo bordo
-   sinistro: stesso colore/contrasto di .btn.primary (testo bianco,
-   funziona sia col primary chiaro che scuro). */
+/* Stato attivo a sfondo pieno, testo scuro su sfondo arancione come nel
+   mockup (prima testo bianco: contrasto invertito rispetto all'originale). */
 .sidebar-link.active {
     background: var(--primary);
-    color: #fff;
+    color: #1a1108;
     font-weight: 700;
 }
 
@@ -290,7 +289,7 @@ body {
     border-radius: 9px;
     padding: 8px 10px 8px 30px;
     font-size: 12.5px;
-    color: #e5e7eb;
+    color: #fff;
 }
 
 .sidebar-search input::placeholder {
@@ -403,15 +402,17 @@ body {
 
 .sidebar-badge-danger {
     background: var(--red);
+    color: #1a1108;
 }
 
 .sidebar-badge-amber {
     background: var(--amber);
+    color: #1a1108;
 }
 
 .sidebar-badge-neutral {
-    background: rgba(255, 255, 255, 0.12);
-    color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.08);
+    color: #b4a68d;
 }
 
 .sidebar-footer {
@@ -424,7 +425,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #e5e7eb;
+    color: #fff;
     font-size: 12.5px;
 }
 
@@ -454,19 +455,37 @@ body {
     display: grid;
     place-items: center;
     font-size: 12px;
+    font-weight: 700;
     color: #fff;
     flex-shrink: 0;
+}
+
+/* Nome + ruolo impilati, come nel mockup (restyle "Saru", ADR §19) —
+   prima solo il nome, su un'unica riga. */
+.sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
 }
 
 .sidebar-user-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    flex: 1;
+}
+
+.sidebar-user-role {
+    font-size: 10.5px;
+    color: #786b54;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .sidebar-logout {
-    color: #b0b7c4;
+    color: #786b54;
     font-size: 13px;
     text-decoration: none;
     padding: 4px;

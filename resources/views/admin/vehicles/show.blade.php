@@ -101,7 +101,11 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="veh-tab-scadenze-btn" data-bs-toggle="tab"
                     data-bs-target="#veh-tab-scadenze" type="button" role="tab" aria-controls="veh-tab-scadenze"
-                    aria-selected="false">{{ __('Scadenze') }}</button>
+                    aria-selected="false">{{ __('Scadenze') }}
+                    @if ($activeDeadlines->isNotEmpty())
+                        · {{ $activeDeadlines->count() }}
+                    @endif
+                </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="veh-tab-manutenzioni-btn" data-bs-toggle="tab"
