@@ -340,16 +340,18 @@ class IssueCrudTest extends TestCase
         $response->assertDontSee('data-description="Problema già risolto"', false);
     }
 
-    public function test_create_page_hides_tire_picker_behind_checkbox_by_default(): void
+    public function test_create_page_hides_tire_picker_by_default(): void
     {
         // Il selettore pneumatico non deve comparire per ogni guasto: resta
-        // nascosto finché non si seleziona "Guasto relativo a un pneumatico".
+        // nascosto finché non si seleziona "Pneumatici" come parte coinvolta
+        // (si attiva via JS sul cambio della select, non più da una checkbox
+        // separata).
         $user = $this->createUser();
 
         $response = $this->actingAs($user)->get(route('admin.issues.create'));
 
         $response->assertOk();
-        $response->assertSee('Guasto relativo a uno o più pneumatici');
+        $response->assertDontSee('Guasto relativo a uno o più pneumatici');
         $response->assertSee('id="tire-id-field" style="display:none;"', false);
     }
 
@@ -374,7 +376,6 @@ class IssueCrudTest extends TestCase
         $response = $this->actingAs($user)->get(route('admin.issues.edit', $issue));
 
         $response->assertOk();
-        $response->assertSee('id="is-tire-issue" checked', false);
         $response->assertDontSee('id="tire-id-field" style="display:none;"', false);
     }
 

@@ -8,6 +8,9 @@
     ]" />
 @endsection
 
+@section('form-topbar-title', __('Nuovo guasto'))
+@section('form-topbar-cancel-url', request('back', route('admin.issues.index')))
+
 @section('content')
 
     <div class="page-header">
@@ -24,25 +27,22 @@
 
             <div class="form-section" style="margin-bottom:0;">
                 <h2><span class="num">1</span> {{ __('Dettagli guasto') }}</h2>
-                <div class="row2">
-                    <div class="field">
-                        <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
-                        <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
-                            name="vehicle_id" required>
-                            <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
-                            @foreach ($vehicles as $vehicle)
-                                <option value="{{ $vehicle->id }}"
-                                    {{ old('vehicle_id', $selectedVehicleId) == $vehicle->id ? 'selected' : '' }}>
-                                    {{ $vehicle->internal_code }} · {{ $vehicle->brand->name ?? 'N/A' }}
-                                    {{ $vehicle->carModel->name ?? 'N/A' }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('vehicle_id')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" required />
+                <div class="field">
+                    <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
+                    <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
+                        name="vehicle_id" required>
+                        <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
+                        @foreach ($vehicles as $vehicle)
+                            <option value="{{ $vehicle->id }}"
+                                {{ old('vehicle_id', $selectedVehicleId) == $vehicle->id ? 'selected' : '' }}>
+                                {{ $vehicle->internal_code }} · {{ $vehicle->brand->name ?? 'N/A' }}
+                                {{ $vehicle->carModel->name ?? 'N/A' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('vehicle_id')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div id="open-issues-panel" class="alert warning" style="display:none; margin-bottom:14px;">
@@ -58,29 +58,34 @@
                     @endforeach
                 </div>
 
-                <div class="row2">
-                    <div class="field">
-                        <label for="part">{{ __('Parte del veicolo coinvolta') }} <span class="req">*</span></label>
-                        <select class="select @error('part') is-invalid @enderror" id="part" name="part" required>
-                            <option value="" disabled {{ old('part') ? '' : 'selected' }}>{{ __('Seleziona...') }}</option>
-                            @foreach (\App\Models\Issue::sortedParts() as $part)
-                                <option value="{{ $part }}" {{ old('part') == $part ? 'selected' : '' }}>{{ $part }}</option>
-                            @endforeach
-                        </select>
-                        @error('part')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="field" style="position:relative;">
+                    <label for="description">{{ __('Descrizione') }} <span class="req">*</span></label>
+                    <input type="text" class="input @error('description') is-invalid @enderror" id="description"
+                        name="description" value="{{ old('description') }}" required autocomplete="off"
+                        data-autocomplete="{{ route('api.issues.suggestions') }}">
+                    <div id="autocomplete-results" class="autocomplete-results" style="display:none;"></div>
+                    @error('description')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
+
+                <div class="field">
+                    <label for="part">{{ __('Parte del veicolo coinvolta') }} <span class="req">*</span></label>
+                    <select class="select @error('part') is-invalid @enderror" id="part" name="part" required>
+                        <option value="" disabled {{ old('part') ? '' : 'selected' }}>{{ __('Seleziona...') }}</option>
+                        @foreach (\App\Models\Issue::sortedParts() as $part)
+                            <option value="{{ $part }}" {{ old('part') == $part ? 'selected' : '' }}>{{ $part }}</option>
+                        @endforeach
+                    </select>
+                    @error('part')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+                {{-- Selettore pneumatici collegati: si mostra quando "Parte" =
+                Pneumatici invece di una checkbox separata, che duplicava la
+                stessa scelta (restyle "Saru", ADR §19). --}}
                 @php($issueTireIds = old('tire_ids', []))
-                <label class="check" style="margin-bottom:8px;">
-                    <input type="checkbox" id="is-tire-issue" {{ !empty($issueTireIds) ? 'checked' : '' }}>
-                    <div>
-                        <div class="label">{{ __('Guasto relativo a uno o più pneumatici') }}</div>
-                        <div class="sub">{{ __('Es. foratura, usura anomala') }}</div>
-                    </div>
-                </label>
-                <div class="field" id="tire-id-field" style="{{ !empty($issueTireIds) ? '' : 'display:none;' }}">
+                <div class="field" id="tire-id-field" style="display:none;">
                     <label>{{ __('Pneumatici collegati') }}</label>
                     <div class="check-list" id="tire-checkboxes">
                         @error('tire_ids')
@@ -105,7 +110,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="row2">
+
+                <div class="row2 row2-tight">
+                    <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" required />
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
                         <select class="select @error('status') is-invalid @enderror" id="status" name="status" required>
@@ -118,16 +125,6 @@
                                 {{ __('Risolto') }}</option>
                         </select>
                         @error('status')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="field" style="position:relative;">
-                        <label for="description">{{ __('Descrizione') }} <span class="req">*</span></label>
-                        <input type="text" class="input @error('description') is-invalid @enderror" id="description"
-                            name="description" value="{{ old('description') }}" required autocomplete="off"
-                            data-autocomplete="{{ route('api.issues.suggestions') }}">
-                        <div id="autocomplete-results" class="autocomplete-results" style="display:none;"></div>
-                        @error('description')
                             <div class="field-error">{{ $message }}</div>
                         @enderror
                     </div>
@@ -155,7 +152,7 @@
             <div class="form-actions">
                 <button id="issue-submit-btn" type="submit" class="btn primary lg"
                     data-loading-text="{{ __('Salvataggio...') }}">
-                    <i class="fa-solid fa-check"></i> {{ __('Salva') }}
+                    <i class="fa-solid fa-check"></i> {{ __('Salva guasto') }}
                 </button>
                 <a href="{{ request('back', route('admin.issues.index')) }}" class="btn">{{ __('Annulla') }}</a>
             </div>
@@ -166,14 +163,15 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const isTireIssue = document.getElementById('is-tire-issue');
+            const partSelect = document.getElementById('part');
             const tireIdField = document.getElementById('tire-id-field');
             const vehicleSelect = document.getElementById('vehicle_id');
             const noTireMsg = document.getElementById('no-tire-msg');
+            const isTirePart = () => partSelect.value === 'Pneumatici';
 
             const toggleTireField = () => {
-                tireIdField.style.display = isTireIssue.checked ? '' : 'none';
-                if (!isTireIssue.checked) {
+                tireIdField.style.display = isTirePart() ? '' : 'none';
+                if (!isTirePart()) {
                     document.querySelectorAll('.tire-checkbox input').forEach(input => input.checked = false);
                 }
             };
@@ -239,11 +237,12 @@
                 openIssuesPanel.style.display = matches.length ? '' : 'none';
             };
 
-            isTireIssue.addEventListener('change', toggleTireField);
+            partSelect.addEventListener('change', toggleTireField);
             vehicleSelect.addEventListener('change', filterTiresByVehicle);
             vehicleSelect.addEventListener('change', filterOpenIssuesByVehicle);
             filterOpenIssuesByVehicle();
             filterTiresByVehicle();
+            toggleTireField();
         });
 
         document.addEventListener('DOMContentLoaded', function() {

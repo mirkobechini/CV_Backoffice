@@ -58,14 +58,20 @@
 </head>
 
 <body>
-    <div class="app-dp">
+    <div class="app-dp {{ $__env->hasSection('form-topbar-title') ? 'is-form-page' : '' }}">
         @include('admin.partials.header')
         <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
         <main class="main-dp">
-            {{-- Topbar: menu mobile + breadcrumb + azioni + theme switch --}}
-            <div class="topbar-dp">
-                <div class="topbar-start">
+            {{-- Topbar: menu mobile + breadcrumb + azioni + theme switch.
+            Sotto i 768px, le pagine di form (create/edit) dichiarano
+            `form-topbar-title`/`form-topbar-cancel-url` per sostituire
+            hamburger+logo+breadcrumb con "Annulla | Titolo" come nel
+            mockup — stesso meccanismo riusabile per gli altri tipi di
+            pagina (liste/dettagli) quando li rivedremo (restyle "Saru",
+            ADR §19). --}}
+            <div class="topbar-dp {{ $__env->hasSection('form-topbar-title') ? 'topbar-dp-form' : '' }}">
+                <div class="topbar-start topbar-start-default">
                     <button type="button" class="topbar-btn menu-toggle" id="sidebar-toggle"
                         aria-label="{{ __('Apri il menu') }}">
                         <i class="fa-solid fa-bars"></i>
@@ -85,6 +91,14 @@
                         <div class="topbar-spacer"></div>
                     @endif
                 </div>
+                @hasSection('form-topbar-title')
+                    <div class="topbar-form-bar">
+                        <a href="{{ $__env->yieldContent('form-topbar-cancel-url') }}"
+                            class="topbar-form-cancel">{{ __('Annulla') }}</a>
+                        <span class="topbar-form-title">@yield('form-topbar-title')</span>
+                        <span class="topbar-form-spacer" aria-hidden="true"></span>
+                    </div>
+                @endif
                 <div class="topbar-actions">
                     <div class="theme-switch" id="theme-switch" role="group" aria-label="{{ __('Cambia tema') }}">
                         <button type="button" data-theme="auto" class="on">
