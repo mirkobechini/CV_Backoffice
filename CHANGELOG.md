@@ -22,6 +22,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Restyle "Saru" (pannello utente sidebar con iniziale e ruolo)**: l'avatar in fondo alla sidebar mostra l'iniziale del nome invece dell'icona generica; aggiunto il ruolo (Capo/Sottocapo/Membro) sotto il nome, come nel mockup.
 - **Restyle "Saru" (palette sidebar fedele al mockup)**: colori sidebar allineati ai toni caldi del mockup invece del grigio-blu precedente (link, sezioni, stato attivo, badge guasti/scadenze, ricerca); rimossa la versione app dal brand sidebar (non presente nel mockup); contatore scadenze attive sulla tab "Scadenze" della scheda veicolo; breadcrumb mancante su `admin/equipments/index` ("Attrezzature / Attrezzatura", coerente con le altre viste del gruppo).
 - **Restyle "Saru" (topbar mobile compatta)**: sotto i 768px lo switch tema perde l'etichetta testuale "Auto" a favore di un'icona (stessa funzione, meno spazio); il pulsante "+ Nuovo" della dashboard non viene più mostrato perché duplica il FAB già presente al centro della bottom nav.
+- **Restyle "Saru" (lista Veicoli a card su mobile)**: sotto i 768px la tabella desktop (scroll orizzontale, colonne tagliate) è sostituita da una lista a card — icona, sigla+marca/modello, km, scadenza più urgente, badge disponibile/in officina. Stessi dati della tabella, nessuna funzionalità rimossa. Nascosto anche "Nuovo veicolo" <768px, duplica il FAB della bottom nav.
 
 ### Fixed
 
