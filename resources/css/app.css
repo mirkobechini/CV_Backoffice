@@ -538,6 +538,13 @@ body {
     display: none;
 }
 
+/* Topbar delle pagine di dettaglio su mobile: "‹ Titolo" + icone azione
+   al posto di hamburger+logo+breadcrumb, come nel mockup — stesso
+   principio di `.topbar-form-bar` sopra. */
+.topbar-detail-bar {
+    display: none;
+}
+
 .topbar-btn.menu-toggle {
     display: none;
 }
@@ -3121,6 +3128,67 @@ textarea.input {
     display: block;
 }
 
+.timeline-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-top: 14px;
+}
+
+.timeline-card h4 {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.timeline {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+}
+
+.timeline-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+    background: var(--text-muted);
+}
+
+.timeline-dot.red {
+    background: var(--red);
+}
+
+.timeline-dot.amber {
+    background: var(--amber);
+}
+
+.timeline-dot.green {
+    background: var(--green);
+}
+
+.timeline-label {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    display: block;
+}
+
+.timeline-date {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
 /* =============================================
    Appuntamenti: index (descrizione + data) e form
    (checklist guasti/scadenze collegati)
@@ -3880,9 +3948,12 @@ body.modal-open {
     /* Topbar dei form: "Annulla" + titolo centrato al posto di
        hamburger+logo+breadcrumb e dello switch tema/campanella, come nel
        mockup. Bottom nav e lo spazio riservato per lei spariscono mentre
-       si compila un form — resta solo il pulsante "Salva" fisso. */
+       si compila un form — resta solo il pulsante "Salva" fisso. Stesso
+       trattamento per le pagine di dettaglio (`.topbar-dp-detail`). */
     .topbar-dp-form .topbar-start-default,
-    .topbar-dp-form .topbar-actions {
+    .topbar-dp-form .topbar-actions,
+    .topbar-dp-detail .topbar-start-default,
+    .topbar-dp-detail .topbar-actions {
         display: none;
     }
 
@@ -3920,12 +3991,22 @@ body.modal-open {
         flex-shrink: 0;
     }
 
-    .is-form-page .bottom-nav {
+    .is-form-page .bottom-nav,
+    .is-detail-page .bottom-nav {
         display: none;
     }
 
     .is-form-page .main-dp {
         padding-bottom: 14px;
+    }
+
+    /* 90px invece di 14px: a differenza dei form (dove `.form-card`
+       riceve il margine per via del pulsante "Salva" sempre ultimo
+       elemento), qui l'ultima card della pagina varia (Dettagli/Note/
+       Immagine/Storico) — il padding va sul contenitore per coprire ogni
+       caso senza doverlo ripetere su ogni card. */
+    .is-detail-page .main-dp {
+        padding-bottom: 90px;
     }
 
     .is-form-page .page-header {
@@ -3938,6 +4019,76 @@ body.modal-open {
 
     .is-form-page .form-card {
         margin-bottom: 76px;
+    }
+
+    /* Topbar di dettaglio: "‹ Titolo" + icone azione (es. Modifica, Prenota
+       appuntamento), come nel mockup (restyle "Saru", issue-565). */
+    .topbar-dp-detail .topbar-detail-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .topbar-detail-back {
+        flex-shrink: 0;
+        color: var(--text-muted);
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+    }
+
+    .topbar-detail-title {
+        flex: 1;
+        min-width: 0;
+        font-weight: 800;
+        font-size: 15px;
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .topbar-detail-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-shrink: 0;
+    }
+
+    .topbar-detail-actions a {
+        color: var(--primary);
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+    }
+
+    /* "Torna" e azioni secondarie (es. "Prenota appuntamento") si
+       spostano nella topbar di dettaglio (freccia indietro + icona):
+       restano solo Modifica/Elimina, che diventano una barra fissa in
+       fondo allo schermo come il pulsante "Salva" dei form. */
+    .is-detail-page .page-actions-back,
+    .is-detail-page .page-actions-extra {
+        display: none;
+    }
+
+    .is-detail-page .page-actions {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 110;
+        margin: 0;
+        padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .is-detail-page .page-actions .btn {
+        flex: 1;
+        justify-content: center;
     }
 
     /* Sotto i 768px il breadcrumb mostra solo il nome della pagina

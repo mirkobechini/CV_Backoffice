@@ -58,7 +58,12 @@
 </head>
 
 <body>
-    <div class="app-dp {{ $__env->hasSection('form-topbar-title') ? 'is-form-page' : '' }}">
+    @php
+        $topbarMode = $__env->hasSection('form-topbar-title')
+            ? 'form'
+            : ($__env->hasSection('detail-topbar-title') ? 'detail' : null);
+    @endphp
+    <div class="app-dp {{ $topbarMode ? 'is-'.$topbarMode.'-page' : '' }}">
         @include('admin.partials.header')
         <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
@@ -66,11 +71,12 @@
             {{-- Topbar: menu mobile + breadcrumb + azioni + theme switch.
             Sotto i 768px, le pagine di form (create/edit) dichiarano
             `form-topbar-title`/`form-topbar-cancel-url` per sostituire
-            hamburger+logo+breadcrumb con "Annulla | Titolo" come nel
-            mockup — stesso meccanismo riusabile per gli altri tipi di
-            pagina (liste/dettagli) quando li rivedremo (restyle "Saru",
-            ADR §19). --}}
-            <div class="topbar-dp {{ $__env->hasSection('form-topbar-title') ? 'topbar-dp-form' : '' }}">
+            hamburger+logo+breadcrumb con "Annulla | Titolo"; le pagine di
+            dettaglio dichiarano `detail-topbar-title`/`-back-url`/
+            `-actions` per "‹ Titolo" + icone azione, come nel mockup —
+            stesso meccanismo per entrambi i tipi di pagina (restyle
+            "Saru", ADR §19). --}}
+            <div class="topbar-dp {{ $topbarMode ? 'topbar-dp-'.$topbarMode : '' }}">
                 <div class="topbar-start topbar-start-default">
                     <button type="button" class="topbar-btn menu-toggle" id="sidebar-toggle"
                         aria-label="{{ __('Apri il menu') }}">
@@ -97,6 +103,18 @@
                             class="topbar-form-cancel">{{ __('Annulla') }}</a>
                         <span class="topbar-form-title">@yield('form-topbar-title')</span>
                         <span class="topbar-form-spacer" aria-hidden="true"></span>
+                    </div>
+                @endif
+                @hasSection('detail-topbar-title')
+                    <div class="topbar-detail-bar">
+                        <a href="{{ $__env->yieldContent('detail-topbar-back-url') }}" class="topbar-detail-back"
+                            aria-label="{{ __('Indietro') }}">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </a>
+                        <span class="topbar-detail-title">@yield('detail-topbar-title')</span>
+                        <div class="topbar-detail-actions">
+                            @yield('detail-topbar-actions')
+                        </div>
                     </div>
                 @endif
                 <div class="topbar-actions">

@@ -160,7 +160,9 @@ class IssueController extends Controller
      */
     public function show(Issue $issue)
     {
-        return view('admin.issues.show', compact('issue'));
+        $activities = $issue->activities()->with('causer')->latest()->get();
+
+        return view('admin.issues.show', compact('issue', 'activities'));
     }
 
     /**

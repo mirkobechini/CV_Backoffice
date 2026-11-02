@@ -8,15 +8,29 @@
     ]" />
 @endsection
 
+@section('detail-topbar-title', __('Dettaglio guasto'))
+@section('detail-topbar-back-url', request('back', route('admin.issues.index')))
+@section('detail-topbar-actions')
+    @if ($issue->status !== 'closed')
+        <a href="{{ route('admin.maintenance-records.create', ['issue_id' => $issue->id, 'vehicle_id' => $issue->vehicle_id, 'back' => url()->full()]) }}"
+            title="{{ __('Prenota appuntamento') }}" aria-label="{{ __('Prenota appuntamento') }}">
+            <i class="fa-solid fa-calendar-check"></i>
+        </a>
+    @endif
+    <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}"
+        title="{{ __('Modifica') }}" aria-label="{{ __('Modifica') }}">
+        <i class="fa-solid fa-pen"></i>
+    </a>
+@endsection
 
 @section('content')
 
     <div class="page-actions">
-        <a href="{{ request('back', route('admin.issues.index')) }}" class="btn ghost">
+        <a href="{{ request('back', route('admin.issues.index')) }}" class="btn ghost page-actions-back">
             <i class="fa-solid fa-arrow-left"></i> {{ __('Torna') }}
         </a>
         @if ($issue->status !== 'closed')
-            <a class="btn success"
+            <a class="btn success page-actions-extra"
                 href="{{ route('admin.maintenance-records.create', ['issue_id' => $issue->id, 'vehicle_id' => $issue->vehicle_id, 'back' => url()->full()]) }}">
                 <i class="fa-solid fa-calendar-check"></i> {{ __('Prenota appuntamento') }}
             </a>
@@ -109,6 +123,43 @@
             <h4>{{ __('Immagine') }}</h4>
             <img src="{{ \App\Support\UploadedFileUrl::for($issue->photo) }}"
                 alt="{{ __('Immagine del guasto') }}">
+        </div>
+    @endif
+
+    @if ($activities->isNotEmpty())
+        @php
+            $timelineEvent = function ($activity) {
+                if ($activity->event === 'created') {
+                    return ['label' => __('Segnalato'), 'color' => 'red'];
+                }
+                $newStatus = $activity->attribute_changes?->get('attributes', [])['status'] ?? null;
+                $oldStatus = $activity->attribute_changes?->get('old', [])['status'] ?? null;
+                if ($newStatus && $newStatus !== $oldStatus) {
+                    return match ($newStatus) {
+                        'in_progress' => ['label' => __('Preso in carico'), 'color' => 'amber'],
+                        'closed' => ['label' => __('Risolto'), 'color' => 'green'],
+                        'open' => ['label' => __('Riaperto'), 'color' => 'red'],
+                        default => ['label' => __('Aggiornato'), 'color' => 'gray'],
+                    };
+                }
+
+                return ['label' => __('Aggiornato'), 'color' => 'gray'];
+            };
+        @endphp
+        <div class="timeline-card">
+            <h4>{{ __('Storico') }}</h4>
+            <ul class="timeline">
+                @foreach ($activities as $activity)
+                    @php($event = $timelineEvent($activity))
+                    <li class="timeline-item">
+                        <span class="timeline-dot {{ $event['color'] }}"></span>
+                        <div>
+                            <span class="timeline-label">{{ $event['label'] }}</span>
+                            <span class="timeline-date">{{ $activity->created_at->format('d/m/Y') }}</span>
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
