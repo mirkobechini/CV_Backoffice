@@ -39,34 +39,56 @@ const initializeFuelCardSelect = () => {
     reorderFuelCardsForSelectedVehicle();
 };
 
-// Precompila il carburante con quello del veicolo selezionato, ma solo per
-// i veicoli con un'alimentazione univoca (non "ibrido", dove l'utente deve
-// scegliere consapevolmente il carburante di questo specifico rifornimento,
-// issue-585) e solo se il campo non è già stato impostato (vale old() dopo
-// un errore di validazione, o il valore esistente in edit).
-const initializeFuelTypeDefault = () => {
+// Filtra le opzioni "Carburante" a quelle davvero registrate per il
+// veicolo selezionato (Vehicle::allowedFuelLogTypes(), letto dall'attributo
+// data-fuel-types di ciascuna option veicolo): un veicolo non ibrido ha
+// un'unica opzione selezionabile, un ibrido solo quelle scelte in
+// anagrafica (issue-585 follow-up). Se il veicolo non ha ancora nessun
+// carburante configurato (es. ibrido non configurato), non blocca l'utente:
+// mostra tutte le opzioni come fallback permissivo.
+const initializeFuelTypeFilter = () => {
     const vehicleSelect = document.getElementById('vehicle_id');
     const fuelTypeSelect = document.getElementById('fuel_type');
 
-    if (!vehicleSelect || !fuelTypeSelect || fuelTypeSelect.value) {
+    if (!vehicleSelect || !fuelTypeSelect) {
         return;
     }
 
-    vehicleSelect.addEventListener('change', () => {
-        if (fuelTypeSelect.value) {
-            return;
-        }
+    const fuelTypeOptions = Array.from(fuelTypeSelect.options).filter((option) => option.value !== '');
 
+    const applyFilter = () => {
         const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
-        const vehicleFuelType = selectedOption?.dataset.fuelType;
+        const allowed = (selectedOption?.dataset.fuelTypes || '').split(',').filter(Boolean);
+        const showAll = allowed.length === 0;
+        const previousValue = fuelTypeSelect.value;
 
-        if (vehicleFuelType && vehicleFuelType !== 'ibrido') {
-            fuelTypeSelect.value = vehicleFuelType;
+        let visibleCount = 0;
+        let onlyVisibleValue = null;
+
+        fuelTypeOptions.forEach((option) => {
+            const isVisible = showAll || allowed.includes(option.value);
+            option.hidden = !isVisible;
+            option.disabled = !isVisible;
+            if (isVisible) {
+                visibleCount += 1;
+                onlyVisibleValue = option.value;
+            }
+        });
+
+        if (previousValue && !showAll && !allowed.includes(previousValue)) {
+            fuelTypeSelect.value = '';
         }
-    });
+
+        if (!fuelTypeSelect.value && visibleCount === 1) {
+            fuelTypeSelect.value = onlyVisibleValue;
+        }
+    };
+
+    vehicleSelect.addEventListener('change', applyFilter);
+    applyFilter();
 };
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeFuelCardSelect();
-    initializeFuelTypeDefault();
+    initializeFuelTypeFilter();
 });

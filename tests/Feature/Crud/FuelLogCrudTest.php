@@ -132,6 +132,45 @@ class FuelLogCrudTest extends TestCase
         $this->assertSame('Metano', $methaneLog->fresh()->fuel_type_label);
     }
 
+    public function test_fuel_type_options_are_filtered_by_vehicle_in_create_form(): void
+    {
+        // issue-585 follow-up: il form deve poter filtrare le opzioni
+        // "Carburante" via JS leggendo data-fuel-types su ogni option
+        // veicolo — un veicolo diesel ammette solo "diesel", un ibrido
+        // solo i carburanti scelti in anagrafica.
+        $user = $this->createUser();
+        $dieselVehicle = $this->createVehicle();
+        $hybridVehicle = $dieselVehicle->replicate();
+        $hybridVehicle->license_plate = 'HY999HY';
+        $hybridVehicle->internal_code = '9999';
+        $hybridVehicle->fuel_type = 'ibrido';
+        $hybridVehicle->allowed_fuel_types = ['benzina', 'metano'];
+        $hybridVehicle->save();
+
+        $response = $this->actingAs($user)->get(route('admin.fuel-logs.create'));
+
+        $response->assertOk();
+        $response->assertSee('data-fuel-types="diesel"', false);
+        $response->assertSee('data-fuel-types="benzina,metano"', false);
+    }
+
+    public function test_store_rejects_fuel_type_not_allowed_for_vehicle(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $vehicle->update(['fuel_type' => 'ibrido', 'allowed_fuel_types' => ['benzina', 'metano']]);
+
+        $response = $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
+            'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
+            'log_date' => '2025-01-25',
+            'liters' => '45.50',
+        ]);
+
+        $response->assertSessionHasErrors('fuel_type');
+        $this->assertDatabaseCount('fuel_logs', 0);
+    }
+
     public function test_store_requires_fuel_type(): void
     {
         $user = $this->createUser();

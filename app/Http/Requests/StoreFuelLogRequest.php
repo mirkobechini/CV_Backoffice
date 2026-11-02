@@ -7,6 +7,7 @@ use App\Models\FuelCard;
 use App\Models\Vehicle;
 use App\Rules\BelongsToCurrentUserGroup;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreFuelLogRequest extends FormRequest
@@ -45,5 +46,30 @@ class StoreFuelLogRequest extends FormRequest
             'mileage.integer' => 'Il campo chilometraggio deve essere un numero intero.',
             'mileage.min' => 'Il chilometraggio non può essere negativo.',
         ];
+    }
+
+    /**
+     * Il carburante deve essere tra quelli ammessi dal veicolo scelto
+     * (Vehicle::allowedFuelLogTypes()), non una qualunque delle 4 opzioni —
+     * stesso filtro già applicato in UI, qui solo per non fidarsi di un
+     * form manomesso. Permissivo se il veicolo non ha ancora nessun
+     * carburante configurato (stesso fallback della UI), per non bloccare
+     * la registrazione di un rifornimento solo perché l'anagrafica non è
+     * stata completata.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($validator->errors()->has('vehicle_id') || $validator->errors()->has('fuel_type')) {
+                return;
+            }
+
+            $vehicle = Vehicle::find($this->input('vehicle_id'));
+            $allowed = $vehicle?->allowedFuelLogTypes() ?? [];
+
+            if ($allowed && ! in_array($this->input('fuel_type'), $allowed, true)) {
+                $validator->errors()->add('fuel_type', 'Il carburante selezionato non è tra quelli ammessi per questo veicolo.');
+            }
+        });
     }
 }

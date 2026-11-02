@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Added
 
 - Rifornimenti: nuovo campo "Carburante" per singolo rifornimento, indipendente dall'alimentazione anagrafica del veicolo — un veicolo "ibrido" benzina/metano fa rifornimenti ora dell'uno ora dell'altro, e prima finivano tutti indistinti sotto "Ibrido" nelle statistiche carburante. Precompilato dal tipo del veicolo quando univoco (benzina/diesel/elettrico), scelta obbligatoria per i veicoli ibridi. Dati storici: backfill automatico per i veicoli non ibridi, i rifornimenti dei veicoli ibridi restano senza carburante impostato (nessun modo di dedurlo a posteriori) finché non modificati.
+- Veicoli: nuovo campo "Carburanti ammessi" sulla scheda, visibile solo per i veicoli ibridi — indica esplicitamente quali carburanti specifici ammette (es. Benzina + Metano). Il form rifornimento mostra/seleziona solo i carburanti ammessi dal veicolo scelto (per i non ibridi, solo il loro unico tipo), invece delle 4 opzioni sempre tutte visibili.
 
 ### Changed
 

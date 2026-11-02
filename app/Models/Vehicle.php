@@ -41,6 +41,7 @@ class Vehicle extends Model
         'brand_id',
         'car_model_id',
         'fuel_type',
+        'allowed_fuel_types',
         'vehicle_type_id',
         'immatricolation_date',
         'registration_card_path',
@@ -69,6 +70,7 @@ class Vehicle extends Model
         'engine_power_kw' => 'integer',
         'allowed_tire_sizes' => 'array',
         'allowed_tire_size_combinations' => 'array',
+        'allowed_fuel_types' => 'array',
     ];
 
     protected $searchable = ['internal_code', 'license_plate'];
@@ -152,6 +154,28 @@ class Vehicle extends Model
     public function getFuelTypeLabelAttribute(): ?string
     {
         return $this->fuel_type ? (self::fuelTypeLabels()[$this->fuel_type] ?? $this->fuel_type) : null;
+    }
+
+    /**
+     * Carburanti ammessi per un rifornimento (FuelLog) di questo veicolo:
+     * per i veicoli non ibridi è sempre e solo il loro unico fuel_type; per
+     * gli ibridi (es. benzina/metano) quelli scelti esplicitamente in
+     * allowed_fuel_types — vuoto se non ancora configurato (issue-585
+     * follow-up: Vehicle.fuel_type="ibrido" da solo non dice quali).
+     *
+     * @return array<int, string>
+     */
+    public function allowedFuelLogTypes(): array
+    {
+        if (! $this->fuel_type) {
+            return [];
+        }
+
+        if ($this->fuel_type !== 'ibrido') {
+            return [$this->fuel_type];
+        }
+
+        return $this->allowed_fuel_types ?? [];
     }
 
     /**

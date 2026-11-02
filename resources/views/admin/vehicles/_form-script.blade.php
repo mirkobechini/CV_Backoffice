@@ -13,6 +13,8 @@ campo in entrambi i form, prima duplicato verbatim nei due file (audit
         const scanBtn = document.getElementById('scan-libretto-btn');
         const scanForm = document.getElementById('scan-libretto-form');
         const scanPhotoFrontInput = document.getElementById('scan_photo_front_hidden');
+        const fuelTypeSelect = document.getElementById('fuel_type');
+        const allowedFuelTypesField = document.getElementById('allowed-fuel-types-field');
 
         // Mantiene lato client il formato targa coerente con le regole server.
         function uppercaseLicensePlate() {
@@ -25,6 +27,19 @@ campo in entrambi i form, prima duplicato verbatim nei due file (audit
 
             warrantyExpirationDateInput.required = isChecked;
             warrantyExtensionDurationInput.required = isChecked;
+        }
+
+        // Il campo "Carburanti ammessi" ha senso solo per un veicolo
+        // ibrido (es. benzina/metano): Vehicle.fuel_type da solo non dice
+        // quali, serve una scelta esplicita per filtrare il form
+        // rifornimento (issue-585 follow-up).
+        function toggleAllowedFuelTypesField() {
+            const isHybrid = fuelTypeSelect.value === 'ibrido';
+
+            allowedFuelTypesField.style.display = isHybrid ? '' : 'none';
+            allowedFuelTypesField.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+                if (!isHybrid) checkbox.checked = false;
+            });
         }
 
         // Mostra il nome del file selezionato nella zona di upload.
@@ -60,8 +75,10 @@ campo in entrambi i form, prima duplicato verbatim nei due file (audit
 
         toggleWarrantyRequiredFields();
         uppercaseLicensePlate();
+        toggleAllowedFuelTypesField();
         warrantyExtensionCheckbox.addEventListener('change', toggleWarrantyRequiredFields);
         licensePlateInput.addEventListener('input', uppercaseLicensePlate);
+        fuelTypeSelect.addEventListener('change', toggleAllowedFuelTypesField);
         registrationCardInput.addEventListener('change', () => {
             updateRegistrationCardLabel();
             updateScanButtonState();

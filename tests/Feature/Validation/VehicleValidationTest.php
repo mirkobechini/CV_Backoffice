@@ -105,4 +105,54 @@ class VehicleValidationTest extends TestCase
             'car_model_id' => $carModel->id,
         ]);
     }
+
+    public function test_vehicle_store_fails_when_hybrid_without_allowed_fuel_types(): void
+    {
+        // issue-585 follow-up: Vehicle.fuel_type="ibrido" da solo non dice
+        // quali carburanti specifici ammette (es. benzina/metano), serve
+        // una scelta esplicita per filtrare il form rifornimento.
+        $user = $this->createUser();
+        $brand = Brand::create(['name' => 'Fiat']);
+        $carModel = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $vehicleType = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true]);
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => '1234',
+            'brand_id' => $brand->id,
+            'car_model_id' => $carModel->id,
+            'fuel_type' => 'ibrido',
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+        ]);
+
+        $response->assertSessionHasErrors(['allowed_fuel_types']);
+        $this->assertDatabaseCount('vehicles', 0);
+    }
+
+    public function test_vehicle_can_be_stored_hybrid_with_allowed_fuel_types(): void
+    {
+        $user = $this->createUser();
+        $brand = Brand::create(['name' => 'Fiat']);
+        $carModel = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $vehicleType = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true]);
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => '1234',
+            'brand_id' => $brand->id,
+            'car_model_id' => $carModel->id,
+            'fuel_type' => 'ibrido',
+            'allowed_fuel_types' => ['benzina', 'metano'],
+            'immatricolation_date' => '2024-01-01',
+            'has_warranty_extension' => 0,
+        ]);
+
+        $vehicle = Vehicle::first();
+        $response->assertRedirect(route('admin.vehicles.show', $vehicle));
+        $this->assertSame(['benzina', 'metano'], $vehicle->allowed_fuel_types);
+        $this->assertSame(['benzina', 'metano'], $vehicle->allowedFuelLogTypes());
+    }
 }

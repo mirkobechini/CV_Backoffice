@@ -26,7 +26,7 @@
                     required>
                     <option value="" disabled {{ $isEdit ? '' : 'selected' }}>{{ __('Seleziona un veicolo') }}</option>
                     @foreach ($vehicles as $vehicle)
-                        <option value="{{ $vehicle->id }}" data-fuel-type="{{ $vehicle->fuel_type }}"
+                        <option value="{{ $vehicle->id }}" data-fuel-types="{{ implode(',', $vehicle->allowedFuelLogTypes()) }}"
                             {{ old('vehicle_id', $currentVehicleId) == $vehicle->id ? 'selected' : '' }}>
                             {{ $vehicle->internal_code }} · {{ $vehicle->brand?->name ?? 'N/A' }}
                             {{ $vehicle->carModel?->name ?? 'N/A' }}
@@ -50,7 +50,7 @@
                     @endforeach
                 </select>
                 <div class="hint">
-                    {{ __('Un veicolo ibrido può fare rifornimenti di tipi diversi: scegli quale carburante è stato messo in questo pieno.') }}
+                    {{ __('Mostra solo i carburanti ammessi per il veicolo selezionato (configurabili sulla sua scheda).') }}
                 </div>
                 @error('fuel_type')
                     <div class="field-error">{{ $message }}</div>

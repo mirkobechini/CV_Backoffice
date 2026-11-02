@@ -110,6 +110,24 @@
                     </div>
                 </div>
 
+                <div class="field" id="allowed-fuel-types-field" style="display:none;">
+                    <label>{{ __('Carburanti ammessi') }} <span class="req">*</span></label>
+                    <div class="check-list">
+                        @foreach (\App\Models\FuelLog::fuelTypeLabels() as $value => $label)
+                            <div class="item">
+                                <input type="checkbox" name="allowed_fuel_types[]" value="{{ $value }}"
+                                    id="allowed_fuel_type_{{ $value }}"
+                                    {{ in_array($value, old('allowed_fuel_types', [])) ? 'checked' : '' }}>
+                                <label class="lbl" for="allowed_fuel_type_{{ $value }}">{{ $label }}</label>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="hint">{{ __('Un veicolo ibrido fa rifornimenti ora dell\'uno ora dell\'altro: indica quali carburanti specifici ammette (es. Benzina + Metano), così il form rifornimento mostra solo quelli.') }}</div>
+                    @error('allowed_fuel_types')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 <div class="row2">
                     <x-form.date-input name="immatricolation_date" label="{{ __('Data immatricolazione') }}" required />
                     <div class="field">
