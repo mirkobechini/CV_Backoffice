@@ -12,7 +12,7 @@
         </div>
         <div class="info-row">
             <span class="label">Carburante</span>
-            <span class="value">{{ $vehicle->fuel_type }}</span>
+            <span class="value">{{ $vehicle->fuel_type_display_label }}</span>
         </div>
         <div class="info-row">
             <span class="label">Immatricolazione</span>

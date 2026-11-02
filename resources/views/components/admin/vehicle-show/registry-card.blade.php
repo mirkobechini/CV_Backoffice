@@ -12,7 +12,7 @@
         <div class="veh-kv"><span class="k">{{ __('Modello') }}</span><span
                 class="v">{{ $vehicle->carModel->name ?? 'N/A' }}</span></div>
         <div class="veh-kv"><span class="k">{{ __('Carburante') }}</span><span
-                class="v">{{ $vehicle->fuel_type ?? '—' }}</span></div>
+                class="v">{{ $vehicle->fuel_type_display_label ?? '—' }}</span></div>
         <div class="veh-kv"><span class="k">{{ __('Tipo') }}</span><span
                 class="v">{{ $vehicle->vehicleType->name ?? 'N/A' }}</span></div>
         <div class="veh-kv"><span class="k">{{ __('Distribuzione') }}</span><span class="v">
