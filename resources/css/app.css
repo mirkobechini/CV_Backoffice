@@ -3951,6 +3951,42 @@ body.modal-open {
     }
 }
 
+/* Menu sotto i 768px: bottom sheet che sale dal basso invece del drawer
+   laterale ereditato dal desktop (sopra, fino a 991.98px) — coerente
+   col tab "Menu" già in bottom-nav, resta raggiungibile col pollice
+   (restyle "Saru", ADR §19). */
+@media (max-width: 767.98px) {
+    .sidebar-dp {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: auto;
+        max-height: 85vh;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(100%);
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
+        padding-top: 10px;
+        padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .sidebar-dp.is-open {
+        transform: translateY(0);
+    }
+
+    /* Maniglia visiva, come i bottom sheet nativi iOS/Android. */
+    .sidebar-dp::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        border-radius: 999px;
+        background: var(--border);
+        margin: 0 auto 10px;
+        flex-shrink: 0;
+    }
+}
+
 /* =============================================
    Bottom nav (mobile <768px): sostituisce la sidebar come
    navigazione primaria — restyle "Saru", ADR §19.
