@@ -134,6 +134,27 @@
                 'open' => ['label' => __('Riaperto'), 'color' => 'red'],
                 default => ['label' => __('Aggiornato'), 'color' => 'gray'],
             };
+            // "Preso in carico"/"Risolto" scattano quando si completa un
+            // appuntamento collegato (MaintenanceCompletionService): la data
+            // che racconta il fatto è il rientro/appuntamento, non il
+            // timestamp di quando l'operatore ha salvato il completamento in
+            // app, spesso successivo. Abbinamento per vicinanza nel tempo
+            // (stesso secondo/minuto, stessa richiesta HTTP) tra il log
+            // attività e l'appuntamento aggiornato: oltre 30s non è più lo
+            // stesso evento, si tiene il timestamp reale come ripiego.
+            $linkedRecords = $issue->maintenanceRecordItems()
+                ->with('maintenanceRecord')
+                ->get()
+                ->pluck('maintenanceRecord')
+                ->filter();
+            $appointmentDateFor = function ($activity) use ($linkedRecords) {
+                $closest = $linkedRecords->sortBy(fn($r) => abs($r->updated_at->diffInSeconds($activity->created_at)))->first();
+                if (! $closest || abs($closest->updated_at->diffInSeconds($activity->created_at)) > 30) {
+                    return null;
+                }
+
+                return $closest->return_date ?? $closest->appointment_date;
+            };
             $timelineEntries = collect();
             foreach ($activities as $activity) {
                 if ($activity->event === 'created') {
@@ -163,7 +184,10 @@
                 $event = ($newStatus && $newStatus !== $oldStatus)
                     ? $statusEvent($newStatus)
                     : ['label' => __('Aggiornato'), 'color' => 'gray'];
-                $timelineEntries->push([...$event, 'date' => $activity->created_at]);
+                $date = in_array($newStatus, ['in_progress', 'closed'], true)
+                    ? ($appointmentDateFor($activity) ?? $activity->created_at)
+                    : $activity->created_at;
+                $timelineEntries->push([...$event, 'date' => $date]);
             }
             $timelineEntries = $timelineEntries->sortByDesc('date');
         @endphp
