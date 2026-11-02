@@ -18,9 +18,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Restyle "Saru" (Veicoli, lista+scheda, capofila)**: lista veicoli riprogettata — rimossa la riga KPI ridondante con la dashboard, ricerca a tutta larghezza affiancata ai filtri, icona veicolo come chip arrotondata invece di cerchio pieno, nuova colonna/filtri "Disponibile"/"In officina". Stesso badge sulla scheda veicolo. Badge conteggio veicoli in sidebar; icone del menu "Nuovo" con sfondo colorato.
 - **Restyle "Saru" (scheda veicolo, Panoramica completa e mobile compatto)**: tab Panoramica a 2 colonne con riepilogo di Scadenze/Pneumatici/Equipaggiamento (prima solo Anagrafica/Specifiche/Documenti/Affidabilità), oltre al dettaglio completo nelle rispettive tab dedicate. Header scheda veicolo più compatto su mobile.
 - **Restyle "Saru" (allineamento larghezza card tab + ingranaggio sidebar)**: le tab con una sola card ora occupano tutta la larghezza invece di un terzo; la tab Scadenze (2 card) passa a 2 colonne piene. Pannello utente in sidebar: icona a ingranaggio con menu (Impostazioni account/Esci) invece del solo pulsante di logout diretto, come nel mockup.
+- **Restyle "Saru" (dashboard a 3 colonne)**: card KPI con icona/valore/etichetta impilati verticalmente come nel mockup (prima affiancati orizzontalmente); layout a 3 colonne fisse al posto delle righe impilate a coppie, 3 card per colonna raggruppate per urgenza (richiede attenzione ora/in arrivo a breve/stato generale) invece che per entità, per restare bilanciate in altezza. Nessun dato o funzionalità rimossi, solo riorganizzati.
 
 ### Fixed
 
+- Il valore della card KPI "Premio assicurativo annuo" andava a capo tra "€" e la cifra nella card stretta della dashboard.
+- Le 3 colonne dashboard finivano ad altezze diverse; ora si allungano in pari con l'ultima card di ciascuna che assorbe lo spazio avanzato. Il dettaglio espandibile di "Lavaggi del mese" scrolla internamente invece di allungare la colonna. Card "Prossimi appuntamenti" con riquadro data a sinistra come nel mockup; scadenze imminenti/scadute ora nella stessa colonna.
 - Le chiamate `fetch()` da sessione browser verso `/api/*` non si autenticavano mai via cookie (Sanctum configurato solo per token Bearer) — rendeva silenziosamente non funzionante da browser anche l'autocomplete descrizioni guasto esistente, non solo la nuova ricerca veicoli. Risolto abilitando l'autenticazione via sessione per le richieste same-origin (comportamento standard Sanctum).
 
 ## [v1.22.0] - 2026-10-29

@@ -94,18 +94,29 @@
         :in-workshop-count="$inWorkshopCount" :expiring-equipment="$expiringEquipment"
         :active-insurance-premium-total="$activeInsurancePremiumTotal" />
 
-    <x-dashboard.open-issues-card :open-issues="$openIssues" />
-
-    <x-dashboard.workshop-row :in-workshop-records="$inWorkshopRecords" :upcoming-appointments="$upcomingAppointments" />
-
-    <x-dashboard.deadlines-row :upcoming-deadlines="$upcomingDeadlines" :expired-deadlines="$expiredDeadlines" />
-
-    <x-dashboard.equipment-row :total-vehicles="$totalVehicles" :incomplete-vehicles="$incompleteVehicles"
-        :expiring-equipment="$expiringEquipment" />
-
-    <x-dashboard.tire-season-carwash-row :tire-season-expected="$tireSeasonExpected"
-        :tire-season-next-switch="$tireSeasonNextSwitch" :tire-season-compliant-count="$tireSeasonCompliantCount"
-        :tire-season-pending="$tireSeasonPending" :tire-season-overdue="$tireSeasonOverdue"
-        :car-wash-total="$carWashTotal" :car-wash-washed-count="$carWashWashedCount"
-        :car-wash-missing-vehicles="$carWashMissingVehicles" :car-wash-records="$carWashRecords" />
+    {{-- 3 colonne fisse come nel mockup (restyle "Saru", ADR §19), al posto
+         delle righe impilate a coppie — col.1 guasti + scadenze (tenute
+         insieme), col.2 appuntamenti/officina/attrezzature, col.3 stato
+         generale/completezza. --}}
+    <div class="dash-columns">
+        <div class="dash-col">
+            <x-dashboard.open-issues-card :open-issues="$openIssues" />
+            <x-dashboard.upcoming-deadlines-card :upcoming-deadlines="$upcomingDeadlines" />
+            <x-dashboard.expired-deadlines-card :expired-deadlines="$expiredDeadlines" />
+        </div>
+        <div class="dash-col">
+            <x-dashboard.upcoming-appointments-card :upcoming-appointments="$upcomingAppointments" />
+            <x-dashboard.in-workshop-card :in-workshop-records="$inWorkshopRecords" />
+            <x-dashboard.expiring-equipment-card :expiring-equipment="$expiringEquipment" />
+        </div>
+        <div class="dash-col">
+            <x-dashboard.equipment-completeness-card :total-vehicles="$totalVehicles"
+                :incomplete-vehicles="$incompleteVehicles" />
+            <x-dashboard.tire-season-card :tire-season-expected="$tireSeasonExpected"
+                :tire-season-next-switch="$tireSeasonNextSwitch" :tire-season-compliant-count="$tireSeasonCompliantCount"
+                :tire-season-pending="$tireSeasonPending" :tire-season-overdue="$tireSeasonOverdue" />
+            <x-dashboard.car-wash-card :car-wash-total="$carWashTotal" :car-wash-washed-count="$carWashWashedCount"
+                :car-wash-missing-vehicles="$carWashMissingVehicles" :car-wash-records="$carWashRecords" />
+        </div>
+    </div>
 @endsection

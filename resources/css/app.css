@@ -706,14 +706,16 @@ body {
     margin-bottom: 18px;
 }
 
+/* Icona/valore/etichetta impilati verticalmente, come nel mockup
+   (restyle "Saru", ADR §19) — prima icona+testo affiancati. */
 .dash-kpi {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 12px;
+    padding: 14px;
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
     text-decoration: none;
     color: inherit;
     transition: transform .12s;
@@ -724,25 +726,34 @@ body {
 }
 
 .dash-kpi .ic {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
     border-radius: var(--radius);
     display: grid;
     place-items: center;
-    font-size: 16px;
+    font-size: 14px;
     flex-shrink: 0;
+    margin-bottom: 9px;
 }
 
 .dash-kpi .lbl {
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text-muted);
-    font-weight: 500;
+    font-weight: 600;
 }
 
 .dash-kpi .val {
     font-size: 17px;
     font-weight: 700;
     line-height: 1.1;
+    white-space: nowrap;
+}
+
+/* Valore in euro (premio assicurativo): più lungo delle altre KPI, a
+   rischio di andare a capo tra "€" e la cifra nella card stretta —
+   font più piccolo invece che spezzare su due righe. */
+.dash-kpi .val.val-currency {
+    font-size: 14px;
 }
 
 .dash-grid2 {
@@ -750,6 +761,32 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 14px;
     margin-top: 16px;
+}
+
+/* Dashboard a 3 colonne fisse, come nel mockup (restyle "Saru", ADR §19) —
+   sostituisce le righe impilate a coppie: ogni colonna è una pila
+   verticale di card indipendenti, non un'unica griglia 2D. */
+.dash-columns {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+    align-items: stretch;
+}
+
+.dash-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* Le 3 colonne hanno contenuto di lunghezza diversa (liste con più o meno
+   righe): la colonna si allunga quanto la più alta (align-items:stretch
+   sopra), e qui l'ultima card di ciascuna assorbe lo spazio avanzato,
+   così i 3 fondi restano allineati invece di finire ad altezze diverse. */
+.dash-col > .dash-card:last-child {
+    flex: 1;
 }
 
 .dash-card {
@@ -828,6 +865,26 @@ body {
     margin-bottom: 0;
 }
 
+/* Riquadro mese/giorno a sinistra (card "Prossimi appuntamenti", restyle
+   "Saru" ADR §19) — come nel mockup, al posto del badge data a destra. */
+.dash-date-box {
+    width: 36px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.dash-date-box .month {
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.dash-date-box .day {
+    font-size: 15px;
+    font-weight: 800;
+}
+
 .dash-list-item .dot {
     width: 9px;
     height: 9px;
@@ -901,6 +958,10 @@ body {
     }
 
     .dash-grid2 {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-columns {
         grid-template-columns: 1fr;
     }
 }
