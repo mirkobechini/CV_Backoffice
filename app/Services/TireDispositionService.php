@@ -113,6 +113,21 @@ class TireDispositionService
                 continue;
             }
 
+            // Una gomma già montata su questo stesso veicolo non ha
+            // bisogno di essere "montata" di nuovo: succede quando si
+            // modifica e risalva un appuntamento di cambio gomme già
+            // completato — syncForExistingRecord() cancella e ricrea gli
+            // item, la selezione preesistente delle gomme (già montate)
+            // genera un nuovo item con completed=false, e senza questo
+            // controllo si duplicava la voce nello storico cambi e si
+            // resettava la data di montaggio a oggi senza che nulla fosse
+            // davvero cambiato.
+            if ($tireItem->itemable->status === Tire::STATUS_MOUNTED) {
+                $tireItem->update(['completed' => true]);
+
+                continue;
+            }
+
             // Disposizione scelta indipendentemente per ogni gomma
             // sostituita (es. 1 dismessa e 3 in magazzino nello stesso
             // cambio): 'stored' come default innocuo quando non c'è nulla

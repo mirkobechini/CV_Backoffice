@@ -196,4 +196,54 @@ class MaintenanceRecordTireUpdateTest extends TestCase
         $response->assertSee('Va in magazzino');
         $response->assertSee('Viene dismessa');
     }
+
+    public function test_resaving_already_completed_tire_change_does_not_duplicate_history(): void
+    {
+        // Modificare e risalvare un appuntamento di cambio gomme già
+        // completato ricreava l'item della gomma (già montata) con
+        // completed=false, e mountLinkedTires() la rimontava da capo:
+        // una seconda voce nello storico cambi e mounted_date resettata a
+        // oggi, pur non essendo cambiato nulla (bug segnalato da Mirko).
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+        $oldTire = $this->createTire($vehicle, ['status' => 'stored']);
+        $mountedTire = $this->createTire($vehicle, [
+            'season' => 'summer',
+            'status' => 'mounted',
+            'mounted_date' => today()->subWeek(),
+        ]);
+
+        $maintenance = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subWeek(),
+            'return_date' => today()->subWeek(),
+            'activity_type' => 'Cambio Gomme',
+            'mileage_at_service' => 42000,
+        ]);
+        $maintenance->items()->create([
+            'itemable_id' => $mountedTire->id,
+            'itemable_type' => Tire::class,
+            'completed' => true,
+        ]);
+        $this->assertDatabaseCount('tire_changes', 0);
+
+        $response = $this->actingAs($user)->put(route('admin.maintenance-records.update', $maintenance), [
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => $maintenance->appointment_date->toDateString(),
+            'return_date' => $maintenance->return_date->toDateString(),
+            'activity_type' => 'Cambio Gomme',
+            'mileage_at_service' => 42000,
+            'notes' => 'Correzione note, nessuna gomma cambiata',
+            'target_tire_ids' => [$mountedTire->id],
+        ]);
+
+        $response->assertRedirect(route('admin.maintenance-records.show', $maintenance));
+        $this->assertDatabaseCount('tire_changes', 0);
+        $this->assertSame('mounted', $mountedTire->fresh()->status);
+        $this->assertSame(today()->subWeek()->toDateString(), $mountedTire->fresh()->mounted_date->toDateString());
+        $this->assertSame('stored', $oldTire->fresh()->status);
+    }
 }
