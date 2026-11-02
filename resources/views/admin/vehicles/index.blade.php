@@ -9,6 +9,18 @@
 
 @section('content')
 
+    @php
+        // Nessun risultato per questi filtri è una buona notizia (nessun
+        // veicolo da integrare/con guasti/con scadenze), non un errore —
+        // "Nessun veicolo trovato" generico suonava come un problema.
+        $emptyMessage = match ($filter) {
+            'incomplete' => __('Tutti i veicoli hanno l\'equipaggiamento completo.'),
+            'issues' => __('Nessun veicolo con guasti aperti.'),
+            'deadline' => __('Nessun veicolo con scadenze imminenti.'),
+            default => __('Nessun veicolo trovato.'),
+        };
+    @endphp
+
     {{-- Header: titolo + conteggio flotta + esportazioni/nuovo (restyle "Saru", ADR §19) --}}
     <div class="page-header">
         <div>
@@ -196,7 +208,7 @@
                         <x-admin.delete-modal type="vehicle" :object="$vehicle" />
                     @empty
                         <tr>
-                            <td colspan="8" class="empty">{{ __('Nessun veicolo trovato.') }}</td>
+                            <td colspan="8" class="empty">{{ $emptyMessage }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -239,7 +251,7 @@
                     @endif
                 </a>
             @empty
-                <p class="empty">{{ __('Nessun veicolo trovato.') }}</p>
+                <p class="empty">{{ $emptyMessage }}</p>
             @endforelse
         </div>
 
@@ -253,8 +265,4 @@
             </div>
         @endif
     </div>
-
-    <p class="note">
-        {{ __('Le scadenze per km (cinghia, tagliando) mostrano i km mancanti al target; quelle per data mostrano giorni alla scadenza.') }}
-    </p>
 @endsection
