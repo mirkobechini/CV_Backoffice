@@ -38,7 +38,7 @@
                             </div>
                         </th>
                         <th>{{ __('Targa') }}</th>
-                        <th>{{ __('Alimentazione') }}</th>
+                        <th>{{ __('Carburante') }}</th>
                         <th>
                             <div class="th-wrap"><span>{{ __('Data') }}</span>
                                 <a href="{{ $sortToggleUrl('date') }}" class="mini {{ $sortBy === 'date' ? 'on' : '' }}"
@@ -63,10 +63,10 @@
                             <td class="code">{{ $fuelLog->vehicle->internal_code ?? 'N/A' }}</td>
                             <td class="code">{{ $fuelLog->vehicle->license_plate ?? 'N/A' }}</td>
                             <td>
-                                @if ($fuelLog->vehicle?->fuel_type)
+                                @if ($fuelLog->fuel_type)
                                     <x-admin.status-badge
-                                        :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$fuelLog->vehicle->fuel_type] ?? 'gray'">
-                                        {{ $fuelLog->vehicle->fuel_type_label }}
+                                        :color="\App\Models\FuelLog::fuelTypeBadgeColors()[$fuelLog->fuel_type] ?? 'gray'">
+                                        {{ $fuelLog->fuel_type_label }}
                                     </x-admin.status-badge>
                                 @else
                                     —
@@ -106,11 +106,11 @@
                         <div class="card-list-item-title">{{ $fuelLog->vehicle->internal_code ?? 'N/A' }}</div>
                         <div class="card-list-item-sub">{{ $fuelLog->log_date_formatted ?? 'N/A' }} ·
                             {{ number_format($fuelLog->liters, 2, ',', '.') }} L</div>
-                        @if ($fuelLog->vehicle?->fuel_type)
+                        @if ($fuelLog->fuel_type)
                             <div class="card-list-item-tag">
                                 <x-admin.status-badge
-                                    :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$fuelLog->vehicle->fuel_type] ?? 'gray'">
-                                    {{ $fuelLog->vehicle->fuel_type_label }}
+                                    :color="\App\Models\FuelLog::fuelTypeBadgeColors()[$fuelLog->fuel_type] ?? 'gray'">
+                                    {{ $fuelLog->fuel_type_label }}
                                 </x-admin.status-badge>
                             </div>
                         @endif

@@ -39,4 +39,34 @@ const initializeFuelCardSelect = () => {
     reorderFuelCardsForSelectedVehicle();
 };
 
-document.addEventListener('DOMContentLoaded', initializeFuelCardSelect);
+// Precompila il carburante con quello del veicolo selezionato, ma solo per
+// i veicoli con un'alimentazione univoca (non "ibrido", dove l'utente deve
+// scegliere consapevolmente il carburante di questo specifico rifornimento,
+// issue-585) e solo se il campo non è già stato impostato (vale old() dopo
+// un errore di validazione, o il valore esistente in edit).
+const initializeFuelTypeDefault = () => {
+    const vehicleSelect = document.getElementById('vehicle_id');
+    const fuelTypeSelect = document.getElementById('fuel_type');
+
+    if (!vehicleSelect || !fuelTypeSelect || fuelTypeSelect.value) {
+        return;
+    }
+
+    vehicleSelect.addEventListener('change', () => {
+        if (fuelTypeSelect.value) {
+            return;
+        }
+
+        const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+        const vehicleFuelType = selectedOption?.dataset.fuelType;
+
+        if (vehicleFuelType && vehicleFuelType !== 'ibrido') {
+            fuelTypeSelect.value = vehicleFuelType;
+        }
+    });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeFuelCardSelect();
+    initializeFuelTypeDefault();
+});

@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Rifornimenti: nuovo campo "Carburante" per singolo rifornimento, indipendente dall'alimentazione anagrafica del veicolo — un veicolo "ibrido" benzina/metano fa rifornimenti ora dell'uno ora dell'altro, e prima finivano tutti indistinti sotto "Ibrido" nelle statistiche carburante. Precompilato dal tipo del veicolo quando univoco (benzina/diesel/elettrico), scelta obbligatoria per i veicoli ibridi. Dati storici: backfill automatico per i veicoli non ibridi, i rifornimenti dei veicoli ibridi restano senza carburante impostato (nessun modo di dedurlo a posteriori) finché non modificati.
+
 ### Changed
 
 - **Restyle "Saru" (fase 1/fondamenta)**: nuova palette arancione (tema chiaro e scuro) al posto dell'indigo precedente, sidebar riorganizzata per flusso di lavoro (Flotta/Manutenzione/Attrezzature/Report/Sistema) con contatori badge per guasti aperti e scadenze imminenti, logo scimmia Saru al posto dell'icona generica. Vedi `docs/ADR.md` §19. Solo fondamenta condivise (layout, variabili CSS, sidebar/topbar): le singole pagine saranno ridisegnate nelle fasi successive.

@@ -100,14 +100,34 @@ class FuelStatisticsTest extends TestCase
         $dieselVehicle = $this->vehicle('0001', 'diesel');
         $electricVehicle = $this->vehicle('0002', 'elettrico');
 
-        FuelLog::create(['vehicle_id' => $dieselVehicle->id, 'log_date' => '2026-01-01', 'liters' => 40, 'cost_total' => 60]);
-        FuelLog::create(['vehicle_id' => $electricVehicle->id, 'log_date' => '2026-01-02', 'liters' => 10, 'cost_total' => 15]);
+        FuelLog::create(['vehicle_id' => $dieselVehicle->id, 'fuel_type' => 'diesel', 'log_date' => '2026-01-01', 'liters' => 40, 'cost_total' => 60]);
+        FuelLog::create(['vehicle_id' => $electricVehicle->id, 'fuel_type' => 'elettrico', 'log_date' => '2026-01-02', 'liters' => 10, 'cost_total' => 15]);
 
         $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'carburante', 'period' => 'all']));
 
         $response->assertOk();
         $response->assertSee('Diesel');
         $response->assertSee('Elettrico');
+    }
+
+    public function test_liters_and_cost_by_fuel_type_splits_hybrid_vehicle_refuels_by_log_type(): void
+    {
+        // issue-585: un veicolo "ibrido" benzina/metano fa rifornimenti
+        // ora dell'uno ora dell'altro. Prima si raggruppava per
+        // vehicle.fuel_type (tutto sotto "Ibrido"), ora per il carburante
+        // scelto per ogni singolo rifornimento.
+        $user = $this->admin();
+        $hybridVehicle = $this->vehicle('0003', 'ibrido');
+
+        FuelLog::create(['vehicle_id' => $hybridVehicle->id, 'fuel_type' => 'benzina', 'log_date' => '2026-01-01', 'liters' => 30, 'cost_total' => 50]);
+        FuelLog::create(['vehicle_id' => $hybridVehicle->id, 'fuel_type' => 'metano', 'log_date' => '2026-01-10', 'liters' => 20, 'cost_total' => 20]);
+
+        $response = $this->actingAs($user)->get(route('admin.statistics.index', ['tab' => 'carburante', 'period' => 'all']));
+
+        $response->assertOk();
+        $response->assertSee('Benzina');
+        $response->assertSee('Metano');
+        $response->assertDontSee('Ibrido');
     }
 
     public function test_fuel_statistics_exclude_another_groups_data(): void

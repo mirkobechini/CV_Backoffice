@@ -102,7 +102,7 @@
             <table>
                 <thead>
                     <tr>
-                        <th>{{ __('Alimentazione') }}</th>
+                        <th>{{ __('Carburante') }}</th>
                         <th>{{ __('Litri') }}</th>
                         <th>{{ __('Spesa totale') }}</th>
                     </tr>
@@ -113,7 +113,7 @@
                             <td>
                                 @if ($row['fuel_type'])
                                     <x-admin.status-badge
-                                        :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$row['fuel_type']] ?? 'gray'">
+                                        :color="\App\Models\FuelLog::fuelTypeBadgeColors()[$row['fuel_type']] ?? 'gray'">
                                         {{ $row['label'] }}
                                     </x-admin.status-badge>
                                 @else

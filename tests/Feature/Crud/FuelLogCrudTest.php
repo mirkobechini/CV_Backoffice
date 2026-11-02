@@ -59,6 +59,7 @@ class FuelLogCrudTest extends TestCase
 
         $fuelLog = FuelLog::create([
             'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
             'log_date' => '2025-01-25',
             'liters' => '45.50',
             'cost_total' => '68.90',
@@ -98,6 +99,51 @@ class FuelLogCrudTest extends TestCase
         $indexResponse->assertSee('Diesel');
         $showResponse->assertStatus(200);
         $showResponse->assertSee('Diesel');
+    }
+
+    public function test_fuel_type_is_independent_from_vehicle_fuel_type_for_hybrid_vehicles(): void
+    {
+        // issue-585: un veicolo ibrido benzina/metano fa rifornimenti ora
+        // dell'uno ora dell'altro, e ogni rifornimento deve mostrare il
+        // proprio carburante, non quello generico "Ibrido" del veicolo.
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $vehicle->update(['fuel_type' => 'ibrido']);
+
+        $petrolLog = FuelLog::create([
+            'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'benzina',
+            'log_date' => '2025-01-01',
+            'liters' => '30.00',
+        ]);
+        $methaneLog = FuelLog::create([
+            'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'metano',
+            'log_date' => '2025-01-10',
+            'liters' => '15.00',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.fuel-logs.index'));
+
+        $response->assertOk();
+        $response->assertSee('Benzina');
+        $response->assertSee('Metano');
+        $this->assertSame('Benzina', $petrolLog->fresh()->fuel_type_label);
+        $this->assertSame('Metano', $methaneLog->fresh()->fuel_type_label);
+    }
+
+    public function test_store_requires_fuel_type(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $response = $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2025-01-25',
+            'liters' => '45.50',
+        ]);
+
+        $response->assertSessionHasErrors('fuel_type');
     }
 
     public function test_fuel_card_select_shows_vehicle_code_and_sort_data(): void
@@ -145,6 +191,7 @@ class FuelLogCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
             'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
             'log_date' => '2025-01-25',
             'liters' => '45.50',
             'cost_total' => '68.90',
@@ -157,6 +204,7 @@ class FuelLogCrudTest extends TestCase
         $this->assertDatabaseHas('fuel_logs', [
             'id' => $fuelLog->id,
             'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
             'log_date' => '2025-01-25 00:00:00',
             'liters' => 45.50,
             'cost_total' => 68.90,
@@ -176,6 +224,7 @@ class FuelLogCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
             'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
             'log_date' => '2025-01-25',
             'liters' => '45.50',
             'fuel_card_id' => $fuelCard->id,
@@ -196,6 +245,7 @@ class FuelLogCrudTest extends TestCase
 
         $response = $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
             'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
             'log_date' => '2025-01-25',
             'liters' => '45.50',
         ]);
@@ -217,6 +267,7 @@ class FuelLogCrudTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('admin.fuel-logs.update', $data['fuelLog']), [
             'vehicle_id' => $data['vehicle']->id,
+            'fuel_type' => 'diesel',
             'log_date' => '2025-02-10',
             'liters' => '50.00',
             'cost_total' => '75.00',

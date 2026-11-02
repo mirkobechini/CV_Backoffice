@@ -56,12 +56,12 @@
                 </span>
             </div>
             <div class="dl-kv">
-                <span class="k">{{ __('Alimentazione') }}</span>
+                <span class="k">{{ __('Carburante') }}</span>
                 <span class="v">
-                    @if ($fuelLog->vehicle?->fuel_type)
+                    @if ($fuelLog->fuel_type)
                         <x-admin.status-badge
-                            :color="\App\Models\Vehicle::fuelTypeBadgeColors()[$fuelLog->vehicle->fuel_type] ?? 'gray'">
-                            {{ $fuelLog->vehicle->fuel_type_label }}
+                            :color="\App\Models\FuelLog::fuelTypeBadgeColors()[$fuelLog->fuel_type] ?? 'gray'">
+                            {{ $fuelLog->fuel_type_label }}
                         </x-admin.status-badge>
                     @else
                         N/A

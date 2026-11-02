@@ -21,6 +21,7 @@ class StoreFuelLogRequest extends FormRequest
         return [
             'vehicle_id' => ['required', new BelongsToCurrentUserGroup(Vehicle::class, message: 'Il veicolo selezionato non esiste o non appartiene al tuo gruppo.')],
             'fuel_card_id' => ['nullable', new BelongsToCurrentUserGroup(FuelCard::class, message: 'La tessera selezionata non esiste o non appartiene al tuo gruppo.', byOwnGroupColumn: true)],
+            'fuel_type' => ['required', 'in:benzina,diesel,elettrico,metano'],
             'log_date' => ['required', 'date'],
             'liters' => ['required', 'numeric', 'min:0.01'],
             'cost_total' => ['nullable', 'numeric', 'min:0'],
@@ -32,6 +33,8 @@ class StoreFuelLogRequest extends FormRequest
     {
         return [
             'vehicle_id.required' => 'Il campo veicolo è obbligatorio.',
+            'fuel_type.required' => 'Il campo carburante è obbligatorio.',
+            'fuel_type.in' => 'Il tipo carburante selezionato non è valido.',
             'log_date.required' => 'Il campo data è obbligatorio.',
             'log_date.date' => 'Il campo data deve essere una data valida.',
             'liters.required' => 'Il campo litri è obbligatorio.',

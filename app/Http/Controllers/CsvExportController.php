@@ -154,9 +154,10 @@ class CsvExportController extends Controller
     {
         $logs = FuelLog::with('vehicle', 'fuelCard')->forCurrentUser()->get();
 
-        $headers = ['Veicolo', 'Data', 'Litri', 'Costo totale', 'Chilometri', 'Tessera'];
+        $headers = ['Veicolo', 'Carburante', 'Data', 'Litri', 'Costo totale', 'Chilometri', 'Tessera'];
         $rows = $logs->map(fn ($l) => [
             $l->vehicle?->internal_code ?? '',
+            $l->fuel_type_label ?? '',
             $l->log_date_formatted ?? '',
             $l->liters,
             $l->cost_total ?? '',

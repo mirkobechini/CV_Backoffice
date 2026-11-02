@@ -26,7 +26,7 @@
                     required>
                     <option value="" disabled {{ $isEdit ? '' : 'selected' }}>{{ __('Seleziona un veicolo') }}</option>
                     @foreach ($vehicles as $vehicle)
-                        <option value="{{ $vehicle->id }}"
+                        <option value="{{ $vehicle->id }}" data-fuel-type="{{ $vehicle->fuel_type }}"
                             {{ old('vehicle_id', $currentVehicleId) == $vehicle->id ? 'selected' : '' }}>
                             {{ $vehicle->internal_code }} · {{ $vehicle->brand?->name ?? 'N/A' }}
                             {{ $vehicle->carModel?->name ?? 'N/A' }}
@@ -34,6 +34,25 @@
                     @endforeach
                 </select>
                 @error('vehicle_id')
+                    <div class="field-error">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="field">
+                <label for="fuel_type">{{ __('Carburante di questo rifornimento') }} <span class="req">*</span></label>
+                <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type"
+                    required>
+                    <option value="" disabled {{ old('fuel_type', $fuelLog->fuel_type ?? '') ? '' : 'selected' }}>
+                        {{ __('Seleziona il carburante') }}</option>
+                    @foreach (\App\Models\FuelLog::fuelTypeLabels() as $value => $label)
+                        <option value="{{ $value }}"
+                            {{ old('fuel_type', $fuelLog->fuel_type ?? '') == $value ? 'selected' : '' }}>
+                            {{ $label }}</option>
+                    @endforeach
+                </select>
+                <div class="hint">
+                    {{ __('Un veicolo ibrido può fare rifornimenti di tipi diversi: scegli quale carburante è stato messo in questo pieno.') }}
+                </div>
+                @error('fuel_type')
                     <div class="field-error">{{ $message }}</div>
                 @enderror
             </div>

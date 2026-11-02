@@ -68,20 +68,24 @@ class FuelStatisticsService
     }
 
     /**
-     * Litri e spesa totali per tipo di alimentazione del veicolo
-     * (Vehicle::fuelTypeLabels()), per vedere quanto pesa benzina/gasolio/
-     * ecc. sulla flotta. I veicoli senza alimentazione impostata finiscono
-     * sotto "Non specificata" invece di sparire dal totale.
+     * Litri e spesa totali per tipo di carburante del singolo rifornimento
+     * (FuelLog::fuelTypeLabels()), per vedere quanto pesa benzina/gasolio/
+     * ecc. sulla flotta. Per tipo del rifornimento e non del veicolo
+     * (issue-585): un veicolo "ibrido" benzina/metano fa rifornimenti ora
+     * dell'uno ora dell'altro, altrimenti finirebbero tutti indistinti
+     * sotto "ibrido". I rifornimenti senza carburante impostato (pre
+     * issue-585) finiscono sotto "Non specificata" invece di sparire dal
+     * totale.
      *
      * @return Collection<int, array{fuel_type: ?string, label: string, liters: float, cost: float}>
      */
     public function litersAndCostByFuelType(?Carbon $since = null): Collection
     {
-        $logs = $this->baseQuery($since)->with('vehicle')->get(['id', 'vehicle_id', 'liters', 'cost_total']);
-        $labels = Vehicle::fuelTypeLabels();
+        $logs = $this->baseQuery($since)->get(['id', 'fuel_type', 'liters', 'cost_total']);
+        $labels = FuelLog::fuelTypeLabels();
 
         return $logs
-            ->groupBy(fn (FuelLog $log) => $log->vehicle?->fuel_type ?? '')
+            ->groupBy(fn (FuelLog $log) => $log->fuel_type ?? '')
             ->map(fn ($group, $fuelType) => [
                 'fuel_type' => $fuelType ?: null,
                 'label' => $fuelType !== '' ? ($labels[$fuelType] ?? $fuelType) : __('Non specificata'),
