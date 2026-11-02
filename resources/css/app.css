@@ -704,6 +704,14 @@ body {
     color: var(--text-muted);
 }
 
+/* Kebab per le azioni secondarie del page-header (es. CSV/PDF) sotto i
+   768px — nascosto di default, mostrato via media query (restyle
+   "Saru", ADR §19). Doppia classe per vincere su `.dropdown { display:
+   inline-block }`, stessa specificità ma dichiarata dopo nel file. */
+.page-header-kebab.dropdown {
+    display: none;
+}
+
 /* Banner "cose da gestire oggi" (restyle "Saru", ADR §19) */
 .dash-attention-banner {
     display: flex;
@@ -4186,6 +4194,24 @@ body.modal-open {
     .veh-list-mobile,
     .card-list-mobile {
         display: flex;
+    }
+
+    /* Legenda Tagliando/Cinghia/Revisione/Ossigeno: ha senso solo per la
+       tabella desktop (colonna "Prossima scadenza" senza etichetta
+       testuale) — la lista a card mobile mostra già il tipo per esteso in
+       ogni riga, la legenda è ridondante e assente nel mockup. */
+    .legend {
+        display: none;
+    }
+
+    /* CSV/PDF nel page-header: spostati in un kebab sotto i 768px, per
+       lasciare spazio a ricerca e filtri (restyle "Saru", ADR §19). */
+    .page-header-actions-extra {
+        display: none;
+    }
+
+    .page-header-kebab.dropdown {
+        display: block;
     }
 
     /* Le card delle liste mobile hanno già il proprio bordo: senza,

@@ -12,18 +12,33 @@
     {{-- Header: titolo + conteggio flotta + esportazioni/nuovo (restyle "Saru", ADR §19) --}}
     <div class="page-header">
         <div>
-            <h1>{{ __('Veicoli') }}</h1>
+            <h1 class="toolbar-title-redundant">{{ __('Veicoli') }}</h1>
             <div class="date">{{ trans_choice(':count veicolo nella flotta|:count veicoli nella flotta', $totalVehicles, ['count' => $totalVehicles]) }}
             </div>
         </div>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <a href="{{ route('admin.csv.export', 'vehicles') }}" class="btn" title="{{ __('Scarica CSV') }}">
+            <a href="{{ route('admin.csv.export', 'vehicles') }}" class="btn page-header-actions-extra"
+                title="{{ __('Scarica CSV') }}">
                 <i class="fa-solid fa-download"></i> CSV
             </a>
-            <a href="{{ route('admin.vehicles.pdf.fleet-overview') }}" class="btn"
+            <a href="{{ route('admin.vehicles.pdf.fleet-overview') }}" class="btn page-header-actions-extra"
                 title="{{ __('Scarica PDF riepilogo flotta') }}">
                 <i class="fa-solid fa-file-pdf"></i> PDF
             </a>
+            {{-- Sotto i 768px, CSV/PDF si spostano in un kebab per lasciare
+            spazio a ricerca e card (restyle "Saru", ADR §19). --}}
+            <div class="dropdown page-header-kebab">
+                <button type="button" class="btn" data-bs-toggle="dropdown" data-bs-auto-close="true"
+                    aria-expanded="false" aria-label="{{ __('Altre azioni') }}">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{{ route('admin.csv.export', 'vehicles') }}"><i
+                                class="fa-solid fa-download" style="width:16px;"></i> CSV</a></li>
+                    <li><a class="dropdown-item" href="{{ route('admin.vehicles.pdf.fleet-overview') }}"><i
+                                class="fa-solid fa-file-pdf" style="width:16px;"></i> PDF</a></li>
+                </ul>
+            </div>
             {{-- Nascosto <768px: duplica il FAB "+" già nella bottom nav (restyle
             "Saru", ADR §19). --}}
             <a href="{{ route('admin.vehicles.create') }}" class="btn primary page-header-quick-add">
