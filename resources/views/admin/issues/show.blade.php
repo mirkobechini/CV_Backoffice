@@ -137,6 +137,11 @@
             $timelineEntries = collect();
             foreach ($activities as $activity) {
                 if ($activity->event === 'created') {
+                    // "Segnalato" riporta la data del guasto (quando è
+                    // successo, scelta nel form), non il timestamp interno
+                    // di creazione del record: altrimenti non coinciderebbe
+                    // con "Data del guasto" nella card Dettagli, confondendo.
+                    //
                     // Un guasto inserito già "In lavorazione"/"Risolto" (non
                     // passato per lo stato "Aperto") non ha mai generato un
                     // evento di cambio stato separato: senza questo, lo
@@ -147,9 +152,9 @@
                     // va sopra all'evento che lo ha originato.
                     $initialStatus = $activity->attribute_changes?->get('attributes', [])['status'] ?? null;
                     if ($initialStatus && $initialStatus !== 'open') {
-                        $timelineEntries->push([...$statusEvent($initialStatus), 'date' => $activity->created_at]);
+                        $timelineEntries->push([...$statusEvent($initialStatus), 'date' => $issue->event_date]);
                     }
-                    $timelineEntries->push(['label' => __('Segnalato'), 'color' => 'red', 'date' => $activity->created_at]);
+                    $timelineEntries->push(['label' => __('Segnalato'), 'color' => 'red', 'date' => $issue->event_date]);
 
                     continue;
                 }
