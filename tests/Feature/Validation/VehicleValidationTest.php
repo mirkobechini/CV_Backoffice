@@ -155,4 +155,28 @@ class VehicleValidationTest extends TestCase
         $this->assertSame(['benzina', 'metano'], $vehicle->allowed_fuel_types);
         $this->assertSame(['benzina', 'metano'], $vehicle->allowedFuelLogTypes());
     }
+
+    public function test_vehicle_show_page_displays_allowed_fuel_types_for_hybrid(): void
+    {
+        $user = $this->createUser();
+        $brand = Brand::create(['name' => 'Fiat']);
+        $carModel = CarModel::create(['name' => 'Ducato', 'brand_id' => $brand->id]);
+        $vehicleType = VehicleType::create(['name' => 'Ambulanza', 'needs_oxygen_check' => true]);
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => '1234',
+            'brand_id' => $brand->id,
+            'car_model_id' => $carModel->id,
+            'fuel_type' => 'ibrido',
+            'allowed_fuel_types' => ['benzina', 'metano'],
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.show', $vehicle));
+
+        $response->assertOk();
+        $response->assertSee('Ibrido (Benzina, Metano)');
+    }
 }

@@ -157,6 +157,24 @@ class Vehicle extends Model
     }
 
     /**
+     * Come fuel_type_label, ma per un ibrido con allowed_fuel_types
+     * configurato aggiunge lo specifico tra parentesi (es. "Ibrido
+     * (Benzina, Metano)"): "Ibrido" da solo in scheda veicolo non dice
+     * quali carburanti ammette davvero.
+     */
+    public function getFuelTypeDisplayLabelAttribute(): ?string
+    {
+        if ($this->fuel_type !== 'ibrido' || empty($this->allowed_fuel_types)) {
+            return $this->fuel_type_label;
+        }
+
+        $labels = FuelLog::fuelTypeLabels();
+        $specifics = collect($this->allowed_fuel_types)->map(fn ($type) => $labels[$type] ?? $type)->implode(', ');
+
+        return "{$this->fuel_type_label} ({$specifics})";
+    }
+
+    /**
      * Carburanti ammessi per un rifornimento (FuelLog) di questo veicolo:
      * per i veicoli non ibridi è sempre e solo il loro unico fuel_type; per
      * gli ibridi (es. benzina/metano) quelli scelti esplicitamente in

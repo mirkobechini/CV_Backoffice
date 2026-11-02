@@ -81,41 +81,25 @@
                     <div class="hint">{{ __('Modello letto dal libretto (da selezionare a mano): :text', ['text' => session('unmatched_model_text')]) }}</div>
                 @endif
 
-                <div class="row2">
-                    <div class="field">
-                        <label for="fuel_type">{{ __('Carburante') }}</label>
-                        <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type">
-                            <option value="benzina"
-                                {{ old('fuel_type', $vehicle->fuel_type) == 'benzina' ? 'selected' : '' }}>
-                                {{ __('Benzina') }}</option>
-                            <option value="diesel"
-                                {{ old('fuel_type', $vehicle->fuel_type) == 'diesel' ? 'selected' : '' }}>
-                                {{ __('Diesel') }}</option>
-                            <option value="elettrico"
-                                {{ old('fuel_type', $vehicle->fuel_type) == 'elettrico' ? 'selected' : '' }}>
-                                {{ __('Elettrico') }}</option>
-                            <option value="ibrido"
-                                {{ old('fuel_type', $vehicle->fuel_type) == 'ibrido' ? 'selected' : '' }}>
-                                {{ __('Ibrido') }}</option>
-                        </select>
-                        @error('fuel_type')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="field">
-                        <label for="vehicle_type_id">{{ __('Tipologia') }} <span class="req">*</span></label>
-                        <select class="select @error('vehicle_type_id') is-invalid @enderror" id="vehicle_type_id"
-                            name="vehicle_type_id" required>
-                            @foreach ($vehicleTypes as $type)
-                                <option value="{{ $type->id }}"
-                                    {{ old('vehicle_type_id', $vehicle->vehicle_type_id) == $type->id ? 'selected' : '' }}>
-                                    {{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('vehicle_type_id')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
-                    </div>
+                <div class="field">
+                    <label for="fuel_type">{{ __('Carburante') }}</label>
+                    <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type">
+                        <option value="benzina"
+                            {{ old('fuel_type', $vehicle->fuel_type) == 'benzina' ? 'selected' : '' }}>
+                            {{ __('Benzina') }}</option>
+                        <option value="diesel"
+                            {{ old('fuel_type', $vehicle->fuel_type) == 'diesel' ? 'selected' : '' }}>
+                            {{ __('Diesel') }}</option>
+                        <option value="elettrico"
+                            {{ old('fuel_type', $vehicle->fuel_type) == 'elettrico' ? 'selected' : '' }}>
+                            {{ __('Elettrico') }}</option>
+                        <option value="ibrido"
+                            {{ old('fuel_type', $vehicle->fuel_type) == 'ibrido' ? 'selected' : '' }}>
+                            {{ __('Ibrido') }}</option>
+                    </select>
+                    @error('fuel_type')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="field" id="allowed-fuel-types-field" style="display:none;">
@@ -132,6 +116,21 @@
                     </div>
                     <div class="hint">{{ __('Un veicolo ibrido fa rifornimenti ora dell\'uno ora dell\'altro: indica quali carburanti specifici ammette (es. Benzina + Metano), così il form rifornimento mostra solo quelli.') }}</div>
                     @error('allowed_fuel_types')
+                        <div class="field-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="field">
+                    <label for="vehicle_type_id">{{ __('Tipologia') }} <span class="req">*</span></label>
+                    <select class="select @error('vehicle_type_id') is-invalid @enderror" id="vehicle_type_id"
+                        name="vehicle_type_id" required>
+                        @foreach ($vehicleTypes as $type)
+                            <option value="{{ $type->id }}"
+                                {{ old('vehicle_type_id', $vehicle->vehicle_type_id) == $type->id ? 'selected' : '' }}>
+                                {{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('vehicle_type_id')
                         <div class="field-error">{{ $message }}</div>
                     @enderror
                 </div>

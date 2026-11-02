@@ -73,7 +73,7 @@
         <div class="veh-title">
             <h1>{{ $vehicle->internal_code }}</h1>
             <div class="sub">{{ $vehicle->license_plate ?? '—' }} · {{ $vehicle->vehicleType->name ?? 'N/A' }} ·
-                {{ $vehicle->fuel_type ?? '—' }}</div>
+                {{ $vehicle->fuel_type_display_label ?? '—' }}</div>
         </div>
         <div class="veh-badges">
             @if ($inWorkshop)
