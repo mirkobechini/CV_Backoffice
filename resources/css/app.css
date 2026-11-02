@@ -1292,12 +1292,13 @@ body {
     color: var(--text-muted);
 }
 
-/* Veicoli: lista a card <768px al posto della tabella (restyle "Saru",
-   ADR §19) — nascosta di default, mostrata via media query. Liste a
-   card condivise da Guasti/Scadenze/Appuntamenti (e future liste),
-   stessa forma: icona/dot + titolo/sottotitolo + tag a destra — Veicoli
-   ha un proprio set di classi analogo (`.veh-*`), non ancora
-   riconciliato con quello condiviso. */
+/* Liste a card <768px al posto delle tabelle con scroll orizzontale
+   (restyle "Saru", ADR §19) — nascoste di default, mostrate via media
+   query. Condivise da Guasti/Scadenze/Appuntamenti/Pneumatici/
+   Attrezzature (e future liste), stessa forma: icona/dot +
+   titolo/sottotitolo + colonna destra — Veicoli ha un proprio set di
+   classi analogo (`.veh-*`), non ancora riconciliato con quello
+   condiviso. */
 .veh-list-mobile,
 .card-list-mobile {
     display: none;
@@ -1342,8 +1343,8 @@ body {
     margin-top: 5px;
 }
 
-/* Colonna destra (categoria/countdown) nelle liste a card mobile — testo
-   semplice, non uno stato colorato come i badge. */
+/* Colonna destra (categoria/countdown/prossimo cambio) nelle liste a
+   card mobile — testo semplice, non uno stato colorato come i badge. */
 .card-list-item-side {
     flex-shrink: 0;
     display: flex;
@@ -1356,8 +1357,8 @@ body {
 }
 
 /* Etichetta sopra il valore nella colonna destra delle card mobile (es.
-   "Parte", "Manca"): senza, il valore da solo (una data, un numero) non
-   dice a cosa si riferisce. */
+   "Parte", "Manca", "Prossimo cambio"): senza, il valore da solo (una
+   data, un numero) non dice a cosa si riferisce. */
 .card-list-item-side-label {
     font-size: 9.5px;
     font-weight: 700;
@@ -3823,10 +3824,10 @@ body.modal-open {
         display: none;
     }
 
-    /* Veicoli/Guasti/Scadenze/Appuntamenti: lista a card al posto della
-       tabella con scroll orizzontale (restyle "Saru", ADR §19). Veicoli
-       usa un proprio set di classi (`.veh-*`), non ancora riconciliato
-       con quello condiviso dalle altre liste. */
+    /* Veicoli/Guasti/Scadenze/Appuntamenti/Pneumatici/Attrezzature: lista
+       a card al posto della tabella con scroll orizzontale (restyle
+       "Saru", ADR §19). Veicoli usa un proprio set di classi (`.veh-*`),
+       non ancora riconciliato con quello condiviso dalle altre liste. */
     .veh-table-desktop,
     .table-desktop-only {
         display: none;
