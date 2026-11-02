@@ -1920,6 +1920,13 @@ body {
     border-bottom-color: var(--primary);
 }
 
+/* Conteggio nel tab (es. "Scadenze · 2") in risalto, come gli altri
+   contatori dell'app — altrimenti si confonde con l'etichetta. */
+.nav-link-count {
+    color: var(--primary);
+    font-weight: 700;
+}
+
 .veh-tab-content {
     padding-top: 16px;
 }
@@ -4015,6 +4022,17 @@ body.modal-open {
        caso senza doverlo ripetere su ogni card. */
     .is-detail-page .main-dp {
         padding-bottom: 90px;
+    }
+
+    /* Pagine di dettaglio senza barra fissa in fondo (es. scheda veicolo:
+       ogni azione è già nella topbar) tengono la bottom-nav, altrimenti la
+       pagina resterebbe senza alcuna navigazione in fondo. */
+    .is-detail-page:has(.page-actions-topbar-only) .bottom-nav {
+        display: flex;
+    }
+
+    .is-detail-page:has(.page-actions-topbar-only) .main-dp {
+        padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
     }
 
     .is-form-page .page-header {

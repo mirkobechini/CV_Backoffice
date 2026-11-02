@@ -76,10 +76,6 @@
             @else
                 <span class="badge b-green">{{ __('Disponibile') }}</span>
             @endif
-            @if ($vehicle->open_issues->isNotEmpty())
-                <span class="badge b-red">⚠
-                    {{ __(':count guasto/i aperto/i', ['count' => $vehicle->open_issues->count()]) }}</span>
-            @endif
             @if (!$vehicle->vehicleType)
                 <span class="badge b-gray">{{ __('Nessun tipo assegnato') }}</span>
             @elseif ($missingEquipment->isNotEmpty())
@@ -125,14 +121,18 @@
                     data-bs-target="#veh-tab-scadenze" type="button" role="tab" aria-controls="veh-tab-scadenze"
                     aria-selected="false">{{ __('Scadenze') }}
                     @if ($activeDeadlines->isNotEmpty())
-                        · {{ $activeDeadlines->count() }}
+                        <span class="nav-link-count">· {{ $activeDeadlines->count() }}</span>
                     @endif
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="veh-tab-manutenzioni-btn" data-bs-toggle="tab"
                     data-bs-target="#veh-tab-manutenzioni" type="button" role="tab" aria-controls="veh-tab-manutenzioni"
-                    aria-selected="false">{{ __('Manutenzioni') }}</button>
+                    aria-selected="false">{{ __('Manutenzioni') }}
+                    @if ($vehicle->open_issues->isNotEmpty())
+                        <span class="nav-link-count">· {{ $vehicle->open_issues->count() }}</span>
+                    @endif
+                </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="veh-tab-pneumatici-btn" data-bs-toggle="tab"
