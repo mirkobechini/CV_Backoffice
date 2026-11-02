@@ -60,6 +60,11 @@
             ->filter()
             ->filter(fn($d) => in_array($d->automatic_status, ['pending', 'expired']));
         $missingEquipment = $vehicle->missingRequiredEquipment();
+        // Colore del conteggio sui tab in base alla gravità, non un
+        // arancione piatto: rosso se c'è almeno una scadenza scaduta/un
+        // guasto aperto, giallo se solo "in scadenza"/"in lavorazione".
+        $deadlinesCountColor = $activeDeadlines->contains(fn($d) => $d->automatic_status === 'expired') ? 'red' : 'amber';
+        $issuesCountColor = $vehicle->open_issues->contains(fn($i) => $i->status === 'open') ? 'red' : 'amber';
     @endphp
 
     {{-- Header veicolo --}}
@@ -121,7 +126,7 @@
                     data-bs-target="#veh-tab-scadenze" type="button" role="tab" aria-controls="veh-tab-scadenze"
                     aria-selected="false">{{ __('Scadenze') }}
                     @if ($activeDeadlines->isNotEmpty())
-                        <span class="nav-link-count">· {{ $activeDeadlines->count() }}</span>
+                        <span class="nav-link-count {{ $deadlinesCountColor }}">· {{ $activeDeadlines->count() }}</span>
                     @endif
                 </button>
             </li>
@@ -130,7 +135,7 @@
                     data-bs-target="#veh-tab-manutenzioni" type="button" role="tab" aria-controls="veh-tab-manutenzioni"
                     aria-selected="false">{{ __('Manutenzioni') }}
                     @if ($vehicle->open_issues->isNotEmpty())
-                        <span class="nav-link-count">· {{ $vehicle->open_issues->count() }}</span>
+                        <span class="nav-link-count {{ $issuesCountColor }}">· {{ $vehicle->open_issues->count() }}</span>
                     @endif
                 </button>
             </li>

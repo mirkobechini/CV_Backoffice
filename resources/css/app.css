@@ -1920,11 +1920,19 @@ body {
     border-bottom-color: var(--primary);
 }
 
-/* Conteggio nel tab (es. "Scadenze · 2") in risalto, come gli altri
-   contatori dell'app — altrimenti si confonde con l'etichetta. */
+/* Conteggio nel tab (es. "Scadenze · 2") colorato in base alla gravità
+   (rosso scaduto/aperto, giallo in scadenza/in lavorazione) invece di un
+   arancione piatto, coerente coi badge di stato usati altrove. */
 .nav-link-count {
-    color: var(--primary);
     font-weight: 700;
+}
+
+.nav-link-count.red {
+    color: var(--red);
+}
+
+.nav-link-count.amber {
+    color: var(--amber);
 }
 
 .veh-tab-content {
