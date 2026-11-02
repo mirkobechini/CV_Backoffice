@@ -51,13 +51,15 @@
                 <a href="{{ route('admin.csv-import.index') }}" class="btn">
                     <i class="fa-solid fa-file-import"></i> {{ __('Importa CSV') }}
                 </a>
-                <a href="{{ route('admin.issues.create') }}" class="btn primary">
+                {{-- Nascosto <768px: duplica il FAB "+" già nella bottom nav
+                (restyle "Saru", ADR §19). --}}
+                <a href="{{ route('admin.issues.create') }}" class="btn primary page-header-quick-add">
                     <i class="fa-solid fa-plus"></i> {{ __('Nuovo guasto') }}
                 </a>
             </div>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
                     <tr>
@@ -152,6 +154,32 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+
+        {{-- Lista a card <768px al posto della tabella con scroll
+        orizzontale (restyle "Saru", ADR §19): stessi dati di `$issues`
+        (non raggruppati — il raggruppamento resta una funzione desktop). --}}
+        <div class="card-list-mobile">
+            @forelse ($issues as $issue)
+                <a href="{{ route('admin.issues.show', $issue->id) }}" class="card-list-item">
+                    <span class="thumb t{{ ($issue->vehicle_id % 5) + 1 }}"><i class="fa-solid fa-truck"></i></span>
+                    <div class="card-list-item-body">
+                        <div class="card-list-item-title">{{ $issue->description }}</div>
+                        <div class="card-list-item-sub">{{ $issue->vehicle->internal_code ?? 'N/A' }} ·
+                            {{ $issue->event_date_formatted ?? 'N/A' }}</div>
+                        <div class="card-list-item-tag">
+                            <x-admin.status-badge
+                                :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
+                        </div>
+                    </div>
+                    <div class="card-list-item-side">
+                        <div class="card-list-item-side-label">{{ __('Parte') }}</div>
+                        <div>{{ $issue->part ?? 'N/A' }}</div>
+                    </div>
+                </a>
+            @empty
+                <p class="empty">{{ __('Nessun guasto trovato.') }}</p>
+            @endforelse
         </div>
     </div>
 @endsection
