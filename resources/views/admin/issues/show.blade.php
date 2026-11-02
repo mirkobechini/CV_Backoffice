@@ -35,7 +35,7 @@
                 <i class="fa-solid fa-calendar-check"></i> {{ __('Prenota appuntamento') }}
             </a>
         @endif
-        <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}" class="btn primary">
+        <a href="{{ route('admin.issues.edit', ['issue' => $issue->id, 'back' => url()->full()]) }}" class="btn">
             <i class="fa-solid fa-pen"></i> {{ __('Modifica') }}
         </a>
         <button type="button" class="btn danger" data-bs-toggle="modal"
@@ -128,34 +128,49 @@
 
     @if ($activities->isNotEmpty())
         @php
-            $timelineEvent = function ($activity) {
+            $statusEvent = fn($status) => match ($status) {
+                'in_progress' => ['label' => __('Preso in carico'), 'color' => 'amber'],
+                'closed' => ['label' => __('Risolto'), 'color' => 'green'],
+                'open' => ['label' => __('Riaperto'), 'color' => 'red'],
+                default => ['label' => __('Aggiornato'), 'color' => 'gray'],
+            };
+            $timelineEntries = collect();
+            foreach ($activities as $activity) {
                 if ($activity->event === 'created') {
-                    return ['label' => __('Segnalato'), 'color' => 'red'];
+                    // Un guasto inserito già "In lavorazione"/"Risolto" (non
+                    // passato per lo stato "Aperto") non ha mai generato un
+                    // evento di cambio stato separato: senza questo, lo
+                    // storico mostrerebbe solo "Segnalato" anche se il badge
+                    // dice "In lavorazione", un'incoerenza che confonde.
+                    // Spinto prima di "Segnalato" (stesso istante) perché lo
+                    // storico è ordinato dal più recente: lo stato raggiunto
+                    // va sopra all'evento che lo ha originato.
+                    $initialStatus = $activity->attribute_changes?->get('attributes', [])['status'] ?? null;
+                    if ($initialStatus && $initialStatus !== 'open') {
+                        $timelineEntries->push([...$statusEvent($initialStatus), 'date' => $activity->created_at]);
+                    }
+                    $timelineEntries->push(['label' => __('Segnalato'), 'color' => 'red', 'date' => $activity->created_at]);
+
+                    continue;
                 }
                 $newStatus = $activity->attribute_changes?->get('attributes', [])['status'] ?? null;
                 $oldStatus = $activity->attribute_changes?->get('old', [])['status'] ?? null;
-                if ($newStatus && $newStatus !== $oldStatus) {
-                    return match ($newStatus) {
-                        'in_progress' => ['label' => __('Preso in carico'), 'color' => 'amber'],
-                        'closed' => ['label' => __('Risolto'), 'color' => 'green'],
-                        'open' => ['label' => __('Riaperto'), 'color' => 'red'],
-                        default => ['label' => __('Aggiornato'), 'color' => 'gray'],
-                    };
-                }
-
-                return ['label' => __('Aggiornato'), 'color' => 'gray'];
-            };
+                $event = ($newStatus && $newStatus !== $oldStatus)
+                    ? $statusEvent($newStatus)
+                    : ['label' => __('Aggiornato'), 'color' => 'gray'];
+                $timelineEntries->push([...$event, 'date' => $activity->created_at]);
+            }
+            $timelineEntries = $timelineEntries->sortByDesc('date');
         @endphp
         <div class="timeline-card">
             <h4>{{ __('Storico') }}</h4>
             <ul class="timeline">
-                @foreach ($activities as $activity)
-                    @php($event = $timelineEvent($activity))
+                @foreach ($timelineEntries as $event)
                     <li class="timeline-item">
                         <span class="timeline-dot {{ $event['color'] }}"></span>
                         <div>
                             <span class="timeline-label">{{ $event['label'] }}</span>
-                            <span class="timeline-date">{{ $activity->created_at->format('d/m/Y') }}</span>
+                            <span class="timeline-date">{{ $event['date']->format('d/m/Y') }}</span>
                         </div>
                     </li>
                 @endforeach
