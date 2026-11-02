@@ -802,6 +802,39 @@ body {
     white-space: nowrap;
 }
 
+/* Indicatori secondari (Veicoli totali/Attrez. in scadenza/Premio
+   assicurativo) dietro "Vedi tutti gli indicatori" sotto i 768px, come
+   nel mockup — una seconda `.dash-kpis` separata (stesso
+   `grid-template-columns`, colonne comunque allineate essendo entrambe
+   a piena larghezza). Toggle via classe propria (`.is-collapsed`), non
+   l'attributo `[hidden]`: il preflight di Tailwind lo resetta con
+   `display:none!important` dentro un suo `@layer`, che per le
+   dichiarazioni `!important` vince sempre su una nostra regola non
+   layered, indipendentemente dall'ordine nel file. */
+.dash-kpis-extra.is-collapsed {
+    display: none;
+}
+
+.dash-kpis-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 4px 0 16px;
+}
+
+@media (min-width: 768px) {
+    .dash-kpis-extra.is-collapsed {
+        display: grid;
+    }
+
+    .dash-kpis-toggle {
+        display: none;
+    }
+}
+
 /* Valore in euro (premio assicurativo): più lungo delle altre KPI, a
    rischio di andare a capo tra "€" e la cifra nella card stretta —
    font più piccolo invece che spezzare su due righe. */
