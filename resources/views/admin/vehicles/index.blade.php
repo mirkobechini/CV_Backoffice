@@ -19,6 +19,16 @@
             'deadline' => __('Nessun veicolo con scadenze imminenti.'),
             default => __('Nessun veicolo trovato.'),
         };
+        $relativeDate = function ($date) {
+            if (! $date) {
+                return null;
+            }
+            $days = (int) now()->startOfDay()->diffInDays($date->copy()->startOfDay(), false);
+            if ($days === 0) {
+                return __('oggi');
+            }
+            return $days > 0 ? __('tra :n giorni', ['n' => $days]) : __(':n giorni fa', ['n' => abs($days)]);
+        };
     @endphp
 
     {{-- Header: titolo + conteggio flotta + esportazioni/nuovo (restyle "Saru", ADR §19) --}}
@@ -105,6 +115,7 @@
                         <th>{{ __('Veicolo') }}</th>
                         <th>{{ __('Codice') }}</th>
                         <th>{{ __('Km attuali') }}</th>
+                        <th>{{ __('Ultimo lavaggio') }}</th>
                         <th>{{ __('Prossima scadenza') }}</th>
                         <th>{{ __('Stato') }}</th>
                         <th>{{ __('Guasti') }}</th>
@@ -134,6 +145,14 @@
                                         {{ number_format($vehicle->previousMileageLog->mileage, 0, ',', '.') }} ·
                                         {{ $vehicle->previousMileageLog->log_date?->translatedFormat('d M') }}
                                     </div>
+                                @endif
+                            </td>
+                            <td>
+                                @if ($vehicle->lastCarWash)
+                                    <div class="km-cell">{{ $vehicle->lastCarWash->return_date->translatedFormat('d M') }}</div>
+                                    <div class="km-sub">{{ $relativeDate($vehicle->lastCarWash->return_date) }}</div>
+                                @else
+                                    <span class="badge b-gray">{{ __('Mai') }}</span>
                                 @endif
                             </td>
                             <td>
@@ -208,7 +227,7 @@
                         <x-admin.delete-modal type="vehicle" :object="$vehicle" />
                     @empty
                         <tr>
-                            <td colspan="8" class="empty">{{ $emptyMessage }}</td>
+                            <td colspan="9" class="empty">{{ $emptyMessage }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -227,6 +246,9 @@
                         <div class="veh-card-mobile-name">{{ $vehicle->internal_code }} ·
                             {{ $vehicle->brand->name ?? '' }} {{ $vehicle->carModel->name ?? 'N/A' }}</div>
                         <div class="veh-card-mobile-km">{{ number_format($vehicle->mileage ?? 0, 0, ',', '.') }} km
+                            @if ($vehicle->lastCarWash)
+                                · {{ __('lavaggio') }} {{ $relativeDate($vehicle->lastCarWash->return_date) }}
+                            @endif
                         </div>
                         @if ($activeDeadlines->isNotEmpty())
                             @php($deadline = $activeDeadlines->first())

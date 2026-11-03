@@ -17,6 +17,7 @@ use App\Services\MaintenanceRecordItemSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class MaintenanceRecordController extends Controller
 {
@@ -43,6 +44,7 @@ class MaintenanceRecordController extends Controller
             'status_filter' => 'nullable|in:all,scheduled,completed,with_issues',
             'vehicle_id' => 'nullable|integer',
             'q' => 'nullable|string|max:255',
+            'activity_type' => ['nullable', Rule::in(MaintenanceRecord::ACTIVITY_TYPES)],
         ]);
 
         $groupBy = $validated['group_by'] ?? null;
@@ -51,6 +53,7 @@ class MaintenanceRecordController extends Controller
         $statusFilter = $validated['status_filter'] ?? 'all';
         $vehicleFilter = $validated['vehicle_id'] ?? null;
         $q = $validated['q'] ?? null;
+        $activityTypeFilter = $validated['activity_type'] ?? null;
 
         $query = MaintenanceRecord::with(['vehicle.brand', 'vehicle.carModel', 'provider', 'items.itemable'])
             ->forCurrentUser();
@@ -63,6 +66,8 @@ class MaintenanceRecordController extends Controller
             );
 
         $query->when($vehicleFilter, fn ($qr) => $qr->where('vehicle_id', $vehicleFilter));
+
+        $query->when($activityTypeFilter, fn ($qr) => $qr->where('activity_type', $activityTypeFilter));
 
         $query->when($q, function ($qr) use ($q) {
             $qr->where(function ($sub) use ($q) {
@@ -102,11 +107,23 @@ class MaintenanceRecordController extends Controller
 
         $vehicles = Vehicle::forCurrentUser()->orderBy('internal_code')->get(['id', 'internal_code']);
 
-        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords', 'statusFilter', 'vehicleFilter', 'vehicles') + [
+        return view('admin.maintenance-records.index', compact('maintenanceRecords', 'groupBy', 'sortBy', 'sortDir', 'groupedMaintenanceRecords', 'statusFilter', 'vehicleFilter', 'vehicles', 'activityTypeFilter') + [
             'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.maintenance-records.index'),
             'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.maintenance-records.index'),
             'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
         ]);
+    }
+
+    /**
+     * Stessa lista di index(), filtrata per i soli lavaggi (pagina
+     * dedicata "Lavaggi" in sidebar): la card dashboard mostra solo quelli
+     * del mese corrente, qui lo storico completo.
+     */
+    public function carWashes(Request $request)
+    {
+        $request->merge(['activity_type' => MaintenanceRecord::ACTIVITY_WASH]);
+
+        return $this->index($request);
     }
 
     /**

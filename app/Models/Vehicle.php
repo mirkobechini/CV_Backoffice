@@ -338,6 +338,20 @@ class Vehicle extends Model
         return $this->hasOne(MileageLog::class)->latest('log_date');
     }
 
+    /**
+     * Ultimo appuntamento di lavaggio concluso (return_date valorizzato),
+     * per mostrare la data accanto al veicolo nella lista (issue lavaggi).
+     * Un lavaggio solo programmato non conta: stesso criterio già usato
+     * per "Lavato questo mese" in dashboard (DashboardController).
+     */
+    public function lastCarWash()
+    {
+        return $this->hasOne(MaintenanceRecord::class)
+            ->where('activity_type', MaintenanceRecord::ACTIVITY_WASH)
+            ->whereNotNull('return_date')
+            ->latest('return_date');
+    }
+
     public function fuelLogs()
     {
         return $this->hasMany(FuelLog::class);

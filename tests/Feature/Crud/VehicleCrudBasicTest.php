@@ -91,6 +91,46 @@ class VehicleCrudBasicTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_vehicle_index_shows_last_car_wash_date(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle()['vehicle'];
+        $provider = Provider::create(['name' => 'Autolavaggio Rossi', 'type' => 'Lavaggio']);
+
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-06-01',
+            'return_date' => '2025-06-01',
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+        ]);
+        // Appuntamento di lavaggio solo programmato (senza return_date): non
+        // deve contare come "ultimo lavaggio" (nessuna prova sia avvenuto).
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-07-01',
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.index'));
+
+        $response->assertOk();
+        $response->assertSee('01 giu');
+        $response->assertDontSee('01 lug');
+    }
+
+    public function test_vehicle_index_shows_never_washed_for_vehicles_without_wash_history(): void
+    {
+        $user = $this->createUser();
+        $this->createVehicle();
+
+        $response = $this->actingAs($user)->get(route('admin.vehicles.index'));
+
+        $response->assertOk();
+        $response->assertSee('Mai');
+    }
+
     public function test_vehicle_create_page_is_reachable(): void
     {
         $user = $this->createUser();    // fake user

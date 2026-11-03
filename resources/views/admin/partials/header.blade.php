@@ -26,6 +26,7 @@
         'admin.fuel-cards.*',
         'admin.mileage-logs.*',
         'admin.vehicle-types.*',
+        'admin.maintenance-records.car-washes',
     ]);
     $equipmentGroupActive = request()->routeIs([
         'admin.equipments.*',
@@ -94,13 +95,17 @@
         <button type="button"
             class="sidebar-link sidebar-link-toggle {{ $fuelGroupActive ? 'active open' : '' }}"
             data-sidebar-submenu-toggle="fuel-group">
-            <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante, Pedaggi, Tessere') }}</span>
+            <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante, Lavaggi, Pedaggi, Tessere') }}</span>
             <i class="fa-solid fa-chevron-down sidebar-submenu-caret"></i>
         </button>
         <div class="sidebar-submenu {{ $fuelGroupActive ? 'open' : '' }}" id="fuel-group">
             <a class="sidebar-link {{ request()->routeIs('admin.fuel-logs.*') ? 'active' : '' }}"
                 href="{{ route('admin.fuel-logs.index') }}" title="{{ __('Carburante') }}">
                 <i class="fa-solid fa-gas-pump"></i><span>{{ __('Carburante') }}</span>
+            </a>
+            <a class="sidebar-link {{ request()->routeIs('admin.maintenance-records.car-washes') ? 'active' : '' }}"
+                href="{{ route('admin.maintenance-records.car-washes') }}" title="{{ __('Lavaggi') }}">
+                <i class="fa-solid fa-soap"></i><span>{{ __('Lavaggi') }}</span>
             </a>
             <a class="sidebar-link {{ request()->routeIs('admin.fleet-devices.*') ? 'active' : '' }}"
                 href="{{ route('admin.fleet-devices.index') }}" title="{{ __('Dispositivi pedaggio') }}">
@@ -135,7 +140,7 @@
                 <span class="sidebar-badge sidebar-badge-danger">{{ $sidebarOpenIssuesCount }}</span>
             @endif
         </a>
-        <a class="sidebar-link {{ request()->routeIs('admin.maintenance-records.*') ? 'active' : '' }}"
+        <a class="sidebar-link {{ request()->routeIs('admin.maintenance-records.*') && ! request()->routeIs('admin.maintenance-records.car-washes') ? 'active' : '' }}"
             href="{{ route('admin.maintenance-records.index') }}" title="{{ __('Appuntamenti') }}">
             <i class="fa-solid fa-calendar-check"></i><span>{{ __('Appuntamenti') }}</span>
         </a>

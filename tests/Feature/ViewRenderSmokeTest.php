@@ -85,6 +85,7 @@ class ViewRenderSmokeTest extends TestCase
             'admin.providers.index',
             'admin.issues.index',
             'admin.maintenance-records.index',
+            'admin.maintenance-records.car-washes',
             'admin.deadlines.index',
             'admin.equipments.index',
             'admin.equipment-types.index',

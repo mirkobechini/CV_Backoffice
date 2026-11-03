@@ -117,6 +117,49 @@ class MaintenanceRecordCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_car_washes_page_only_shows_wash_records(): void
+    {
+        // Pagina dedicata "Lavaggi": stessa lista di admin.maintenance-records.index
+        // ma filtrata a activity_type=Lavaggio (dashboard mostra solo quelli
+        // del mese corrente, qui lo storico completo).
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        $provider = $this->createProvider();
+
+        $wash = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-01-03',
+            'return_date' => '2025-01-03',
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+        ]);
+        $tagliando = MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'appointment_date' => '2025-01-05',
+            'activity_type' => MaintenanceRecord::ACTIVITY_TAGLIANDO,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.car-washes'));
+
+        $response->assertOk();
+        $response->assertSee('Elenco lavaggi');
+        $response->assertSee($wash->vehicle->internal_code);
+        $response->assertDontSee(MaintenanceRecord::ACTIVITY_TAGLIANDO);
+        $this->assertNotNull($tagliando->id);
+    }
+
+    public function test_car_washes_new_button_preselects_activity_type(): void
+    {
+        $user = $this->createUser();
+        $this->createVehicle();
+
+        $response = $this->actingAs($user)->get(route('admin.maintenance-records.car-washes'));
+
+        $response->assertOk();
+        $response->assertSee('activity_type='.urlencode(MaintenanceRecord::ACTIVITY_WASH), false);
+    }
+
     public function test_maintenance_create_page_is_reachable(): void
     {
         $user = $this->createUser();    // fake user

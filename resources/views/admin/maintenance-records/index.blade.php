@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('breadcrumb')
-    <x-admin.breadcrumb :items="[
-        ['label' => __('Manutenzione')],
-        ['label' => __('Appuntamenti')],
-    ]" />
+    @if ($activityTypeFilter === \App\Models\MaintenanceRecord::ACTIVITY_WASH)
+        <x-admin.breadcrumb :items="[
+            ['label' => __('Flotta')],
+            ['label' => __('Lavaggi')],
+        ]" />
+    @else
+        <x-admin.breadcrumb :items="[
+            ['label' => __('Manutenzione')],
+            ['label' => __('Appuntamenti')],
+        ]" />
+    @endif
 @endsection
 
 @section('content')
@@ -33,7 +40,7 @@
     <div class="table-card">
         <div class="toolbar">
             <div class="toolbar-left">
-                <h2>{{ __('Elenco appuntamenti') }}</h2>
+                <h2>{{ $activityTypeFilter === \App\Models\MaintenanceRecord::ACTIVITY_WASH ? __('Elenco lavaggi') : __('Elenco appuntamenti') }}</h2>
                 <div class="filters">
                     <a href="{{ $statusFilterUrl('all') }}"
                         class="chip {{ $statusFilter === 'all' ? 'on' : '' }}">{{ __('Tutti') }}</a>
@@ -79,8 +86,14 @@
                 </a>
                 {{-- Nascosto <768px: duplica il FAB "+" già nella bottom nav
                 (restyle "Saru", ADR §19). --}}
-                <a href="{{ route('admin.maintenance-records.create') }}" class="btn primary page-header-quick-add">
-                    <i class="fa-solid fa-plus"></i> {{ __('Nuovo appuntamento') }}
+                @php
+                    $isCarWashView = $activityTypeFilter === \App\Models\MaintenanceRecord::ACTIVITY_WASH;
+                    $createUrl = $isCarWashView
+                        ? route('admin.maintenance-records.create', ['activity_type' => \App\Models\MaintenanceRecord::ACTIVITY_WASH, 'back' => url()->full()])
+                        : route('admin.maintenance-records.create');
+                @endphp
+                <a href="{{ $createUrl }}" class="btn primary page-header-quick-add">
+                    <i class="fa-solid fa-plus"></i> {{ $isCarWashView ? __('Nuovo lavaggio') : __('Nuovo appuntamento') }}
                 </a>
             </div>
         </div>
@@ -199,7 +212,7 @@
                         @endforeach
                     @empty
                         <tr>
-                            <td colspan="4" class="empty">{{ __('Nessun appuntamento trovato.') }}</td>
+                            <td colspan="4" class="empty">{{ $isCarWashView ? __('Nessun lavaggio trovato.') : __('Nessun appuntamento trovato.') }}</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -245,7 +258,7 @@
                     @endif
                 </a>
             @empty
-                <p class="empty">{{ __('Nessun appuntamento trovato.') }}</p>
+                <p class="empty">{{ $isCarWashView ? __('Nessun lavaggio trovato.') : __('Nessun appuntamento trovato.') }}</p>
             @endforelse
         </div>
     </div>

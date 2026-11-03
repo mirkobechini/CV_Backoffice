@@ -48,7 +48,7 @@ class VehicleController extends Controller
 
         $vehicles = Vehicle::query()
             ->forCurrentUser()
-            ->with(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment', 'latestMileageLog'])
+            ->with(['vehicleType.equipmentTypes', 'brand', 'carModel', 'equipment', 'latestMileageLog', 'lastCarWash'])
             ->with(['mileageLogs' => function ($query) {
                 $query->orderByDesc('log_date')->limit(2);
             }])

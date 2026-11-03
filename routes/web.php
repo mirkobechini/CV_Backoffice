@@ -184,6 +184,8 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
             ->name('maintenance-records.calendar');
         Route::get('maintenance-records/events', [MaintenanceCalendarController::class, 'events'])
             ->name('maintenance-records.events');
+        Route::get('maintenance-records/lavaggi', [MaintenanceRecordController::class, 'carWashes'])
+            ->name('maintenance-records.car-washes');
 
         Route::resource('maintenance-records', MaintenanceRecordController::class)
             ->parameters(['maintenance-records' => 'maintenanceRecord']);
