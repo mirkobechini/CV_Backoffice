@@ -389,7 +389,9 @@ The maintenance calendar (`maintenance-records/calendar.blade.php`) loaded FullC
 
 ---
 
-## 19. Full UI restyle ("Saru"): orange brand, dark-first, reorganized navigation
+## 19. Full UI restyle ("Saru"): orange brand, dark-first, reorganized navigation — accettata, completata
+
+**Stato (2026-11-03)**: rollout concluso, rilasciato in `main` con v2.0.0. Tutte le viste admin sono sul nuovo tema; non resta nessuna pagina "vecchia" in attesa.
 
 ### Decision
 
@@ -401,7 +403,7 @@ Mirko asked for a complete visual and information-architecture redesign of the a
 - **Detail pages restructured into tabs**: the vehicle show page (11 stacked cards, a long scroll) becomes tab sections (Panoramica/Scadenze/Manutenzioni/Pneumatici/Attrezzatura/Storico) — same pattern to be applied to other long detail pages as they're redone.
 - **Mobile**: same design language adapted at breakpoints (sidebar → top bar + bottom nav), not a separate design, with explicit safe-area handling (`env(safe-area-inset-top/bottom)`) for the notch/Dynamic Island and the home indicator/gesture bar.
 
-Rolled out in phases, each its own issue/PR: foundations (CSS tokens + sidebar/topbar, shared by every page) first, then page groups by domain (Veicoli, Manutenzione, Carburante/Pneumatici/Pedaggi/Tessere, Attrezzature, Sistema, Statistiche), mobile safe-area alongside each group. Existing CSS custom-property **names** (`--primary`, `--bg`, `--tagliando`, etc.) are kept as-is in the foundations phase — only their values change — so the rollout doesn't require touching every one of the ~93 admin Blade views at once; individual pages still get redone in later phases for layout/reorganization, but already inherit the new palette and sidebar from the shared layout.
+Rolled out in phases, each its own issue/PR: foundations (CSS tokens + sidebar/topbar, shared by every page) first, then page groups by domain (Veicoli, Manutenzione, Carburante/Pneumatici/Pedaggi/Tessere, Attrezzature, Sistema, Statistiche), mobile safe-area alongside each group. Existing CSS custom-property **names** (`--primary`, `--bg`, `--tagliando`, etc.) were kept as-is in the foundations phase — only their values changed — so the rollout didn't require touching every one of the ~93 admin Blade views at once; individual pages were redone in later phases for layout/reorganization, inheriting the new palette and sidebar from the shared layout from day one.
 
 ### Rationale
 
@@ -412,9 +414,10 @@ Rolled out in phases, each its own issue/PR: foundations (CSS tokens + sidebar/t
 
 ### Consequences
 
-- Every Blade view that renders its own hardcoded hex color (bypassing the CSS variables) needs to be found and fixed case-by-case as that page is redone, not all at once — the foundations phase only fixes the ones that affect global/shared chrome (PWA `theme-color` in `layouts/app.blade.php` and `manifest.json`, any hardcoded gradient using the old indigo).
-- A long rollout (weeks, not days) across ~93 admin views plus auth/profile/superadmin/public pages — the app intentionally looks inconsistent (old pages next to restyled ones) for the duration, phase by phase, rather than shipping a single giant change.
-- `docs/ROADMAP_IDEE.md`'s already-closed "redesign" note (audit 2026-10-22) is superseded by this ADR entry as the actual, in-progress decision.
+- Hardcoded hex colors bypassing the CSS variables were found and fixed case-by-case as each page was redone, not all at once — the foundations phase only fixed the ones affecting global/shared chrome (PWA `theme-color` in `layouts/app.blade.php` and `manifest.json`, any hardcoded gradient using the old indigo).
+- The rollout spanned several weeks across ~93 admin views plus auth/profile/superadmin/public pages, shipped phase by phase rather than as one giant change — now fully done, nothing left on the old palette.
+- `docs/ROADMAP_IDEE.md`'s already-closed "redesign" note (audit 2026-10-22) is superseded by this ADR entry.
+- PWA `theme-color`/`manifest.json` reliably recolor the Android **status bar**; Chrome on Android does not consistently extend that to the system **navigation/gesture bar**, even when installed as a PWA — a known upstream Chrome limitation, not something fixable from this codebase (confirmed 2026-11-03).
 
 ---
 

@@ -73,7 +73,7 @@
 
 **Scartata**: assegnazione turno/autista per appuntamento — non la facciamo.
 
-**Nota**: il redesign complessivo resta pianificato per dopo; i punti di accessibilità/responsive (A1-A7, R1-R2) sono comunque più rapidi da sistemare ora che da portarsi dietro nel redesign.
+**Nota (aggiornata 2026-11-03)**: il redesign complessivo ("Saru", `docs/ADR.md` §19) è stato completato e rilasciato in `main` con v2.0.0 — i punti di accessibilità/responsive (A1-A7, R1-R2) sono stati sistemati prima e restano validi.
 
 ---
 
