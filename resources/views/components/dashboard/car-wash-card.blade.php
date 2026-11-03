@@ -35,7 +35,9 @@
                             <a href="{{ route('admin.vehicles.show', $vehicle->id) }}" class="dash-list-item">
                                 <div>
                                     <div class="name">{{ $vehicle->internal_code }}</div>
-                                    <div class="meta">{{ $vehicle->license_plate }}</div>
+                                    <div class="meta">
+                                        {{ $vehicle->lastCarWash ? __('Ultimo: :date', ['date' => $vehicle->lastCarWash->return_date->format('d/m/Y')]) : __('Mai lavato') }}
+                                    </div>
                                 </div>
                                 <span class="badge b-amber">{{ __('da lavare') }}</span>
                             </a>

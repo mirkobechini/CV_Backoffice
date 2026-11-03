@@ -234,6 +234,41 @@ class DashboardCardsTest extends TestCase
         $response->assertSee('1 veicolo da lavare');
     }
 
+    public function test_dashboard_car_wash_card_shows_last_wash_date_for_vehicles_due_this_month(): void
+    {
+        // Un veicolo "da lavare" questo mese potrebbe comunque essere stato
+        // lavato in passato: mostrare quando, non solo che manca questo
+        // mese (issue-593 follow-up).
+        $user = User::factory()->withRole('admin')->create();
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $neverWashed = Vehicle::create([
+            'license_plate' => 'EF456GH',
+            'internal_code' => '0002',
+            'immatricolation_date' => now()->subYears(2),
+            'group_id' => $this->defaultGroup()->id,
+        ]);
+        $provider = Provider::create(['name' => 'Autolavaggio Test', 'type' => 'Lavaggio']);
+        MaintenanceRecord::create([
+            'vehicle_id' => $vehicle->id,
+            'provider_id' => $provider->id,
+            'activity_type' => MaintenanceRecord::ACTIVITY_WASH,
+            'appointment_date' => '2025-01-15',
+            'return_date' => '2025-01-15',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee('Ultimo: 15/01/2025');
+        $response->assertSee('Mai lavato');
+        $this->assertNotNull($neverWashed->id);
+    }
+
     public function test_dashboard_shows_total_premium_of_active_insurance_policies_only(): void
     {
         $user = User::factory()->withRole('admin')->create();

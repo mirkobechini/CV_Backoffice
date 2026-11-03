@@ -33,7 +33,7 @@ class DashboardController extends Controller
         $data = Cache::remember($cacheKey, 300, function () use ($groupId, $activeGroup, $tireSeasonService, $fleetUsageStatisticsService) {
             // Riusata anche per carWashMissingVehicles sotto: evita una
             // seconda query identica per lo stesso insieme di veicoli.
-            $groupVehicles = Vehicle::forCurrentUser()->get(['id', 'internal_code', 'license_plate']);
+            $groupVehicles = Vehicle::forCurrentUser()->with('lastCarWash')->get(['id', 'internal_code', 'license_plate']);
             $totalVehicles = $groupVehicles->count();
 
             $openIssues = Issue::with('vehicle')
