@@ -6,7 +6,7 @@
         "dev": "vite"
     },
     "devDependencies": {
-        "@tailwindcss/postcss": "^4.3.3",
+        "@tailwindcss/postcss": "^4.3.4",
         "axios": "^1.21.0",
         "concurrently": "^10.0.6",
         "laravel-vite-plugin": "^3.2.0",
