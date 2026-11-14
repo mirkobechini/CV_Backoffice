@@ -6,6 +6,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Fixed
 
+- **Sicurezza**: aggiornati `laravel/framework` (13.39.0→13.42.0) e le dipendenze Symfony transitive (`http-foundation`/`http-kernel`/`routing`/`yaml`/`filesystem`) per 9 vulnerabilità riportate il 2026-11-13/14 (CVE-2026-128083 e altre, trusted proxies/path traversal/host spoofing). `composer audit` ora pulito.
 - Tornando indietro col browser dopo aver salvato un qualunque inserimento (veicolo, guasto, appuntamento, rifornimento, ecc.), il form riappariva ripopolato con i vecchi dati digitati e il pulsante "Salva" di nuovo cliccabile — un secondo click poteva creare un duplicato silenzioso (campi "normali"), oppure fallire con un errore di validazione fuorviante (campi data, gestiti da flatpickr: il valore visibile veniva ripristinato dal browser ma quello realmente inviato restava vuoto). Aggiunto `autocomplete="off"` a tutti i form di inserimento/modifica dell'app: tornando indietro il form è ora genuinamente vuoto, niente dati residui, niente rischio di doppio salvataggio.
 
 ## [v2.0.0] - 2026-11-03
