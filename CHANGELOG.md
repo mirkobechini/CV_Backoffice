@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.0.1] - 2026-11-14
+
 ### Fixed
 
 - **Sicurezza**: aggiornati `laravel/framework` (13.39.0→13.42.0) e le dipendenze Symfony transitive (`http-foundation`/`http-kernel`/`routing`/`yaml`/`filesystem`) per 9 vulnerabilità riportate il 2026-11-13/14 (CVE-2026-128083 e altre, trusted proxies/path traversal/host spoofing). `composer audit` ora pulito.
