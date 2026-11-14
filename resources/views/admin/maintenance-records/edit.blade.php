@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-card">
-        <form id="maintenance-record-form" method="POST"
+        <form autocomplete="off" id="maintenance-record-form" method="POST"
             action="{{ route('admin.maintenance-records.update', $maintenanceRecord->id) }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf

@@ -37,7 +37,7 @@
             <div id="backfill-error" class="alert danger" style="display:none;margin:0 20px 16px;"></div>
         </div>
 
-        <form method="POST" action="{{ route('admin.issues.backfill-parts.store') }}" data-single-submit="true">
+        <form autocomplete="off" method="POST" action="{{ route('admin.issues.backfill-parts.store') }}" data-single-submit="true">
             @csrf
             <div class="table-card">
                 <div class="table-responsive">

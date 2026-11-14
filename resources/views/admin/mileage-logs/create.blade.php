@@ -19,7 +19,7 @@
 
     <div class="form-card">
         <form id="mileage-log-form" method="POST" action="{{ route('admin.mileage-logs.store') }}"
-            enctype="multipart/form-data" data-single-submit="true">
+            enctype="multipart/form-data" data-single-submit="true" autocomplete="off">
             @csrf
 
             <div class="form-section" style="margin-bottom:0;">

@@ -24,14 +24,14 @@
     {{-- Form nascosto usato solo per inviare la scansione: il file caricato
     è quello del libretto qui sotto (copiato via JS, vedi script in fondo),
     così non c'è un selettore file duplicato. --}}
-    <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
+    <form autocomplete="off" id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
         enctype="multipart/form-data" style="display:none;">
         @csrf
         <input type="file" name="photo_front" id="scan_photo_front_hidden">
     </form>
 
     <div class="form-card">
-        <form id="vehicle-form" method="POST" action="{{ route('admin.vehicles.store') }}"
+        <form autocomplete="off" id="vehicle-form" method="POST" action="{{ route('admin.vehicles.store') }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
             @if (session('scanned_registration_card_path'))

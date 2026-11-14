@@ -19,7 +19,7 @@
     </div>
 
     <div class="form-card">
-        <form id="mileage-log-form" method="POST" action="{{ route('admin.mileage-logs.update', $mileageLog->id) }}"
+        <form autocomplete="off" id="mileage-log-form" method="POST" action="{{ route('admin.mileage-logs.update', $mileageLog->id) }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
             @method('PUT')

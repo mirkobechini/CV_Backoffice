@@ -19,7 +19,7 @@
     </div>
 
     <div class="form-card">
-        <form id="fuel-card-form" method="POST" action="{{ route('admin.fuel-cards.update', $fuelCard->id) }}"
+        <form autocomplete="off" id="fuel-card-form" method="POST" action="{{ route('admin.fuel-cards.update', $fuelCard->id) }}"
             data-single-submit="true">
             @csrf
             @method('PUT')

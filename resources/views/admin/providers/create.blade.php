@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-card">
-        <form id="provider-form" method="POST" action="{{ route('admin.providers.store') }}" data-single-submit="true">
+        <form autocomplete="off" id="provider-form" method="POST" action="{{ route('admin.providers.store') }}" data-single-submit="true">
             @csrf
 
             <div class="form-section" style="margin-bottom:0;">

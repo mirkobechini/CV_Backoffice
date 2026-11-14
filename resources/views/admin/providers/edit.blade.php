@@ -19,7 +19,7 @@
     </div>
 
     <div class="form-card">
-        <form id="provider-edit-form" method="POST" action="{{ route('admin.providers.update', $provider->id) }}"
+        <form autocomplete="off" id="provider-edit-form" method="POST" action="{{ route('admin.providers.update', $provider->id) }}"
             data-single-submit="true">
             @csrf
             @method('PUT')

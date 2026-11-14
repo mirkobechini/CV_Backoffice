@@ -17,7 +17,7 @@
     </div>
 
     <div class="form-card">
-        <form method="POST" action="{{ route('superadmin.groups.store') }}" data-single-submit="true">
+        <form autocomplete="off" method="POST" action="{{ route('superadmin.groups.store') }}" data-single-submit="true">
             @csrf
 
             <div class="form-section">

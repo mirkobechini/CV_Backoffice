@@ -22,7 +22,7 @@
     </div>
 
     <div class="form-card">
-        <form id="issue-edit-form" method="POST" action="{{ route('admin.issues.update', $issue->id) }}"
+        <form autocomplete="off" id="issue-edit-form" method="POST" action="{{ route('admin.issues.update', $issue->id) }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
             @method('PUT')

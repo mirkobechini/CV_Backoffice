@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-card">
-        <form id="equipment-edit-form" method="POST" action="{{ route('admin.equipments.update', $equipment->id) }}"
+        <form autocomplete="off" id="equipment-edit-form" method="POST" action="{{ route('admin.equipments.update', $equipment->id) }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
             @method('PUT')

@@ -24,7 +24,7 @@
         <div id="equipment-qr-reader" style="width:100%; max-width:400px; margin:16px auto;"></div>
         <p id="equipment-scan-status" class="hint" style="text-align:center;"></p>
 
-        <form id="equipment-scan-assign-form" method="POST"
+        <form autocomplete="off" id="equipment-scan-assign-form" method="POST"
             action="{{ route('admin.vehicles.equipment.assign', $vehicle) }}">
             @csrf
             <input type="hidden" id="equipment-scan-id" name="equipment_id" value="">

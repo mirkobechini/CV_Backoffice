@@ -27,7 +27,7 @@
     così non c'è un selettore file duplicato. vehicle_id indica al
     controller di reindirizzare qui (modifica) invece che alla creazione di
     un nuovo veicolo. --}}
-    <form id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
+    <form autocomplete="off" id="scan-libretto-form" method="POST" action="{{ route('admin.vehicles.scan-libretto') }}"
         enctype="multipart/form-data" style="display:none;">
         @csrf
         <input type="hidden" name="vehicle_id" value="{{ $vehicle->id }}">
@@ -35,7 +35,7 @@
     </form>
 
     <div class="form-card">
-        <form id="vehicle-edit-form" method="POST" action="{{ route('admin.vehicles.update', $vehicle->id) }}"
+        <form autocomplete="off" id="vehicle-edit-form" method="POST" action="{{ route('admin.vehicles.update', $vehicle->id) }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
             @method('PUT')

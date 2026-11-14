@@ -30,7 +30,7 @@
     @endif
 
     <div class="form-card">
-        <form method="POST" action="{{ route('superadmin.licenses.store', $group) }}" data-single-submit="true">
+        <form autocomplete="off" method="POST" action="{{ route('superadmin.licenses.store', $group) }}" data-single-submit="true">
             @csrf
 
             <div class="form-section" style="margin-bottom:0;">

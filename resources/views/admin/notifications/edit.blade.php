@@ -36,7 +36,7 @@
                         <span class="badge b-green">{{ __('Collegato') }}</span>
                         {{ __('Riceverai qui anche il report riassuntivo (il PDF) e le notifiche, oltre all\'email.') }}
                     </p>
-                    <form method="POST" action="{{ route('admin.notifications.telegram-unlink') }}" data-single-submit="true">
+                    <form autocomplete="off" method="POST" action="{{ route('admin.notifications.telegram-unlink') }}" data-single-submit="true">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn outline-solid">{{ __('Scollega Telegram') }}</button>
@@ -45,7 +45,7 @@
                     <p class="hint" style="margin-bottom:14px;">
                         {{ __('Collega il tuo account Telegram per ricevere qui il report riassuntivo e le notifiche, oltre all\'email.') }}
                     </p>
-                    <form method="POST" action="{{ route('admin.notifications.telegram-link') }}" data-single-submit="true">
+                    <form autocomplete="off" method="POST" action="{{ route('admin.notifications.telegram-link') }}" data-single-submit="true">
                         @csrf
                         <button type="submit" class="btn primary">{{ __('Collega Telegram') }}</button>
                     </form>
@@ -55,7 +55,7 @@
     @endif
 
     <div class="form-card">
-        <form method="POST" action="{{ route('admin.notifications.update') }}" data-single-submit="true">
+        <form autocomplete="off" method="POST" action="{{ route('admin.notifications.update') }}" data-single-submit="true">
             @csrf
             @method('PATCH')
 

@@ -10,7 +10,7 @@
 @endphp
 
 <div class="form-card">
-    <form id="fuel-log-form" method="POST"
+    <form autocomplete="off" id="fuel-log-form" method="POST"
         action="{{ $isEdit ? route('admin.fuel-logs.update', $fuelLog) : route('admin.fuel-logs.store') }}"
         data-single-submit="true">
         @csrf

@@ -198,4 +198,39 @@ class ViewRenderSmokeTest extends TestCase
         $response = $this->actingAs($this->admin)->get(route('admin.groups.users.create', $group));
         $response->assertOk();
     }
+
+    /**
+     * Tornando indietro dopo un salvataggio, il browser ripopola i campi
+     * (anche quelli non più visibili con un valore reale, es. un flatpickr
+     * nascosto rimasto vuoto) con quanto digitato in precedenza, lasciando
+     * il pulsante "Salva" di nuovo cliccabile — un secondo click rischia di
+     * creare un duplicato silenzioso. `autocomplete="off"` sul form impedisce
+     * al browser di farlo (bug segnalato da Mirko il 2026-11-14).
+     */
+    public function test_create_pages_disable_autocomplete_to_prevent_stale_resubmission(): void
+    {
+        $this->createVehicle();
+
+        $routes = [
+            'admin.vehicles.create',
+            'admin.vehicle-types.create',
+            'admin.mileage-logs.create',
+            'admin.fuel-logs.create',
+            'admin.fleet-devices.create',
+            'admin.fuel-cards.create',
+            'admin.providers.create',
+            'admin.issues.create',
+            'admin.maintenance-records.create',
+            'admin.deadlines.create',
+            'admin.equipments.create',
+            'admin.equipment-types.create',
+            'admin.tires.create',
+        ];
+
+        foreach ($routes as $route) {
+            $response = $this->actingAs($this->admin)->get(route($route));
+            $response->assertOk();
+            $response->assertSee('autocomplete="off"', false);
+        }
+    }
 }

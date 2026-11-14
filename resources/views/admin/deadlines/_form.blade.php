@@ -12,7 +12,7 @@
 @endphp
 
 <div class="form-card">
-    <form id="deadline-form" method="POST"
+    <form autocomplete="off" id="deadline-form" method="POST"
         action="{{ $isEdit ? route('admin.deadlines.update', $deadline) : route('admin.deadlines.store') }}"
         enctype="multipart/form-data" data-single-submit="true">
         @csrf

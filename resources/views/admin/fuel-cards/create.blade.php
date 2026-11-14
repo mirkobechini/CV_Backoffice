@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-card">
-        <form id="fuel-card-form" method="POST" action="{{ route('admin.fuel-cards.store') }}"
+        <form autocomplete="off" id="fuel-card-form" method="POST" action="{{ route('admin.fuel-cards.store') }}"
             data-single-submit="true">
             @csrf
 

@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-card">
-        <form id="vehicle-type-form" method="POST" action="{{ route('admin.vehicle-types.store') }}"
+        <form autocomplete="off" id="vehicle-type-form" method="POST" action="{{ route('admin.vehicle-types.store') }}"
             enctype="multipart/form-data" data-single-submit="true">
             @csrf
 

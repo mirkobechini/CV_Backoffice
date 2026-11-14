@@ -22,7 +22,7 @@
             @endif
         </div>
 
-        <form action="{{ route('admin.csv-import.confirm') }}" method="POST">
+        <form autocomplete="off" action="{{ route('admin.csv-import.confirm') }}" method="POST">
             @csrf
             <input type="hidden" name="entity" value="{{ $entity }}">
 

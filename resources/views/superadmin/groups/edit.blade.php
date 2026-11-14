@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-card">
-        <form method="POST" action="{{ route('superadmin.groups.update', $group) }}" data-single-submit="true">
+        <form autocomplete="off" method="POST" action="{{ route('superadmin.groups.update', $group) }}" data-single-submit="true">
             @csrf
             @method('PUT')
 
@@ -48,7 +48,7 @@
             <div class="hint" style="margin:0 0 12px;">
                 {{ __("Correggi qui nome/email se sbagliati in fase di creazione: senza un'email corretta il capo non riceve mai il link per impostare la password e resta bloccato fuori.") }}
             </div>
-            <form method="POST" action="{{ route('superadmin.groups.capo.update', $group) }}" data-single-submit="true">
+            <form autocomplete="off" method="POST" action="{{ route('superadmin.groups.capo.update', $group) }}" data-single-submit="true">
                 @csrf
                 @method('PUT')
 
@@ -78,7 +78,7 @@
                 </div>
             </form>
 
-            <form method="POST" action="{{ route('superadmin.groups.capo.resend-password-link', $group) }}">
+            <form autocomplete="off" method="POST" action="{{ route('superadmin.groups.capo.resend-password-link', $group) }}">
                 @csrf
                 <button type="submit" class="btn">
                     <i class="fa-solid fa-paper-plane"></i> {{ __('Invia di nuovo l\'email per impostare la password') }}

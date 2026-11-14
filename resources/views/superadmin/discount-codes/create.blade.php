@@ -17,7 +17,7 @@
     </div>
 
     <div class="form-card">
-        <form method="POST" action="{{ route('superadmin.discount-codes.store') }}" data-single-submit="true">
+        <form autocomplete="off" method="POST" action="{{ route('superadmin.discount-codes.store') }}" data-single-submit="true">
             @csrf
 
             <div class="form-section" style="margin-bottom:0;">
