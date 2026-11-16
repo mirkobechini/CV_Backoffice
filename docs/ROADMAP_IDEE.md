@@ -32,7 +32,7 @@
 
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
-| S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | ⬜ |
+| S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | 🔄 aggiunta a `.env.example=true` con commento (2026-11-16); **da impostare manualmente anche nelle env vars di Laravel Cloud** — non modificabile da codice |
 | S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ⬜ |
 | S3 | Hygiene | 3 advisory Composer ignorate senza un commento sul motivo | `composer.json:76-82` | Bassa | ✅ |
 | S4 | Fragilità futura | `group_id` fillable su `Vehicle` ma nessuna request lo valida oggi — aggiungere un test che pinni l'invariante (nessuna richiesta futura deve poterlo scrivere da payload) | `app/Models/Vehicle.php` | Bassa | ✅ |
@@ -101,9 +101,9 @@
 
 | # | Area | Descrizione | Riferimento | Stato |
 |---|------|-------------|-------------|-------|
-| SM1 | Isolamento gruppi | Record attrezzatura-manutenzione con equipaggiamento su più veicoli di gruppi diversi: nessun controllo di gruppo (caso diverso dall'attrezzatura "non assegnata" già accettato) | `app/Models/EquipmentMaintenanceRecord.php:86-91` | ⬜ |
-| SM2 | Isolamento gruppi | Righe con `group_id` NULL (dopo delete gruppo o riga legacy) cadono nel ramo "nessuna restrizione" di `HasGroupScopedAccess` | `app/Policies/Concerns/HasGroupScopedAccess.php:111` | ⬜ |
-| SM3 | XSS | Sink DOM stored-XSS nell'autocomplete guasti (`innerHTML` con solo `'` escapato) — non sfruttabile oggi da browser per via di SH5, ma da correggere comunque | `admin/issues/create.blade.php:283-287`, `edit.blade.php:240-244` | ⬜ |
+| SM1 | Isolamento gruppi | Record attrezzatura-manutenzione con equipaggiamento su più veicoli di gruppi diversi: nessun controllo di gruppo (caso diverso dall'attrezzatura "non assegnata" già accettato) | `app/Models/EquipmentMaintenanceRecord.php:86-91` | ✅ già corretto: `getVehicleAttribute()` restituisce il veicolo condiviso solo se tutte le attrezzature collegate risolvono allo stesso veicolo, altrimenti `null` (ambiguo, stesso trattamento dell'attrezzatura non assegnata) — riverificato 2026-11-16, nessuna azione necessaria |
+| SM2 | Isolamento gruppi | Righe con `group_id` NULL (dopo delete gruppo o riga legacy) cadono nel ramo "nessuna restrizione" di `HasGroupScopedAccess` | `app/Policies/Concerns/HasGroupScopedAccess.php:111` | ✅ il bug descritto (NULL group_id → accesso illimitato) è già corretto (fix sicurezza 2026-10-09: `belongsToUserGroup()` nega l'accesso senza gruppo attivo). Resta solo il caso voluto — `Equipment` non assegnata (nessun `group_id` proprio, nessun veicolo) visibile a tutti i gruppi, stesso comportamento già accettato per le liste — riverificato 2026-11-16, nessuna azione necessaria |
+| SM3 | XSS | Sink DOM stored-XSS nell'autocomplete guasti (`innerHTML` con solo `'` escapato) — non sfruttabile oggi da browser per via di SH5, ma da correggere comunque | `admin/issues/create.blade.php:283-287`, `edit.blade.php:240-244` | ✅ già corretto: entrambe le viste costruiscono il dropdown con `document.createElement`/`textContent`/`replaceChildren`, non più `innerHTML` — riverificato 2026-11-16, nessuna azione necessaria |
 | SM4 | Open redirect / XSS | `redirect($request->input('back'))` non validato in 3 controller; 75 viste stampano `request('back')` in `href` senza whitelist di schema | `Admin/DeadlineController.php:338-340` e altri 2 | ⬜ |
 | SM5 | Isolamento gruppi | `Superadmin\GroupController::destroy` elimina solo i veicoli del gruppo, lascia FleetDevice/FuelCard/Equipment orfani (poi soggetti a SM2) | `app/Http/Controllers/Superadmin/GroupController.php` | ⬜ |
 | SM6 | Privacy | Note di tessere/dispositivi (dove Mirko mette il PIN) in chiaro: visibili a ogni membro, salvate per sempre nell'activity log, incluse nei backup | `FuelCard.php`/`FleetDevice.php` | ⬜ |
@@ -114,7 +114,7 @@
 | SL4 | Sessione | Reset/cambio password non revoca i token Sanctum esistenti | — | ⬜ |
 | SL5 | Headers | Nessun CSP, nessun X-Frame-Options | — | ⬜ |
 | SL6 | GDPR | Export dati personali omette impostazioni Telegram, token API, voci activity-log, stato 2FA | `ProfileController::exportData` | ⬜ |
-| SL7 | `.gitignore` | `PROJECT_RULES.md`/`GIT_WORKFLOW.md` non ignorati (linea guida 7 di Mirko) | `.gitignore` | ⬜ |
+| SL7 | `.gitignore` | `PROJECT_RULES.md`/`GIT_WORKFLOW.md` non ignorati (linea guida 7 di Mirko) | `.gitignore` | ❌ non applicabile: questi file non esistono in questo repo (`.gitignore` ignora già `AGENTS.md`/`AGENT_FLOW.md`/`.specs/`, le convenzioni effettivamente usate qui) — riverificato 2026-11-16 |
 
 ### Bug funzionali
 
