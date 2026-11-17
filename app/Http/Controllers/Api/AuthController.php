@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
-use PragmaRX\Google2FA\Google2FA;
 
 class AuthController extends Controller
 {
@@ -84,10 +83,7 @@ class AuthController extends Controller
     private function twoFactorCodeIsValid(User $user, Request $request): bool
     {
         if ($request->filled('code')) {
-            return (new Google2FA)->verifyKey(
-                $user->two_factor_secret,
-                preg_replace('/\s+/', '', (string) $request->input('code'))
-            );
+            return $user->verifyTwoFactorCode(preg_replace('/\s+/', '', (string) $request->input('code')));
         }
 
         if ($request->filled('recovery_code')) {

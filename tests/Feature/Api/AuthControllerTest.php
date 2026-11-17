@@ -114,6 +114,27 @@ class AuthControllerTest extends TestCase
         $response->assertOk()->assertJsonPath('user.email', $user->email);
     }
 
+    public function test_login_rejects_a_previously_used_two_factor_code(): void
+    {
+        // Audit sicurezza SL3: stesso rischio replay del login web, qui sul
+        // login API (stessa User::verifyTwoFactorCode() condivisa).
+        $secret = 'ABCDEFGHIJKLMNOP';
+        $user = User::factory()->create([
+            'email' => 'test@example.com',
+            'password' => bcrypt('password'),
+            'two_factor_secret' => $secret,
+            'two_factor_confirmed_at' => now(),
+        ]);
+        $code = (new Google2FA)->getCurrentOtp($secret);
+
+        $this->postJson('/api/login', ['email' => $user->email, 'password' => 'password', 'code' => $code])
+            ->assertOk();
+
+        $response = $this->postJson('/api/login', ['email' => $user->email, 'password' => 'password', 'code' => $code]);
+
+        $response->assertStatus(422)->assertJsonValidationErrors('code');
+    }
+
     public function test_me_returns_authenticated_user(): void
     {
         $user = User::factory()->withRole('member')->create();

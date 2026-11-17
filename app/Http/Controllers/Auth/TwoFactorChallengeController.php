@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
-use PragmaRX\Google2FA\Google2FA;
 
 /**
  * Secondo passo del login quando l'utente ha il 2FA attivo: LoginRequest
@@ -44,10 +43,7 @@ class TwoFactorChallengeController extends Controller
         $valid = false;
 
         if (! empty($data['code'])) {
-            $valid = (new Google2FA)->verifyKey(
-                $user->two_factor_secret,
-                preg_replace('/\s+/', '', $data['code'])
-            );
+            $valid = $user->verifyTwoFactorCode(preg_replace('/\s+/', '', $data['code']));
         } elseif (! empty($data['recovery_code'])) {
             $valid = $user->redeemRecoveryCode(trim($data['recovery_code']));
         }

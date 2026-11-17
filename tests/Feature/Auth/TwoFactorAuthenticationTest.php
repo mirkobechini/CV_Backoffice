@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
@@ -67,6 +68,27 @@ class TwoFactorAuthenticationTest extends TestCase
 
         $this->assertAuthenticatedAs($user);
         $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
+    public function test_challenge_rejects_a_previously_used_code(): void
+    {
+        // Audit sicurezza SL3: senza verifyKeyNewer(), lo stesso codice a 6
+        // cifre resterebbe valido per tutta la sua finestra di validità
+        // (~30-90s), anche dopo essere già stato usato per accedere.
+        [$user, $secret] = $this->enabledUser();
+        $code = $this->currentCode($secret);
+
+        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+        $this->post(route('two-factor.challenge'), ['code' => $code]);
+        $this->assertAuthenticatedAs($user);
+
+        Auth::logout();
+        $this->post('/login', ['email' => $user->email, 'password' => 'password']);
+
+        $response = $this->post(route('two-factor.challenge'), ['code' => $code]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors('code');
     }
 
     public function test_challenge_with_wrong_code_does_not_log_in(): void
