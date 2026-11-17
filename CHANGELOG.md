@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- **Sicurezza**: cancellando un gruppo (superadmin) con i suoi veicoli, i dispositivi pedaggio/tessere carburante/attrezzature collegati restavano orfani ma pienamente vivi e interrogabili. Ora eliminati insieme a gruppo/veicoli, nella stessa transazione.
+
 ## [v2.0.1] - 2026-11-14
 
 ### Fixed
