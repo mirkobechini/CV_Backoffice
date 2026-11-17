@@ -48,6 +48,11 @@ class NewPasswordController extends Controller
                     'remember_token' => Str::random(60),
                 ])->save();
 
+                // Un token API rubato (es. da un dispositivo perso) restava
+                // valido anche dopo il reset password — il motivo stesso
+                // per cui l'utente lo sta facendo (audit sicurezza SL4).
+                $user->tokens()->delete();
+
                 event(new PasswordReset($user));
             }
         );

@@ -70,4 +70,31 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_password_reset_revokes_existing_api_tokens(): void
+    {
+        // Audit sicurezza SL4: un token API rubato (es. da un dispositivo
+        // perso) restava valido anche dopo il reset password, lo stesso
+        // motivo per cui l'utente lo sta facendo.
+        Notification::fake();
+
+        $user = User::factory()->create();
+        $user->createToken('mobile-app');
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+
+        $this->post('/forgot-password', ['email' => $user->email]);
+
+        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use ($user) {
+            $this->post('/reset-password', [
+                'token' => $notification->token,
+                'email' => $user->email,
+                'password' => 'new-password',
+                'password_confirmation' => 'new-password',
+            ]);
+
+            return true;
+        });
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
 }

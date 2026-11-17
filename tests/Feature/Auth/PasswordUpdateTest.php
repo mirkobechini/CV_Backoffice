@@ -31,6 +31,24 @@ class PasswordUpdateTest extends TestCase
         $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
     }
 
+    public function test_updating_password_revokes_existing_api_tokens(): void
+    {
+        // Audit sicurezza SL4: un token API rubato restava valido anche
+        // dopo il cambio password, lo stesso motivo per cui l'utente lo sta
+        // facendo.
+        $user = User::factory()->create();
+        $user->createToken('mobile-app');
+        $this->assertDatabaseCount('personal_access_tokens', 1);
+
+        $this->actingAs($user)->put('/password', [
+            'current_password' => 'password',
+            'password' => 'new-password',
+            'password_confirmation' => 'new-password',
+        ]);
+
+        $this->assertDatabaseCount('personal_access_tokens', 0);
+    }
+
     public function test_correct_password_must_be_provided_to_update_password(): void
     {
         $user = User::factory()->create();

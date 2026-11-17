@@ -11,6 +11,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Sicurezza**: le API (Veicoli, Scadenze, Guasti, Appuntamenti) non avevano un tetto massimo su `per_page` — un client poteva forzare una query enorme. Ora limitato a 100.
 - **Sicurezza**: l'estensione del file libretto salvato veniva presa dal nome dichiarato dal client (spoofabile), non dal contenuto reale; `registration_card` non aveva un limite di dimensione. Ora l'estensione è dedotta dal MIME reale, con un tetto di 8 MB.
 - **Sicurezza**: il codice 2FA a 6 cifre restava valido per tutta la sua finestra (~30-90s) anche dopo essere già stato usato per accedere — ora un codice già usato viene rifiutato, sia su login web che API.
+- **Sicurezza**: reset/cambio password non revocava i token API (Sanctum) esistenti — un token rubato restava valido. Ora revocati automaticamente.
 
 ## [v2.0.1] - 2026-11-14
 
