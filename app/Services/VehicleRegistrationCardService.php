@@ -42,7 +42,13 @@ class VehicleRegistrationCardService
             $this->deleteExisting($existingVehicle);
 
             $file = $request->file('registration_card');
-            $fileName = Str::random(40).'.'.$file->getClientOriginalExtension();
+            // extension() deduce l'estensione dal MIME reale del contenuto
+            // (Symfony MimeTypes), non dal nome file dichiarato dal client
+            // — getClientOriginalExtension() era spoofabile (audit
+            // sicurezza SL2). Il nome resta comunque casuale, quindi non
+            // c'è un vero rischio di path traversal, solo di contenuto
+            // servito con un'estensione ingannevole.
+            $fileName = Str::random(40).'.'.($file->extension() ?: $file->getClientOriginalExtension());
             $data['registration_card_path'] = $file->storeAs('registration_cards', $fileName, $this->disk());
 
             return;
