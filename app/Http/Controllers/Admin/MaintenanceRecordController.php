@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\DetectsDuplicates;
 use App\Http\Controllers\Concerns\SortableAndGroupable;
+use App\Http\Controllers\Concerns\ValidatesBackUrl;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMaintenanceRecordRequest;
 use App\Http\Requests\UpdateMaintenanceRecordRequest;
@@ -23,6 +24,7 @@ class MaintenanceRecordController extends Controller
 {
     use DetectsDuplicates;
     use SortableAndGroupable;
+    use ValidatesBackUrl;
 
     public function __construct(
         private readonly MaintenanceCompletionService $completionService,
@@ -299,8 +301,8 @@ class MaintenanceRecordController extends Controller
             $message .= ' Ripristinate le scadenze: '.implode(', ', $restoredDeadlines).'.';
         }
 
-        $back = $request->input('back');
-        if ($back && ! str_starts_with($back, $showUrl)) {
+        $back = $this->safeBackUrl($request->input('back'));
+        if ($back && ! str_starts_with(parse_url($back, PHP_URL_PATH), parse_url($showUrl, PHP_URL_PATH))) {
             return redirect($back)->with('status', $message);
         }
 
