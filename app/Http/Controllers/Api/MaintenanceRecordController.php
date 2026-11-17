@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\CapsPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\MaintenanceRecord;
 use Illuminate\Http\Request;
 
 class MaintenanceRecordController extends Controller
 {
+    use CapsPerPage;
+
     public function index(Request $request)
     {
         $records = MaintenanceRecord::with(['vehicle', 'provider', 'items.itemable'])
@@ -21,7 +24,7 @@ class MaintenanceRecordController extends Controller
                 }
             })
             ->orderByDesc('appointment_date')
-            ->paginate($request->per_page ?? 20);
+            ->paginate($this->perPage($request));
 
         return response()->json($records);
     }

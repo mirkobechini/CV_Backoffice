@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\CapsPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 
 class VehicleController extends Controller
 {
+    use CapsPerPage;
+
     public function index(Request $request)
     {
         $vehicles = Vehicle::with(['brand', 'carModel', 'vehicleType'])->forCurrentUser()
             ->when($request->q, fn ($q, $search) => $q->search($search))
-            ->paginate($request->per_page ?? 20);
+            ->paginate($this->perPage($request));
 
         return response()->json($vehicles);
     }

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\CapsPerPage;
 use App\Http\Controllers\Controller;
 use App\Models\Issue;
 use Illuminate\Http\Request;
 
 class IssueController extends Controller
 {
+    use CapsPerPage;
+
     public function index(Request $request)
     {
         $issues = Issue::with('vehicle')
@@ -15,7 +18,7 @@ class IssueController extends Controller
             ->when($request->q, fn ($q, $search) => $q->search($search))
             ->when($request->status, fn ($q, $status) => $q->where('status', $status))
             ->orderByDesc('event_date')
-            ->paginate($request->per_page ?? 20);
+            ->paginate($this->perPage($request));
 
         return response()->json($issues);
     }

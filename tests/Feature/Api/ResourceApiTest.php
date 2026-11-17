@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class ResourceApiTest extends TestCase
@@ -169,5 +170,30 @@ class ResourceApiTest extends TestCase
         $response = $this->withToken($this->authToken())->getJson('/api/maintenance-records');
         $response->assertOk()
             ->assertJsonStructure(['data']);
+    }
+
+    /**
+     * Audit sicurezza SM7: `per_page` arrivava dalla richiesta senza alcun
+     * tetto massimo — un client poteva forzare una query enorme con
+     * `per_page=999999`. Verificato su tutte e 4 le risorse API.
+     */
+    #[DataProvider('perPageEndpoints')]
+    public function test_per_page_is_capped_at_100(string $endpoint): void
+    {
+        $this->vehicle();
+
+        $response = $this->withToken($this->authToken())->getJson("{$endpoint}?per_page=999999");
+
+        $response->assertOk()->assertJsonPath('per_page', 100);
+    }
+
+    public static function perPageEndpoints(): array
+    {
+        return [
+            'vehicles' => ['/api/vehicles'],
+            'deadlines' => ['/api/deadlines'],
+            'issues' => ['/api/issues'],
+            'maintenance-records' => ['/api/maintenance-records'],
+        ];
     }
 }
