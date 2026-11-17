@@ -25,8 +25,9 @@ class SecurityHeadersTest extends TestCase
     {
         $this->app['env'] = 'local';
         $csp = $this->get('/login')->headers->get('Content-Security-Policy');
-        $this->assertStringContainsString('http://localhost:5173', $csp);
-        $this->assertStringContainsString('ws://localhost:5173', $csp);
+        $this->assertStringContainsString("script-src 'self' 'unsafe-inline' http://*:5173", $csp);
+        $this->assertStringContainsString("font-src 'self' https://fonts.gstatic.com http://*:5173", $csp);
+        $this->assertStringContainsString('ws://*:5173', $csp);
 
         $this->app['env'] = 'production';
         $csp = $this->get('/login')->headers->get('Content-Security-Policy');

@@ -13,7 +13,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Sicurezza**: il codice 2FA a 6 cifre restava valido per tutta la sua finestra (~30-90s) anche dopo essere già stato usato per accedere — ora un codice già usato viene rifiutato, sia su login web che API.
 - **Sicurezza**: reset/cambio password non revocava i token API (Sanctum) esistenti — un token rubato restava valido. Ora revocati automaticamente.
 - **Sicurezza**: nessun header CSP/X-Frame-Options — un sito esterno poteva incorniciare l'app in un iframe (clickjacking). Aggiunti CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`.
-- Il CSP (vedi sopra) bloccava il dev server Vite (HMR) in locale — rilevato con una verifica live in browser dopo il merge. In ambiente locale `script-src`/`style-src`/`connect-src` ora includono l'origine del dev server Vite; in produzione resta invariato.
+- Il CSP (vedi sopra) bloccava il dev server Vite (HMR) in locale — rilevato con una verifica live in browser dopo il merge. In ambiente locale `script-src`/`style-src`/`font-src`/`connect-src` ora includono l'origine del dev server Vite; in produzione resta invariato.
 
 ## [v2.0.1] - 2026-11-14
 
