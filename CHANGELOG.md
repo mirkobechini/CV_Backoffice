@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Fixed
 
 - **Sicurezza**: il parametro `back` (dove tornare dopo un'eliminazione) non era validato in 3 controller (Scadenze, Appuntamenti, Appuntamenti attrezzature) — un valore esterno malevolo avrebbe reindirizzato l'utente fuori dall'app dopo l'azione (open redirect). Ora accettati solo path relativi o URL assoluti dello stesso sito.
+- **Sicurezza**: cancellando un gruppo (superadmin) con i suoi veicoli, i dispositivi pedaggio/tessere carburante/attrezzature collegati restavano orfani ma pienamente vivi e interrogabili. Ora eliminati insieme a gruppo/veicoli, nella stessa transazione.
 
 ## [v2.0.1] - 2026-11-14
 
