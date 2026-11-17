@@ -29,13 +29,20 @@ class AddSecurityHeaders
             $imgSrc .= " https://{$r2Host}";
         }
 
+        // In locale il dev server Vite (HMR) serve script/CSS/websocket da
+        // localhost:5173 (vedi public/hot): senza questi il CSP lo bloccava,
+        // rompendo lo sviluppo locale. Non si applica in produzione (asset
+        // compilati, stesso host).
+        $viteDev = app()->environment('local') ? ' http://localhost:5173 http://[::1]:5173' : '';
+        $viteDevWs = app()->environment('local') ? ' ws://localhost:5173 ws://[::1]:5173' : '';
+
         $csp = implode('; ', [
             "default-src 'self'",
-            "script-src 'self' 'unsafe-inline'",
-            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "script-src 'self' 'unsafe-inline'{$viteDev}",
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com{$viteDev}",
             "font-src 'self' https://fonts.gstatic.com",
             "img-src {$imgSrc}",
-            "connect-src 'self'",
+            "connect-src 'self'{$viteDev}{$viteDevWs}",
             "object-src 'none'",
             "base-uri 'self'",
             "form-action 'self'",

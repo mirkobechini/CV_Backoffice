@@ -20,4 +20,16 @@ class SecurityHeadersTest extends TestCase
         $this->assertStringContainsString("frame-ancestors 'none'", $response->headers->get('Content-Security-Policy'));
         $this->assertStringContainsString("default-src 'self'", $response->headers->get('Content-Security-Policy'));
     }
+
+    public function test_csp_allows_the_vite_dev_server_only_in_local_environment(): void
+    {
+        $this->app['env'] = 'local';
+        $csp = $this->get('/login')->headers->get('Content-Security-Policy');
+        $this->assertStringContainsString('http://localhost:5173', $csp);
+        $this->assertStringContainsString('ws://localhost:5173', $csp);
+
+        $this->app['env'] = 'production';
+        $csp = $this->get('/login')->headers->get('Content-Security-Policy');
+        $this->assertStringNotContainsString('5173', $csp);
+    }
 }
