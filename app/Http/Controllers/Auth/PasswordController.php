@@ -20,9 +20,14 @@ class PasswordController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
-        $request->user()->update([
+        $user = $request->user();
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
+
+        // Stesso motivo del reset password (audit sicurezza SL4): un token
+        // API rubato restava valido anche dopo il cambio password.
+        $user->tokens()->delete();
 
         return back()->with('status', 'password-updated');
     }
