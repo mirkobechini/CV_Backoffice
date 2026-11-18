@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.1.1] - 2026-11-18
+
 ### Fixed
 
 - Pezzi ordinati/arrivati sui guasti: la sezione non era responsive (tabella + form illeggibili su mobile), il form di aggiunta non aveva etichette, il badge "Pezzi arrivati" scattava anche con una data di arrivo futura, lo storico del guasto non mostrava gli eventi di ordine/arrivo. Sezione ridisegnata a card con campi etichettati, badge corretto (arrivato solo con data odierna o passata), eventi aggiunti alla timeline.
