@@ -215,6 +215,8 @@ Richiesta di Mirko, dopo audit del codice esistente (assicurazione modellata com
 
 **Idea (da Mirko, 2026-11-18)**: nella index dei guasti, una vista alternativa a card invece della tabella attuale, raggruppata per veicolo — con filtro di default che mostra solo i guasti non chiusi (open/in_progress). Pianificata esplicitamente per **dopo** l'integrazione openvehicle-data (F3), non prima.
 
+✅ Fatta (issue-655): toggle "Tabella"/"Card" nell'elenco guasti. La card raggruppa sempre per veicolo (non è un raggruppamento scelto dall'utente come in tabella) e di default filtra sui soli guasti non chiusi (`status_filter=active`, nuovo valore); un filtro esplicito (es. "Risolti") lo sovrascrive come in tabella. Solo desktop — su mobile resta la lista piatta a card già esistente, indipendentemente dal toggle.
+
 ## 7. QR code su veicoli/attrezzature
 
 **Idea**: uno sticker con QR su ogni mezzo/attrezzatura che apre direttamente la sua scheda da smartphone (browser, non app nativa). Risolve il caso d'uso più comune di una "mobile app" (controllare stato o segnalare un guasto sul posto) con un decimo dello sforzo, zero sviluppo nativo.

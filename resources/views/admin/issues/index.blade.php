@@ -10,6 +10,7 @@
 @section('content')
     @php
         $statusFilterUrl = fn($status) => route('admin.issues.index', array_merge(request()->except(['status_filter', 'page']), $status === 'all' ? [] : ['status_filter' => $status]));
+        $viewToggleUrl = fn($v) => route('admin.issues.index', array_merge(request()->except(['view', 'status_filter', 'group_by', 'page']), ['view' => $v]));
     @endphp
 
     <div class="table-card">
@@ -25,6 +26,16 @@
                         class="chip {{ $statusFilter === 'in_progress' ? 'on' : '' }}">{{ __('In lavorazione') }}</a>
                     <a href="{{ $statusFilterUrl('closed') }}"
                         class="chip {{ $statusFilter === 'closed' ? 'on' : '' }}">{{ __('Risolti') }}</a>
+                </div>
+                <div class="filters" role="group" aria-label="{{ __('Vista') }}">
+                    <a href="{{ $viewToggleUrl('table') }}" class="chip {{ $view === 'table' ? 'on' : '' }}"
+                        title="{{ __('Vista tabella') }}">
+                        <i class="fa-solid fa-table-list"></i> {{ __('Tabella') }}
+                    </a>
+                    <a href="{{ $viewToggleUrl('card') }}" class="chip {{ $view === 'card' ? 'on' : '' }}"
+                        title="{{ __('Vista card, raggruppata per veicolo, solo guasti non chiusi di default') }}">
+                        <i class="fa-solid fa-grip"></i> {{ __('Card') }}
+                    </a>
                 </div>
             </div>
             <div class="filters">
@@ -65,6 +76,7 @@
             </div>
         </div>
 
+        @if ($view === 'table')
         <div class="table-responsive table-desktop-only">
             <table>
                 <thead>
@@ -165,6 +177,51 @@
                 </tbody>
             </table>
         </div>
+        @endif
+
+        @if ($view === 'card')
+            {{-- Vista a card raggruppata per veicolo (roadmap 7b), solo
+            desktop — su mobile resta sempre la lista piatta sotto,
+            indipendentemente dal toggle. Riusa table-desktop-only: stessa
+            regola "nascosto sotto 768px", non è una tabella. --}}
+            <div class="table-desktop-only">
+                <div style="display:flex;flex-direction:column;gap:18px;">
+                    @forelse ($groupedIssues ?? [] as $vehicleLabel => $vehicleIssues)
+                        <div>
+                            <h3 style="font-size:13px;font-weight:600;margin:0 0 8px;color:var(--text-muted);">
+                                {{ $vehicleLabel }} ({{ $vehicleIssues->count() }})
+                            </h3>
+                            <div style="display:flex;flex-direction:column;gap:10px;">
+                                @foreach ($vehicleIssues as $issue)
+                                    <a href="{{ route('admin.issues.show', $issue->id) }}" class="card-list-item">
+                                        <span class="thumb t{{ ($issue->vehicle_id % 5) + 1 }}"><i
+                                                class="fa-solid fa-truck"></i></span>
+                                        <div class="card-list-item-body">
+                                            <div class="card-list-item-title">{{ $issue->description }}</div>
+                                            <div class="card-list-item-sub">{{ $issue->event_date_formatted ?? 'N/A' }}</div>
+                                            <div class="card-list-item-tag">
+                                                <x-admin.status-badge
+                                                    :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
+                                                @if ($issue->spare_parts_badge)
+                                                    <x-admin.status-badge
+                                                        :color="$issue->spare_parts_badge['color']">{{ $issue->spare_parts_badge['label'] }}</x-admin.status-badge>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="card-list-item-side">
+                                            <div class="card-list-item-side-label">{{ __('Parte') }}</div>
+                                            <div>{{ $issue->part ?? 'N/A' }}</div>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @empty
+                        <p class="empty">{{ __('Nessun guasto trovato.') }}</p>
+                    @endforelse
+                </div>
+            </div>
+        @endif
 
         {{-- Lista a card <768px al posto della tabella con scroll
         orizzontale (restyle "Saru", ADR §19): stessi dati di `$issues`

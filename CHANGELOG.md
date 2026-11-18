@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Added
 
 - Lo scan del libretto ora incrocia i dati di omologazione (carburante, cilindrata, potenza, massa massima) con il catalogo [openvehicle-data](https://github.com/mirkobechini/openvehicle-data), cercando la variante esatta per codice di omologazione (campo D.2) letto dalla foto — prima questi campi venivano solo indovinati dall'AI, spesso in modo sbagliato (es. carburante sempre "benzina"). L'AI resta l'unica fonte se il catalogo non trova un riscontro. Badge "Dal catalogo" nel form quando il dato viene dal catalogo.
+- Elenco guasti: nuova vista a card (in alternativa alla tabella), raggruppata per veicolo, con filtro di default sui soli guasti non chiusi.
 
 ## [v2.1.1] - 2026-11-18
 
