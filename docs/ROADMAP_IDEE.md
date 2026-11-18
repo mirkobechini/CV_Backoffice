@@ -113,7 +113,7 @@
 | SL3 | 2FA | Codice TOTP riusabile nella finestra di validità (no `verifyKeyNewer`) | `TwoFactorChallengeController.php:47` | ✅ fix issue-629 |
 | SL4 | Sessione | Reset/cambio password non revoca i token Sanctum esistenti | — | ✅ fix issue-631 |
 | SL5 | Headers | Nessun CSP, nessun X-Frame-Options | — | ✅ fix issue-633/issue-635 |
-| SL6 | GDPR | Export dati personali omette impostazioni Telegram, token API, voci activity-log, stato 2FA | `ProfileController::exportData` | ⬜ |
+| SL6 | GDPR | Export dati personali omette impostazioni Telegram, token API, voci activity-log, stato 2FA | `ProfileController::exportData` | ✅ fix issue-641 |
 | SL7 | `.gitignore` | `PROJECT_RULES.md`/`GIT_WORKFLOW.md` non ignorati (linea guida 7 di Mirko) | `.gitignore` | ❌ non applicabile: questi file non esistono in questo repo (`.gitignore` ignora già `AGENTS.md`/`AGENT_FLOW.md`/`.specs/`, le convenzioni effettivamente usate qui) — riverificato 2026-11-16 |
 
 ### Bug funzionali

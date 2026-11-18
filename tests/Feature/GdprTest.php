@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Group;
 use App\Models\Notification;
+use App\Models\NotificationSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class GdprTest extends TestCase
@@ -29,6 +31,40 @@ class GdprTest extends TestCase
         $this->assertCount(1, $data['groups']);
         $this->assertEquals('Gruppo A', $data['groups'][0]['name']);
         $this->assertCount(1, $data['notifications']);
+        $this->assertFalse($data['user']['two_factor_enabled']);
+    }
+
+    /**
+     * Audit sicurezza SL6: l'export omette impostazioni di notifica
+     * (incluso il collegamento Telegram), token API, voci activity log,
+     * stato 2FA.
+     */
+    public function test_export_includes_notification_settings_api_tokens_and_activity_log(): void
+    {
+        $user = User::factory()->create();
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'telegram_chat_id', 'value' => '12345']);
+        NotificationSetting::create(['user_id' => $user->id, 'key' => 'telegram_link_token', 'value' => 'SECRET|999999']);
+        $user->createToken('App mobile');
+        Activity::create([
+            'log_name' => 'default',
+            'description' => 'test-activity-marker',
+            'causer_type' => User::class,
+            'causer_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user)->get('/profile/export');
+
+        $data = json_decode($response->getContent(), true);
+
+        $settingKeys = array_column($data['notification_settings'], 'key');
+        $this->assertContains('telegram_chat_id', $settingKeys);
+        $this->assertNotContains('telegram_link_token', $settingKeys);
+
+        $this->assertCount(1, $data['api_tokens']);
+        $this->assertEquals('App mobile', $data['api_tokens'][0]['name']);
+
+        $this->assertCount(1, $data['activity_log']);
+        $this->assertEquals('test-activity-marker', $data['activity_log'][0]['description']);
     }
 
     public function test_capo_can_transfer_role_before_deleting_account(): void

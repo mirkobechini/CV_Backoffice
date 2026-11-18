@@ -16,6 +16,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Il CSP (vedi sopra) bloccava il dev server Vite (HMR) in locale — rilevato con una verifica live in browser dopo il merge. In ambiente locale `script-src`/`style-src`/`font-src`/`connect-src` ora includono l'origine del dev server Vite; in produzione resta invariato.
 - **Sicurezza**: le note di tessere carburante/dispositivi pedaggio (dove si annotano anche i PIN) finivano in chiaro nello storico attività. Ora escluse dall'activity log.
 - **Sicurezza**: il webhook Telegram rispondeva sempre 419 (CSRF), il controller non veniva mai invocato — verificato con una richiesta reale. Escluso dalla verifica CSRF (l'autenticità resta verificata internamente).
+- **Sicurezza**: l'export dati personali (GDPR) ometteva impostazioni di notifica (incluso il collegamento Telegram), metadata dei token API, voci dell'activity log e stato 2FA. Ora incluse (il token di collegamento Telegram, un segreto temporaneo di 15 minuti, resta escluso).
 
 ## [v2.0.1] - 2026-11-14
 
