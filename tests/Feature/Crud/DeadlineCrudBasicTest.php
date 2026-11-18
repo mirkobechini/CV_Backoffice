@@ -87,6 +87,17 @@ class DeadlineCrudBasicTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_index_shows_the_due_date_without_opening_the_row(): void
+    {
+        $user = $this->createUser();
+        $this->createDeadline();
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('01/01/2025');
+    }
+
     public function test_insurances_page_shows_only_insurance_deadlines(): void
     {
         $user = $this->createUser();
