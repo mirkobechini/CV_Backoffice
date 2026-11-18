@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Spatie\Activitylog\Models\Activity;
 
 class ProfileController extends Controller
 {
@@ -124,6 +125,7 @@ class ProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'created_at' => $user->created_at?->toIso8601String(),
+                'two_factor_enabled' => $user->hasTwoFactorEnabled(),
             ],
             'groups' => $user->groups->map(fn ($group) => [
                 'name' => $group->name,
@@ -135,6 +137,31 @@ class ProfileController extends Controller
                 'message' => $n->message,
                 'created_at' => $n->created_at?->toIso8601String(),
             ]),
+            // telegram_link_token è un segreto temporaneo (15 minuti, come
+            // un token di reset password), non un dato personale da
+            // esportare.
+            'notification_settings' => $user->notificationSettings
+                ->reject(fn ($s) => $s->key === 'telegram_link_token')
+                ->map(fn ($s) => [
+                    'key' => $s->key,
+                    'value' => $s->value,
+                    'updated_at' => $s->updated_at?->toIso8601String(),
+                ])->values(),
+            'api_tokens' => $user->tokens->map(fn ($t) => [
+                'name' => $t->name,
+                'created_at' => $t->created_at?->toIso8601String(),
+                'last_used_at' => $t->last_used_at?->toIso8601String(),
+            ]),
+            'activity_log' => Activity::where('causer_type', User::class)
+                ->where('causer_id', $user->id)
+                ->orderByDesc('created_at')
+                ->get()
+                ->map(fn ($a) => [
+                    'description' => $a->description,
+                    'subject_type' => $a->subject_type,
+                    'subject_id' => $a->subject_id,
+                    'created_at' => $a->created_at?->toIso8601String(),
+                ]),
         ];
 
         $filename = 'dati-personali-'.$user->id.'-'.now()->format('Y-m-d').'.json';

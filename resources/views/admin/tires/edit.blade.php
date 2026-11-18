@@ -29,7 +29,7 @@
                     <div class="field">
                         <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
                         <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
-                            name="vehicle_id" required>
+                            name="vehicle_id" required aria-describedby="vehicle_id-error">
                             <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                             @foreach ($vehicles as $vehicle)
                                 <option value="{{ $vehicle->id }}" data-tire-sizes="{{ json_encode($vehicle->allowed_tire_sizes ?? []) }}"
@@ -40,13 +40,13 @@
                             @endforeach
                         </select>
                         @error('vehicle_id')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="season">{{ __('Stagionalità') }} <span class="req">*</span></label>
                         <select class="select @error('season') is-invalid @enderror" id="season" name="season"
-                            required>
+                            required aria-describedby="season-error">
                             <option value="" disabled>{{ __('Seleziona una stagionalità') }}</option>
                             <option value="summer" {{ old('season', $tire->season) == 'summer' ? 'selected' : '' }}>
                                 {{ __('Estive') }}</option>
@@ -57,15 +57,15 @@
                                 {{ __('Quattro stagioni') }}</option>
                         </select>
                         @error('season')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="season-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
                     <div class="field">
                         <label for="position">{{ __('Posizione') }} <span class="req">*</span></label>
                         <select class="select @error('position') is-invalid @enderror" id="position" name="position"
-                            required>
+                            required aria-describedby="position-error">
                             <option value="" disabled>{{ __('Seleziona...') }}</option>
                             <option value="front_left" {{ old('position', $tire->position) == 'front_left' ? 'selected' : '' }}>
                                 {{ __('Anteriore sinistra') }}</option>
@@ -77,13 +77,13 @@
                                 {{ __('Posteriore destra') }}</option>
                         </select>
                         @error('position')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="position-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
                         <select class="select @error('status') is-invalid @enderror" id="status" name="status"
-                            required>
+                            required aria-describedby="status-error">
                             <option value="" disabled>{{ __('Seleziona uno stato') }}</option>
                             <option value="mounted" {{ old('status', $tire->status) == 'mounted' ? 'selected' : '' }}>
                                 {{ __('Montate') }}</option>
@@ -93,27 +93,27 @@
                                 {{ __('Dismesse') }}</option>
                         </select>
                         @error('status')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="status-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
                     <div class="field">
                         <label for="brand">{{ __('Marca') }}</label>
                         <input type="text" class="input @error('brand') is-invalid @enderror" id="brand"
-                            name="brand" value="{{ old('brand', $tire->brand) }}" placeholder="{{ __('es. Michelin') }}">
+                            name="brand" value="{{ old('brand', $tire->brand) }}" placeholder="{{ __('es. Michelin') }}" aria-describedby="brand-error">
                         @error('brand')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="brand-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="model_name">{{ __('Modello') }}</label>
                         <input type="text" class="input @error('model_name') is-invalid @enderror" id="model_name"
                             name="model_name" value="{{ old('model_name', $tire->model_name) }}"
-                            placeholder="{{ __('es. Alpin 6') }}">
+                            placeholder="{{ __('es. Alpin 6') }}" aria-describedby="model_name-error">
                         @error('model_name')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="model_name-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <x-form.tire-size-input name="size" label="{{ __('Misura') }}" :model="$tire" vehicle-select="vehicle_id" />
@@ -123,10 +123,10 @@
                         <label for="mounted_mileage">{{ __('Km al montaggio') }}</label>
                         <input type="number" class="input @error('mounted_mileage') is-invalid @enderror"
                             id="mounted_mileage" name="mounted_mileage"
-                            value="{{ old('mounted_mileage', $tire->mounted_mileage) }}" min="0">
+                            value="{{ old('mounted_mileage', $tire->mounted_mileage) }}" min="0" aria-describedby="mounted_mileage-error">
                         @error('mounted_mileage')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="mounted_mileage-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
@@ -136,18 +136,18 @@
                         <label for="next_change_mileage">{{ __('Prossimo cambio (km)') }}</label>
                         <input type="number" class="input @error('next_change_mileage') is-invalid @enderror"
                             id="next_change_mileage" name="next_change_mileage"
-                            value="{{ old('next_change_mileage', $tire->next_change_mileage) }}" min="0">
+                            value="{{ old('next_change_mileage', $tire->next_change_mileage) }}" min="0" aria-describedby="next_change_mileage-error">
                         @error('next_change_mileage')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="next_change_mileage-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="field">
                     <label for="notes">{{ __('Note (opzionale)') }}</label>
-                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes', $tire->notes) }}</textarea>
+                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3" aria-describedby="notes-error">{{ old('notes', $tire->notes) }}</textarea>
                     @error('notes')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="notes-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 

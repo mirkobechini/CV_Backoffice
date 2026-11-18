@@ -391,6 +391,50 @@ class VehicleScanTest extends TestCase
         Storage::disk('public')->assertMissing($vehicle->registration_card_path);
     }
 
+    public function test_registration_card_stores_with_extension_guessed_from_content_not_client_name(): void
+    {
+        // Audit sicurezza SL2: l'estensione salvata veniva presa dal nome
+        // file dichiarato dal client (spoofabile), non dal contenuto reale.
+        // File dichiarato "libretto.png" ma con mime reale image/jpeg: il
+        // nome salvato deve riflettere jpg, non il png dichiarato dal client.
+        Storage::fake(config('filesystems.uploads_disk'));
+        $user = $this->capo();
+        $deps = $this->vehicleDeps();
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'registration_card' => UploadedFile::fake()->create('libretto.png', 100, 'image/jpeg'),
+        ]);
+
+        $response->assertRedirect();
+        $vehicle = Vehicle::where('license_plate', 'AB123CD')->first();
+        $this->assertStringEndsWith('.jpg', $vehicle->registration_card_path);
+    }
+
+    public function test_registration_card_rejects_file_larger_than_8mb(): void
+    {
+        $user = $this->capo();
+        $deps = $this->vehicleDeps();
+
+        $response = $this->actingAs($user)->post(route('admin.vehicles.store'), [
+            'license_plate' => 'AB123CD',
+            'internal_code' => '0001',
+            'brand_id' => $deps['brand']->id,
+            'car_model_id' => $deps['model']->id,
+            'vehicle_type_id' => $deps['type']->id,
+            'immatricolation_date' => '2024-01-01',
+            'registration_card' => UploadedFile::fake()->create('libretto.jpg', 8193, 'image/jpeg'),
+        ]);
+
+        $response->assertSessionHasErrors('registration_card');
+        $this->assertDatabaseMissing('vehicles', ['license_plate' => 'AB123CD']);
+    }
+
     public function test_scan_endpoint_works_when_uploads_disk_is_s3(): void
     {
         config(['filesystems.uploads_disk' => 's3']);

@@ -52,12 +52,7 @@ class TwoFactorAuthenticationController extends Controller
             return back()->withErrors(['code' => 'Nessuna attivazione in corso: ricomincia dal primo passo.']);
         }
 
-        $valid = (new Google2FA)->verifyKey(
-            $user->two_factor_secret,
-            preg_replace('/\s+/', '', $request->input('code'))
-        );
-
-        if (! $valid) {
+        if (! $user->verifyTwoFactorCode(preg_replace('/\s+/', '', $request->input('code')))) {
             return back()->withErrors(['code' => 'Codice non valido o scaduto.']);
         }
 

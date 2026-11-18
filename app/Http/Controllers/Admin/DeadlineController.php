@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\SortableAndGroupable;
+use App\Http\Controllers\Concerns\ValidatesBackUrl;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDeadlineRequest;
 use App\Http\Requests\UpdateDeadlineRequest;
@@ -14,7 +15,7 @@ use Illuminate\Support\Carbon;
 
 class DeadlineController extends Controller
 {
-    use SortableAndGroupable;
+    use SortableAndGroupable, ValidatesBackUrl;
 
     /**
      * Tipologie valide per il filtro "tipo" dell'elenco, nello stesso ordine
@@ -341,8 +342,8 @@ class DeadlineController extends Controller
             $previousDeadline->syncStatusFromRules();
         }
 
-        $back = $request->input('back');
-        if ($back && ! str_starts_with($back, $showUrl)) {
+        $back = $this->safeBackUrl($request->input('back'));
+        if ($back && ! str_starts_with(parse_url($back, PHP_URL_PATH), parse_url($showUrl, PHP_URL_PATH))) {
             return redirect($back)->with('success', 'Scadenza eliminata con successo.');
         }
 

@@ -27,10 +27,11 @@
                 <h2><span class="num">1</span> {{ __('Attrezzature coinvolte') }}</h2>
                 <div class="field">
                     <label>{{ __('Attrezzature') }} <span class="req">*</span></label>
-                    <div class="check-list" id="equipment-checkboxes">
+                    <div class="check-list" id="equipment-checkboxes" role="group"
+                        aria-describedby="equipment_ids-error">
                         @error('equipment_ids')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="equipment_ids-error">{{ $message }}</div>
+                            @enderror
                         @php($selectedEquipmentIds = old('equipment_ids', $selectedEquipmentId ? [(string) $selectedEquipmentId] : []))
                         @foreach ($equipments as $equipment)
                             <div class="item">
@@ -50,10 +51,10 @@
 
                 <div class="field" id="issue-section" style="display:none;">
                     <label>{{ __('Guasti collegati') }}</label>
-                    <div class="check-list" id="issue-checkboxes">
+                    <div class="check-list" id="issue-checkboxes" role="group" aria-describedby="issue_ids-error">
                         @error('issue_ids')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="issue_ids-error">{{ $message }}</div>
+                            @enderror
                         @foreach ($openIssues as $issue)
                             <div class="item issue-checkbox" data-equipment-id="{{ $issue->equipment_id }}"
                                 style="display:none;">
@@ -82,7 +83,7 @@
                     <div class="field">
                         <label for="provider_id">{{ __('Fornitore') }} <span class="req">*</span></label>
                         <select class="select @error('provider_id') is-invalid @enderror" id="provider_id"
-                            name="provider_id" required>
+                            name="provider_id" required aria-describedby="provider_id-error">
                             <option value="" disabled selected>{{ __('Seleziona un fornitore') }}</option>
                             @foreach ($providers as $provider)
                                 <option value="{{ $provider->id }}"
@@ -92,13 +93,13 @@
                             @endforeach
                         </select>
                         @error('provider_id')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="provider_id-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="activity_type">{{ __('Tipologia attività') }}</label>
                         <select class="select @error('activity_type') is-invalid @enderror" id="activity_type"
-                            name="activity_type">
+                            name="activity_type" aria-describedby="activity_type-error">
                             <option value="" disabled selected>{{ __('Seleziona...') }}</option>
                             @foreach (\App\Models\EquipmentMaintenanceRecord::ACTIVITY_TYPES as $item)
                                 <option value="{{ $item }}" {{ old('activity_type') == $item ? 'selected' : '' }}>
@@ -106,8 +107,8 @@
                             @endforeach
                         </select>
                         @error('activity_type')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="activity_type-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
@@ -117,18 +118,18 @@
                 <div class="field">
                     <label for="cost">{{ __('Costo (€)') }}</label>
                     <input type="number" step="0.01" class="input @error('cost') is-invalid @enderror"
-                        id="cost" name="cost" value="{{ old('cost') }}" min="0" placeholder="es. 120.00">
+                        id="cost" name="cost" value="{{ old('cost') }}" min="0" placeholder="es. 120.00" aria-describedby="cost-error">
                     @error('cost')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="cost-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field" style="margin-bottom:0;">
                     <label for="notes">{{ __('Note (opzionale)') }}</label>
                     <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes"
-                        rows="3">{{ old('notes') }}</textarea>
+                        rows="3" aria-describedby="notes-error">{{ old('notes') }}</textarea>
                     @error('notes')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="notes-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 

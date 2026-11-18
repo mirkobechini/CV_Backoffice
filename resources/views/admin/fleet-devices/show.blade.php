@@ -91,7 +91,7 @@
                 <div class="field">
                     <label for="vehicle_id">{{ __('Nuovo veicolo') }} <span class="req">*</span></label>
                     <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id"
-                        required>
+                        required aria-describedby="vehicle_id-error">
                         <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                         @foreach ($vehicles as $vehicle)
                             @continue($vehicle->id === $fleetDevice->vehicle_id)
@@ -100,8 +100,8 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <x-form.date-input name="assigned_date" label="{{ __('Data riassegnazione') }}" required />
             </div>

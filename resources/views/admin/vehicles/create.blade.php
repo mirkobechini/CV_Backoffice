@@ -47,19 +47,19 @@
                         <label for="license_plate">{{ __('Targa') }} <span class="req">*</span> <span class="hint">({{ __('A.') }})</span></label>
                         <input type="text" class="input @error('license_plate') is-invalid @enderror"
                             id="license_plate" name="license_plate" value="{{ old('license_plate') }}"
-                            placeholder="{{ __('es. AB123CD') }}" style="text-transform:uppercase;" required>
+                            placeholder="{{ __('es. AB123CD') }}" style="text-transform:uppercase;" required aria-describedby="license_plate-error">
                         @error('license_plate')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="license_plate-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="internal_code">{{ __('Sigla') }}</label>
                         <input type="text" inputmode="numeric" class="input @error('internal_code') is-invalid @enderror"
                             id="internal_code" name="internal_code" value="{{ old('internal_code') }}"
-                            placeholder="{{ __('es. 001') }}">
+                            placeholder="{{ __('es. 001') }}" aria-describedby="internal_code-error">
                         @error('internal_code')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="internal_code-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
 
@@ -77,7 +77,7 @@
 
                 <div class="field">
                     <label for="fuel_type">{{ __('Carburante') }}</label>
-                    <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type">
+                    <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type" aria-describedby="fuel_type-error">
                         <option value="" disabled selected>{{ __('Seleziona un carburante') }}</option>
                         <option value="benzina" {{ old('fuel_type') == 'benzina' ? 'selected' : '' }}>
                             {{ __('Benzina') }}</option>
@@ -89,13 +89,13 @@
                             {{ __('Ibrido') }}</option>
                     </select>
                     @error('fuel_type')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="fuel_type-error">{{ $message }}</div>
+                        @enderror
                 </div>
 
                 <div class="field" id="allowed-fuel-types-field" style="display:none;">
                     <label>{{ __('Carburanti ammessi') }} <span class="req">*</span></label>
-                    <div class="check-list">
+                    <div class="check-list" role="group" aria-describedby="allowed_fuel_types-error">
                         @foreach (\App\Models\FuelLog::fuelTypeLabels() as $value => $label)
                             <div class="item">
                                 <input type="checkbox" name="allowed_fuel_types[]" value="{{ $value }}"
@@ -107,14 +107,14 @@
                     </div>
                     <div class="hint">{{ __('Un veicolo ibrido fa rifornimenti ora dell\'uno ora dell\'altro: indica quali carburanti specifici ammette (es. Benzina + Metano), così il form rifornimento mostra solo quelli.') }}</div>
                     @error('allowed_fuel_types')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="allowed_fuel_types-error">{{ $message }}</div>
+                        @enderror
                 </div>
 
                 <div class="field">
                     <label for="vehicle_type_id">{{ __('Tipologia') }} <span class="req">*</span></label>
                     <select class="select @error('vehicle_type_id') is-invalid @enderror" id="vehicle_type_id"
-                        name="vehicle_type_id" required>
+                        name="vehicle_type_id" required aria-describedby="vehicle_type_id-error">
                         <option value="" disabled selected>{{ __('Seleziona una tipologia') }}</option>
                         @foreach ($vehicleTypes as $type)
                             <option value="{{ $type->id }}"
@@ -123,8 +123,8 @@
                         @endforeach
                     </select>
                     @error('vehicle_type_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_type_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
 
                 <div class="row2">
@@ -141,13 +141,13 @@
                             @endif
                         </label>
                         <input type="file" class="@error('registration_card') is-invalid @enderror" id="registration_card"
-                            name="registration_card" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif" hidden>
+                            name="registration_card" accept=".pdf,.jpg,.jpeg,.png,.heic,.heif" hidden aria-describedby="registration_card-error">
                         @error('registration_card')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="registration_card-error">{{ $message }}</div>
+                            @enderror
                         @error('photo_front')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="photo_front-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
 
@@ -172,37 +172,37 @@
                     <div class="field">
                         <label for="vin">{{ __('Numero di telaio (VIN)') }} <span class="hint">({{ __('E.') }})</span></label>
                         <input type="text" class="input @error('vin') is-invalid @enderror" id="vin" name="vin"
-                            value="{{ old('vin') }}">
+                            value="{{ old('vin') }}" aria-describedby="vin-error">
                         @error('vin')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="vin-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="color">{{ __('Colore') }} <span class="hint">({{ __('R.') }})</span></label>
                         <input type="text" class="input @error('color') is-invalid @enderror" id="color" name="color"
-                            value="{{ old('color') }}">
+                            value="{{ old('color') }}" aria-describedby="color-error">
                         @error('color')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="color-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
                     <div class="field">
                         <label for="seats">{{ __('Numero posti') }} <span class="hint">({{ __('S.1') }})</span></label>
                         <input type="number" class="input @error('seats') is-invalid @enderror" id="seats"
-                            name="seats" value="{{ old('seats') }}" min="1" max="99">
+                            name="seats" value="{{ old('seats') }}" min="1" max="99" aria-describedby="seats-error">
                         @error('seats')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="seats-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="vehicle_category">{{ __('Categoria veicolo') }} <span class="hint">({{ __('J.') }})</span></label>
                         <input type="text" class="input @error('vehicle_category') is-invalid @enderror"
                             id="vehicle_category" name="vehicle_category" value="{{ old('vehicle_category') }}"
-                            placeholder="{{ __('es. M1') }}">
+                            placeholder="{{ __('es. M1') }}" aria-describedby="vehicle_category-error">
                         @error('vehicle_category')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="vehicle_category-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
@@ -210,18 +210,18 @@
                         <label for="environmental_class">{{ __('Classe ambientale') }} <span class="hint">({{ __('V.9') }})</span></label>
                         <input type="text" class="input @error('environmental_class') is-invalid @enderror"
                             id="environmental_class" name="environmental_class"
-                            value="{{ old('environmental_class') }}" placeholder="{{ __('es. Euro 6') }}">
+                            value="{{ old('environmental_class') }}" placeholder="{{ __('es. Euro 6') }}" aria-describedby="environmental_class-error">
                         @error('environmental_class')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="environmental_class-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="max_mass_kg">{{ __('Massa massima ammissibile (kg)') }} <span class="hint">({{ __('F.2') }})</span></label>
                         <input type="number" class="input @error('max_mass_kg') is-invalid @enderror"
-                            id="max_mass_kg" name="max_mass_kg" value="{{ old('max_mass_kg') }}" min="0">
+                            id="max_mass_kg" name="max_mass_kg" value="{{ old('max_mass_kg') }}" min="0" aria-describedby="max_mass_kg-error">
                         @error('max_mass_kg')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="max_mass_kg-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
@@ -229,19 +229,19 @@
                         <label for="engine_displacement_cc">{{ __('Cilindrata (cc)') }} <span class="hint">({{ __('P.1') }})</span></label>
                         <input type="number" class="input @error('engine_displacement_cc') is-invalid @enderror"
                             id="engine_displacement_cc" name="engine_displacement_cc"
-                            value="{{ old('engine_displacement_cc') }}" min="0">
+                            value="{{ old('engine_displacement_cc') }}" min="0" aria-describedby="engine_displacement_cc-error">
                         @error('engine_displacement_cc')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="engine_displacement_cc-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="engine_power_kw">{{ __('Potenza (kW)') }} <span class="hint">({{ __('P.2') }})</span></label>
                         <input type="number" class="input @error('engine_power_kw') is-invalid @enderror"
                             id="engine_power_kw" name="engine_power_kw" value="{{ old('engine_power_kw') }}"
-                            min="0">
+                            min="0" aria-describedby="engine_power_kw-error">
                         @error('engine_power_kw')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="engine_power_kw-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <x-vehicles.tire-size-section />
@@ -258,24 +258,24 @@
                         <input type="number" class="input @error('warranty_extension_duration') is-invalid @enderror"
                             id="warranty_extension_duration" name="warranty_extension_duration"
                             value="{{ old('warranty_extension_duration') }}" placeholder="{{ __('es. 24') }}"
-                            @if (old('has_warranty_extension')) required @endif>
+                            @if (old('has_warranty_extension')) required @endif aria-describedby="warranty_extension_duration-error">
                         @error('warranty_extension_duration')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="warranty_extension_duration-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <input type="hidden" name="has_warranty_extension" value="0">
                 <label class="check">
                     <input type="checkbox" id="has_warranty_extension" name="has_warranty_extension" value="1"
-                        {{ old('has_warranty_extension') ? 'checked' : '' }}>
+                        {{ old('has_warranty_extension') ? 'checked' : '' }} aria-describedby="has_warranty_extension-error">
                     <div>
                         <div class="label">{{ __('Estensione garanzia') }}</div>
                         <div class="sub">{{ __('Aggiungi mesi alla scadenza originale') }}</div>
                     </div>
                 </label>
                 @error('has_warranty_extension')
-                    <div class="field-error">{{ $message }}</div>
-                @enderror
+                    <div class="field-error" id="has_warranty_extension-error">{{ $message }}</div>
+                    @enderror
             </div>
 
             {{-- Sezione 4: Assicurazione --}}

@@ -32,8 +32,8 @@
 
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
-| S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | ⬜ |
-| S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ⬜ |
+| S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | 🔄 aggiunta a `.env.example=true` con commento (2026-11-16); **da impostare manualmente anche nelle env vars di Laravel Cloud** — non modificabile da codice |
+| S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ✅ fix issue-639: confermato 419 con una richiesta reale, ora escluso via `validateCsrfTokens(except: ...)` |
 | S3 | Hygiene | 3 advisory Composer ignorate senza un commento sul motivo | `composer.json:76-82` | Bassa | ✅ |
 | S4 | Fragilità futura | `group_id` fillable su `Vehicle` ma nessuna request lo valida oggi — aggiungere un test che pinni l'invariante (nessuna richiesta futura deve poterlo scrivere da payload) | `app/Models/Vehicle.php` | Bassa | ✅ |
 
@@ -43,7 +43,7 @@
 |---|------|-------------|-------------|----------|-------|
 | A1 | ARIA | Bottoni icona-only (visualizza/modifica/elimina) con solo `title`, serve `aria-label` | varie card scheda veicolo | Media | ✅ |
 | A2 | Contrasto | Badge ambra/verde in tema chiaro sotto soglia WCAG AA (4.5:1) | `resources/css/app.css:1146-1159,1093-1096` | Media | ✅ |
-| A3 | Form | Messaggi di errore non collegati via `aria-describedby` | tutte le `@error` nei form create/edit | Media | 🔄 fatto per i componenti condivisi (date/month/time/tire-size-input); restano i form con `<input>` semplice (sweep più ampio, ~50 file) |
+| A3 | Form | Messaggi di errore non collegati via `aria-describedby` | tutte le `@error` nei form create/edit | Media | ✅ fix issue-649: tutti i form rimanenti ora collegati via aria-describedby |
 | A4 | Tastiera | Righe raggruppabili (tabelle scadenze/guasti) rispondono solo al click, non da tastiera | `resources/js/app.js:116-127` | Media | ✅ |
 | A5 | Struttura | Manca `<h1>` su alcune pagine indice | pagine indice | Bassa | ✅ |
 | A6 | Focus | Focus visibile mancante su `.search input` e `.role-select` | `resources/css/app.css:819-826,3306-3315` | Bassa | ✅ |
@@ -101,20 +101,20 @@
 
 | # | Area | Descrizione | Riferimento | Stato |
 |---|------|-------------|-------------|-------|
-| SM1 | Isolamento gruppi | Record attrezzatura-manutenzione con equipaggiamento su più veicoli di gruppi diversi: nessun controllo di gruppo (caso diverso dall'attrezzatura "non assegnata" già accettato) | `app/Models/EquipmentMaintenanceRecord.php:86-91` | ⬜ |
-| SM2 | Isolamento gruppi | Righe con `group_id` NULL (dopo delete gruppo o riga legacy) cadono nel ramo "nessuna restrizione" di `HasGroupScopedAccess` | `app/Policies/Concerns/HasGroupScopedAccess.php:111` | ⬜ |
-| SM3 | XSS | Sink DOM stored-XSS nell'autocomplete guasti (`innerHTML` con solo `'` escapato) — non sfruttabile oggi da browser per via di SH5, ma da correggere comunque | `admin/issues/create.blade.php:283-287`, `edit.blade.php:240-244` | ⬜ |
-| SM4 | Open redirect / XSS | `redirect($request->input('back'))` non validato in 3 controller; 75 viste stampano `request('back')` in `href` senza whitelist di schema | `Admin/DeadlineController.php:338-340` e altri 2 | ⬜ |
-| SM5 | Isolamento gruppi | `Superadmin\GroupController::destroy` elimina solo i veicoli del gruppo, lascia FleetDevice/FuelCard/Equipment orfani (poi soggetti a SM2) | `app/Http/Controllers/Superadmin/GroupController.php` | ⬜ |
-| SM6 | Privacy | Note di tessere/dispositivi (dove Mirko mette il PIN) in chiaro: visibili a ogni membro, salvate per sempre nell'activity log, incluse nei backup | `FuelCard.php`/`FleetDevice.php` | ⬜ |
-| SM7 | DoS | `per_page` API senza tetto massimo | `Api/VehicleController.php:15` e altri 3 | ⬜ |
-| SL1 | CSRF | Webhook Telegram senza eccezione CSRF esplicita (verificare se arriva davvero un 419 in produzione) | `routes/web.php:55` | ⬜ |
-| SL2 | Upload | Estensione file presa dal nome client (`getClientOriginalExtension()`) invece che dal contenuto reale; `registration_card` senza `max:` dimensione | `VehicleRegistrationCardService.php:45`, `StoreVehicleRequest.php:33` | ⬜ |
-| SL3 | 2FA | Codice TOTP riusabile nella finestra di validità (no `verifyKeyNewer`) | `TwoFactorChallengeController.php:47` | ⬜ |
-| SL4 | Sessione | Reset/cambio password non revoca i token Sanctum esistenti | — | ⬜ |
-| SL5 | Headers | Nessun CSP, nessun X-Frame-Options | — | ⬜ |
-| SL6 | GDPR | Export dati personali omette impostazioni Telegram, token API, voci activity-log, stato 2FA | `ProfileController::exportData` | ⬜ |
-| SL7 | `.gitignore` | `PROJECT_RULES.md`/`GIT_WORKFLOW.md` non ignorati (linea guida 7 di Mirko) | `.gitignore` | ⬜ |
+| SM1 | Isolamento gruppi | Record attrezzatura-manutenzione con equipaggiamento su più veicoli di gruppi diversi: nessun controllo di gruppo (caso diverso dall'attrezzatura "non assegnata" già accettato) | `app/Models/EquipmentMaintenanceRecord.php:86-91` | ✅ già corretto: `getVehicleAttribute()` restituisce il veicolo condiviso solo se tutte le attrezzature collegate risolvono allo stesso veicolo, altrimenti `null` (ambiguo, stesso trattamento dell'attrezzatura non assegnata) — riverificato 2026-11-16, nessuna azione necessaria |
+| SM2 | Isolamento gruppi | Righe con `group_id` NULL (dopo delete gruppo o riga legacy) cadono nel ramo "nessuna restrizione" di `HasGroupScopedAccess` | `app/Policies/Concerns/HasGroupScopedAccess.php:111` | ✅ il bug descritto (NULL group_id → accesso illimitato) è già corretto (fix sicurezza 2026-10-09: `belongsToUserGroup()` nega l'accesso senza gruppo attivo). Resta solo il caso voluto — `Equipment` non assegnata (nessun `group_id` proprio, nessun veicolo) visibile a tutti i gruppi, stesso comportamento già accettato per le liste — riverificato 2026-11-16, nessuna azione necessaria |
+| SM3 | XSS | Sink DOM stored-XSS nell'autocomplete guasti (`innerHTML` con solo `'` escapato) — non sfruttabile oggi da browser per via di SH5, ma da correggere comunque | `admin/issues/create.blade.php:283-287`, `edit.blade.php:240-244` | ✅ già corretto: entrambe le viste costruiscono il dropdown con `document.createElement`/`textContent`/`replaceChildren`, non più `innerHTML` — riverificato 2026-11-16, nessuna azione necessaria |
+| SM4 | Open redirect / XSS | `redirect($request->input('back'))` non validato in 3 controller; 75 viste stampano `request('back')` in `href` senza whitelist di schema | `Admin/DeadlineController.php:338-340` e altri 2 | ✅ fix issue-619: `ValidatesBackUrl` accetta solo path relativi o URL assoluti dello stesso sito |
+| SM5 | Isolamento gruppi | `Superadmin\GroupController::destroy` elimina solo i veicoli del gruppo, lascia FleetDevice/FuelCard/Equipment orfani (poi soggetti a SM2) | `app/Http/Controllers/Superadmin/GroupController.php` | ✅ fix issue-623: cleanup in transazione |
+| SM6 | Privacy | Note di tessere/dispositivi (dove Mirko mette il PIN) in chiaro: visibili a ogni membro, salvate per sempre nell'activity log, incluse nei backup | `FuelCard.php`/`FleetDevice.php` | ✅ fix issue-637: `logExcept(['notes', 'provider_notes'])` su FuelCard/FleetDevice/FleetDeviceAssignment |
+| SM7 | DoS | `per_page` API senza tetto massimo | `Api/VehicleController.php:15` e altri 3 | ✅ fix issue-625: `CapsPerPage` limita a 100 |
+| SL1 | CSRF | Webhook Telegram senza eccezione CSRF esplicita (verificare se arriva davvero un 419 in produzione) | `routes/web.php:55` | ✅ fix issue-639 (stesso bug di S2) |
+| SL2 | Upload | Estensione file presa dal nome client (`getClientOriginalExtension()`) invece che dal contenuto reale; `registration_card` senza `max:` dimensione | `VehicleRegistrationCardService.php:45`, `StoreVehicleRequest.php:33` | ✅ fix issue-627 |
+| SL3 | 2FA | Codice TOTP riusabile nella finestra di validità (no `verifyKeyNewer`) | `TwoFactorChallengeController.php:47` | ✅ fix issue-629 |
+| SL4 | Sessione | Reset/cambio password non revoca i token Sanctum esistenti | — | ✅ fix issue-631 |
+| SL5 | Headers | Nessun CSP, nessun X-Frame-Options | — | ✅ fix issue-633/issue-635 |
+| SL6 | GDPR | Export dati personali omette impostazioni Telegram, token API, voci activity-log, stato 2FA | `ProfileController::exportData` | ✅ fix issue-641 |
+| SL7 | `.gitignore` | `PROJECT_RULES.md`/`GIT_WORKFLOW.md` non ignorati (linea guida 7 di Mirko) | `.gitignore` | ❌ non applicabile: questi file non esistono in questo repo (`.gitignore` ignora già `AGENTS.md`/`AGENT_FLOW.md`/`.specs/`, le convenzioni effettivamente usate qui) — riverificato 2026-11-16 |
 
 ### Bug funzionali
 
@@ -210,6 +210,10 @@ Richiesta di Mirko, dopo audit del codice esistente (assicurazione modellata com
 **Versione implementata ora** (vedi issue/PR collegata): non una previsione per componente, ma un indicatore di tendenza affidabilità sulle riparazioni non programmate (`activity_type = 'Riparazione'`) di un singolo veicolo — intervallo medio storico vs intervallo più recente, badge "in peggioramento" solo con dati sufficienti. Solo sulla scheda veicolo.
 
 **Nota per il futuro — categorizzazione per componente a basso sforzo**: se in futuro si vuole davvero l'analisi "per componente" dell'idea originale, il modo più economico per arrivarci senza perdere tempo ora né dover rielaborare lo storico: aggiungere un campo **categoria opzionale** su `Issue` (es. select: Motore, Freni, Elettrico, Carrozzeria, Pneumatici, Altro), nullable, compilato gradualmente da chi segnala un nuovo guasto — nessuna migrazione dei guasti già esistenti necessaria, un solo campo in più nel form. Quando ce ne sarà accumulato abbastanza, l'analisi per componente diventa possibile sui dati da quel momento in avanti.
+
+## 7b. Vista a card per i guasti, raggruppata per veicolo (dopo F3)
+
+**Idea (da Mirko, 2026-11-18)**: nella index dei guasti, una vista alternativa a card invece della tabella attuale, raggruppata per veicolo — con filtro di default che mostra solo i guasti non chiusi (open/in_progress). Pianificata esplicitamente per **dopo** l'integrazione openvehicle-data (F3), non prima.
 
 ## 7. QR code su veicoli/attrezzature
 

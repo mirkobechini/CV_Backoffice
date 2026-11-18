@@ -30,7 +30,7 @@
                 <div class="row2">
                     <div class="field">
                         <label for="type">{{ __('Tipo') }} <span class="req">*</span></label>
-                        <select class="select @error('type') is-invalid @enderror" id="type" name="type" required>
+                        <select class="select @error('type') is-invalid @enderror" id="type" name="type" required aria-describedby="type-error">
                             @foreach ($typeOptions as $value => $label)
                                 <option value="{{ $value }}"
                                     {{ old('type', $fleetDevice->type) == $value ? 'selected' : '' }}>{{ $label }}
@@ -38,16 +38,16 @@
                             @endforeach
                         </select>
                         @error('type')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="type-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="code">{{ __('Codice dispositivo') }} <span class="req">*</span></label>
                         <input type="text" class="input @error('code') is-invalid @enderror" id="code" name="code"
-                            value="{{ old('code', $fleetDevice->code) }}" maxlength="255" required>
+                            value="{{ old('code', $fleetDevice->code) }}" maxlength="255" required aria-describedby="code-error">
                         @error('code')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="code-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
@@ -55,18 +55,18 @@
                         <label for="provider_notes">{{ __('Intestatario/contratto') }}</label>
                         <input type="text" class="input @error('provider_notes') is-invalid @enderror"
                             id="provider_notes" name="provider_notes"
-                            value="{{ old('provider_notes', $fleetDevice->provider_notes) }}" maxlength="255">
+                            value="{{ old('provider_notes', $fleetDevice->provider_notes) }}" maxlength="255" aria-describedby="provider_notes-error">
                         @error('provider_notes')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="provider_notes-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="field">
                     <label for="notes">{{ __('Note') }}</label>
-                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes', $fleetDevice->notes) }}</textarea>
+                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3" aria-describedby="notes-error">{{ old('notes', $fleetDevice->notes) }}</textarea>
                     @error('notes')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="notes-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 

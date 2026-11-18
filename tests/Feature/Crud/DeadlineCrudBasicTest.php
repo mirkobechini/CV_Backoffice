@@ -87,6 +87,17 @@ class DeadlineCrudBasicTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_index_shows_the_due_date_without_opening_the_row(): void
+    {
+        $user = $this->createUser();
+        $this->createDeadline();
+
+        $response = $this->actingAs($user)->get(route('admin.deadlines.index'));
+
+        $response->assertStatus(200);
+        $response->assertSee('01/01/2025');
+    }
+
     public function test_insurances_page_shows_only_insurance_deadlines(): void
     {
         $user = $this->createUser();
@@ -206,6 +217,33 @@ class DeadlineCrudBasicTest extends TestCase
             'vehicle_id' => $vehicle->id,
             'type' => 'Tagliando',
         ]);
+    }
+
+    public function test_destroy_ignores_back_pointing_to_an_external_url(): void
+    {
+        // Audit sicurezza SM4: `back` è un input utente, non va seguito
+        // ciecamente — un `back` assoluto o protocol-relative reindirizzerebbe
+        // fuori dall'app (open redirect).
+        $user = $this->createUser();
+        $deadline = $this->createDeadline()['deadline'];
+
+        $response = $this->actingAs($user)->delete(route('admin.deadlines.destroy', $deadline), [
+            'back' => 'https://evil.example/phishing',
+        ]);
+
+        $response->assertRedirect(route('admin.deadlines.index'));
+    }
+
+    public function test_destroy_follows_a_safe_relative_back_url(): void
+    {
+        $user = $this->createUser();
+        $deadline = $this->createDeadline()['deadline'];
+
+        $response = $this->actingAs($user)->delete(route('admin.deadlines.destroy', $deadline), [
+            'back' => '/admin/vehicles',
+        ]);
+
+        $response->assertRedirect('/admin/vehicles');
     }
 
     public function test_deadline_can_be_updated(): void

@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use PragmaRX\Google2FA\Google2FA;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -126,6 +127,37 @@ class User extends Authenticatable implements MustVerifyEmail
         unset($codes[$index]);
         $this->two_factor_recovery_codes = array_values($codes);
         $this->save();
+
+        return true;
+    }
+
+    /**
+     * Verifica un codice TOTP contro il segreto dell'utente, rifiutando un
+     * codice già usato finché resta nella sua finestra di validità
+     * (Google2FA::verifyKeyNewer() invece di verifyKey() — senza, lo stesso
+     * codice a 6 cifre intercettato resterebbe riutilizzabile per
+     * ~30-90 secondi dopo il primo uso legittimo, audit sicurezza SL3).
+     * Condivisa tra login web (TwoFactorChallengeController) e API
+     * (Api\AuthController), prima duplicata quasi identica tra i due.
+     */
+    public function verifyTwoFactorCode(string $code): bool
+    {
+        // oldTimestamp=null farebbe tornare il booleano true invece del
+        // contatore reale (comportamento di Google2FA quando non c'è nulla
+        // da confrontare) — 0 al primo utilizzo in assoluto garantisce
+        // sempre un contatore vero da salvare, senza mai rifiutare un primo
+        // codice legittimo (ogni contatore reale è enormemente maggiore di 0).
+        $matchedCounter = (new Google2FA)->verifyKeyNewer(
+            $this->two_factor_secret,
+            $code,
+            $this->two_factor_last_used_counter ?? 0
+        );
+
+        if ($matchedCounter === false) {
+            return false;
+        }
+
+        $this->forceFill(['two_factor_last_used_counter' => $matchedCounter])->save();
 
         return true;
     }

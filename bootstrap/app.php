@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\EnsureIsSuperAdmin;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -24,6 +25,19 @@ return Application::configure(basePath: dirname(__DIR__))
         // sidebar) non si autenticava mai da browser — solo i test con
         // token Bearer coprivano queste route, nessun utente reale loggato.
         $middleware->statefulApi();
+
+        $middleware->web(append: [
+            AddSecurityHeaders::class,
+        ]);
+
+        // Telegram non manda un token CSRF: senza questa eccezione il
+        // webhook riceve sempre 419 e il controller non viene mai invocato
+        // (verificato con una richiesta reale, audit sicurezza S2/SL1).
+        // L'autenticità resta verificata dal controller stesso (header
+        // X-Telegram-Bot-Api-Secret-Token, fail-closed).
+        $middleware->validateCsrfTokens(except: [
+            'telegram/webhook',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

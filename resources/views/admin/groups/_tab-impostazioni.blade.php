@@ -11,10 +11,10 @@
                 <div class="field" style="flex:1; min-width:220px; margin-bottom:0;">
                     <label for="name">{{ __('Nome') }}</label>
                     <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
-                        value="{{ old('name', $group->name) }}" required>
+                        value="{{ old('name', $group->name) }}" required aria-describedby="name-error">
                     @error('name')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="name-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <button type="submit" class="btn primary">{{ __('Rinomina') }}</button>
             </form>
@@ -44,12 +44,13 @@
                     <h4>{{ __('Invita via email') }}</h4>
                     <form method="POST" action="{{ route('admin.groups.invite', $group) }}" class="email-row">
                         @csrf
-                        <input type="email" name="email" class="input" placeholder="email@esempio.it" required>
+                        <input type="email" id="email" name="email" class="input" placeholder="email@esempio.it"
+                            required aria-describedby="email-error">
                         <button type="submit" class="btn primary sm">{{ __('Invia invito') }}</button>
                     </form>
                     @error('email')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="email-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="invite-email">
                     <h4>{{ __('Oppure crea un account direttamente') }}</h4>
@@ -90,8 +91,9 @@
                                 <label>{{ __('Passaggio a invernali') }}</label>
                                 <div style="display:flex; gap:8px;">
                                     <input type="number" class="input @error('winter_switch_day') is-invalid @enderror"
-                                        name="winter_switch_day" min="1" max="31"
-                                        value="{{ old('winter_switch_day', (int) $winterDay) }}" style="width:80px;">
+                                        id="winter_switch_day" name="winter_switch_day" min="1" max="31"
+                                        value="{{ old('winter_switch_day', (int) $winterDay) }}" style="width:80px;"
+                                        aria-describedby="winter_switch_day-error">
                                     <select class="select" name="winter_switch_month">
                                         @foreach ($months as $num => $label)
                                             <option value="{{ $num }}"
@@ -101,15 +103,16 @@
                                     </select>
                                 </div>
                                 @error('winter_switch_day')
-                                    <div class="field-error">{{ $message }}</div>
-                                @enderror
+                                    <div class="field-error" id="winter_switch_day-error">{{ $message }}</div>
+                                    @enderror
                             </div>
                             <div class="field">
                                 <label>{{ __('Passaggio a estive') }}</label>
                                 <div style="display:flex; gap:8px;">
                                     <input type="number" class="input @error('summer_switch_day') is-invalid @enderror"
-                                        name="summer_switch_day" min="1" max="31"
-                                        value="{{ old('summer_switch_day', (int) $summerDay) }}" style="width:80px;">
+                                        id="summer_switch_day" name="summer_switch_day" min="1" max="31"
+                                        value="{{ old('summer_switch_day', (int) $summerDay) }}" style="width:80px;"
+                                        aria-describedby="summer_switch_day-error">
                                     <select class="select" name="summer_switch_month">
                                         @foreach ($months as $num => $label)
                                             <option value="{{ $num }}"
@@ -119,8 +122,8 @@
                                     </select>
                                 </div>
                                 @error('summer_switch_day')
-                                    <div class="field-error">{{ $message }}</div>
-                                @enderror
+                                    <div class="field-error" id="summer_switch_day-error">{{ $message }}</div>
+                                    @enderror
                             </div>
                         </div>
                         <button type="submit" class="btn outline-solid" data-loading-text="{{ __('Salvataggio...') }}">

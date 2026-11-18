@@ -58,7 +58,8 @@
                                     <td>{{ $issue->event_date_formatted ?? 'N/A' }}</td>
                                     <td>
                                         <select class="select @error("parts.{$issue->id}") is-invalid @enderror"
-                                            id="part-select-{{ $issue->id }}" name="parts[{{ $issue->id }}]">
+                                            id="part-select-{{ $issue->id }}" name="parts[{{ $issue->id }}]"
+                                            aria-describedby="part-select-{{ $issue->id }}-error">
                                             <option value="">{{ __('Non assegnata') }}</option>
                                             @foreach (\App\Models\Issue::sortedParts() as $part)
                                                 <option value="{{ $part }}" {{ old("parts.{$issue->id}") === $part ? 'selected' : '' }}>
@@ -67,7 +68,7 @@
                                             @endforeach
                                         </select>
                                         @error("parts.{$issue->id}")
-                                            <div class="field-error">{{ $message }}</div>
+                                            <div class="field-error" id="part-select-{{ $issue->id }}-error">{{ $message }}</div>
                                         @enderror
                                     </td>
                                 </tr>

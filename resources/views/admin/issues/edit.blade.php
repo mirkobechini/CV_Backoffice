@@ -32,7 +32,7 @@
                 <div class="field">
                     <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
                     <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
-                        name="vehicle_id" required>
+                        name="vehicle_id" required aria-describedby="vehicle_id-error">
                         <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}"
@@ -43,30 +43,30 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field" style="position:relative;">
                     <label for="description">{{ __('Descrizione') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('description') is-invalid @enderror" id="description"
                         name="description" value="{{ old('description', $issue->description) }}" required
-                        autocomplete="off" data-autocomplete="{{ route('api.issues.suggestions') }}">
+                        autocomplete="off" data-autocomplete="{{ route('api.issues.suggestions') }}" aria-describedby="description-error">
                     <div id="autocomplete-results" class="autocomplete-results" style="display:none;"></div>
                     @error('description')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="description-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="part">{{ __('Parte del veicolo coinvolta') }} <span class="req">*</span></label>
-                    <select class="select @error('part') is-invalid @enderror" id="part" name="part" required>
+                    <select class="select @error('part') is-invalid @enderror" id="part" name="part" required aria-describedby="part-error">
                         <option value="" disabled {{ old('part', $issue->part) ? '' : 'selected' }}>{{ __('Seleziona...') }}</option>
                         @foreach (\App\Models\Issue::sortedParts() as $part)
                             <option value="{{ $part }}" {{ old('part', $issue->part) == $part ? 'selected' : '' }}>{{ $part }}</option>
                         @endforeach
                     </select>
                     @error('part')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="part-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 {{-- Selettore pneumatici collegati: si mostra quando "Parte" =
                 Pneumatici invece di una checkbox separata, che duplicava la
@@ -75,10 +75,10 @@
                 <div class="field" id="tire-id-field"
                     style="{{ !empty($issueTireIds) || old('part', $issue->part) === 'Pneumatici' ? '' : 'display:none;' }}">
                     <label>{{ __('Pneumatici collegati') }}</label>
-                    <div class="check-list" id="tire-checkboxes">
+                    <div class="check-list" id="tire-checkboxes" role="group" aria-describedby="tire_ids-error">
                         @error('tire_ids')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="tire_ids-error">{{ $message }}</div>
+                            @enderror
                         @foreach ($tires as $tire)
                             <div class="item tire-checkbox" data-vehicle-id="{{ $tire->vehicle_id }}"
                                 style="display:none;">
@@ -102,7 +102,7 @@
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" :model="$issue" required />
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
-                        <select class="select @error('status') is-invalid @enderror" id="status" name="status" required>
+                        <select class="select @error('status') is-invalid @enderror" id="status" name="status" required aria-describedby="status-error">
                             <option value="" disabled selected>{{ __('Seleziona uno stato') }}</option>
                             <option value="open" {{ old('status', $issue->status) == 'open' ? 'selected' : '' }}>
                                 {{ __('Aperto') }}</option>
@@ -113,16 +113,16 @@
                                 {{ __('Risolto') }}</option>
                         </select>
                         @error('status')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="status-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="field">
                     <label for="notes">{{ __('Note (opzionale)') }}</label>
-                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes', $issue->notes) }}</textarea>
+                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3" aria-describedby="notes-error">{{ old('notes', $issue->notes) }}</textarea>
                     @error('notes')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="notes-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="image">{{ __('Immagine (opzionale)') }}</label>
@@ -134,10 +134,10 @@
                         @endif
                     </label>
                     <input type="file" class="heic-convert @error('image') is-invalid @enderror" id="image"
-                        name="image" accept="image/*,.heic,.heif" hidden>
+                        name="image" accept="image/*,.heic,.heif" hidden aria-describedby="image-error">
                     @error('image')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="image-error">{{ $message }}</div>
+                        @enderror
                     @if ($issue->photo)
                         <div class="hint"><a
                                 href="{{ \App\Support\UploadedFileUrl::for($issue->photo) }}"

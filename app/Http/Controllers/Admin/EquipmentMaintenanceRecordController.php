@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\ValidatesBackUrl;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEquipmentMaintenanceRecordRequest;
 use App\Http\Requests\UpdateEquipmentMaintenanceRecordRequest;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\DB;
 
 class EquipmentMaintenanceRecordController extends Controller
 {
+    use ValidatesBackUrl;
+
     public function __construct()
     {
         $this->authorizeResource(EquipmentMaintenanceRecord::class, 'equipmentMaintenanceRecord');
@@ -225,7 +228,7 @@ class EquipmentMaintenanceRecordController extends Controller
         $equipmentMaintenanceRecord->equipments()->detach();
         $equipmentMaintenanceRecord->delete();
 
-        $back = $request->input('back');
+        $back = $this->safeBackUrl($request->input('back'));
         if ($back) {
             return redirect($back)->with('status', 'Appuntamento eliminato con successo.');
         }

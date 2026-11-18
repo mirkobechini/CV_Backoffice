@@ -177,6 +177,11 @@ class TireSeasonServiceTest extends TestCase
 
     public function test_is_compliant_uses_expected_season_override_when_given(): void
     {
+        // isCompliant() senza override usa la data reale: fissata a
+        // un giorno sicuramente estivo, altrimenti il test diventa fragile
+        // tra metà novembre e metà aprile (cambio stagionale di default).
+        $this->travelTo(Carbon::parse('2026-07-01'));
+
         $service = $this->service();
         $group = $this->group();
         $vehicle = Vehicle::create([

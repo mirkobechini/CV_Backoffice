@@ -4,6 +4,31 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.1.0] - 2026-11-18
+
+### Fixed
+
+- **Sicurezza**: il parametro `back` (dove tornare dopo un'eliminazione) non era validato in 3 controller (Scadenze, Appuntamenti, Appuntamenti attrezzature) — un valore esterno malevolo avrebbe reindirizzato l'utente fuori dall'app dopo l'azione (open redirect). Ora accettati solo path relativi o URL assoluti dello stesso sito.
+- **Sicurezza**: cancellando un gruppo (superadmin) con i suoi veicoli, i dispositivi pedaggio/tessere carburante/attrezzature collegati restavano orfani ma pienamente vivi e interrogabili. Ora eliminati insieme a gruppo/veicoli, nella stessa transazione.
+- **Sicurezza**: le API (Veicoli, Scadenze, Guasti, Appuntamenti) non avevano un tetto massimo su `per_page` — un client poteva forzare una query enorme. Ora limitato a 100.
+- **Sicurezza**: l'estensione del file libretto salvato veniva presa dal nome dichiarato dal client (spoofabile), non dal contenuto reale; `registration_card` non aveva un limite di dimensione. Ora l'estensione è dedotta dal MIME reale, con un tetto di 8 MB.
+- **Sicurezza**: il codice 2FA a 6 cifre restava valido per tutta la sua finestra (~30-90s) anche dopo essere già stato usato per accedere — ora un codice già usato viene rifiutato, sia su login web che API.
+- **Sicurezza**: reset/cambio password non revocava i token API (Sanctum) esistenti — un token rubato restava valido. Ora revocati automaticamente.
+- **Sicurezza**: nessun header CSP/X-Frame-Options — un sito esterno poteva incorniciare l'app in un iframe (clickjacking). Aggiunti CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`.
+- Il CSP (vedi sopra) bloccava il dev server Vite (HMR) in locale — rilevato con una verifica live in browser dopo il merge. In ambiente locale `script-src`/`style-src`/`font-src`/`connect-src` ora includono l'origine del dev server Vite; in produzione resta invariato.
+- **Sicurezza**: le note di tessere carburante/dispositivi pedaggio (dove si annotano anche i PIN) finivano in chiaro nello storico attività. Ora escluse dall'activity log.
+- **Sicurezza**: il webhook Telegram rispondeva sempre 419 (CSRF), il controller non veniva mai invocato — verificato con una richiesta reale. Escluso dalla verifica CSRF (l'autenticità resta verificata internamente).
+- **Sicurezza**: l'export dati personali (GDPR) ometteva impostazioni di notifica (incluso il collegamento Telegram), metadata dei token API, voci dell'activity log e stato 2FA. Ora incluse (il token di collegamento Telegram, un segreto temporaneo di 15 minuti, resta escluso).
+
+### Added
+
+- Tracciamento pezzi di ricambio ordinati/arrivati sui guasti: un guasto può avere più pezzi (nome, nota, data ordine opzionale, data arrivo sempre opzionale), aggiungibili più alla volta dalla scheda guasto. Badge secondario "Pezzi in attesa"/"Pezzi arrivati" accanto allo stato, senza introdurre un nuovo stato del guasto.
+
+### Changed
+
+- L'elenco scadenze mostrava solo l'etichetta relativa ("Manca X giorni") — per vedere la data effettiva serviva aprire ogni riga. Aggiunta la colonna "Data" (desktop e card mobile).
+- Accessibilità: i messaggi di errore nei form rimasti (circa 37 viste) sono ora collegati ai rispettivi campi via `aria-describedby`, per chi usa un lettore di schermo (A3).
+
 ## [v2.0.1] - 2026-11-14
 
 ### Fixed

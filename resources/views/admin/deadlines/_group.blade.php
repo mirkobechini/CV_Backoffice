@@ -24,7 +24,7 @@
     <tr class="group-row {{ $depth > 0 ? 'group-row-sub' : '' }}" data-group-row="{{ $groupId }}" tabindex="0"
         role="button" aria-expanded="true"
         @if (!empty($parentIds)) data-groups="{{ implode(' ', $parentIds) }}" @endif>
-        <td colspan="5" style="padding-left: {{ 12 + $depth * 20 }}px">
+        <td colspan="6" style="padding-left: {{ 12 + $depth * 20 }}px">
             <i class="fa-solid fa-chevron-down group-chevron"></i>{{ $groupLabel }} ({{ $groupItems->flatten()->count() }})
         </td>
     </tr>

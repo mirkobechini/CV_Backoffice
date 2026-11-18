@@ -5,6 +5,7 @@
             <span class="type-name">{{ $deadline->type }}</span>
         </div>
     </td>
+    <td>{{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</td>
     <td>
         <div class="dl-badges">
             @if ($deadline->date_remaining_label)

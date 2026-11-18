@@ -30,10 +30,10 @@
                 <div class="field">
                     <label for="name">{{ __('Nome') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
-                        value="{{ old('name', $vehicleType->name) }}" required>
+                        value="{{ old('name', $vehicleType->name) }}" required aria-describedby="name-error">
                     @error('name')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="name-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="row2">
                     <div class="field">
@@ -43,10 +43,10 @@
                             class="input @error('first_inspection_months') is-invalid @enderror"
                             id="first_inspection_months" name="first_inspection_months"
                             value="{{ old('first_inspection_months', $vehicleType->first_inspection_months) }}"
-                            min="0" required>
+                            min="0" required aria-describedby="first_inspection_months-error">
                         @error('first_inspection_months')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="first_inspection_months-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="regular_inspection_months">{{ __('Dopo quanti mesi le successive revisioni') }}
@@ -55,22 +55,22 @@
                             class="input @error('regular_inspection_months') is-invalid @enderror"
                             id="regular_inspection_months" name="regular_inspection_months"
                             value="{{ old('regular_inspection_months', $vehicleType->regular_inspection_months) }}"
-                            min="0" required>
+                            min="0" required aria-describedby="regular_inspection_months-error">
                         @error('regular_inspection_months')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="regular_inspection_months-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <input type="hidden" name="needs_oxygen_check" value="0">
                 <label class="switch-field">
                     <input type="checkbox" class="switch-input" id="needs_oxygen_check" name="needs_oxygen_check"
-                        value="1" {{ old('needs_oxygen_check', $vehicleType->needs_oxygen_check) ? 'checked' : '' }}>
+                        value="1" {{ old('needs_oxygen_check', $vehicleType->needs_oxygen_check) ? 'checked' : '' }} aria-describedby="needs_oxygen_check-error">
                     <span class="track"><span class="knob"></span></span>
                     <span class="label">{{ __('Revisione ossigeno') }}</span>
                 </label>
                 @error('needs_oxygen_check')
-                    <div class="field-error">{{ $message }}</div>
-                @enderror
+                    <div class="field-error" id="needs_oxygen_check-error">{{ $message }}</div>
+                    @enderror
             </div>
 
             {{-- Sezione 2: Equipaggiamento necessario --}}

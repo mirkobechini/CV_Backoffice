@@ -86,11 +86,14 @@
                             </div>
                         </th>
                         <th>
-                            <div class="th-wrap"><span>{{ __('Manca') }}</span>
+                            <div class="th-wrap"><span>{{ __('Data') }}</span>
                                 <a href="{{ $sortToggleUrl('date') }}"
                                     class="mini {{ $sortBy === 'date' ? 'on' : '' }}"
                                     title="{{ __('Ordina per data') }}">{{ $sortIcon('date') }}</a>
                             </div>
+                        </th>
+                        <th>
+                            <div class="th-wrap"><span>{{ __('Manca') }}</span></div>
                         </th>
                         <th>
                             <div class="th-wrap"><span>{{ __('Status') }}</span>
@@ -118,7 +121,7 @@
                 <tbody>
                     @if ($deadlines->isEmpty())
                         <tr>
-                            <td colspan="5" class="empty">{{ __('Nessuna scadenza trovata.') }}</td>
+                            <td colspan="6" class="empty">{{ __('Nessuna scadenza trovata.') }}</td>
                         </tr>
                     @elseif (!empty($groupByKeys))
                         @include('admin.deadlines._group', ['groups' => $groupedDeadlines, 'depth' => 0])
@@ -141,7 +144,8 @@
                     <div class="card-list-item-body">
                         <div class="card-list-item-title"><span
                                 class="dot-type leg-{{ $deadline->type_slug }}"></span> {{ $deadline->type }}</div>
-                        <div class="card-list-item-sub">{{ $deadline->vehicle->internal_code ?? 'N/A' }}</div>
+                        <div class="card-list-item-sub">{{ $deadline->vehicle->internal_code ?? 'N/A' }} &middot;
+                            {{ $deadline->due_date?->format('d/m/Y') ?? '—' }}</div>
                         <div class="card-list-item-tag">
                             <x-admin.status-badge
                                 :color="$deadline->status_color">{{ $deadline->status_label }}</x-admin.status-badge>

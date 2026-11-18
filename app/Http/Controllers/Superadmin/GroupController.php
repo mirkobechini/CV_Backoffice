@@ -4,6 +4,9 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSuperadminGroupRequest;
+use App\Models\Equipment;
+use App\Models\FleetDevice;
+use App\Models\FuelCard;
 use App\Models\Group;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -165,11 +168,28 @@ class GroupController extends Controller
             ]);
         }
 
-        if ($deleteVehicles) {
-            $group->vehicles()->delete();
-        }
+        // FleetDevice/FuelCard/Equipment non hanno un ciclo di vita proprio
+        // indipendente da gruppo/veicolo: senza questa pulizia restavano
+        // orfani (puntando a un gruppo/veicolo cancellato) ma pienamente
+        // vivi e interrogabili — audit sicurezza SM5. Equipment non ha un
+        // group_id proprio (dedotto dal veicolo), quindi va ripulita solo
+        // tramite i veicoli del gruppo.
+        DB::transaction(function () use ($group, $deleteVehicles) {
+            if ($deleteVehicles) {
+                $vehicleIds = $group->vehicles()->pluck('id');
 
-        $group->delete();
+                Equipment::whereIn('vehicle_id', $vehicleIds)->delete();
+                FleetDevice::where('group_id', $group->id)->orWhereIn('vehicle_id', $vehicleIds)->delete();
+                FuelCard::where('group_id', $group->id)->orWhereIn('vehicle_id', $vehicleIds)->delete();
+
+                $group->vehicles()->delete();
+            } else {
+                FleetDevice::where('group_id', $group->id)->delete();
+                FuelCard::where('group_id', $group->id)->delete();
+            }
+
+            $group->delete();
+        });
 
         return redirect()->route('superadmin.dashboard')->with('status', 'Gruppo eliminato.');
     }

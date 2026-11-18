@@ -373,6 +373,21 @@ class MaintenanceRecordCrudTest extends TestCase
         $this->assertSoftDeleted($maintenance);
     }
 
+    public function test_destroy_ignores_back_pointing_to_an_external_url(): void
+    {
+        // Audit sicurezza SM4: `back` è un input utente, non va seguito
+        // ciecamente — un `back` assoluto esterno reindirizzerebbe fuori
+        // dall'app (open redirect).
+        $user = $this->createUser();
+        $maintenance = $this->createMaintenance()['maintenance'];
+
+        $response = $this->actingAs($user)->delete(route('admin.maintenance-records.destroy', $maintenance), [
+            'back' => 'https://evil.example/phishing',
+        ]);
+
+        $response->assertRedirect(route('admin.maintenance-records.index'));
+    }
+
     public function test_maintenance_can_be_stored_with_notes(): void
     {
         $user = $this->createUser();

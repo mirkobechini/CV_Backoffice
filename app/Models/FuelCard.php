@@ -16,7 +16,8 @@ class FuelCard extends Model
     {
         return LogOptions::defaults()
             ->logAll()
-            ->logOnlyDirty();
+            ->logOnlyDirty()
+            ->logExcept(['notes']);
     }
 
     public const STATUS_ASSIGNED = 'assigned';

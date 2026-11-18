@@ -5,12 +5,14 @@ namespace Tests\Feature\Crud;
 use App\Models\Brand;
 use App\Models\CarModel;
 use App\Models\FleetDevice;
+use App\Models\FleetDeviceAssignment;
 use App\Models\FuelCard;
 use App\Models\Group;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class FleetDeviceCrudTest extends TestCase
@@ -148,6 +150,34 @@ class FleetDeviceCrudTest extends TestCase
         ]);
     }
 
+    public function test_assignment_notes_are_excluded_from_the_activity_log(): void
+    {
+        // Audit sicurezza SM6: vale anche per lo storico assegnazioni.
+        $group = $this->group();
+        $user = $this->capo($group);
+        $originVehicle = $this->vehicle($group, '0001');
+        $targetVehicle = $this->vehicle($group, '0002');
+        $device = FleetDevice::create([
+            'type' => FleetDevice::TYPE_TELEPASS,
+            'code' => 'TP-1',
+            'vehicle_id' => $originVehicle->id,
+            'group_id' => $group->id,
+        ]);
+
+        $this->actingAs($user)->post(route('admin.fleet-devices.reassign', $device), [
+            'vehicle_id' => $targetVehicle->id,
+            'assigned_date' => '2026-10-20',
+            'notes' => 'PIN: 1234',
+        ]);
+
+        $assignment = FleetDeviceAssignment::where('fleet_device_id', $device->id)->firstOrFail();
+        $logged = Activity::where('subject_type', FleetDeviceAssignment::class)->where('subject_id', $assignment->id)->get();
+        $this->assertNotEmpty($logged);
+        foreach ($logged as $activity) {
+            $this->assertStringNotContainsString('PIN', json_encode($activity->properties));
+        }
+    }
+
     public function test_capo_can_unassign_device_from_vehicle(): void
     {
         // Audit 2026-10-22 (B8): prima l'unico modo per cambiare veicolo
@@ -278,5 +308,26 @@ class FleetDeviceCrudTest extends TestCase
 
         $response->assertRedirect(route('admin.fleet-devices.index'));
         $this->assertDatabaseMissing('fleet_devices', ['id' => $device->id]);
+    }
+
+    public function test_notes_and_provider_notes_are_excluded_from_the_activity_log(): void
+    {
+        // Audit sicurezza SM6: nelle note Mirko annota anche i PIN, non
+        // devono finire in chiaro nello storico attività.
+        $group = $this->group();
+        $device = FleetDevice::create([
+            'type' => FleetDevice::TYPE_TELEPASS,
+            'code' => 'TP-1',
+            'group_id' => $group->id,
+            'notes' => 'PIN: 1234',
+            'provider_notes' => 'PIN contratto: 4321',
+        ]);
+        $device->update(['notes' => 'PIN: 5678']);
+
+        $logged = Activity::where('subject_type', FleetDevice::class)->where('subject_id', $device->id)->get();
+        $this->assertNotEmpty($logged);
+        foreach ($logged as $activity) {
+            $this->assertStringNotContainsString('PIN', json_encode($activity->properties));
+        }
     }
 }

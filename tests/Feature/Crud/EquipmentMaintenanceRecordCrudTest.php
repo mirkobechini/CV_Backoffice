@@ -105,6 +105,41 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_destroy_ignores_back_pointing_to_an_external_url(): void
+    {
+        // Audit sicurezza SM4: `back` è un input utente, non va seguito
+        // ciecamente — un `back` assoluto esterno reindirizzerebbe fuori
+        // dall'app (open redirect).
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+
+        $response = $this->actingAs($user)->delete(route('admin.equipment-maintenance-records.destroy', $record), [
+            'back' => 'https://evil.example/phishing',
+        ]);
+
+        $response->assertRedirect(route('admin.equipment-maintenance-records.index'));
+    }
+
+    public function test_destroy_follows_a_safe_relative_back_url(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => today(),
+        ]);
+
+        $response = $this->actingAs($user)->delete(route('admin.equipment-maintenance-records.destroy', $record), [
+            'back' => '/admin/vehicles',
+        ]);
+
+        $response->assertRedirect('/admin/vehicles');
+    }
+
     public function test_can_be_stored_with_multiple_equipments(): void
     {
         $user = $this->createUser();
