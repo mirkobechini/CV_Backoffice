@@ -8,10 +8,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreIssueRequest;
 use App\Http\Requests\UpdateIssueRequest;
 use App\Models\Issue;
+use App\Models\IssueSparePart;
 use App\Models\Tire;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\Models\Activity;
 
 class IssueController extends Controller
 {
@@ -162,7 +164,15 @@ class IssueController extends Controller
     {
         $activities = $issue->activities()->with('causer')->latest()->get();
 
-        return view('admin.issues.show', compact('issue', 'activities'));
+        // Lo storico "ordinato"/"arrivato" vive nell'activity log dei pezzi
+        // (IssueSparePart), non in quello del guasto: va unito a parte
+        // nella vista invece di risalire da $activities.
+        $sparePartActivities = Activity::where('subject_type', IssueSparePart::class)
+            ->whereIn('subject_id', $issue->spareParts->pluck('id'))
+            ->latest()
+            ->get();
+
+        return view('admin.issues.show', compact('issue', 'activities', 'sparePartActivities'));
     }
 
     /**

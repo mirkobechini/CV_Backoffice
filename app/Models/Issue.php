@@ -183,7 +183,7 @@ class Issue extends Model
             return null;
         }
 
-        $allArrived = $ordered->every(fn ($p) => $p->arrived_at !== null);
+        $allArrived = $ordered->every(fn ($p) => $p->arrived_at !== null && ! $p->arrived_at->isFuture());
 
         return $allArrived
             ? ['label' => __('Pezzi arrivati'), 'color' => 'green']

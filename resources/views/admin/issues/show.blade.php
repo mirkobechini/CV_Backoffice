@@ -121,87 +121,107 @@
         </div>
         <div class="body">
             @if ($issue->spareParts->isNotEmpty())
-                <table class="veh-hist-table">
-                    <thead>
-                        <tr>
-                            <th>{{ __('Pezzo') }}</th>
-                            <th>{{ __('Ordinato il') }}</th>
-                            <th>{{ __('Arrivato il') }}</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($issue->spareParts as $part)
-                            <tr>
-                                <td>
-                                    {{ $part->name }}
-                                    @if ($part->notes)
-                                        <br><span class="hint">{{ $part->notes }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <form method="POST"
-                                        action="{{ route('admin.issues.spare-parts.update', [$issue, $part]) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="name" value="{{ $part->name }}">
-                                        <input type="hidden" name="notes" value="{{ $part->notes }}">
-                                        <input type="hidden" name="arrived_at"
-                                            value="{{ $part->arrived_at?->format('Y-m-d') }}">
-                                        <input type="date" name="ordered_at"
-                                            value="{{ $part->ordered_at?->format('Y-m-d') }}"
-                                            onchange="this.form.submit()">
-                                    </form>
-                                </td>
-                                <td>
-                                    <form method="POST"
-                                        action="{{ route('admin.issues.spare-parts.update', [$issue, $part]) }}">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input type="hidden" name="name" value="{{ $part->name }}">
-                                        <input type="hidden" name="notes" value="{{ $part->notes }}">
-                                        <input type="hidden" name="ordered_at"
-                                            value="{{ $part->ordered_at?->format('Y-m-d') }}">
-                                        <input type="date" name="arrived_at"
-                                            value="{{ $part->arrived_at?->format('Y-m-d') }}"
-                                            onchange="this.form.submit()">
-                                    </form>
-                                </td>
-                                <td>
-                                    <form method="POST"
-                                        action="{{ route('admin.issues.spare-parts.destroy', [$issue, $part]) }}"
-                                        onsubmit="return confirm('{{ __('Eliminare questo pezzo?') }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="mini-btn" title="{{ __('Elimina pezzo') }}"
-                                            aria-label="{{ __('Elimina pezzo') }}">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                @foreach ($issue->spareParts as $part)
+                    <div class="spare-part-item"
+                        style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                            <div>
+                                <strong>{{ $part->name }}</strong>
+                                @if ($part->notes)
+                                    <div class="hint">{{ $part->notes }}</div>
+                                @endif
+                            </div>
+                            <form method="POST"
+                                action="{{ route('admin.issues.spare-parts.destroy', [$issue, $part]) }}"
+                                onsubmit="return confirm('{{ __('Eliminare questo pezzo?') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="mini-btn" title="{{ __('Elimina pezzo') }}"
+                                    aria-label="{{ __('Elimina pezzo') }}">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="row2-tight" style="margin-top:10px;">
+                            <form class="field" method="POST"
+                                action="{{ route('admin.issues.spare-parts.update', [$issue, $part]) }}">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="name" value="{{ $part->name }}">
+                                <input type="hidden" name="notes" value="{{ $part->notes }}">
+                                <input type="hidden" name="arrived_at"
+                                    value="{{ $part->arrived_at?->format('Y-m-d') }}">
+                                <label for="ordered_at-{{ $part->id }}">{{ __('Ordinato il') }}</label>
+                                <input type="date" class="input" id="ordered_at-{{ $part->id }}" name="ordered_at"
+                                    value="{{ $part->ordered_at?->format('Y-m-d') }}" onchange="this.form.submit()">
+                            </form>
+                            <form class="field" method="POST"
+                                action="{{ route('admin.issues.spare-parts.update', [$issue, $part]) }}">
+                                @csrf
+                                @method('PATCH')
+                                <input type="hidden" name="name" value="{{ $part->name }}">
+                                <input type="hidden" name="notes" value="{{ $part->notes }}">
+                                <input type="hidden" name="ordered_at"
+                                    value="{{ $part->ordered_at?->format('Y-m-d') }}">
+                                <label for="arrived_at-{{ $part->id }}">{{ __('Arrivato il') }}</label>
+                                <input type="date" class="input" id="arrived_at-{{ $part->id }}" name="arrived_at"
+                                    value="{{ $part->arrived_at?->format('Y-m-d') }}" onchange="this.form.submit()">
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
             @else
                 <p class="hint">{{ __('Nessun pezzo registrato.') }}</p>
             @endif
 
-            <details style="margin-top:12px;">
-                <summary>{{ __('Aggiungi pezzi') }}</summary>
+            <details style="margin-top:12px;" @if ($errors->has('parts.*')) open @endif>
+                <summary>{{ __('+ Aggiungi pezzi di ricambio') }}</summary>
+                <p class="hint" style="margin-top:8px;">
+                    {{ __('Se lasci vuota la data ordine su una riga, erediterà quella della prima riga compilata. La data arrivo resta sempre facoltativa.') }}
+                </p>
+                @if ($errors->has('parts.*'))
+                    <div class="field-error" style="margin-top:8px;">
+                        @foreach ($errors->get('parts.*') as $messages)
+                            @foreach ($messages as $message)
+                                <div>{{ $message }}</div>
+                            @endforeach
+                        @endforeach
+                    </div>
+                @endif
                 <form method="POST" action="{{ route('admin.issues.spare-parts.store', $issue) }}"
-                    id="spare-parts-form" style="margin-top:12px;">
+                    id="spare-parts-form" style="margin-top:10px;">
                     @csrf
                     <div id="spare-parts-rows">
-                        <div class="spare-part-row" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
-                            <input type="text" name="parts[0][name]" placeholder="{{ __('Nome pezzo') }}" required>
-                            <input type="text" name="parts[0][notes]" placeholder="{{ __('Nota (opzionale)') }}">
-                            <input type="date" name="parts[0][ordered_at]" title="{{ __('Data ordine') }}">
-                            <input type="date" name="parts[0][arrived_at]" title="{{ __('Data arrivo') }}">
+                        <div class="spare-part-row"
+                            style="border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px;">
+                            <div class="field">
+                                <label for="parts-0-name">{{ __('Nome pezzo') }}</label>
+                                <input type="text" class="input" id="parts-0-name" name="parts[0][name]"
+                                    placeholder="{{ __('es. Specchietto destro') }}" required>
+                            </div>
+                            <div class="field" style="margin-top:10px;">
+                                <label for="parts-0-notes">{{ __('Nota (opzionale)') }}</label>
+                                <input type="text" class="input" id="parts-0-notes" name="parts[0][notes]"
+                                    placeholder="{{ __('es. fornitore, codice ricambio') }}">
+                            </div>
+                            <div class="row2-tight" style="margin-top:10px;">
+                                <div class="field">
+                                    <label for="parts-0-ordered_at">{{ __('Data ordine (opzionale)') }}</label>
+                                    <input type="date" class="input" id="parts-0-ordered_at"
+                                        name="parts[0][ordered_at]">
+                                </div>
+                                <div class="field">
+                                    <label for="parts-0-arrived_at">{{ __('Data arrivo (opzionale)') }}</label>
+                                    <input type="date" class="input" id="parts-0-arrived_at"
+                                        name="parts[0][arrived_at]">
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <button type="button" id="add-spare-part-row" class="btn ghost">{{ __('+ Aggiungi riga') }}</button>
-                    <button type="submit" class="btn primary">{{ __('Salva pezzi') }}</button>
+                    <div class="form-actions">
+                        <button type="button" id="add-spare-part-row" class="btn ghost">{{ __('+ Aggiungi un altro pezzo') }}</button>
+                        <button type="submit" class="btn primary">{{ __('Salva pezzi') }}</button>
+                    </div>
                 </form>
             </details>
         </div>
@@ -222,7 +242,7 @@
         </div>
     @endif
 
-    @if ($activities->isNotEmpty())
+    @if ($activities->isNotEmpty() || $sparePartActivities->isNotEmpty())
         @php
             $statusEvent = fn($status) => match ($status) {
                 'in_progress' => ['label' => __('Preso in carico'), 'color' => 'amber'],
@@ -285,6 +305,54 @@
                     : $activity->created_at;
                 $timelineEntries->push([...$event, 'date' => $date]);
             }
+            // Storico pezzi ordinati/arrivati: vive nell'activity log di
+            // IssueSparePart, unito qui perché il guasto ha un'unica
+            // timeline visibile. Il nome va preso dal pezzo attuale, non
+            // da $attrs: un update che tocca solo una data non include
+            // "name" tra gli attributi modificati (logOnlyDirty).
+            $sparePartNames = $issue->spareParts->pluck('name', 'id');
+            // Le date (cast 'date') vengono serializzate in JSON come
+            // ISO8601 UTC ("...T23:00:00Z" per mezzanotte locale del
+            // giorno dopo, con APP_TIMEZONE=Europe/Rome): va riportata al
+            // fuso dell'app prima di leggerne solo la data, altrimenti
+            // compare il giorno prima.
+            $parseLogDate = fn($value) => \Carbon\Carbon::parse($value)->setTimezone(config('app.timezone'));
+            foreach ($sparePartActivities as $activity) {
+                $attrs = $activity->attribute_changes?->get('attributes', []) ?? [];
+                $old = $activity->attribute_changes?->get('old', []) ?? [];
+                $name = $sparePartNames[$activity->subject_id] ?? ($attrs['name'] ?? null);
+                if (! $name) {
+                    continue;
+                }
+
+                if ($activity->event === 'created') {
+                    if (! empty($attrs['ordered_at'])) {
+                        $timelineEntries->push([
+                            'label' => __('Pezzo ordinato: :name', ['name' => $name]),
+                            'color' => 'amber',
+                            'date' => $parseLogDate($attrs['ordered_at']),
+                        ]);
+                    }
+
+                    continue;
+                }
+
+                if (! empty($attrs['arrived_at']) && empty($old['arrived_at'] ?? null)) {
+                    $timelineEntries->push([
+                        'label' => __('Pezzo arrivato: :name', ['name' => $name]),
+                        'color' => 'green',
+                        'date' => $parseLogDate($attrs['arrived_at']),
+                    ]);
+                }
+
+                if (! empty($attrs['ordered_at']) && empty($old['ordered_at'] ?? null)) {
+                    $timelineEntries->push([
+                        'label' => __('Pezzo ordinato: :name', ['name' => $name]),
+                        'color' => 'amber',
+                        'date' => $parseLogDate($attrs['ordered_at']),
+                    ]);
+                }
+            }
             $timelineEntries = $timelineEntries->sortByDesc('date');
         @endphp
         <div class="timeline-card">
@@ -311,12 +379,26 @@
             const i = rows.children.length;
             const row = document.createElement('div');
             row.className = 'spare-part-row';
-            row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;';
+            row.style.cssText = 'border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px;';
             row.innerHTML = `
-                <input type="text" name="parts[${i}][name]" placeholder="{{ __('Nome pezzo') }}" required>
-                <input type="text" name="parts[${i}][notes]" placeholder="{{ __('Nota (opzionale)') }}">
-                <input type="date" name="parts[${i}][ordered_at]" title="{{ __('Data ordine') }}">
-                <input type="date" name="parts[${i}][arrived_at]" title="{{ __('Data arrivo') }}">
+                <div class="field">
+                    <label for="parts-${i}-name">{{ __('Nome pezzo') }}</label>
+                    <input type="text" class="input" id="parts-${i}-name" name="parts[${i}][name]" placeholder="{{ __('es. Specchietto destro') }}" required>
+                </div>
+                <div class="field" style="margin-top:10px;">
+                    <label for="parts-${i}-notes">{{ __('Nota (opzionale)') }}</label>
+                    <input type="text" class="input" id="parts-${i}-notes" name="parts[${i}][notes]" placeholder="{{ __('es. fornitore, codice ricambio') }}">
+                </div>
+                <div class="row2-tight" style="margin-top:10px;">
+                    <div class="field">
+                        <label for="parts-${i}-ordered_at">{{ __('Data ordine (opzionale)') }}</label>
+                        <input type="date" class="input" id="parts-${i}-ordered_at" name="parts[${i}][ordered_at]">
+                    </div>
+                    <div class="field">
+                        <label for="parts-${i}-arrived_at">{{ __('Data arrivo (opzionale)') }}</label>
+                        <input type="date" class="input" id="parts-${i}-arrived_at" name="parts[${i}][arrived_at]">
+                    </div>
+                </div>
             `;
             rows.appendChild(row);
         });
