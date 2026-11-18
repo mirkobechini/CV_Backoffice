@@ -16,7 +16,8 @@
     annidate con quelle dei modal di eliminazione), compilata via JS dagli
     id selezionati prima dell'invio. --}}
     <form id="equipment-bulk-form" method="POST" action="{{ route('admin.equipments.bulk-record-revision') }}"
-        class="bulk-edit-bar" style="display:none;" data-single-submit="true">
+        class="bulk-edit-bar" style="display:none;" data-single-submit="true" role="group"
+        aria-describedby="equipment_ids-error">
         @csrf
         <div id="equipment-bulk-hidden-ids"></div>
         <div class="bulk-edit-bar-inner">
@@ -32,11 +33,8 @@
             <button type="button" id="equipment-bulk-clear" class="btn ghost sm">{{ __('Annulla selezione') }}</button>
         </div>
         @error('equipment_ids')
-            <div class="field-error">{{ $message }}</div>
-        @enderror
-        @error('performed_date')
-            <div class="field-error">{{ $message }}</div>
-        @enderror
+            <div class="field-error" id="equipment_ids-error">{{ $message }}</div>
+            @enderror
     </form>
 
     <div class="table-card">

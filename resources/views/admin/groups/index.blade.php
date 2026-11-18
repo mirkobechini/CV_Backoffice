@@ -17,12 +17,12 @@
         <h3><span class="ic"><i class="fa-solid fa-key"></i></span> {{ __('Entra in un gruppo esistente') }}</h3>
         <form method="POST" action="{{ route('admin.groups.join') }}" class="join-row">
             @csrf
-            <input type="text" name="invite_code" class="input" placeholder="{{ __('Codice invito') }}" maxlength="12"
-                required>
+            <input type="text" id="invite_code" name="invite_code" class="input" placeholder="{{ __('Codice invito') }}"
+                maxlength="12" required aria-describedby="invite_code-error">
             <button type="submit" class="btn outline-solid">{{ __('Entra') }}</button>
         </form>
         @error('invite_code')
-            <div class="field-error" style="margin-top:8px;">{{ $message }}</div>
+            <div class="field-error" id="invite_code-error" style="margin-top:8px;">{{ $message }}</div>
         @enderror
     </div>
 

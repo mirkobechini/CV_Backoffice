@@ -30,7 +30,7 @@
                     <div class="field">
                         <label for="equipment_id">{{ __('Attrezzatura') }} <span class="req">*</span></label>
                         <select class="select @error('equipment_id') is-invalid @enderror" id="equipment_id"
-                            name="equipment_id" required>
+                            name="equipment_id" required aria-describedby="equipment_id-error">
                             <option value="" disabled>{{ __('Seleziona un\'attrezzatura') }}</option>
                             @foreach ($equipments as $equipment)
                                 <option value="{{ $equipment->id }}"
@@ -43,8 +43,8 @@
                             @endforeach
                         </select>
                         @error('equipment_id')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="equipment_id-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <x-form.date-input name="event_date" label="{{ __('Data del guasto') }}" :model="$equipmentIssue"
                         required />
@@ -52,7 +52,7 @@
                 <div class="row2">
                     <div class="field">
                         <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
-                        <select class="select @error('status') is-invalid @enderror" id="status" name="status" required>
+                        <select class="select @error('status') is-invalid @enderror" id="status" name="status" required aria-describedby="status-error">
                             <option value="" disabled>{{ __('Seleziona uno stato') }}</option>
                             <option value="open"
                                 {{ old('status', $equipmentIssue->status) == 'open' ? 'selected' : '' }}>{{ __('Aperto') }}
@@ -65,16 +65,16 @@
                                 {{ __('Risolto') }}</option>
                         </select>
                         @error('status')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="status-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="description">{{ __('Descrizione') }} <span class="req">*</span></label>
                         <input type="text" class="input @error('description') is-invalid @enderror" id="description"
-                            name="description" value="{{ old('description', $equipmentIssue->description) }}" required>
+                            name="description" value="{{ old('description', $equipmentIssue->description) }}" required aria-describedby="description-error">
                         @error('description')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="description-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
             </div>

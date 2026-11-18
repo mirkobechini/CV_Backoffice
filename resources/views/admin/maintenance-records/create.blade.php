@@ -28,7 +28,7 @@
                 <div class="field">
                     <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
                     <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id"
-                        required>
+                        required aria-describedby="vehicle_id-error">
                         <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}"
@@ -40,8 +40,8 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
 
                 <x-admin.maintenance-item-picker
@@ -58,7 +58,7 @@
                 <div class="field">
                     <label for="provider_id">{{ __('Officina') }} <span class="req">*</span></label>
                     <select class="select @error('provider_id') is-invalid @enderror" id="provider_id"
-                        name="provider_id" required>
+                        name="provider_id" required aria-describedby="provider_id-error">
                         <option value="" disabled selected>{{ __("Seleziona un'officina") }}</option>
                         @foreach ($providers as $provider)
                             <option value="{{ $provider->id }}"
@@ -67,8 +67,8 @@
                         @endforeach
                     </select>
                     @error('provider_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="provider_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 
@@ -81,7 +81,7 @@
                     <div class="field">
                         <label for="activity_type">{{ __('Tipo attività') }}</label>
                         <select class="select @error('activity_type') is-invalid @enderror" id="activity_type"
-                            name="activity_type">
+                            name="activity_type" aria-describedby="activity_type-error">
                             <option value="" disabled {{ old('activity_type', $preselectedActivityType) ? '' : 'selected' }}>{{ __('Seleziona...') }}</option>
                             @foreach (\App\Models\MaintenanceRecord::ACTIVITY_TYPES as $item)
                                 <option value="{{ $item }}" {{ old('activity_type', $preselectedActivityType) == $item ? 'selected' : '' }}>
@@ -90,8 +90,8 @@
                             @endforeach
                         </select>
                         @error('activity_type')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="activity_type-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
 
@@ -106,10 +106,10 @@
                         <label for="mileage_at_service">{{ __("Chilometraggio all'appuntamento") }}</label>
                         <input type="number" class="input @error('mileage_at_service') is-invalid @enderror"
                             id="mileage_at_service" name="mileage_at_service" value="{{ old('mileage_at_service') }}"
-                            min="0" placeholder="es. 87400">
+                            min="0" placeholder="es. 87400" aria-describedby="mileage_at_service-error">
                         @error('mileage_at_service')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="mileage_at_service-error">{{ $message }}</div>
+                            @enderror
                         <div class="hint" id="mileage-last-known-hint"></div>
                         <div class="hint">
                             {{ __("Obbligatorio se è selezionato un tagliando — km al momento del conferimento in officina.") }}
@@ -119,18 +119,18 @@
                 <div class="field">
                     <label for="cost">{{ __('Costo (€)') }}</label>
                     <input type="number" step="0.01" class="input @error('cost') is-invalid @enderror"
-                        id="cost" name="cost" value="{{ old('cost') }}" min="0" placeholder="es. 120.00">
+                        id="cost" name="cost" value="{{ old('cost') }}" min="0" placeholder="es. 120.00" aria-describedby="cost-error">
                     @error('cost')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="cost-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field" style="margin-bottom:0;">
                     <label for="notes">{{ __('Note') }}</label>
                     <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes"
-                        rows="3" placeholder="{{ __('Annotazioni facoltative su questo appuntamento...') }}">{{ old('notes') }}</textarea>
+                        rows="3" placeholder="{{ __('Annotazioni facoltative su questo appuntamento...') }}" aria-describedby="notes-error">{{ old('notes') }}</textarea>
                     @error('notes')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="notes-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 

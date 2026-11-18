@@ -43,7 +43,7 @@
 |---|------|-------------|-------------|----------|-------|
 | A1 | ARIA | Bottoni icona-only (visualizza/modifica/elimina) con solo `title`, serve `aria-label` | varie card scheda veicolo | Media | ✅ |
 | A2 | Contrasto | Badge ambra/verde in tema chiaro sotto soglia WCAG AA (4.5:1) | `resources/css/app.css:1146-1159,1093-1096` | Media | ✅ |
-| A3 | Form | Messaggi di errore non collegati via `aria-describedby` | tutte le `@error` nei form create/edit | Media | 🔄 fatto per i componenti condivisi (date/month/time/tire-size-input); restano i form con `<input>` semplice (sweep più ampio, ~50 file) |
+| A3 | Form | Messaggi di errore non collegati via `aria-describedby` | tutte le `@error` nei form create/edit | Media | ✅ fix issue-649: tutti i form rimanenti ora collegati via aria-describedby |
 | A4 | Tastiera | Righe raggruppabili (tabelle scadenze/guasti) rispondono solo al click, non da tastiera | `resources/js/app.js:116-127` | Media | ✅ |
 | A5 | Struttura | Manca `<h1>` su alcune pagine indice | pagine indice | Bassa | ✅ |
 | A6 | Focus | Focus visibile mancante su `.search input` e `.role-select` | `resources/css/app.css:819-826,3306-3315` | Bassa | ✅ |

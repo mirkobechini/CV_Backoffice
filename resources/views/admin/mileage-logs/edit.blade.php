@@ -29,7 +29,7 @@
                 <div class="field">
                     <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
                     <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id"
-                        required>
+                        required aria-describedby="vehicle_id-error">
                         <option value="" disabled>{{ __('Seleziona un veicolo') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}"
@@ -40,8 +40,8 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="row2">
                     <x-form.date-input name="log_date" label="{{ __('Data della registrazione') }}" :model="$mileageLog"
@@ -49,10 +49,10 @@
                     <div class="field">
                         <label for="mileage">{{ __('Chilometraggio') }} <span class="req">*</span></label>
                         <input type="number" class="input @error('mileage') is-invalid @enderror" id="mileage"
-                            name="mileage" value="{{ old('mileage', $mileageLog->mileage) }}" min="0" required>
+                            name="mileage" value="{{ old('mileage', $mileageLog->mileage) }}" min="0" required aria-describedby="mileage-error">
                         @error('mileage')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="mileage-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
             </div>

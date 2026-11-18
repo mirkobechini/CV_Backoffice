@@ -23,7 +23,7 @@
             <div class="field">
                 <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
                 <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id"
-                    required>
+                    required aria-describedby="vehicle_id-error">
                     <option value="" disabled {{ $isEdit ? '' : 'selected' }}>{{ __('Seleziona un veicolo') }}</option>
                     @foreach ($vehicles as $vehicle)
                         <option value="{{ $vehicle->id }}" data-fuel-types="{{ implode(',', $vehicle->allowedFuelLogTypes()) }}"
@@ -34,13 +34,13 @@
                     @endforeach
                 </select>
                 @error('vehicle_id')
-                    <div class="field-error">{{ $message }}</div>
-                @enderror
+                    <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                    @enderror
             </div>
             <div class="field">
                 <label for="fuel_type">{{ __('Carburante di questo rifornimento') }} <span class="req">*</span></label>
                 <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type"
-                    required>
+                    required aria-describedby="fuel_type-error">
                     <option value="" disabled {{ old('fuel_type', $fuelLog->fuel_type ?? '') ? '' : 'selected' }}>
                         {{ __('Seleziona il carburante') }}</option>
                     @foreach (\App\Models\FuelLog::fuelTypeLabels() as $value => $label)
@@ -53,8 +53,8 @@
                     {{ __('Mostra solo i carburanti ammessi per il veicolo selezionato (configurabili sulla sua scheda).') }}
                 </div>
                 @error('fuel_type')
-                    <div class="field-error">{{ $message }}</div>
-                @enderror
+                    <div class="field-error" id="fuel_type-error">{{ $message }}</div>
+                    @enderror
             </div>
             <div class="row2">
                 <x-form.date-input name="log_date" label="{{ __('Data rifornimento') }}" :model="$fuelLog"
@@ -63,10 +63,10 @@
                     <label for="liters">{{ __('Litri') }} <span class="req">*</span></label>
                     <input type="number" step="0.01" class="input @error('liters') is-invalid @enderror"
                         id="liters" name="liters" value="{{ old('liters', $fuelLog->liters ?? '') }}" min="0.01"
-                        placeholder="{{ __('es. 45.50') }}" required>
+                        placeholder="{{ __('es. 45.50') }}" required aria-describedby="liters-error">
                     @error('liters')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="liters-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
             <div class="row2">
@@ -74,26 +74,26 @@
                     <label for="cost_total">{{ __('Costo totale (€)') }}</label>
                     <input type="number" step="0.01" class="input @error('cost_total') is-invalid @enderror"
                         id="cost_total" name="cost_total" value="{{ old('cost_total', $fuelLog->cost_total ?? '') }}"
-                        min="0" placeholder="{{ __('es. 68.90') }}">
+                        min="0" placeholder="{{ __('es. 68.90') }}" aria-describedby="cost_total-error">
                     @error('cost_total')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="cost_total-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="mileage">{{ __('Chilometraggio al rifornimento') }}</label>
                     <input type="number" class="input @error('mileage') is-invalid @enderror" id="mileage"
                         name="mileage" value="{{ old('mileage', $fuelLog->mileage ?? '') }}" min="0"
-                        placeholder="{{ __('es. 87400') }}">
+                        placeholder="{{ __('es. 87400') }}" aria-describedby="mileage-error">
                     @error('mileage')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="mileage-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
             @if ($fuelCards->isNotEmpty())
                 <div class="field">
                     <label for="fuel_card_id">{{ __('Tessera usata (opzionale)') }}</label>
                     <select class="select @error('fuel_card_id') is-invalid @enderror" id="fuel_card_id"
-                        name="fuel_card_id">
+                        name="fuel_card_id" aria-describedby="fuel_card_id-error">
                         <option value="">{{ __('Nessuna') }}</option>
                         @foreach ($fuelCards as $fuelCard)
                             <option value="{{ $fuelCard->id }}" data-vehicle-id="{{ $fuelCard->vehicle_id }}"
@@ -104,8 +104,8 @@
                         @endforeach
                     </select>
                     @error('fuel_card_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="fuel_card_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
             @endif
         </div>

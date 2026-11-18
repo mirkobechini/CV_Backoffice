@@ -28,36 +28,36 @@
                     <div class="field">
                         <label for="card_number">{{ __('Numero tessera') }} <span class="req">*</span></label>
                         <input type="text" class="input @error('card_number') is-invalid @enderror" id="card_number"
-                            name="card_number" value="{{ old('card_number') }}" maxlength="255" required>
+                            name="card_number" value="{{ old('card_number') }}" maxlength="255" required aria-describedby="card_number-error">
                         @error('card_number')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="card_number-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="provider">{{ __('Fornitore') }}</label>
                         <input type="text" class="input @error('provider') is-invalid @enderror" id="provider"
                             name="provider" value="{{ old('provider') }}" maxlength="255"
-                            placeholder="{{ __('es. Eni, Q8, IP') }}">
+                            placeholder="{{ __('es. Eni, Q8, IP') }}" aria-describedby="provider-error">
                         @error('provider')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="provider-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="field">
                     <label for="status">{{ __('Stato') }} <span class="req">*</span></label>
-                    <select class="select @error('status') is-invalid @enderror" id="status" name="status" required>
+                    <select class="select @error('status') is-invalid @enderror" id="status" name="status" required aria-describedby="status-error">
                         @foreach ($statusOptions as $value => $label)
                             <option value="{{ $value }}"
                                 {{ old('status', 'assigned') == $value ? 'selected' : '' }}>{{ $label }}</option>
                         @endforeach
                     </select>
                     @error('status')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="status-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field" id="vehicle-field">
                     <label for="vehicle_id">{{ __('Veicolo') }}</label>
-                    <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id">
+                    <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" aria-describedby="vehicle_id-error">
                         <option value="">{{ __('Seleziona un veicolo') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}" {{ old('vehicle_id') == $vehicle->id ? 'selected' : '' }}>
@@ -66,15 +66,15 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="notes">{{ __('Note') }}</label>
-                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3">{{ old('notes') }}</textarea>
+                    <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes" rows="3" aria-describedby="notes-error">{{ old('notes') }}</textarea>
                     @error('notes')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="notes-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 

@@ -27,7 +27,7 @@
                 <div class="field">
                     <label for="vehicle_id">{{ __('Veicolo') }} <span class="req">*</span></label>
                     <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id"
-                        name="vehicle_id" required>
+                        name="vehicle_id" required aria-describedby="vehicle_id-error">
                         <option value="" disabled selected>{{ __('Seleziona un veicolo') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}"
@@ -39,12 +39,12 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="type">{{ __('Tipologia') }} <span class="req">*</span></label>
-                    <select class="select @error('type') is-invalid @enderror" id="type" name="type" required>
+                    <select class="select @error('type') is-invalid @enderror" id="type" name="type" required aria-describedby="type-error">
                         <option value="" disabled selected>{{ __('Seleziona una tipologia') }}</option>
                         <option value="Assicurazione"
                             {{ old('type', $isEdit ? $deadline->type : null) == 'Assicurazione' ? 'selected' : '' }}>
@@ -63,8 +63,8 @@
                             {{ __('Cinghia Distribuzione') }}</option>
                     </select>
                     @error('type')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="type-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
             <div id="due-date-group">
@@ -96,30 +96,30 @@
                         <input type="number" class="input @error('interval_km') is-invalid @enderror"
                             id="interval_km" name="interval_km"
                             value="{{ old('interval_km', $isEdit ? $deadline->interval_km : null) }}" min="0"
-                            placeholder="es. 15000">
+                            placeholder="es. 15000" aria-describedby="interval_km-error">
                         @error('interval_km')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="interval_km-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="last_mileage" id="last-mileage-label">{{ __("Km all'ultimo cambio") }}</label>
                         <input type="number" class="input @error('last_mileage') is-invalid @enderror"
                             id="last_mileage" name="last_mileage"
                             value="{{ old('last_mileage', $isEdit ? $deadline->last_mileage : null) }}" min="0"
-                            placeholder="es. 50000">
+                            placeholder="es. 50000" aria-describedby="last_mileage-error">
                         @error('last_mileage')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="last_mileage-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field" id="interval-days-field">
                         <label for="interval_days">{{ __('Intervallo giorni') }}</label>
                         <input type="number" class="input @error('interval_days') is-invalid @enderror"
                             id="interval_days" name="interval_days"
                             value="{{ old('interval_days', $isEdit ? $deadline->interval_days : null) }}" min="0"
-                            placeholder="es. 365">
+                            placeholder="es. 365" aria-describedby="interval_days-error">
                         @error('interval_days')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="interval_days-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="hint" id="km-settings-hint">
@@ -136,22 +136,22 @@
                     <label for="insurance_company">{{ __('Compagnia') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('insurance_company') is-invalid @enderror"
                         id="insurance_company" name="insurance_company"
-                        value="{{ old('insurance_company', $isEdit ? $deadline->insurance_company : null) }}">
+                        value="{{ old('insurance_company', $isEdit ? $deadline->insurance_company : null) }}" aria-describedby="insurance_company-error">
                     @error('insurance_company')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="insurance_company-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="insurance_policy_number">{{ __('Numero polizza') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('insurance_policy_number') is-invalid @enderror"
                         id="insurance_policy_number" name="insurance_policy_number"
-                        value="{{ old('insurance_policy_number', $isEdit ? $deadline->insurance_policy_number : null) }}">
+                        value="{{ old('insurance_policy_number', $isEdit ? $deadline->insurance_policy_number : null) }}" aria-describedby="insurance_policy_number-error">
                     @error('insurance_policy_number')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="insurance_policy_number-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
-            <div class="field">
+            <div class="field" role="group" aria-describedby="coverages-error">
                 <label>{{ __('Coperture') }} <span class="req">*</span></label>
                 <div class="hint" style="margin-bottom:8px;">{{ __('Seleziona una o più coperture e indica il costo annuo di ciascuna.') }}</div>
                 @foreach (\App\Models\Deadline::INSURANCE_COVERAGE_TYPES as $coverageType)
@@ -170,15 +170,16 @@
                             class="input @error('coverages.' . $coverageType . '.cost') is-invalid @enderror"
                             id="coverage-cost-{{ $slug }}" name="coverages[{{ $coverageType }}][cost]"
                             placeholder="{{ __('Costo (€)') }}" value="{{ $coverageCost }}"
+                            aria-describedby="coverage-cost-{{ $slug }}-error"
                             {{ $coverageChecked ? '' : 'disabled' }}>
                     </div>
                     @error('coverages.' . $coverageType . '.cost')
-                        <div class="field-error">{{ $message }}</div>
+                        <div class="field-error" id="coverage-cost-{{ $slug }}-error">{{ $message }}</div>
                     @enderror
                 @endforeach
                 @error('coverages')
-                    <div class="field-error">{{ $message }}</div>
-                @enderror
+                    <div class="field-error" id="coverages-error">{{ $message }}</div>
+                    @enderror
             </div>
             <div class="row2">
                 <div class="field">
@@ -187,19 +188,19 @@
                         class="input @error('insurance_coverage_limit') is-invalid @enderror"
                         id="insurance_coverage_limit" name="insurance_coverage_limit"
                         value="{{ old('insurance_coverage_limit', $isEdit ? $deadline->insurance_coverage_limit : null) }}"
-                        min="0">
+                        min="0" aria-describedby="insurance_coverage_limit-error">
                     @error('insurance_coverage_limit')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="insurance_coverage_limit-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="insurance_broker_contact">{{ __('Contatto broker/agenzia') }}</label>
                     <input type="text" class="input @error('insurance_broker_contact') is-invalid @enderror"
                         id="insurance_broker_contact" name="insurance_broker_contact"
-                        value="{{ old('insurance_broker_contact', $isEdit ? $deadline->insurance_broker_contact : null) }}">
+                        value="{{ old('insurance_broker_contact', $isEdit ? $deadline->insurance_broker_contact : null) }}" aria-describedby="insurance_broker_contact-error">
                     @error('insurance_broker_contact')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="insurance_broker_contact-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
             <div class="field">
@@ -208,19 +209,19 @@
                     class="input @error('insurance_renewal_months') is-invalid @enderror"
                     id="insurance_renewal_months" name="insurance_renewal_months"
                     value="{{ old('insurance_renewal_months', $isEdit ? $deadline->insurance_renewal_months : null) }}"
-                    placeholder="{{ __('Default: 12') }}">
+                    placeholder="{{ __('Default: 12') }}" aria-describedby="insurance_renewal_months-error">
                 @error('insurance_renewal_months')
-                    <div class="field-error">{{ $message }}</div>
-                @enderror
+                    <div class="field-error" id="insurance_renewal_months-error">{{ $message }}</div>
+                    @enderror
                 <div class="hint">{{ __('Usato dal rinnovo "senza appuntamento". Lascia vuoto per 12 mesi.') }}</div>
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label for="notes">{{ __('Note') }}</label>
                 <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes"
-                    rows="2">{{ old('notes', $isEdit ? $deadline->notes : null) }}</textarea>
+                    rows="2" aria-describedby="notes-error">{{ old('notes', $isEdit ? $deadline->notes : null) }}</textarea>
                 @error('notes')
-                    <div class="field-error">{{ $message }}</div>
-                @enderror
+                    <div class="field-error" id="notes-error">{{ $message }}</div>
+                    @enderror
             </div>
         </div>
 
@@ -229,15 +230,15 @@
             <h2><span class="num">3</span> {{ __('Stato') }}</h2>
             <label class="check">
                 <input type="checkbox" value="1" id="is_renewed" name="is_renewed"
-                    {{ old('is_renewed', $isEdit ? $deadline->is_renewed : null) ? 'checked' : '' }}>
+                    {{ old('is_renewed', $isEdit ? $deadline->is_renewed : null) ? 'checked' : '' }} aria-describedby="is_renewed-error">
                 <div>
                     <div class="label">{{ $isEdit ? __('Segna come rinnovata') : __('Segna subito come rinnovata') }}</div>
                     <div class="sub">{{ __('Se la scadenza è già stata effettuata') }}</div>
                 </div>
             </label>
             @error('is_renewed')
-                <div class="field-error">{{ $message }}</div>
-            @enderror
+                <div class="field-error" id="is_renewed-error">{{ $message }}</div>
+                @enderror
         </div>
 
         <div class="form-actions">

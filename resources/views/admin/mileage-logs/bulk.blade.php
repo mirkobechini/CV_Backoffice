@@ -42,10 +42,10 @@
                     <div class="field" style="margin-bottom:0;">
                         <input type="text" class="flatpickr-date" id="log_date" name="log_date"
                             value="{{ old('log_date', date('Y-m-d')) }}" placeholder="gg/mm/aaaa" autocomplete="off"
-                            data-alt-class="input @error('log_date') is-invalid @enderror" required>
+                            data-alt-class="input @error('log_date') is-invalid @enderror" required aria-describedby="log_date-error">
                         @error('log_date')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="log_date-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
             </div>

@@ -28,15 +28,15 @@
                     <div class="field">
                         <label for="name">{{ __('Nome') }} <span class="req">*</span></label>
                         <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
-                            value="{{ old('name') }}" placeholder="{{ __('es. Estintore') }}" required>
+                            value="{{ old('name') }}" placeholder="{{ __('es. Estintore') }}" required aria-describedby="name-error">
                         @error('name')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="name-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="equipment_type_id">{{ __('Tipo di attrezzatura') }} <span class="req">*</span></label>
                         <select class="select @error('equipment_type_id') is-invalid @enderror" id="equipment_type_id"
-                            name="equipment_type_id" required>
+                            name="equipment_type_id" required aria-describedby="equipment_type_id-error">
                             <option value="" disabled {{ old('equipment_type_id', $selectedEquipmentTypeId) ? '' : 'selected' }}>
                                 {{ __('Seleziona un tipo di attrezzatura') }}</option>
                             @foreach ($equipmentTypes as $type)
@@ -47,26 +47,26 @@
                             @endforeach
                         </select>
                         @error('equipment_type_id')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="equipment_type_id-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
                     <div class="field">
                         <label for="brand">{{ __('Marca') }}</label>
                         <input type="text" class="input @error('brand') is-invalid @enderror" id="brand" name="brand"
-                            value="{{ old('brand') }}">
+                            value="{{ old('brand') }}" aria-describedby="brand-error">
                         @error('brand')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="brand-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="model">{{ __('Modello') }}</label>
                         <input type="text" class="input @error('model') is-invalid @enderror" id="model" name="model"
-                            value="{{ old('model') }}">
+                            value="{{ old('model') }}" aria-describedby="model-error">
                         @error('model')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="model-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
@@ -74,19 +74,19 @@
                         <label for="serial_number">{{ __('Numero di serie / matricola') }} <span class="req">*</span></label>
                         <input type="text" class="input @error('serial_number') is-invalid @enderror"
                             id="serial_number" name="serial_number" value="{{ old('serial_number') }}"
-                            placeholder="{{ __('es. SN-8821') }}" required>
+                            placeholder="{{ __('es. SN-8821') }}" required aria-describedby="serial_number-error">
                         @error('serial_number')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="serial_number-error">{{ $message }}</div>
+                            @enderror
                     </div>
                     <div class="field">
                         <label for="identification_number">{{ __('Numero identificativo') }}</label>
                         <input type="text" class="input @error('identification_number') is-invalid @enderror"
                             id="identification_number" name="identification_number"
-                            value="{{ old('identification_number') }}">
+                            value="{{ old('identification_number') }}" aria-describedby="identification_number-error">
                         @error('identification_number')
-                            <div class="field-error">{{ $message }}</div>
-                        @enderror
+                            <div class="field-error" id="identification_number-error">{{ $message }}</div>
+                            @enderror
                     </div>
                 </div>
                 <div class="row2">
@@ -104,7 +104,7 @@
                         <div class="field">
                             <label for="extinguisher_agent">{{ __('Agente estinguente') }}</label>
                             <select class="select @error('extinguisher_agent') is-invalid @enderror"
-                                id="extinguisher_agent" name="extinguisher_agent">
+                                id="extinguisher_agent" name="extinguisher_agent" aria-describedby="extinguisher_agent-error">
                                 <option value="" disabled selected>{{ __('Seleziona...') }}</option>
                                 <option value="co2" {{ old('extinguisher_agent') == 'co2' ? 'selected' : '' }}>
                                     {{ __('CO2') }}</option>
@@ -112,16 +112,16 @@
                                     {{ __('Polvere') }}</option>
                             </select>
                             @error('extinguisher_agent')
-                                <div class="field-error">{{ $message }}</div>
-                            @enderror
+                                <div class="field-error" id="extinguisher_agent-error">{{ $message }}</div>
+                                @enderror
                         </div>
                         <div class="field">
                             <label for="weight_kg">{{ __('Peso (kg)') }}</label>
                             <input type="number" step="0.01" class="input @error('weight_kg') is-invalid @enderror"
-                                id="weight_kg" name="weight_kg" value="{{ old('weight_kg') }}" min="0">
+                                id="weight_kg" name="weight_kg" value="{{ old('weight_kg') }}" min="0" aria-describedby="weight_kg-error">
                             @error('weight_kg')
-                                <div class="field-error">{{ $message }}</div>
-                            @enderror
+                                <div class="field-error" id="weight_kg-error">{{ $message }}</div>
+                                @enderror
                         </div>
                     </div>
                     <div class="row2">
@@ -137,7 +137,7 @@
                         <div class="field" id="chair-type-field">
                             <label for="chair_type">{{ __('Tipo di sedia') }}</label>
                             <select class="select @error('chair_type') is-invalid @enderror" id="chair_type"
-                                name="chair_type">
+                                name="chair_type" aria-describedby="chair_type-error">
                                 <option value="" disabled selected>{{ __('Seleziona...') }}</option>
                                 <option value="electric" {{ old('chair_type') == 'electric' ? 'selected' : '' }}>
                                     {{ __('Elettrica') }}</option>
@@ -152,16 +152,16 @@
                                     {{ __('Manuale cingolata') }}</option>
                             </select>
                             @error('chair_type')
-                                <div class="field-error">{{ $message }}</div>
-                            @enderror
+                                <div class="field-error" id="chair_type-error">{{ $message }}</div>
+                                @enderror
                         </div>
                         <div class="field">
                             <label for="max_weight_kg">{{ __('Kg massimo consentito') }}</label>
                             <input type="number" step="0.01" class="input @error('max_weight_kg') is-invalid @enderror"
-                                id="max_weight_kg" name="max_weight_kg" value="{{ old('max_weight_kg') }}" min="0">
+                                id="max_weight_kg" name="max_weight_kg" value="{{ old('max_weight_kg') }}" min="0" aria-describedby="max_weight_kg-error">
                             @error('max_weight_kg')
-                                <div class="field-error">{{ $message }}</div>
-                            @enderror
+                                <div class="field-error" id="max_weight_kg-error">{{ $message }}</div>
+                                @enderror
                         </div>
                     </div>
                 </div>
@@ -169,10 +169,10 @@
                 <div class="field" style="margin-bottom:0;">
                     <label for="notes">{{ __('Note') }}</label>
                     <textarea class="input @error('notes') is-invalid @enderror" id="notes" name="notes"
-                        rows="3">{{ old('notes') }}</textarea>
+                        rows="3" aria-describedby="notes-error">{{ old('notes') }}</textarea>
                     @error('notes')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="notes-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 
@@ -181,7 +181,7 @@
                 <h2><span class="num">2</span> {{ __('Dettagli veicolo') }}</h2>
                 <div class="field">
                     <label for="vehicle_id">{{ __('Veicolo') }}</label>
-                    <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id">
+                    <select class="select @error('vehicle_id') is-invalid @enderror" id="vehicle_id" name="vehicle_id" aria-describedby="vehicle_id-error">
                         <option value="">{{ __('Nessun veicolo associato') }}</option>
                         @foreach ($vehicles as $vehicle)
                             <option value="{{ $vehicle->id }}"
@@ -193,8 +193,8 @@
                         @endforeach
                     </select>
                     @error('vehicle_id')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="vehicle_id-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 

@@ -25,6 +25,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Changed
 
 - L'elenco scadenze mostrava solo l'etichetta relativa ("Manca X giorni") — per vedere la data effettiva serviva aprire ogni riga. Aggiunta la colonna "Data" (desktop e card mobile).
+- Accessibilità: i messaggi di errore nei form rimasti (circa 37 viste) sono ora collegati ai rispettivi campi via `aria-describedby`, per chi usa un lettore di schermo (A3).
 
 ## [v2.0.1] - 2026-11-14
 

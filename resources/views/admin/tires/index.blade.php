@@ -42,7 +42,8 @@
         <div class="bulk-edit-bar-inner">
             <span id="tire-bulk-count" class="bulk-edit-count"></span>
             <div class="field">
-                <input type="text" class="input sm" name="brand" placeholder="{{ __('Marca') }}">
+                <input type="text" class="input sm" id="brand" name="brand" placeholder="{{ __('Marca') }}"
+                    aria-describedby="brand-error">
             </div>
             <div class="field">
                 <input type="text" class="input sm" name="model_name" placeholder="{{ __('Modello') }}">
@@ -52,11 +53,8 @@
             <button type="button" id="tire-bulk-clear" class="btn ghost sm">{{ __('Annulla selezione') }}</button>
         </div>
         @error('brand')
-            <div class="field-error">{{ $message }}</div>
-        @enderror
-        @error('size')
-            <div class="field-error">{{ $message }}</div>
-        @enderror
+            <div class="field-error" id="brand-error">{{ $message }}</div>
+            @enderror
     </form>
 
     <div class="table-card">

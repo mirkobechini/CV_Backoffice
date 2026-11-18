@@ -29,30 +29,30 @@
                 <div class="field">
                     <label for="name">{{ __('Nome') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
-                        value="{{ old('name', $provider->name) }}" required>
+                        value="{{ old('name', $provider->name) }}" required aria-describedby="name-error">
                     @error('name')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="name-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="contact_info">{{ __('Contatti') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('contact_info') is-invalid @enderror" id="contact_info"
-                        name="contact_info" value="{{ old('contact_info', $provider->contact_info) }}" required>
+                        name="contact_info" value="{{ old('contact_info', $provider->contact_info) }}" required aria-describedby="contact_info-error">
                     @error('contact_info')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="contact_info-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="address">{{ __('Indirizzo') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('address') is-invalid @enderror" id="address" name="address"
-                        value="{{ old('address', $provider->address) }}" required>
+                        value="{{ old('address', $provider->address) }}" required aria-describedby="address-error">
                     @error('address')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="address-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="type">{{ __('Tipo') }} <span class="req">*</span></label>
-                    <select class="select @error('type') is-invalid @enderror" id="type" name="type" required>
+                    <select class="select @error('type') is-invalid @enderror" id="type" name="type" required aria-describedby="type-error">
                         <option value="" disabled>{{ __('Seleziona tipo...') }}</option>
                         @foreach (['Meccanico', 'Carrozziere', 'Gommista', 'Lavaggio', 'Allestitore', 'Vetri', 'Elettrauto', 'Centro Revisioni'] as $tipo)
                             <option value="{{ $tipo }}"
@@ -61,8 +61,8 @@
                         @endforeach
                     </select>
                     @error('type')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="type-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 

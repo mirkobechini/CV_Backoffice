@@ -40,9 +40,9 @@
                     <div class="mb-3">
                         <label for="csv_file" class="form-label">File CSV</label>
                         <input type="file" class="form-control @error('csv_file') is-invalid @enderror" id="csv_file"
-                            name="csv_file" accept=".csv,.txt" required>
+                            name="csv_file" accept=".csv,.txt" required aria-describedby="csv_file-error">
                         @error('csv_file')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                            <div class="invalid-feedback" id="csv_file-error">{{ $message }}</div>
                         @enderror
                         <div class="form-text">
                             Massimo 5MB.

@@ -65,10 +65,10 @@
                     <label for="report_email">{{ __('Indirizzo email per ricevere i report') }} <span
                             class="req">*</span></label>
                     <input type="email" class="input @error('report_email') is-invalid @enderror" id="report_email"
-                        name="report_email" value="{{ old('report_email', $settings['report_email'] ?? '') }}" required>
+                        name="report_email" value="{{ old('report_email', $settings['report_email'] ?? '') }}" required aria-describedby="report_email-error">
                     @error('report_email')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="report_email-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 
@@ -78,7 +78,7 @@
                     <label for="report_frequency">{{ __('Ogni quanto ricevere il report riassuntivo') }} <span
                             class="req">*</span></label>
                     <select class="select @error('report_frequency') is-invalid @enderror" id="report_frequency"
-                        name="report_frequency" required>
+                        name="report_frequency" required aria-describedby="report_frequency-error">
                         <option value="daily" @selected(old('report_frequency', $settings['report_frequency'] ?? '') === 'daily')>
                             {{ __('Ogni giorno') }}</option>
                         <option value="weekly" @selected(old('report_frequency', $settings['report_frequency'] ?? '') === 'weekly')>
@@ -87,8 +87,8 @@
                             {{ __('Ogni mese (1° giorno)') }}</option>
                     </select>
                     @error('report_frequency')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="report_frequency-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 
@@ -100,10 +100,10 @@
                     <input type="number" class="input @error('reminder_days_before') is-invalid @enderror"
                         id="reminder_days_before" name="reminder_days_before"
                         value="{{ old('reminder_days_before', $settings['reminder_days_before'] ?? '7') }}" min="1"
-                        max="90" required>
+                        max="90" required aria-describedby="reminder_days_before-error">
                     @error('reminder_days_before')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="reminder_days_before-error">{{ $message }}</div>
+                        @enderror
                     <div class="hint">
                         {{ __('Le scadenze con data entro questo numero di giorni verranno incluse nel report come "in arrivo".') }}
                     </div>
@@ -132,12 +132,13 @@
                             <input type="hidden" name="{{ $key }}" value="0">
                             <label class="switch-field">
                                 <input type="checkbox" class="switch-input" id="{{ $key }}" name="{{ $key }}"
-                                    value="1" {{ old($key, $settings[$key] ?? true) ? 'checked' : '' }}>
+                                    value="1" aria-describedby="{{ $key }}-error"
+                                    {{ old($key, $settings[$key] ?? true) ? 'checked' : '' }}>
                                 <span class="track"><span class="knob"></span></span>
                                 <span class="label">{{ $label }}</span>
                             </label>
                             @error($key)
-                                <div class="field-error">{{ $message }}</div>
+                                <div class="field-error" id="{{ $key }}-error">{{ $message }}</div>
                             @enderror
                         </div>
                     @endforeach

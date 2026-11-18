@@ -30,29 +30,29 @@
                 <div class="field">
                     <label for="name">{{ __('Nome') }} <span class="req">*</span></label>
                     <input type="text" class="input @error('name') is-invalid @enderror" id="name" name="name"
-                        value="{{ old('name') }}" placeholder="{{ __('es. Luca Verdi') }}" required>
+                        value="{{ old('name') }}" placeholder="{{ __('es. Luca Verdi') }}" required aria-describedby="name-error">
                     @error('name')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="name-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field">
                     <label for="email">{{ __('Email') }} <span class="req">*</span></label>
                     <input type="email" class="input @error('email') is-invalid @enderror" id="email" name="email"
-                        value="{{ old('email') }}" placeholder="{{ __('es. luca@example.com') }}" required>
+                        value="{{ old('email') }}" placeholder="{{ __('es. luca@example.com') }}" required aria-describedby="email-error">
                     @error('email')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="email-error">{{ $message }}</div>
+                        @enderror
                 </div>
                 <div class="field" style="margin-bottom:0;">
                     <label for="role">{{ __('Ruolo') }} <span class="req">*</span></label>
-                    <select class="select @error('role') is-invalid @enderror" id="role" name="role" required>
+                    <select class="select @error('role') is-invalid @enderror" id="role" name="role" required aria-describedby="role-error">
                         <option value="member" @selected(old('role') === 'member')>{{ __('Membro') }}</option>
                         <option value="sottocapo" @selected(old('role') === 'sottocapo')>{{ __('Sottocapo') }}</option>
                         <option value="capo" @selected(old('role') === 'capo')>{{ __('Capo') }}</option>
                     </select>
                     @error('role')
-                        <div class="field-error">{{ $message }}</div>
-                    @enderror
+                        <div class="field-error" id="role-error">{{ $message }}</div>
+                        @enderror
                 </div>
             </div>
 
