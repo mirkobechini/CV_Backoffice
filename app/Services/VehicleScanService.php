@@ -42,6 +42,9 @@ class VehicleScanService
         'vehicle_category',
         'allowed_tire_sizes',
         'has_timing_belt_suggested',
+        'type_code',
+        'variant_code',
+        'version_code',
     ];
 
     private const SYSTEM_PROMPT = <<<'PROMPT'
@@ -52,7 +55,10 @@ D.3=denominazione commerciale (modello), E=numero di telaio (VIN),
 F.2=massa massima ammissibile in kg, P.1=cilindrata in cc,
 P.2=potenza massima netta in kW, P.3=alimentazione, R=colore,
 S.1=numero posti a sedere, V.9=classe ambientale (es. "Euro 6"),
-J=categoria del veicolo (es. "M1"). Le misure dei pneumatici, se presenti,
+J=categoria del veicolo (es. "M1"). D.2 è il codice di omologazione del
+veicolo, diviso in tre parti separate da spazio o trattino (tipo,
+variante, versione — es. "250 AENRA GE9M"): estraile come tre campi
+distinti, non il testo intero. Le misure dei pneumatici, se presenti,
 vanno restituite nel formato canonico "LARGHEZZA/PROFILOR DIAMETROC" (es.
 "225/75R16C"), senza spazi prima di "R", con "C" solo se rinforzato: se il
 documento indica più misure (es. diverse per assale anteriore e
@@ -78,7 +84,10 @@ non è leggibile o non è presente sul documento):
   "engine_power_kw": integer|null,
   "vehicle_category": string|null,
   "allowed_tire_sizes": {"size": string}[] (array vuoto se non presenti),
-  "has_timing_belt_suggested": boolean|null
+  "has_timing_belt_suggested": boolean|null,
+  "type_code": string|null (campo D.2, prima parte),
+  "variant_code": string|null (campo D.2, seconda parte),
+  "version_code": string|null (campo D.2, terza parte)
 }
 
 "has_timing_belt_suggested" NON è leggibile sul documento: è una tua stima,

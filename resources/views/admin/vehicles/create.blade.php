@@ -76,7 +76,13 @@
                 @endif
 
                 <div class="field">
-                    <label for="fuel_type">{{ __('Carburante') }}</label>
+                    <label for="fuel_type">{{ __('Carburante') }}
+                        @if (session('catalog_matched'))
+                            <span class="badge b-green" title="{{ __('Trovato nel catalogo openvehicle-data.') }}">
+                                <i class="fa-solid fa-circle-check"></i> {{ __('Dal catalogo') }}
+                            </span>
+                        @endif
+                    </label>
                     <select class="select @error('fuel_type') is-invalid @enderror" id="fuel_type" name="fuel_type" aria-describedby="fuel_type-error">
                         <option value="" disabled selected>{{ __('Seleziona un carburante') }}</option>
                         <option value="benzina" {{ old('fuel_type') == 'benzina' ? 'selected' : '' }}>
@@ -167,7 +173,13 @@
 
             {{-- Sezione 2: Specifiche tecniche (dal libretto, tutte facoltative) --}}
             <div class="form-section">
-                <h2><span class="num">2</span> {{ __('Specifiche tecniche') }}</h2>
+                <h2><span class="num">2</span> {{ __('Specifiche tecniche') }}
+                    @if (session('catalog_matched'))
+                        <span class="badge b-green" title="{{ __('Massa/cilindrata/potenza trovate nel catalogo openvehicle-data.') }}">
+                            <i class="fa-solid fa-circle-check"></i> {{ __('Dal catalogo') }}
+                        </span>
+                    @endif
+                </h2>
                 <div class="row2">
                     <div class="field">
                         <label for="vin">{{ __('Numero di telaio (VIN)') }} <span class="hint">({{ __('E.') }})</span></label>

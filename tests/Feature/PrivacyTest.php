@@ -28,6 +28,15 @@ class PrivacyTest extends TestCase
         $response->assertSee('Informativa Privacy');
     }
 
+    public function test_privacy_page_credits_the_openvehicle_data_license(): void
+    {
+        $response = $this->get('/privacy');
+
+        $response->assertOk();
+        $response->assertSee('openvehicle-data');
+        $response->assertSee('CC BY 4.0');
+    }
+
     public function test_cookie_banner_is_present_in_app_layout(): void
     {
         $user = User::factory()->create();

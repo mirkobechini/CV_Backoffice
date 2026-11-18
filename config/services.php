@@ -55,4 +55,14 @@ return [
         'base_url' => env('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1'),
     ],
 
+    // Catalogo veicoli di Mirko (openvehicle-data, deployato su Render,
+    // nessuna autenticazione): usato per i dati di omologazione nello
+    // scan libretto (OpenVehicleCatalogService). Timeout alto perché il
+    // piano gratuito Render si addormenta dopo 15 minuti di inattività,
+    // la prima chiamata dopo lo sleep può richiedere fino a ~1 minuto.
+    'openvehicle' => [
+        'base_url' => env('OPENVEHICLE_BASE_URL', 'https://openvehicle-data.onrender.com'),
+        'timeout' => env('OPENVEHICLE_TIMEOUT', 20),
+    ],
+
 ];

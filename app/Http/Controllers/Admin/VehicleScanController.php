@@ -6,6 +6,7 @@ use App\Exceptions\VehicleScanException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ScanVehicleRegistrationCardRequest;
 use App\Models\Vehicle;
+use App\Services\OpenVehicleCatalogService;
 use App\Services\VehicleRegistrationCardService;
 use App\Services\VehicleScanService;
 use Illuminate\Support\Facades\Log;
@@ -41,7 +42,7 @@ class VehicleScanController extends Controller
      * config('filesystems.uploads_disk')), che per un disco remoto non
      * espone un percorso locale leggibile direttamente.
      */
-    public function scanRegistrationCard(ScanVehicleRegistrationCardRequest $request, VehicleScanService $vehicleScanService)
+    public function scanRegistrationCard(ScanVehicleRegistrationCardRequest $request, VehicleScanService $vehicleScanService, OpenVehicleCatalogService $catalogService)
     {
         $vehicle = $request->filled('vehicle_id')
             ? Vehicle::forCurrentUser()->findOrFail($request->input('vehicle_id'))
@@ -78,6 +79,24 @@ class VehicleScanController extends Controller
 
         $matched = $vehicleScanService->matchBrandAndModel($extracted['brand'], $extracted['car_model']);
 
+        // Dati di omologazione: il catalogo è più affidabile dell'AI
+        // (che oggi indovina, es. carburante sempre "benzina"), ma
+        // sovrascrive solo i campi che trova — un campo assente dal
+        // catalogo (es. max_mass_kg, coperto solo per il 48% delle
+        // varianti) resta quello letto dall'AI.
+        $catalogMatch = null;
+        if ($extracted['type_code'] && $extracted['variant_code'] && $extracted['version_code']) {
+            $catalogMatch = $catalogService->lookup($extracted['type_code'], $extracted['variant_code'], $extracted['version_code']);
+        }
+
+        if ($catalogMatch) {
+            foreach (['fuel_type', 'engine_displacement_cc', 'engine_power_kw', 'max_mass_kg'] as $field) {
+                if ($catalogMatch[$field] !== null) {
+                    $extracted[$field] = $catalogMatch[$field];
+                }
+            }
+        }
+
         $prefill = array_filter([
             'license_plate' => $extracted['license_plate'],
             'immatricolation_date' => $extracted['immatricolation_date'],
@@ -108,6 +127,10 @@ class VehicleScanController extends Controller
 
         if ($extracted['has_timing_belt_suggested'] !== null) {
             $redirect->with('timing_belt_suggested', true);
+        }
+
+        if ($catalogMatch) {
+            $redirect->with('catalog_matched', true);
         }
 
         if (! $matched['brand_id'] && $extracted['brand']) {

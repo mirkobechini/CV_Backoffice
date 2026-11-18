@@ -82,6 +82,9 @@ class VehicleScanTest extends TestCase
             'vehicle_category' => 'M1',
             'allowed_tire_sizes' => [['size' => '225/75R16C']],
             'has_timing_belt_suggested' => true,
+            'type_code' => '250',
+            'variant_code' => 'AENRA',
+            'version_code' => 'GE9M',
         ], $overrides);
     }
 
@@ -96,6 +99,9 @@ class VehicleScanTest extends TestCase
         $this->assertSame('Fiat', $result['brand']);
         $this->assertSame([['size' => '225/75R16C']], $result['allowed_tire_sizes']);
         $this->assertTrue($result['has_timing_belt_suggested']);
+        $this->assertSame('250', $result['type_code']);
+        $this->assertSame('AENRA', $result['variant_code']);
+        $this->assertSame('GE9M', $result['version_code']);
     }
 
     public function test_scan_service_normalizes_allowed_tire_sizes_to_size_only(): void

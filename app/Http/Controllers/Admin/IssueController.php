@@ -34,13 +34,21 @@ class IssueController extends Controller
             'group_by' => 'nullable|in:vehicle,status,date,part',
             'sort_by' => 'nullable|in:vehicle,status,date,part',
             'sort_dir' => 'nullable|in:asc,desc',
-            'status_filter' => 'nullable|in:all,open,in_progress,closed',
+            'status_filter' => 'nullable|in:all,active,open,in_progress,closed',
+            'view' => 'nullable|in:table,card',
         ]);
 
-        $groupBy = $validated['group_by'] ?? null;
+        $view = $validated['view'] ?? 'table';
+        // La vista a card è sempre raggruppata per veicolo (voce roadmap
+        // 7b): non è un raggruppamento scelto dall'utente come per la
+        // tabella, quindi ignora group_by in quel caso.
+        $groupBy = $view === 'card' ? 'vehicle' : ($validated['group_by'] ?? null);
         $sortBy = $validated['sort_by'] ?? 'date';
         $sortDir = $validated['sort_dir'] ?? ($validated['sort_by'] ?? null ? 'asc' : 'desc');
-        $statusFilter = $validated['status_filter'] ?? 'all';
+        // Di default la vista a card mostra solo i guasti non chiusi
+        // (roadmap 7b); la tabella resta "Tutti" come sempre, a meno che
+        // l'utente non abbia scelto esplicitamente un filtro diverso.
+        $statusFilter = $validated['status_filter'] ?? ($view === 'card' ? 'active' : 'all');
 
         $search = $request->get('q');
 
@@ -62,7 +70,9 @@ class IssueController extends Controller
             });
         }
 
-        if ($statusFilter !== 'all') {
+        if ($statusFilter === 'active') {
+            $issuesQuery->whereIn('status', ['open', 'in_progress']);
+        } elseif ($statusFilter !== 'all') {
             $issuesQuery->where('status', $statusFilter);
         }
 
@@ -98,7 +108,7 @@ class IssueController extends Controller
             ->whereNull('part')
             ->count();
 
-        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues', 'statusFilter', 'issuesWithoutPartCount') + [
+        return view('admin.issues.index', compact('issues', 'groupBy', 'sortBy', 'sortDir', 'groupedIssues', 'statusFilter', 'issuesWithoutPartCount', 'view') + [
             'groupToggleUrl' => fn ($f) => $this->groupToggleUrl($f, $groupBy, 'admin.issues.index'),
             'sortToggleUrl' => fn ($f) => $this->sortToggleUrl($f, $sortBy, $sortDir, 'admin.issues.index'),
             'sortIcon' => fn ($f) => $this->sortIcon($f, $sortBy, $sortDir),
