@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\FuelLogController;
 use App\Http\Controllers\Admin\GroupController;
 use App\Http\Controllers\Admin\IssueController;
 use App\Http\Controllers\Admin\IssuePartBackfillController;
+use App\Http\Controllers\Admin\IssueSparePartController;
 use App\Http\Controllers\Admin\MaintenanceCalendarController;
 use App\Http\Controllers\Admin\MaintenanceRecordController;
 use App\Http\Controllers\Admin\MileageLogController;
@@ -103,6 +104,12 @@ Route::middleware(['auth', 'verified', 'throttle:admin-mutations'])
         Route::post('issues/backfill-parts', [IssuePartBackfillController::class, 'store'])
             ->name('issues.backfill-parts.store');
         Route::resource('issues', IssueController::class);
+        Route::post('issues/{issue}/spare-parts', [IssueSparePartController::class, 'store'])
+            ->name('issues.spare-parts.store');
+        Route::patch('issues/{issue}/spare-parts/{sparePart}', [IssueSparePartController::class, 'update'])
+            ->name('issues.spare-parts.update');
+        Route::delete('issues/{issue}/spare-parts/{sparePart}', [IssueSparePartController::class, 'destroy'])
+            ->name('issues.spare-parts.destroy');
         Route::get('deadlines/insurances', [DeadlineController::class, 'insurances'])
             ->name('deadlines.insurances');
         Route::get('documents', [DocumentStatusController::class, 'index'])

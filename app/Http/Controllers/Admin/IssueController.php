@@ -42,7 +42,7 @@ class IssueController extends Controller
 
         $search = $request->get('q');
 
-        $issuesQuery = Issue::with('vehicle.brand', 'vehicle.carModel')
+        $issuesQuery = Issue::with('vehicle.brand', 'vehicle.carModel', 'spareParts')
             ->forCurrentUser();
 
         // Issue::$searchable copre solo description/status: il campo cerca
