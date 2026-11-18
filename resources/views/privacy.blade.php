@@ -70,6 +70,15 @@
                 I dati sono protetti con misure di sicurezza adeguate: password crittografate, autenticazione con
                 token, rate limiting e controllo degli accessi basato sui ruoli.
             </p>
+
+            <h2 class="mt-4 fs-5">9. Crediti e licenze dei dati di terze parti</h2>
+            <p>
+                I dati di omologazione (carburante, cilindrata, potenza, massa) suggeriti durante la scansione del
+                libretto di circolazione provengono, quando disponibili, dal catalogo
+                <a href="https://github.com/mirkobechini/openvehicle-data" target="_blank"
+                    rel="noopener">openvehicle-data</a>, distribuito con licenza
+                <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>.
+            </p>
         </div>
     </div>
 @endsection
