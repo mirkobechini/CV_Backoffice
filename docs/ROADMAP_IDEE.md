@@ -33,7 +33,7 @@
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
 | S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | 🔄 aggiunta a `.env.example=true` con commento (2026-11-16); **da impostare manualmente anche nelle env vars di Laravel Cloud** — non modificabile da codice |
-| S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ⬜ |
+| S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ✅ fix issue-639: confermato 419 con una richiesta reale, ora escluso via `validateCsrfTokens(except: ...)` |
 | S3 | Hygiene | 3 advisory Composer ignorate senza un commento sul motivo | `composer.json:76-82` | Bassa | ✅ |
 | S4 | Fragilità futura | `group_id` fillable su `Vehicle` ma nessuna request lo valida oggi — aggiungere un test che pinni l'invariante (nessuna richiesta futura deve poterlo scrivere da payload) | `app/Models/Vehicle.php` | Bassa | ✅ |
 
@@ -108,7 +108,7 @@
 | SM5 | Isolamento gruppi | `Superadmin\GroupController::destroy` elimina solo i veicoli del gruppo, lascia FleetDevice/FuelCard/Equipment orfani (poi soggetti a SM2) | `app/Http/Controllers/Superadmin/GroupController.php` | ✅ fix issue-623: cleanup in transazione |
 | SM6 | Privacy | Note di tessere/dispositivi (dove Mirko mette il PIN) in chiaro: visibili a ogni membro, salvate per sempre nell'activity log, incluse nei backup | `FuelCard.php`/`FleetDevice.php` | ✅ fix issue-637: `logExcept(['notes', 'provider_notes'])` su FuelCard/FleetDevice/FleetDeviceAssignment |
 | SM7 | DoS | `per_page` API senza tetto massimo | `Api/VehicleController.php:15` e altri 3 | ✅ fix issue-625: `CapsPerPage` limita a 100 |
-| SL1 | CSRF | Webhook Telegram senza eccezione CSRF esplicita (verificare se arriva davvero un 419 in produzione) | `routes/web.php:55` | ⬜ |
+| SL1 | CSRF | Webhook Telegram senza eccezione CSRF esplicita (verificare se arriva davvero un 419 in produzione) | `routes/web.php:55` | ✅ fix issue-639 (stesso bug di S2) |
 | SL2 | Upload | Estensione file presa dal nome client (`getClientOriginalExtension()`) invece che dal contenuto reale; `registration_card` senza `max:` dimensione | `VehicleRegistrationCardService.php:45`, `StoreVehicleRequest.php:33` | ✅ fix issue-627 |
 | SL3 | 2FA | Codice TOTP riusabile nella finestra di validità (no `verifyKeyNewer`) | `TwoFactorChallengeController.php:47` | ✅ fix issue-629 |
 | SL4 | Sessione | Reset/cambio password non revoca i token Sanctum esistenti | — | ✅ fix issue-631 |

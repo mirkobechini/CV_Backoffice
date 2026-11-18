@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Services\TelegramNotifier;
 use Carbon\Carbon;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -117,6 +118,19 @@ class TelegramNotificationTest extends TestCase
         ], ['X-Telegram-Bot-Api-Secret-Token' => 'my-secret']);
 
         $this->assertFalse(app(TelegramNotifier::class)->isLinked($user->fresh()));
+    }
+
+    /**
+     * I test disabilitano sempre la verifica CSRF (runningUnitTests()), per
+     * cui una richiesta via postJson() non riprodurrebbe il 419 reale.
+     * Questo test verifica direttamente l'eccezione registrata in
+     * bootstrap/app.php (audit sicurezza S2/SL1).
+     */
+    public function test_webhook_route_is_excluded_from_csrf_verification(): void
+    {
+        $middleware = app(PreventRequestForgery::class);
+
+        $this->assertContains('telegram/webhook', $middleware->getExcludedPaths());
     }
 
     public function test_webhook_rejects_request_without_valid_secret(): void
