@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.1.0] - 2026-11-18
+
 ### Fixed
 
 - **Sicurezza**: il parametro `back` (dove tornare dopo un'eliminazione) non era validato in 3 controller (Scadenze, Appuntamenti, Appuntamenti attrezzature) — un valore esterno malevolo avrebbe reindirizzato l'utente fuori dall'app dopo l'azione (open redirect). Ora accettati solo path relativi o URL assoluti dello stesso sito.
