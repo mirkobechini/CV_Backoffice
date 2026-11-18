@@ -15,7 +15,8 @@ class FleetDeviceAssignment extends Model
     {
         return LogOptions::defaults()
             ->logAll()
-            ->logOnlyDirty();
+            ->logOnlyDirty()
+            ->logExcept(['notes']);
     }
 
     protected $fillable = [

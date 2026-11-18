@@ -16,7 +16,8 @@ class FleetDevice extends Model
     {
         return LogOptions::defaults()
             ->logAll()
-            ->logOnlyDirty();
+            ->logOnlyDirty()
+            ->logExcept(['notes', 'provider_notes']);
     }
 
     public const TYPE_TELEPASS = 'telepass';

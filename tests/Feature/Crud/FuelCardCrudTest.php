@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 class FuelCardCrudTest extends TestCase
@@ -248,5 +249,25 @@ class FuelCardCrudTest extends TestCase
 
         $response->assertRedirect(route('admin.fuel-cards.index'));
         $this->assertDatabaseMissing('fuel_cards', ['id' => $card->id]);
+    }
+
+    public function test_notes_are_excluded_from_the_activity_log(): void
+    {
+        // Audit sicurezza SM6: nelle note Mirko annota anche i PIN, non
+        // devono finire in chiaro nello storico attività.
+        $group = $this->group();
+        $card = FuelCard::create([
+            'card_number' => 'FC-001',
+            'status' => FuelCard::STATUS_UNASSIGNED,
+            'group_id' => $group->id,
+            'notes' => 'PIN: 1234',
+        ]);
+        $card->update(['notes' => 'PIN: 5678']);
+
+        $logged = Activity::where('subject_type', FuelCard::class)->where('subject_id', $card->id)->get();
+        $this->assertNotEmpty($logged);
+        foreach ($logged as $activity) {
+            $this->assertStringNotContainsString('PIN', json_encode($activity->properties));
+        }
     }
 }
