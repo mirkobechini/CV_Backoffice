@@ -18,6 +18,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - **Sicurezza**: il webhook Telegram rispondeva sempre 419 (CSRF), il controller non veniva mai invocato — verificato con una richiesta reale. Escluso dalla verifica CSRF (l'autenticità resta verificata internamente).
 - **Sicurezza**: l'export dati personali (GDPR) ometteva impostazioni di notifica (incluso il collegamento Telegram), metadata dei token API, voci dell'activity log e stato 2FA. Ora incluse (il token di collegamento Telegram, un segreto temporaneo di 15 minuti, resta escluso).
 
+### Added
+
+- Tracciamento pezzi di ricambio ordinati/arrivati sui guasti: un guasto può avere più pezzi (nome, nota, data ordine opzionale, data arrivo sempre opzionale), aggiungibili più alla volta dalla scheda guasto. Badge secondario "Pezzi in attesa"/"Pezzi arrivati" accanto allo stato, senza introdurre un nuovo stato del guasto.
+
 ### Changed
 
 - L'elenco scadenze mostrava solo l'etichetta relativa ("Manca X giorni") — per vedere la data effettiva serviva aprire ogni riga. Aggiunta la colonna "Data" (desktop e card mobile).

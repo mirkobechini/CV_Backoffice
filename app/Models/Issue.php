@@ -163,4 +163,30 @@ class Issue extends Model
     {
         return $this->morphMany(MaintenanceRecordItem::class, 'itemable');
     }
+
+    public function spareParts()
+    {
+        return $this->hasMany(IssueSparePart::class)->orderByDesc('created_at');
+    }
+
+    /**
+     * Badge secondario "a colpo d'occhio" per sapere se un guasto "in
+     * lavorazione" è fermo in attesa di pezzi: non tocca lo status
+     * principale del guasto (resta sempre open/in_progress/closed).
+     * Null se non ci sono pezzi ordinati da mostrare.
+     */
+    public function getSparePartsBadgeAttribute(): ?array
+    {
+        $ordered = $this->spareParts->filter(fn ($p) => $p->ordered_at !== null);
+
+        if ($ordered->isEmpty()) {
+            return null;
+        }
+
+        $allArrived = $ordered->every(fn ($p) => $p->arrived_at !== null);
+
+        return $allArrived
+            ? ['label' => __('Pezzi arrivati'), 'color' => 'green']
+            : ['label' => __('Pezzi in attesa'), 'color' => 'yellow'];
+    }
 }

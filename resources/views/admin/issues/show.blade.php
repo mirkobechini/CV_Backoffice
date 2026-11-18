@@ -57,6 +57,10 @@
         </div>
         <div class="dl-status">
             <x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
+            @if ($issue->spare_parts_badge)
+                <x-admin.status-badge
+                    :color="$issue->spare_parts_badge['color']">{{ $issue->spare_parts_badge['label'] }}</x-admin.status-badge>
+            @endif
             <span class="hint">{{ __('dal :d', ['d' => $issue->event_date_formatted ?? 'N/A']) }}</span>
         </div>
     </div>
@@ -108,6 +112,98 @@
                 <span class="k">{{ __('Stato') }}</span>
                 <span class="v"><x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge></span>
             </div>
+        </div>
+    </div>
+
+    <div class="dl-info-card" style="margin-top:16px;">
+        <div class="head">
+            <h3>{{ __('Pezzi ordinati') }}</h3>
+        </div>
+        <div class="body">
+            @if ($issue->spareParts->isNotEmpty())
+                <table class="veh-hist-table">
+                    <thead>
+                        <tr>
+                            <th>{{ __('Pezzo') }}</th>
+                            <th>{{ __('Ordinato il') }}</th>
+                            <th>{{ __('Arrivato il') }}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($issue->spareParts as $part)
+                            <tr>
+                                <td>
+                                    {{ $part->name }}
+                                    @if ($part->notes)
+                                        <br><span class="hint">{{ $part->notes }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <form method="POST"
+                                        action="{{ route('admin.issues.spare-parts.update', [$issue, $part]) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="name" value="{{ $part->name }}">
+                                        <input type="hidden" name="notes" value="{{ $part->notes }}">
+                                        <input type="hidden" name="arrived_at"
+                                            value="{{ $part->arrived_at?->format('Y-m-d') }}">
+                                        <input type="date" name="ordered_at"
+                                            value="{{ $part->ordered_at?->format('Y-m-d') }}"
+                                            onchange="this.form.submit()">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST"
+                                        action="{{ route('admin.issues.spare-parts.update', [$issue, $part]) }}">
+                                        @csrf
+                                        @method('PATCH')
+                                        <input type="hidden" name="name" value="{{ $part->name }}">
+                                        <input type="hidden" name="notes" value="{{ $part->notes }}">
+                                        <input type="hidden" name="ordered_at"
+                                            value="{{ $part->ordered_at?->format('Y-m-d') }}">
+                                        <input type="date" name="arrived_at"
+                                            value="{{ $part->arrived_at?->format('Y-m-d') }}"
+                                            onchange="this.form.submit()">
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST"
+                                        action="{{ route('admin.issues.spare-parts.destroy', [$issue, $part]) }}"
+                                        onsubmit="return confirm('{{ __('Eliminare questo pezzo?') }}')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="mini-btn" title="{{ __('Elimina pezzo') }}"
+                                            aria-label="{{ __('Elimina pezzo') }}">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <p class="hint">{{ __('Nessun pezzo registrato.') }}</p>
+            @endif
+
+            <details style="margin-top:12px;">
+                <summary>{{ __('Aggiungi pezzi') }}</summary>
+                <form method="POST" action="{{ route('admin.issues.spare-parts.store', $issue) }}"
+                    id="spare-parts-form" style="margin-top:12px;">
+                    @csrf
+                    <div id="spare-parts-rows">
+                        <div class="spare-part-row" style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                            <input type="text" name="parts[0][name]" placeholder="{{ __('Nome pezzo') }}" required>
+                            <input type="text" name="parts[0][notes]" placeholder="{{ __('Nota (opzionale)') }}">
+                            <input type="date" name="parts[0][ordered_at]" title="{{ __('Data ordine') }}">
+                            <input type="date" name="parts[0][arrived_at]" title="{{ __('Data arrivo') }}">
+                        </div>
+                    </div>
+                    <button type="button" id="add-spare-part-row" class="btn ghost">{{ __('+ Aggiungi riga') }}</button>
+                    <button type="submit" class="btn primary">{{ __('Salva pezzi') }}</button>
+                </form>
+            </details>
         </div>
     </div>
 
@@ -208,4 +304,21 @@
     @endif
 
     <x-admin.delete-modal type="issue" :object="$issue" />
+
+    <script>
+        document.getElementById('add-spare-part-row')?.addEventListener('click', function() {
+            const rows = document.getElementById('spare-parts-rows');
+            const i = rows.children.length;
+            const row = document.createElement('div');
+            row.className = 'spare-part-row';
+            row.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;';
+            row.innerHTML = `
+                <input type="text" name="parts[${i}][name]" placeholder="{{ __('Nome pezzo') }}" required>
+                <input type="text" name="parts[${i}][notes]" placeholder="{{ __('Nota (opzionale)') }}">
+                <input type="date" name="parts[${i}][ordered_at]" title="{{ __('Data ordine') }}">
+                <input type="date" name="parts[${i}][arrived_at]" title="{{ __('Data arrivo') }}">
+            `;
+            rows.appendChild(row);
+        });
+    </script>
 @endsection

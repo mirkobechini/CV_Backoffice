@@ -142,6 +142,10 @@
                                 <td>{{ $issue->part ?? 'N/A' }}</td>
                                 <td>
                                     <x-admin.status-badge :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
+                                    @if ($issue->spare_parts_badge)
+                                        <x-admin.status-badge
+                                            :color="$issue->spare_parts_badge['color']">{{ $issue->spare_parts_badge['label'] }}</x-admin.status-badge>
+                                    @endif
                                 </td>
                                 <td>{{ $issue->event_date_formatted ?? 'N/A' }}</td>
                                 <td>
@@ -176,6 +180,10 @@
                         <div class="card-list-item-tag">
                             <x-admin.status-badge
                                 :color="$issue->status_color">{{ $issue->status_label }}</x-admin.status-badge>
+                            @if ($issue->spare_parts_badge)
+                                <x-admin.status-badge
+                                    :color="$issue->spare_parts_badge['color']">{{ $issue->spare_parts_badge['label'] }}</x-admin.status-badge>
+                            @endif
                         </div>
                     </div>
                     <div class="card-list-item-side">

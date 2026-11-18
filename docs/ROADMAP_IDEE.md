@@ -211,6 +211,10 @@ Richiesta di Mirko, dopo audit del codice esistente (assicurazione modellata com
 
 **Nota per il futuro — categorizzazione per componente a basso sforzo**: se in futuro si vuole davvero l'analisi "per componente" dell'idea originale, il modo più economico per arrivarci senza perdere tempo ora né dover rielaborare lo storico: aggiungere un campo **categoria opzionale** su `Issue` (es. select: Motore, Freni, Elettrico, Carrozzeria, Pneumatici, Altro), nullable, compilato gradualmente da chi segnala un nuovo guasto — nessuna migrazione dei guasti già esistenti necessaria, un solo campo in più nel form. Quando ce ne sarà accumulato abbastanza, l'analisi per componente diventa possibile sui dati da quel momento in avanti.
 
+## 7b. Vista a card per i guasti, raggruppata per veicolo (dopo F3)
+
+**Idea (da Mirko, 2026-11-18)**: nella index dei guasti, una vista alternativa a card invece della tabella attuale, raggruppata per veicolo — con filtro di default che mostra solo i guasti non chiusi (open/in_progress). Pianificata esplicitamente per **dopo** l'integrazione openvehicle-data (F3), non prima.
+
 ## 7. QR code su veicoli/attrezzature
 
 **Idea**: uno sticker con QR su ogni mezzo/attrezzatura che apre direttamente la sua scheda da smartphone (browser, non app nativa). Risolve il caso d'uso più comune di una "mobile app" (controllare stato o segnalare un guasto sul posto) con un decimo dello sforzo, zero sviluppo nativo.
