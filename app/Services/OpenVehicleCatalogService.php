@@ -116,7 +116,21 @@ class OpenVehicleCatalogService
             throw new OpenVehicleCatalogException('Risposta del catalogo non valida.');
         }
 
-        return $items[0] ?? null;
+        $variant = $items[0] ?? null;
+
+        if ($variant && ! empty($variant['engine_id'])) {
+            // L'endpoint /variants in elenco restituisce solo engine_id,
+            // non i dati del motore (verificato con una chiamata reale):
+            // servono una seconda chiamata su /engines/{id}. Se fallisce,
+            // il motore resta null — niente eccezione qui, max_mass_kg
+            // (già nell'oggetto variante) resta comunque utilizzabile.
+            $engineResponse = Http::timeout($this->timeout)
+                ->get(rtrim($this->baseUrl, '/')."/api/v1/engines/{$variant['engine_id']}");
+
+            $variant['engine'] = $engineResponse->successful() ? $engineResponse->json() : null;
+        }
+
+        return $variant;
     }
 
     /**

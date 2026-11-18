@@ -12,13 +12,19 @@ class OpenVehicleCatalogServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function fakeVariantResponse(?array $variant): void
+    /**
+     * L'endpoint /variants in elenco restituisce solo "engine_id", non i
+     * dati del motore (verificato con una chiamata reale all'API): il
+     * motore va mockato come seconda risposta su /engines/{id}.
+     */
+    private function fakeVariantResponse(?array $variant, ?array $engine = null): void
     {
         Http::fake([
             '*/api/v1/variants*' => Http::response([
                 'total' => $variant ? 1 : 0,
                 'items' => $variant ? [$variant] : [],
             ]),
+            '*/api/v1/engines/*' => Http::response($engine ?? []),
         ]);
     }
 
@@ -29,13 +35,18 @@ class OpenVehicleCatalogServiceTest extends TestCase
             'variant_code' => 'AENRA',
             'version_code' => 'GE9M',
             'max_mass_kg' => 3150,
-            'engine' => ['fuel' => 'diesel', 'displacement_cc' => 2287, 'power_kw' => 103],
+            'engine_id' => 'eng_diesel-2287-103',
         ], $overrides);
+    }
+
+    private function dieselEngine(array $overrides = []): array
+    {
+        return array_merge(['id' => 'eng_diesel-2287-103', 'fuel' => 'diesel', 'displacement_cc' => 2287, 'power_kw' => 103], $overrides);
     }
 
     public function test_lookup_returns_homologation_data_on_catalog_match(): void
     {
-        $this->fakeVariantResponse($this->fiatDucatoVariant());
+        $this->fakeVariantResponse($this->fiatDucatoVariant(), $this->dieselEngine());
 
         $result = app(OpenVehicleCatalogService::class)->lookup('250', 'AENRA', 'GE9M');
 
@@ -65,9 +76,25 @@ class OpenVehicleCatalogServiceTest extends TestCase
         $this->assertNull($result);
     }
 
+    public function test_lookup_still_returns_max_mass_kg_when_the_engine_call_fails(): void
+    {
+        // Il motore è una seconda chiamata separata: se fallisce,
+        // fuel/cilindrata/potenza restano null ma max_mass_kg (già
+        // nell'oggetto variante) resta comunque utilizzabile.
+        Http::fake([
+            '*/api/v1/variants*' => Http::response(['total' => 1, 'items' => [$this->fiatDucatoVariant()]]),
+            '*/api/v1/engines/*' => Http::response(null, 500),
+        ]);
+
+        $result = app(OpenVehicleCatalogService::class)->lookup('250', 'AENRA', 'GE9M');
+
+        $this->assertSame(3150, $result['max_mass_kg']);
+        $this->assertNull($result['fuel_type']);
+    }
+
     public function test_lookup_maps_catalog_fuel_values_to_the_apps_enum(): void
     {
-        $this->fakeVariantResponse($this->fiatDucatoVariant(['engine' => ['fuel' => 'petrol', 'displacement_cc' => 1368, 'power_kw' => 70]]));
+        $this->fakeVariantResponse($this->fiatDucatoVariant(), $this->dieselEngine(['fuel' => 'petrol', 'displacement_cc' => 1368, 'power_kw' => 70]));
 
         $result = app(OpenVehicleCatalogService::class)->lookup('250', 'AENRA', 'GE9M');
 
@@ -76,7 +103,7 @@ class OpenVehicleCatalogServiceTest extends TestCase
 
     public function test_lookup_leaves_fuel_type_null_for_a_fuel_not_covered_by_the_apps_enum(): void
     {
-        $this->fakeVariantResponse($this->fiatDucatoVariant(['engine' => ['fuel' => 'lpg', 'displacement_cc' => 1368, 'power_kw' => 70]]));
+        $this->fakeVariantResponse($this->fiatDucatoVariant(), $this->dieselEngine(['fuel' => 'lpg', 'displacement_cc' => 1368, 'power_kw' => 70]));
 
         $result = app(OpenVehicleCatalogService::class)->lookup('250', 'AENRA', 'GE9M');
 
@@ -85,7 +112,7 @@ class OpenVehicleCatalogServiceTest extends TestCase
 
     public function test_lookup_caches_the_result_and_does_not_call_the_api_again(): void
     {
-        $this->fakeVariantResponse($this->fiatDucatoVariant());
+        $this->fakeVariantResponse($this->fiatDucatoVariant(), $this->dieselEngine());
         $service = app(OpenVehicleCatalogService::class);
 
         $service->lookup('250', 'AENRA', 'GE9M');
@@ -122,7 +149,7 @@ class OpenVehicleCatalogServiceTest extends TestCase
             'max_mass_kg' => 3150,
             'looked_up_at' => now()->subDays(31),
         ]);
-        $this->fakeVariantResponse($this->fiatDucatoVariant(['max_mass_kg' => 3200]));
+        $this->fakeVariantResponse($this->fiatDucatoVariant(['max_mass_kg' => 3200]), $this->dieselEngine());
 
         $result = app(OpenVehicleCatalogService::class)->lookup('250', 'AENRA', 'GE9M');
 

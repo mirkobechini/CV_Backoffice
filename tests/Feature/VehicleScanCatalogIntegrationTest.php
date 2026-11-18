@@ -80,7 +80,12 @@ class VehicleScanCatalogIntegrationTest extends TestCase
         ]);
     }
 
-    private function fakeCatalogMatch(array $variant): void
+    /**
+     * L'endpoint /variants in elenco restituisce solo "engine_id", non i
+     * dati del motore (verificato con una chiamata reale all'API): $engine
+     * mocka la seconda chiamata su /engines/{id}.
+     */
+    private function fakeCatalogMatch(array $variant, array $engine): void
     {
         Http::fake([
             '*/chat/completions' => Http::response([
@@ -88,7 +93,8 @@ class VehicleScanCatalogIntegrationTest extends TestCase
                     ['message' => ['content' => json_encode($this->extractedFieldsStub())]],
                 ],
             ]),
-            '*/api/v1/variants*' => Http::response(['total' => 1, 'items' => [$variant]]),
+            '*/api/v1/variants*' => Http::response(['total' => 1, 'items' => [[...$variant, 'engine_id' => 'eng_test']]]),
+            '*/api/v1/engines/*' => Http::response($engine),
         ]);
     }
 
@@ -100,10 +106,10 @@ class VehicleScanCatalogIntegrationTest extends TestCase
 
         // L'AI indovina "benzina" (extractedFieldsStub di default), il
         // catalogo dice "diesel": il catalogo vince.
-        $this->fakeCatalogMatch([
-            'max_mass_kg' => 3150,
-            'engine' => ['fuel' => 'diesel', 'displacement_cc' => 2287, 'power_kw' => 103],
-        ]);
+        $this->fakeCatalogMatch(
+            ['max_mass_kg' => 3150],
+            ['fuel' => 'diesel', 'displacement_cc' => 2287, 'power_kw' => 103],
+        );
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
@@ -128,10 +134,10 @@ class VehicleScanCatalogIntegrationTest extends TestCase
         // Il catalogo copre carburante/cilindrata/potenza ma non la massa
         // massima (comune, ~48% di copertura reale): quel campo resta
         // quello letto dall'AI invece di sparire.
-        $this->fakeCatalogMatch([
-            'max_mass_kg' => null,
-            'engine' => ['fuel' => 'diesel', 'displacement_cc' => 2287, 'power_kw' => 103],
-        ]);
+        $this->fakeCatalogMatch(
+            ['max_mass_kg' => null],
+            ['fuel' => 'diesel', 'displacement_cc' => 2287, 'power_kw' => 103],
+        );
 
         $response = $this->actingAs($user)->post(route('admin.vehicles.scan-libretto'), [
             'photo_front' => UploadedFile::fake()->create('fronte.jpg', 100, 'image/jpeg'),
