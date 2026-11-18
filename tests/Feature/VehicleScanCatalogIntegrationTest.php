@@ -114,6 +114,9 @@ class VehicleScanCatalogIntegrationTest extends TestCase
         $response->assertSessionHasInput('engine_power_kw', 103);
         $response->assertSessionHasInput('max_mass_kg', 3150);
         $response->assertSessionHas('catalog_matched', true);
+
+        $createPage = $this->actingAs($user)->followingRedirects()->get(route('admin.vehicles.create'));
+        $createPage->assertSee('Dal catalogo');
     }
 
     public function test_catalog_field_missing_from_the_match_keeps_the_ai_guess(): void
