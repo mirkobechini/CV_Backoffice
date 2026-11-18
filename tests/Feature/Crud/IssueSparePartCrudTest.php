@@ -126,6 +126,24 @@ class IssueSparePartCrudTest extends TestCase
         $response->assertSee('Pezzi arrivati');
     }
 
+    public function test_badge_shows_pending_when_arrival_date_is_in_the_future(): void
+    {
+        $group = $this->group();
+        $user = $this->capo($group);
+        $issue = $this->issue($group);
+        $issue->spareParts()->create([
+            'name' => 'Specchietto destro',
+            'ordered_at' => '2026-01-10',
+            'arrived_at' => now()->addDay()->toDateString(),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.issues.show', $issue));
+
+        $response->assertOk();
+        $response->assertSee('Pezzi in attesa');
+        $response->assertDontSee('Pezzi arrivati');
+    }
+
     public function test_no_badge_when_no_parts_are_ordered(): void
     {
         $group = $this->group();
@@ -210,5 +228,26 @@ class IssueSparePartCrudTest extends TestCase
         ]);
 
         $response->assertNotFound();
+    }
+
+    public function test_show_page_lists_ordered_and_arrived_events_in_the_timeline(): void
+    {
+        $group = $this->group();
+        $user = $this->capo($group);
+        $issue = $this->issue($group);
+        $part = $issue->spareParts()->create(['name' => 'Specchietto destro', 'ordered_at' => '2026-01-10']);
+        $part->update(['arrived_at' => '2026-01-15']);
+
+        $response = $this->actingAs($user)->get(route('admin.issues.show', $issue));
+
+        $response->assertOk();
+        $response->assertSee('Pezzo ordinato: Specchietto destro');
+        $response->assertSee('Pezzo arrivato: Specchietto destro');
+        // La data cast su una colonna 'date' viene serializzata in JSON
+        // come UTC (es. "...T23:00:00Z" con APP_TIMEZONE=Europe/Rome per
+        // mezzanotte locale del giorno dopo): la timeline deve riportare
+        // la data corretta nel fuso dell'app, non quella UTC.
+        $response->assertSee('10/01/2026');
+        $response->assertSee('15/01/2026');
     }
 }
