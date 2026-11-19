@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.2.1] - 2026-11-19
+
+### Changed
+
+- Dipendenze aggiornate (composer: laravel/pint, laravel/tinker, phpunit, spatie/laravel-activitylog, resend/resend-php; npm: vite, sass, tailwindcss, @tailwindcss/postcss, laravel-vite-plugin). `composer audit` pulito.
+
 ## [v2.2.0] - 2026-11-18
 
 ### Added
