@@ -10,7 +10,7 @@
             <p>
                 Il Titolare del trattamento dei dati è {{ config('app.name', 'Gestione Flotta') }}. Per qualsiasi
                 richiesta relativa ai tuoi dati personali, scrivi a
-                <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>.
+                <a href="mailto:{{ config('app.privacy_contact') }}">{{ config('app.privacy_contact') }}</a>.
             </p>
 
             <h2 class="mt-4 fs-5">2. Dati personali trattati</h2>

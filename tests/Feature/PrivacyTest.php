@@ -46,7 +46,7 @@ class PrivacyTest extends TestCase
         $response->assertSee('Cloudflare R2');
         $response->assertSee('OpenRouter');
         $response->assertSee('Telegram');
-        $response->assertSee(config('mail.from.address'));
+        $response->assertSee(config('app.privacy_contact'));
     }
 
     public function test_cookie_banner_is_present_in_app_layout(): void

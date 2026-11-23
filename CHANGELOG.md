@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Fixed
 
 - Privacy policy incompleta: non elencava i reali responsabili esterni del trattamento (Resend, Cloudflare R2, OpenRouter, Telegram) né un contatto reale per il titolare. Cookie di sessione senza flag `Secure` garantito in produzione (`SESSION_SECURE_COOKIE` non aveva un default legato all'ambiente) (issue-673).
+- Il contatto privacy mostrato in `/privacy` usava l'indirizzo noreply delle email transazionali, non leggibile da nessuno. Ora è una nuova env dedicata (`PRIVACY_CONTACT_EMAIL`). Il nome mittente delle email (`MAIL_FROM_NAME`) cadeva sul default Laravel `"Example"` se non impostato, invece che sul nome dell'app — utile per distinguere questa app da altre che condividono lo stesso noreply (issue-675).
 
 ## [v2.2.2] - 2026-11-23
 
