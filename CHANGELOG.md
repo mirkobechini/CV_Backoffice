@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Pagina Impostazioni lenta per il superadmin: l'elenco backup faceva una chiamata di rete separata per dimensione e data di ogni singolo file (su storage remoto R2/S3, 1+2N chiamate sincrone). Ora una sola chiamata di elenco fornisce già questi dati.
+
 ## [v2.2.1] - 2026-11-19
 
 ### Changed

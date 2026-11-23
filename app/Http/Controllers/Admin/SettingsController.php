@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
+use League\Flysystem\FileAttributes;
+use League\Flysystem\StorageAttributes;
 
 class SettingsController extends Controller
 {
@@ -30,12 +32,19 @@ class SettingsController extends Controller
         // solo a chi può effettivamente gestirli.
         $backupsDisk = Storage::disk(config('filesystems.uploads_disk'));
 
+        // listContents() invece di files()+size()+lastModified() per file:
+        // su storage remoto (R2/S3) quest'ultimo approccio faceva 1+2N
+        // chiamate HTTP sincrone (una per elencare, due per ogni singolo
+        // file), rendendo la pagina lenta all'aumentare dei backup.
+        // listContents() ottiene dimensione e data già dalla risposta
+        // dell'elenco (una singola chiamata ListObjectsV2 su S3).
         $backups = $canManageBackups
-            ? collect($backupsDisk->files('backups'))
-                ->map(fn ($file) => [
-                    'name' => basename($file),
-                    'size' => $backupsDisk->size($file),
-                    'modified' => $backupsDisk->lastModified($file),
+            ? collect($backupsDisk->getDriver()->listContents('backups', false))
+                ->filter(fn (StorageAttributes $attributes) => $attributes->isFile())
+                ->map(fn (FileAttributes $attributes) => [
+                    'name' => basename($attributes->path()),
+                    'size' => $attributes->fileSize(),
+                    'modified' => $attributes->lastModified(),
                 ])
                 ->sortByDesc('modified')
                 ->take(10)

@@ -101,6 +101,21 @@ class SettingsTest extends TestCase
         $response->assertDontSee('Crea backup');
     }
 
+    public function test_superadmin_sees_the_list_of_existing_backups(): void
+    {
+        // Verifica il percorso che usa Flysystem::listContents() per
+        // dimensione/data invece di una chiamata separata per file (issue-669).
+        Storage::fake('public');
+        Storage::disk('public')->put('backups/backup-test-marker.json', str_repeat('x', 2048));
+        $superadmin = User::factory()->create(['is_superadmin' => true]);
+
+        $response = $this->actingAs($superadmin)->get(route('admin.settings.index'));
+
+        $response->assertOk();
+        $response->assertSee('backup-test-marker.json');
+        $response->assertSee('2 KB');
+    }
+
     public function test_capo_does_not_see_backup_section(): void
     {
         // Stessa falla di test_capo_cannot_trigger_backup: la sezione
