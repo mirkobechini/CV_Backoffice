@@ -59,12 +59,17 @@
 6. **Telegram bot** (optional, for notifications alongside email):
     - Create a bot with [@BotFather](https://t.me/botfather) (`/newbot`), get the token and the bot's `@username`
     - Set `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME` and a random `TELEGRAM_WEBHOOK_SECRET` (step 2 above)
-    - Register the webhook once (replace the placeholders), from any machine with internet access:
+    - Register the webhook once (replace the placeholders), from any machine with internet access. ⚠️ The `url` **must end in `/telegram/webhook`** — your bare domain is not enough. If you forget it, Telegram happily delivers updates to your homepage instead (200 OK, no error anywhere) and the bot silently never responds to anyone — this exact mistake happened once in production (2026-11-23) and took a while to diagnose precisely because nothing looked broken on Telegram's side:
         ```bash
         curl -F "url=https://your-domain.laravel.cloud/telegram/webhook" \
              -F "secret_token=<same value as TELEGRAM_WEBHOOK_SECRET>" \
              "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook"
         ```
+    - Verify it actually points at the right path:
+        ```bash
+        curl "https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/getWebhookInfo"
+        ```
+        Check the `url` field ends in `/telegram/webhook`, and `last_error_message` is absent.
     - Each user can then link their own Telegram account from **Impostazioni → Notifiche** in the app
 
 ## Useful commands

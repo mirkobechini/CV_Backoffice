@@ -27,6 +27,8 @@
                     <option value="" disabled {{ $isEdit ? '' : 'selected' }}>{{ __('Seleziona un veicolo') }}</option>
                     @foreach ($vehicles as $vehicle)
                         <option value="{{ $vehicle->id }}" data-fuel-types="{{ implode(',', $vehicle->allowedFuelLogTypes()) }}"
+                            data-mileage="{{ $vehicle->mileage }}"
+                            data-mileage-date="{{ $vehicle->latestMileageLog?->log_date_formatted }}"
                             {{ old('vehicle_id', $currentVehicleId) == $vehicle->id ? 'selected' : '' }}>
                             {{ $vehicle->internal_code }} · {{ $vehicle->brand?->name ?? 'N/A' }}
                             {{ $vehicle->carModel?->name ?? 'N/A' }}
@@ -84,6 +86,7 @@
                     <input type="number" class="input @error('mileage') is-invalid @enderror" id="mileage"
                         name="mileage" value="{{ old('mileage', $fuelLog->mileage ?? '') }}" min="0"
                         placeholder="{{ __('es. 87400') }}" aria-describedby="mileage-error">
+                    <div class="hint" id="mileage-last-known-hint"></div>
                     @error('mileage')
                         <div class="field-error" id="mileage-error">{{ $message }}</div>
                         @enderror
@@ -119,3 +122,37 @@
         </div>
     </form>
 </div>
+
+<script>
+    // Mostra l'ultimo km noto del veicolo selezionato come placeholder e
+    // come promemoria sotto il campo, stesso pattern già usato nel form
+    // appuntamento tagliando (_form-script.blade.php).
+    document.addEventListener('DOMContentLoaded', function() {
+        const vehicleSelect = document.getElementById('vehicle_id');
+        const mileageInput = document.getElementById('mileage');
+        const mileageHint = document.getElementById('mileage-last-known-hint');
+
+        if (!vehicleSelect || !mileageInput || !mileageHint) {
+            return;
+        }
+
+        const updateMileageHint = () => {
+            const selectedOption = vehicleSelect.options[vehicleSelect.selectedIndex];
+            const lastMileage = selectedOption?.dataset.mileage;
+            const lastMileageDate = selectedOption?.dataset.mileageDate;
+
+            if (lastMileage) {
+                mileageInput.placeholder = lastMileage;
+                mileageHint.textContent = lastMileageDate ?
+                    `{{ __('Ultimo km noto') }}: ${Number(lastMileage).toLocaleString('it-IT')} km ({{ __('il') }} ${lastMileageDate})` :
+                    `{{ __('Ultimo km noto') }}: ${Number(lastMileage).toLocaleString('it-IT')} km`;
+            } else {
+                mileageInput.placeholder = '{{ __('es. 87400') }}';
+                mileageHint.textContent = '';
+            }
+        };
+
+        updateMileageHint();
+        vehicleSelect.addEventListener('change', updateMileageHint);
+    });
+</script>
