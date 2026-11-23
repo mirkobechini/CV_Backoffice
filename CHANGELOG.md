@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.2.2] - 2026-11-23
+
 ### Fixed
 
 - Rifornimenti: il form non suggeriva l'ultimo km noto del veicolo (a differenza degli appuntamenti tagliando) e il km inserito non veniva mai salvato come lettura ufficiale (`MileageLog`) — restava isolato nel rifornimento, invisibile a pneumatici/scadenze a km/ultimo km noto del veicolo altrove nell'app. Ora entrambi allineati allo stesso meccanismo già usato per gli appuntamenti.
