@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Privacy Contact
+    |--------------------------------------------------------------------------
+    |
+    | The email address shown on the /privacy page for data-subject requests.
+    | Must be a real, monitored mailbox — never a noreply address.
+    |
+    */
+
+    'privacy_contact' => env('PRIVACY_CONTACT_EMAIL', 'privacy@example.com'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Version
     |--------------------------------------------------------------------------
     |
@@ -26,7 +38,7 @@ return [
     |
     */
 
-    'version' => env('APP_VERSION', '2.2.2'),
+    'version' => env('APP_VERSION', '2.2.3'),
 
     /*
     |--------------------------------------------------------------------------

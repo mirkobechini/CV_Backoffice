@@ -18,6 +18,10 @@
     | `APP_URL`               | `https://your-domain.laravel.cloud`      |                                                            |
     | `DB_CONNECTION`         | `mysql`                                  | Laravel Cloud provides MySQL                               |
     | `APP_LOCALE`            | `it`                                     |                                                            |
+    | `SESSION_SECURE_COOKIE` | `true`                                   | Defaults to `true` automatically when `APP_ENV=production`, but set it explicitly if you're unsure — it's what makes the session cookie `Secure` over HTTPS |
+    | `MAIL_FROM_ADDRESS`     | your noreply address                     | The sender address for transactional emails                |
+    | `MAIL_FROM_NAME`        | `${APP_NAME}` or similar                 | The sender's **display name** — set this explicitly if the same noreply mailbox is shared across several apps on your domain, so recipients can tell them apart; defaults to `APP_NAME` if unset |
+    | `PRIVACY_CONTACT_EMAIL` | a real, monitored mailbox                | Shown on the `/privacy` page for data-subject requests. **Must not be the noreply address above** — it needs to be read by someone |
     | `MAIL_MAILER`           | `log`                                    | For testing, then switch to `resend` once you have a [Resend](https://resend.com) account (free tier) — set `RESEND_KEY` too. Laravel Cloud's own Resend integration is currently API-only (no dashboard UI as of 2026-10), so use a Resend account directly instead of waiting for it. |
     | `RESEND_KEY`            | your Resend API key                      | Only needed once `MAIL_MAILER=resend`                     |
     | `OPENROUTER_API_KEY`    | your OpenRouter key                      | Required for the registration document scan; without it the feature fails gracefully, the rest of the app is unaffected |
