@@ -8,9 +8,9 @@
 
             <h2 class="mt-4 fs-5">1. Titolare del trattamento</h2>
             <p>
-                Il Titolare del trattamento dei dati è {{ config('app.name', 'Gestione Flotta') }}, gestito da
-                {{ config('app.name', 'Gestione Flotta') }}. Per qualsiasi richiesta relativa ai tuoi dati personali,
-                contattaci tramite i canali indicati nell'applicazione.
+                Il Titolare del trattamento dei dati è {{ config('app.name', 'Gestione Flotta') }}. Per qualsiasi
+                richiesta relativa ai tuoi dati personali, scrivi a
+                <a href="mailto:{{ config('mail.from.address') }}">{{ config('mail.from.address') }}</a>.
             </p>
 
             <h2 class="mt-4 fs-5">2. Dati personali trattati</h2>
@@ -65,13 +65,30 @@
                 preferenza (tema chiaro/scuro). Non vengono utilizzati cookie di profilazione o di terze parti.
             </p>
 
-            <h2 class="mt-4 fs-5">8. Sicurezza</h2>
+            <h2 class="mt-4 fs-5">8. Responsabili del trattamento (servizi di terze parti)</h2>
+            <p>Per fornire il servizio, alcuni dati sono condivisi con i seguenti responsabili esterni:</p>
+            <ul>
+                <li><strong>Resend</strong> (invio email transazionali e report periodici): riceve l'indirizzo email
+                    del destinatario e il contenuto del messaggio.</li>
+                <li><strong>Cloudflare R2</strong> (storage file): conserva le immagini e i documenti caricati
+                    (foto di guasti, libretti di circolazione, backup del database).</li>
+                <li><strong>OpenRouter</strong> (scansione AI del libretto di circolazione, se la funzione è attiva):
+                    riceve l'immagine del documento caricato per estrarne i dati tecnici del veicolo.</li>
+                <li><strong>Telegram</strong> (notifiche, solo per gli utenti che collegano il proprio account):
+                    riceve l'identificativo dell'account Telegram collegato e il testo delle notifiche inviate.</li>
+            </ul>
+            <p>
+                Questi servizi trattano i dati secondo le proprie informative privacy, agendo come responsabili del
+                trattamento per le finalità sopra descritte.
+            </p>
+
+            <h2 class="mt-4 fs-5">9. Sicurezza</h2>
             <p>
                 I dati sono protetti con misure di sicurezza adeguate: password crittografate, autenticazione con
                 token, rate limiting e controllo degli accessi basato sui ruoli.
             </p>
 
-            <h2 class="mt-4 fs-5">9. Crediti e licenze dei dati di terze parti</h2>
+            <h2 class="mt-4 fs-5">10. Crediti e licenze dei dati di terze parti</h2>
             <p>
                 I dati di omologazione (carburante, cilindrata, potenza, massa) suggeriti durante la scansione del
                 libretto di circolazione provengono, quando disponibili, dal catalogo

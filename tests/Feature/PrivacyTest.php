@@ -37,6 +37,18 @@ class PrivacyTest extends TestCase
         $response->assertSee('CC BY 4.0');
     }
 
+    public function test_privacy_page_lists_the_external_data_processors(): void
+    {
+        $response = $this->get('/privacy');
+
+        $response->assertOk();
+        $response->assertSee('Resend');
+        $response->assertSee('Cloudflare R2');
+        $response->assertSee('OpenRouter');
+        $response->assertSee('Telegram');
+        $response->assertSee(config('mail.from.address'));
+    }
+
     public function test_cookie_banner_is_present_in_app_layout(): void
     {
         $user = User::factory()->create();

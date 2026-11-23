@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Privacy policy incompleta: non elencava i reali responsabili esterni del trattamento (Resend, Cloudflare R2, OpenRouter, Telegram) né un contatto reale per il titolare. Cookie di sessione senza flag `Secure` garantito in produzione (`SESSION_SECURE_COOKIE` non aveva un default legato all'ambiente) (issue-673).
+
 ## [v2.2.2] - 2026-11-23
 
 ### Fixed

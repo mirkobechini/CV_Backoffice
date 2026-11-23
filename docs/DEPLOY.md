@@ -18,6 +18,7 @@
     | `APP_URL`               | `https://your-domain.laravel.cloud`      |                                                            |
     | `DB_CONNECTION`         | `mysql`                                  | Laravel Cloud provides MySQL                               |
     | `APP_LOCALE`            | `it`                                     |                                                            |
+    | `SESSION_SECURE_COOKIE` | `true`                                   | Defaults to `true` automatically when `APP_ENV=production`, but set it explicitly if you're unsure — it's what makes the session cookie `Secure` over HTTPS |
     | `MAIL_MAILER`           | `log`                                    | For testing, then switch to `resend` once you have a [Resend](https://resend.com) account (free tier) — set `RESEND_KEY` too. Laravel Cloud's own Resend integration is currently API-only (no dashboard UI as of 2026-10), so use a Resend account directly instead of waiting for it. |
     | `RESEND_KEY`            | your Resend API key                      | Only needed once `MAIL_MAILER=resend`                     |
     | `OPENROUTER_API_KEY`    | your OpenRouter key                      | Required for the registration document scan; without it the feature fails gracefully, the rest of the app is unaffected |
