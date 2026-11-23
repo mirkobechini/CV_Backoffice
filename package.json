@@ -21,7 +21,7 @@
         "@fullcalendar/daygrid": "^6.1.22",
         "@fullcalendar/interaction": "^6.1.22",
         "@popperjs/core": "^2.11.8",
-        "bootstrap": "^5.3.8",
+        "bootstrap": "^5.3.9",
         "bootstrap-icons": "^1.13.1",
         "flatpickr": "^4.6.13",
         "heic2any": "^0.0.4",
