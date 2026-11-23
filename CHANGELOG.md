@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Build Vite segnalava un falso allarme "chunks are larger than 500 kB" per `heic2any` (decoder WASM di libheif, ~1.3MB): è già in dynamic import e scaricato solo da chi carica un file HEIC/HEIF, non c'era nulla da frazionare ulteriormente (issue-677).
+
 ## [v2.2.3] - 2026-11-23
 
 ### Fixed
