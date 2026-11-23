@@ -7,6 +7,7 @@ use App\Models\CarModel;
 use App\Models\FuelCard;
 use App\Models\FuelLog;
 use App\Models\Group;
+use App\Models\MileageLog;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -441,5 +442,72 @@ class FuelLogCrudTest extends TestCase
 
         $this->assertNull(FuelLog::consumptionKmPerLiter($second, $first));
         $this->assertNull(FuelLog::consumptionKmPerLiter($first, null));
+    }
+
+    public function test_create_form_shows_the_vehicles_last_known_mileage(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+        MileageLog::create(['vehicle_id' => $vehicle->id, 'log_date' => '2026-01-10', 'mileage' => 42000]);
+
+        $response = $this->actingAs($user)->get(route('admin.fuel-logs.create'));
+
+        $response->assertOk();
+        $response->assertSee('data-mileage="42000"', false);
+    }
+
+    public function test_storing_a_fuel_log_records_the_mileage_as_a_mileage_log(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
+            'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
+            'log_date' => '2026-01-25',
+            'liters' => '45.50',
+            'mileage' => 51000,
+        ]);
+
+        $this->assertDatabaseHas('mileage_logs', [
+            'vehicle_id' => $vehicle->id,
+            'log_date' => '2026-01-25 00:00:00',
+            'mileage' => 51000,
+        ]);
+    }
+
+    public function test_storing_a_fuel_log_without_mileage_does_not_create_a_mileage_log(): void
+    {
+        $user = $this->createUser();
+        $vehicle = $this->createVehicle();
+
+        $this->actingAs($user)->post(route('admin.fuel-logs.store'), [
+            'vehicle_id' => $vehicle->id,
+            'fuel_type' => 'diesel',
+            'log_date' => '2026-01-25',
+            'liters' => '45.50',
+        ]);
+
+        $this->assertDatabaseMissing('mileage_logs', ['vehicle_id' => $vehicle->id]);
+    }
+
+    public function test_updating_a_fuel_logs_mileage_updates_the_mileage_log(): void
+    {
+        $user = $this->createUser();
+        $data = $this->createFuelLog();
+
+        $this->actingAs($user)->put(route('admin.fuel-logs.update', $data['fuelLog']), [
+            'vehicle_id' => $data['vehicle']->id,
+            'fuel_type' => 'diesel',
+            'log_date' => '2025-01-25',
+            'liters' => '45.50',
+            'mileage' => 50500,
+        ]);
+
+        $this->assertDatabaseHas('mileage_logs', [
+            'vehicle_id' => $data['vehicle']->id,
+            'log_date' => '2025-01-25 00:00:00',
+            'mileage' => 50500,
+        ]);
     }
 }

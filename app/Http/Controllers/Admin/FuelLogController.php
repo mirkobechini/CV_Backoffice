@@ -9,14 +9,16 @@ use App\Http\Requests\UpdateFuelLogRequest;
 use App\Models\FuelCard;
 use App\Models\FuelLog;
 use App\Models\Vehicle;
+use App\Services\MileageLogService;
 use Illuminate\Http\Request;
 
 class FuelLogController extends Controller
 {
     use SortableAndGroupable;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly MileageLogService $mileageLogService,
+    ) {
         $this->authorizeResource(FuelLog::class, 'fuelLog');
     }
 
@@ -77,7 +79,7 @@ class FuelLogController extends Controller
      */
     public function create()
     {
-        $vehicles = Vehicle::forCurrentUser()->get();
+        $vehicles = Vehicle::with('latestMileageLog')->forCurrentUser()->get();
         $fuelCards = FuelCard::forCurrentUser()->with('vehicle')->orderBy('card_number')->get();
 
         return view('admin.fuel-logs.create', compact('vehicles', 'fuelCards'));
@@ -89,6 +91,14 @@ class FuelLogController extends Controller
     public function store(StoreFuelLogRequest $request)
     {
         $fuelLog = FuelLog::create($request->validated());
+
+        // Il km inserito qui è una lettura reale del contachilometri: va
+        // nello storico chilometraggi del veicolo (vedi MileageLogService),
+        // altrimenti resta isolato in questo rifornimento e invisibile al
+        // resto dell'app (pneumatici, scadenze a km, "ultimo km noto").
+        // Stesso pattern già usato per gli appuntamenti completati, vedi
+        // MaintenanceCompletionService.
+        $this->mileageLogService->recordReading($fuelLog->vehicle, $fuelLog->log_date, $fuelLog->mileage);
 
         return redirect()->route('admin.fuel-logs.show', $fuelLog)->with('status', 'Rifornimento registrato con successo.');
     }
@@ -108,7 +118,7 @@ class FuelLogController extends Controller
      */
     public function edit(FuelLog $fuelLog)
     {
-        $vehicles = Vehicle::forCurrentUser()->get();
+        $vehicles = Vehicle::with('latestMileageLog')->forCurrentUser()->get();
         $fuelCards = FuelCard::forCurrentUser()->with('vehicle')->orderBy('card_number')->get();
 
         return view('admin.fuel-logs.edit', compact('fuelLog', 'vehicles', 'fuelCards'));
@@ -120,6 +130,7 @@ class FuelLogController extends Controller
     public function update(UpdateFuelLogRequest $request, FuelLog $fuelLog)
     {
         $fuelLog->update($request->validated());
+        $this->mileageLogService->recordReading($fuelLog->vehicle, $fuelLog->log_date, $fuelLog->mileage);
 
         return redirect()->route('admin.fuel-logs.show', $fuelLog)->with('status', 'Rifornimento aggiornato con successo.');
     }
