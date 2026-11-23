@@ -7,6 +7,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 ### Fixed
 
 - Rifornimenti: il form non suggeriva l'ultimo km noto del veicolo (a differenza degli appuntamenti tagliando) e il km inserito non veniva mai salvato come lettura ufficiale (`MileageLog`) — restava isolato nel rifornimento, invisibile a pneumatici/scadenze a km/ultimo km noto del veicolo altrove nell'app. Ora entrambi allineati allo stesso meccanismo già usato per gli appuntamenti.
+- Pagina Impostazioni lenta per il superadmin: l'elenco backup faceva una chiamata di rete separata per dimensione e data di ogni singolo file (su storage remoto R2/S3, 1+2N chiamate sincrone). Ora una sola chiamata di elenco fornisce già questi dati.
 
 ## [v2.2.1] - 2026-11-19
 
