@@ -4,6 +4,16 @@
     $routeParameterValue = $equipmentMaintenanceRecord?->getRouteKey();
     $modalIdSuffix = $routeParameterValue ?? 'missing-equipment-maintenance';
     $linkedIssues = $equipmentMaintenanceRecord?->issues ?? collect();
+    $linkedEquipments = $equipmentMaintenanceRecord?->equipments ?? collect();
+    // La selezione "su quali attrezzature è stato fatto l'intervento" ha un
+    // effetto concreto (far ripartire la scadenza revisione/collaudo) solo
+    // per questi due tipi di appuntamento: per gli altri non c'è nulla da
+    // aggiornare sull'attrezzatura, quindi la lista non serve a nulla.
+    $showEquipmentCompletionList = $linkedEquipments->count() > 1
+        && in_array($equipmentMaintenanceRecord?->activity_type, [
+            \App\Models\EquipmentMaintenanceRecord::ACTIVITY_REVISIONE,
+            \App\Models\EquipmentMaintenanceRecord::ACTIVITY_COLLAUDO,
+        ], true);
 @endphp
 
 @if ($disabledReason)
@@ -52,6 +62,27 @@
                                     No
                                 </label>
                             </div>
+                        @endif
+
+                        @if ($showEquipmentCompletionList)
+                            <p class="mb-2 mt-3"><strong>Su quali attrezzature è stato effettuato l'intervento?</strong></p>
+                            <p class="text-muted small mb-2">Le attrezzature non selezionate resteranno collegate all'appuntamento ma senza alcuna revisione/collaudo registrato (da riprogrammare).</p>
+
+                            @foreach ($linkedEquipments as $equipment)
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="completed_equipment_ids[]"
+                                        id="completed_equipment_{{ $equipment->id }}_{{ $modalIdSuffix }}"
+                                        value="{{ $equipment->id }}" checked>
+                                    <label class="form-check-label"
+                                        for="completed_equipment_{{ $equipment->id }}_{{ $modalIdSuffix }}">
+                                        {{ $equipment->name }}
+                                    </label>
+                                </div>
+                            @endforeach
+                        @else
+                            @foreach ($linkedEquipments as $equipment)
+                                <input type="hidden" name="completed_equipment_ids[]" value="{{ $equipment->id }}">
+                            @endforeach
                         @endif
                     </div>
 

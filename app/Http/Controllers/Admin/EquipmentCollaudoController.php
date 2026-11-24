@@ -7,7 +7,7 @@ use App\Http\Requests\BulkRecordEquipmentRevisionRequest;
 use App\Http\Requests\StoreEquipmentRevisionRequest;
 use App\Models\Equipment;
 use App\Models\EquipmentRevision;
-use App\Services\EquipmentRevisionDateCalculator;
+use App\Services\EquipmentRevisionService;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\DB;
  */
 class EquipmentCollaudoController extends Controller
 {
+    public function __construct(
+        private readonly EquipmentRevisionService $equipmentRevisionService,
+    ) {}
+
     /**
      * Registra una revisione o un collaudo effettuato: crea una voce di
      * storico e aggiorna la data corrente (+ la relativa scadenza) di
@@ -27,7 +31,7 @@ class EquipmentCollaudoController extends Controller
         $this->authorize('update', $equipment);
 
         $data = $request->validated();
-        $this->applyRevision($equipment, $data);
+        $this->equipmentRevisionService->apply($equipment, $data);
 
         $message = $data['kind'] === EquipmentRevision::KIND_COLLAUDO
             ? 'Collaudo registrato con successo.'
@@ -53,7 +57,7 @@ class EquipmentCollaudoController extends Controller
         // stessa richiesta.
         DB::transaction(function () use ($equipments, $data) {
             foreach ($equipments as $equipment) {
-                $this->applyRevision($equipment, $data);
+                $this->equipmentRevisionService->apply($equipment, $data);
             }
         });
 
@@ -62,39 +66,5 @@ class EquipmentCollaudoController extends Controller
             : count($equipments).' revisioni registrate con successo.';
 
         return redirect()->route('admin.equipments.index')->with('status', $message);
-    }
-
-    /**
-     * Crea la voce di storico e aggiorna la data corrente (+ la relativa
-     * scadenza) di quel tipo di controllo sull'attrezzatura. Condivisa da
-     * recordRevision() e bulkRecordRevision().
-     */
-    private function applyRevision(Equipment $equipment, array $data): void
-    {
-        $equipment->revisions()->create([
-            'kind' => $data['kind'],
-            'performed_date' => $data['performed_date'],
-            'notes' => $data['notes'] ?? null,
-        ]);
-
-        if ($data['kind'] === EquipmentRevision::KIND_COLLAUDO) {
-            $update = EquipmentRevisionDateCalculator::resolveNextCollaudoDate([
-                'collaudo_date' => $data['performed_date'],
-                'equipment_type_id' => $equipment->equipment_type_id,
-            ]);
-            $equipment->update([
-                'collaudo_date' => $data['performed_date'],
-                'next_collaudo_date' => $update['next_collaudo_date'] ?? null,
-            ]);
-        } else {
-            $update = EquipmentRevisionDateCalculator::resolveExpirationDate([
-                'revision_date' => $data['performed_date'],
-                'equipment_type_id' => $equipment->equipment_type_id,
-            ]);
-            $equipment->update([
-                'revision_date' => $data['performed_date'],
-                'expiration_date' => $update['expiration_date'] ?? null,
-            ]);
-        }
     }
 }
