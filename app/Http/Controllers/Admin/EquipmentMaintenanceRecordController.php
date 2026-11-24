@@ -10,17 +10,18 @@ use App\Models\Equipment;
 use App\Models\EquipmentIssue;
 use App\Models\EquipmentMaintenanceRecord;
 use App\Models\Provider;
+use App\Services\EquipmentMaintenanceCompletionService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class EquipmentMaintenanceRecordController extends Controller
 {
     use ValidatesBackUrl;
 
-    public function __construct()
-    {
+    public function __construct(
+        private readonly EquipmentMaintenanceCompletionService $completionService,
+    ) {
         $this->authorizeResource(EquipmentMaintenanceRecord::class, 'equipmentMaintenanceRecord');
     }
 
@@ -238,17 +239,23 @@ class EquipmentMaintenanceRecordController extends Controller
 
     /**
      * Completa l'appuntamento: imposta la data di restituzione (oggi, se non
-     * già indicata) e, se ci sono guasti collegati, li chiude o li
-     * riporta in lavorazione a seconda della risposta.
+     * già indicata), chiude/riporta in lavorazione gli eventuali guasti
+     * collegati e, per le attrezzature indicate come effettivamente
+     * lavorate, registra la revisione/collaudo se l'appuntamento è di quel
+     * tipo (vedi EquipmentMaintenanceCompletionService).
      */
     public function complete(Request $request, EquipmentMaintenanceRecord $equipmentMaintenanceRecord)
     {
         $this->authorize('update', $equipmentMaintenanceRecord);
 
-        $equipmentMaintenanceRecord->loadMissing('issues');
+        $equipmentMaintenanceRecord->loadMissing('issues', 'equipments');
         $hasIssues = $equipmentMaintenanceRecord->issues->isNotEmpty();
+        $linkedEquipmentIds = $equipmentMaintenanceRecord->equipments->pluck('id')->all();
 
-        $rules = [];
+        $rules = [
+            'completed_equipment_ids' => 'nullable|array',
+            'completed_equipment_ids.*' => 'integer',
+        ];
         $messages = [];
         if ($hasIssues) {
             $rules['issue_resolved'] = 'required|boolean';
@@ -257,20 +264,17 @@ class EquipmentMaintenanceRecordController extends Controller
 
         $data = $request->validate($rules, $messages);
 
-        DB::transaction(function () use ($equipmentMaintenanceRecord, $data, $hasIssues) {
-            if (! $equipmentMaintenanceRecord->return_date) {
-                $equipmentMaintenanceRecord->return_date = Carbon::today();
-            }
-            $equipmentMaintenanceRecord->save();
+        // Deve essere un sottoinsieme delle attrezzature collegate a questo
+        // appuntamento: senza questo controllo si potrebbe far registrare
+        // una revisione su un'attrezzatura arbitraria passando un id non
+        // presente nel form (stesso schema di sicurezza già richiesto per
+        // completed_issue_ids, audit 2026-10-22 SH6).
+        $completedEquipmentIds = $data['completed_equipment_ids'] ?? [];
+        if (! empty(array_diff($completedEquipmentIds, $linkedEquipmentIds))) {
+            return back()->withErrors(['completed_equipment_ids' => 'Una o più attrezzature selezionate non appartengono a questo appuntamento.']);
+        }
 
-            if ($hasIssues) {
-                $resolved = (bool) $data['issue_resolved'];
-                $equipmentMaintenanceRecord->issues->each(function (EquipmentIssue $issue) use ($resolved) {
-                    $issue->status = $resolved ? 'closed' : 'in_progress';
-                    $issue->save();
-                });
-            }
-        });
+        $this->completionService->complete($equipmentMaintenanceRecord, $data);
 
         return redirect()
             ->route('admin.equipment-maintenance-records.show', $equipmentMaintenanceRecord->id)

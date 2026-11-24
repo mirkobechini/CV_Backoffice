@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.3.0] - 2026-11-24
+
+### Added
+
+- Completamento appuntamento attrezzature: quando coinvolge più attrezzature (es. revisione di 10 estintori), ora si può indicare su quali è stato effettivamente eseguito l'intervento (le altre restano collegate per lo storico, da riprogrammare). Se l'appuntamento è di tipo Revisione o Collaudo, per le attrezzature selezionate viene registrata la revisione/collaudo e aggiornata la relativa scadenza — stesso meccanismo già usato per la registrazione manuale, prima completamente separato dal completamento dell'appuntamento (issue-679).
+
+### Fixed
+
+- Build Vite segnalava un falso allarme "chunks are larger than 500 kB" per `heic2any` (decoder WASM di libheif, ~1.3MB): è già in dynamic import e scaricato solo da chi carica un file HEIC/HEIF, non c'era nulla da frazionare ulteriormente (issue-677).
+
 ## [v2.2.3] - 2026-11-23
 
 ### Fixed
