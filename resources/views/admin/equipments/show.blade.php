@@ -233,5 +233,7 @@
         </div>
     @endif
 
+    <x-admin.equipment-maintenance-history-card :equipment="$equipment" />
+
     <x-admin.delete-modal type="equipment" :object="$equipment" />
 @endsection

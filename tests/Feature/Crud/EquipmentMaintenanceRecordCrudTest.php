@@ -6,8 +6,11 @@ use App\Models\Equipment;
 use App\Models\EquipmentIssue;
 use App\Models\EquipmentMaintenanceRecord;
 use App\Models\EquipmentType;
+use App\Models\Group;
 use App\Models\Provider;
 use App\Models\User;
+use App\Models\Vehicle;
+use App\Models\VehicleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -485,6 +488,44 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
         $response->assertOk();
         $response->assertSee('Su quali attrezzature è stato effettuato l\'intervento?', false);
         $response->assertSee('type="checkbox" name="completed_equipment_ids[]"', false);
+    }
+
+    public function test_show_page_lists_equipment_name_serial_and_assigned_vehicle_in_the_completion_picker(): void
+    {
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $vehicleType = VehicleType::create(['name' => 'Ambulanza', 'first_inspection_months' => 48, 'regular_inspection_months' => 24]);
+        $group = Group::firstOrCreate(['name' => 'Associazione di default'], ['invite_code' => Group::generateInviteCode()]);
+        $vehicle = Vehicle::create([
+            'license_plate' => 'AB123CD',
+            'vehicle_type_id' => $vehicleType->id,
+            'internal_code' => 'AMB-1',
+            'fuel_type' => 'diesel',
+            'immatricolation_date' => '2024-01-01',
+            'group_id' => $group->id,
+        ]);
+        $type = EquipmentType::create(['name' => 'Estintore '.uniqid()]);
+        $onVehicle = Equipment::create([
+            'equipment_type_id' => $type->id,
+            'vehicle_id' => $vehicle->id,
+            'name' => 'Estintore cabina',
+            'serial_number' => 'EX-999',
+        ]);
+        $unassigned = $this->createEquipment('Estintore magazzino');
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+            'activity_type' => EquipmentMaintenanceRecord::ACTIVITY_REVISIONE,
+        ]);
+        $record->equipments()->attach([$onVehicle->id, $unassigned->id]);
+
+        $response = $this->actingAs($user)->get(route('admin.equipment-maintenance-records.show', $record));
+
+        $response->assertOk();
+        $response->assertSee('Estintore cabina');
+        $response->assertSee('EX-999');
+        $response->assertSee('AMB-1');
+        $response->assertSee('Estintore magazzino');
     }
 
     public function test_removing_equipment_on_update_unlinks_its_issue(): void

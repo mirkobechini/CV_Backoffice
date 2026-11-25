@@ -76,6 +76,12 @@
                                     <label class="form-check-label"
                                         for="completed_equipment_{{ $equipment->id }}_{{ $modalIdSuffix }}">
                                         {{ $equipment->name }}
+                                        @if ($equipment->serial_number)
+                                            — {{ __('matricola') }} {{ $equipment->serial_number }}
+                                        @endif
+                                        @if ($equipment->vehicle)
+                                            — {{ $equipment->vehicle->internal_code }}
+                                        @endif
                                     </label>
                                 </div>
                             @endforeach
