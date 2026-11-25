@@ -32,7 +32,7 @@
 
 | # | Area | Descrizione | Riferimento | Priorità | Stato |
 |---|------|-------------|-------------|----------|-------|
-| S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | 🔄 aggiunta a `.env.example=true` con commento (2026-11-16); **da impostare manualmente anche nelle env vars di Laravel Cloud** — non modificabile da codice |
+| S1 | Config | `SESSION_SECURE_COOKIE` non impostata esplicitamente in produzione — verificare su Laravel Cloud | env produzione | Media | ✅ fix issue-673 (2026-11-23): `config/session.php` ora default a `true` quando `APP_ENV=production`, non dipende più da un env mai impostata |
 | S2 | CSRF | `TelegramWebhookController` in `routes/web.php` prende il middleware CSRF di default — verificare se le notifiche falliscono silenziosamente (419) o se c'è un bypass non documentato | `routes/web.php:51` | Media | ✅ fix issue-639: confermato 419 con una richiesta reale, ora escluso via `validateCsrfTokens(except: ...)` |
 | S3 | Hygiene | 3 advisory Composer ignorate senza un commento sul motivo | `composer.json:76-82` | Bassa | ✅ |
 | S4 | Fragilità futura | `group_id` fillable su `Vehicle` ma nessuna request lo valida oggi — aggiungere un test che pinni l'invariante (nessuna richiesta futura deve poterlo scrivere da payload) | `app/Models/Vehicle.php` | Bassa | ✅ |
