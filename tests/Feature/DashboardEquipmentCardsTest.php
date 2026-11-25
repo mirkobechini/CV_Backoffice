@@ -136,4 +136,17 @@ class DashboardEquipmentCardsTest extends TestCase
         $response->assertSee('Tutte le attrezzature sono funzionanti');
         $response->assertSee('Tutte le attrezzature sono in regola');
     }
+
+    public function test_dashboard_quick_add_menu_and_mobile_fab_offer_equipment_shortcuts(): void
+    {
+        $user = User::factory()->withRole('admin')->create();
+
+        $response = $this->actingAs($user)->get(route('dashboard'));
+
+        $response->assertOk();
+        $response->assertSee(route('admin.equipment-issues.create'), false);
+        $response->assertSee(route('admin.equipment-maintenance-records.create'), false);
+        $response->assertSee('Nuovo guasto attrezzatura');
+        $response->assertSee('Nuovo appuntamento attrezzatura');
+    }
 }

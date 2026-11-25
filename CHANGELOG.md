@@ -8,6 +8,7 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 - Notifiche per guasti e appuntamenti attrezzature: finora `notify_on_equipment` copriva solo le scadenze fisiche (revisione/collaudo), non i guasti segnalati (`EquipmentIssue`) né gli appuntamenti (`EquipmentMaintenanceRecord`). Riusano i toggle `notify_on_issue`/`notify_on_maintenance` già esistenti, stesso trattamento "non assegnata = visibile a tutto il gruppo" già usato per le scadenze (issue-683).
 - Due nuove card dashboard: "Guasti attrezzature aperti" e "Prossimi appuntamenti attrezzature", stesso gap di prima — oggi la dashboard mostra solo scadenze fisiche delle attrezzature, non guasti/appuntamenti (issue-685).
+- Menu "+" (FAB mobile e dropdown desktop): aggiunte le scorciatoie "Nuovo guasto attrezzatura" e "Nuovo appuntamento attrezzatura" (le route esistevano già, non erano collegate da questi due punti) (issue-687).
 
 ## [v2.4.0] - 2026-11-25
 

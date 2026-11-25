@@ -289,6 +289,10 @@
                 {{ __('Nuovo rifornimento') }}</a>
             <a href="{{ route('admin.maintenance-records.create') }}"><i class="fa-solid fa-calendar-check"></i>
                 {{ __('Nuovo appuntamento') }}</a>
+            <a href="{{ route('admin.equipment-issues.create') }}"><i class="fa-solid fa-screwdriver-wrench"></i>
+                {{ __('Nuovo guasto attrezzatura') }}</a>
+            <a href="{{ route('admin.equipment-maintenance-records.create') }}"><i class="fa-solid fa-calendar-plus"></i>
+                {{ __('Nuovo appuntamento attrezzatura') }}</a>
         </div>
     </div>
     <a class="bottom-nav-link {{ request()->routeIs('admin.issues.*') ? 'active' : '' }}"

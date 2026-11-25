@@ -51,6 +51,16 @@
                         <span class="dropdown-item-icon" style="background:var(--amber-soft);color:var(--amber);"><i
                                 class="fa-solid fa-calendar-check"></i></span>
                         {{ __('Nuovo appuntamento') }}</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.equipment-issues.create') }}"
+                        style="display:flex;align-items:center;gap:10px;">
+                        <span class="dropdown-item-icon" style="background:var(--red-soft);color:var(--red);"><i
+                                class="fa-solid fa-screwdriver-wrench"></i></span>
+                        {{ __('Nuovo guasto attrezzatura') }}</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.equipment-maintenance-records.create') }}"
+                        style="display:flex;align-items:center;gap:10px;">
+                        <span class="dropdown-item-icon" style="background:var(--amber-soft);color:var(--amber);"><i
+                                class="fa-solid fa-calendar-plus"></i></span>
+                        {{ __('Nuovo appuntamento attrezzatura') }}</a></li>
             </ul>
         </div>
     </div>
