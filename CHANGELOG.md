@@ -4,6 +4,11 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Selezione attrezzature completate (completamento appuntamento): ora mostra nome, matricola e mezzo assegnato (se c'è) di ciascuna attrezzatura, non solo il nome — necessario per distinguerle quando più attrezzature dello stesso tipo sono coinvolte nello stesso appuntamento.
+- Scheda attrezzatura: nuovo storico interventi (tutti gli appuntamenti di cui l'attrezzatura ha fatto parte, inclusi quelli ancora in programma), distinto dallo storico controlli (solo revisioni/collaudi effettivamente registrati) (issue-681).
+
 ## [v2.3.0] - 2026-11-24
 
 ### Added

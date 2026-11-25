@@ -124,7 +124,7 @@ class EquipmentMaintenanceRecordController extends Controller
      */
     public function show(EquipmentMaintenanceRecord $equipmentMaintenanceRecord)
     {
-        $equipmentMaintenanceRecord->load('provider', 'equipments.equipmentType', 'issues.equipment');
+        $equipmentMaintenanceRecord->load('provider', 'equipments.equipmentType', 'equipments.vehicle', 'issues.equipment');
 
         return view('admin.equipment-maintenance-records.show', compact('equipmentMaintenanceRecord'));
     }

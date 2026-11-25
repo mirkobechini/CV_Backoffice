@@ -166,7 +166,7 @@ class EquipmentController extends Controller
      */
     public function show(Equipment $equipment)
     {
-        $equipment->load('vehicle.brand', 'vehicle.carModel', 'equipmentType', 'revisions');
+        $equipment->load('vehicle.brand', 'vehicle.carModel', 'equipmentType', 'revisions', 'maintenanceRecords.provider');
 
         return view('admin.equipments.show', compact('equipment'));
     }

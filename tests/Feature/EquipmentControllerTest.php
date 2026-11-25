@@ -3,8 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\Equipment;
+use App\Models\EquipmentMaintenanceRecord;
 use App\Models\EquipmentType;
 use App\Models\Group;
+use App\Models\Provider;
 use App\Models\User;
 use App\Models\Vehicle;
 use App\Models\VehicleType;
@@ -81,6 +83,26 @@ class EquipmentControllerTest extends TestCase
         $this->actingAs($this->admin())
             ->get(route('admin.equipments.show', $eq))
             ->assertOk();
+    }
+
+    public function test_show_lists_the_equipments_maintenance_history(): void
+    {
+        $eqType = EquipmentType::create(['name' => 'Estintore']);
+        $v = $this->vehicle();
+        $eq = Equipment::create(['vehicle_id' => $v->id, 'equipment_type_id' => $eqType->id, 'name' => 'Test', 'serial_number' => 'SN456']);
+        $provider = Provider::create(['name' => 'Officina Collaudi', 'type' => 'Centro Revisioni']);
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => '2026-01-10',
+            'activity_type' => EquipmentMaintenanceRecord::ACTIVITY_COLLAUDO,
+        ]);
+        $record->equipments()->attach($eq->id);
+
+        $response = $this->actingAs($this->admin())->get(route('admin.equipments.show', $eq));
+
+        $response->assertOk();
+        $response->assertSee('Officina Collaudi');
+        $response->assertSee(EquipmentMaintenanceRecord::ACTIVITY_COLLAUDO);
     }
 
     public function test_update_modifies_equipment(): void
