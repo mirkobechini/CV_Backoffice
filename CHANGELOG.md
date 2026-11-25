@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.4.0] - 2026-11-25
+
 ### Added
 
 - Selezione attrezzature completate (completamento appuntamento): ora mostra nome, matricola e mezzo assegnato (se c'è) di ciascuna attrezzatura, non solo il nome — necessario per distinguerle quando più attrezzature dello stesso tipo sono coinvolte nello stesso appuntamento.
