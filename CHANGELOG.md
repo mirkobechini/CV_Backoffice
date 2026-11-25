@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.5.0] - 2026-11-25
+
 ### Added
 
 - Notifiche per guasti e appuntamenti attrezzature: finora `notify_on_equipment` copriva solo le scadenze fisiche (revisione/collaudo), non i guasti segnalati (`EquipmentIssue`) né gli appuntamenti (`EquipmentMaintenanceRecord`). Riusano i toggle `notify_on_issue`/`notify_on_maintenance` già esistenti, stesso trattamento "non assegnata = visibile a tutto il gruppo" già usato per le scadenze (issue-683).
