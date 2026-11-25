@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Mail\EventNotificationMail;
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\EquipmentIssue;
+use App\Models\EquipmentMaintenanceRecord;
 use App\Models\Group;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
@@ -66,6 +68,7 @@ class GenerateNotifications extends Command
 
             if ($user->notificationSetting('notify_on_issue', true)) {
                 $this->notifyOpenIssues($user, $groupId, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+                $this->notifyOpenEquipmentIssues($user, $groupId, $notifications, $emailsByUser, $telegramEventsByUser, $created);
             }
 
             if ($user->notificationSetting('notify_on_equipment', true)) {
@@ -75,6 +78,7 @@ class GenerateNotifications extends Command
 
             if ($user->notificationSetting('notify_on_maintenance', true)) {
                 $this->notifyUpcomingAppointments($user, $groupId, $reminderDays, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+                $this->notifyUpcomingEquipmentAppointments($user, $groupId, $reminderDays, $notifications, $emailsByUser, $telegramEventsByUser, $created);
             }
 
             if ($user->notificationSetting('notify_on_tire_season', true)) {
@@ -225,6 +229,34 @@ class GenerateNotifications extends Command
         }
     }
 
+    /**
+     * Guasti aperti sulle attrezzature (EquipmentIssue), non solo sui
+     * veicoli: stesso trattamento "non assegnata = visibile a tutto il
+     * gruppo" già usato per le scadenze di Equipment, perché l'attrezzatura
+     * non ha un group_id proprio e non è nemmeno sempre assegnata a un
+     * veicolo.
+     */
+    private function notifyOpenEquipmentIssues(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    {
+        $openEquipmentIssues = EquipmentIssue::with('equipment.vehicle')
+            ->open()
+            ->whereHas('equipment', function ($q) use ($groupId) {
+                $q->whereDoesntHave('vehicle')
+                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
+            })
+            ->get();
+
+        foreach ($openEquipmentIssues as $issue) {
+            $equipmentName = $issue->equipment?->name ?? 'N/A';
+            $title = "Guasto attrezzatura aperto: {$equipmentName}";
+            $message = $issue->description;
+            $url = route('admin.equipment-issues.show', $issue->id);
+            $marker = "#equipment-issue-{$issue->id}";
+
+            $this->dispatchEvent($user, Notification::TYPE_ISSUE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+        }
+    }
+
     private function notifyExpiringEquipment(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
     {
         // L'attrezzatura non assegnata a un veicolo non ha un gruppo
@@ -292,6 +324,38 @@ class GenerateNotifications extends Command
             $message = "Il veicolo {$vehicleCode} ha un appuntamento{$activitySuffix} il {$record->appointment_date?->format('d/m/Y')}.";
             $url = $record->vehicle_id ? route('admin.vehicles.show', $record->vehicle_id) : null;
             $marker = "#maintenance-{$record->id}";
+
+            $this->dispatchEvent($user, Notification::TYPE_MAINTENANCE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+        }
+    }
+
+    /**
+     * Appuntamenti attrezzature (officina/collaudo) in arrivo e non ancora
+     * conclusi. Un appuntamento attrezzature può coinvolgerne più di una
+     * insieme (es. collaudo di 10 estintori): basta che UNA sia visibile al
+     * gruppo (non assegnata, o assegnata a un veicolo del gruppo) perché
+     * l'appuntamento lo sia — stesso criterio permissivo già usato
+     * nell'elenco appuntamenti attrezzature.
+     */
+    private function notifyUpcomingEquipmentAppointments(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    {
+        $upcomingEquipmentAppointments = EquipmentMaintenanceRecord::with('equipments.vehicle')
+            ->whereNull('return_date')
+            ->whereNotNull('appointment_date')
+            ->whereBetween('appointment_date', [today(), today()->addDays($reminderDays)])
+            ->whereHas('equipments', function ($q) use ($groupId) {
+                $q->whereDoesntHave('vehicle')
+                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
+            })
+            ->get();
+
+        foreach ($upcomingEquipmentAppointments as $record) {
+            $equipmentNames = $record->equipments->pluck('name')->implode(', ') ?: 'N/A';
+            $title = "Appuntamento attrezzature in arrivo: {$equipmentNames}";
+            $activitySuffix = $record->activity_type ? " ({$record->activity_type})" : '';
+            $message = "Le attrezzature {$equipmentNames} hanno un appuntamento{$activitySuffix} il {$record->appointment_date?->format('d/m/Y')}.";
+            $url = route('admin.equipment-maintenance-records.show', $record->id);
+            $marker = "#equipment-maintenance-{$record->id}";
 
             $this->dispatchEvent($user, Notification::TYPE_MAINTENANCE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
         }

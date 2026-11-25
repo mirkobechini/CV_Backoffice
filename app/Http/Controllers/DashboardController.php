@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Deadline;
 use App\Models\Equipment;
+use App\Models\EquipmentIssue;
+use App\Models\EquipmentMaintenanceRecord;
 use App\Models\Issue;
 use App\Models\MaintenanceRecord;
 use App\Models\Vehicle;
@@ -41,6 +43,32 @@ class DashboardController extends Controller
                 ->open()
                 ->orderByDesc('event_date')
                 ->take(20)
+                ->get();
+
+            // Stesso criterio permissivo già usato per expiringEquipment
+            // sotto: l'attrezzatura non assegnata a un veicolo non ha un
+            // gruppo proprio, resta visibile a tutti.
+            $openEquipmentIssues = EquipmentIssue::with('equipment.vehicle')
+                ->whereHas('equipment', function ($q) {
+                    $q->whereDoesntHave('vehicle')
+                        ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
+                })
+                ->open()
+                ->orderByDesc('event_date')
+                ->take(20)
+                ->get();
+
+            // Un appuntamento attrezzature può coinvolgerne più di una
+            // insieme: basta che UNA sia visibile al gruppo perché
+            // l'appuntamento lo sia (stesso criterio dell'elenco dedicato).
+            $upcomingEquipmentAppointments = EquipmentMaintenanceRecord::with('provider', 'equipments.vehicle')
+                ->whereHas('equipments', function ($q) {
+                    $q->whereDoesntHave('vehicle')
+                        ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
+                })
+                ->whereNull('return_date')
+                ->orderBy('appointment_date')
+                ->take(5)
                 ->get();
 
             $upcomingDeadlines = Deadline::with('vehicle')
@@ -159,6 +187,8 @@ class DashboardController extends Controller
             return compact(
                 'totalVehicles',
                 'openIssues',
+                'openEquipmentIssues',
+                'upcomingEquipmentAppointments',
                 'upcomingDeadlines',
                 'expiredDeadlines',
                 'upcomingAppointments',
