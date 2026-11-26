@@ -144,6 +144,8 @@ class AppServiceProvider extends ServiceProvider
         Issue::observe(DashboardCacheObserver::class);
         MaintenanceRecord::observe(DashboardCacheObserver::class);
         Equipment::observe(DashboardCacheObserver::class);
+        EquipmentIssue::observe(DashboardCacheObserver::class);
+        EquipmentMaintenanceRecord::observe(DashboardCacheObserver::class);
         Tire::observe(DashboardCacheObserver::class);
         MileageLog::observe(DashboardCacheObserver::class);
         Group::observe(DashboardCacheObserver::class);

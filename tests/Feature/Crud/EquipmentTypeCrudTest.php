@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Crud;
 
+use App\Models\Equipment;
 use App\Models\EquipmentType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -120,6 +121,23 @@ class EquipmentTypeCrudTest extends TestCase
         $this->assertDatabaseMissing('equipment_types', [
             'id' => $equipmentType->id,
         ]);
+    }
+
+    public function test_equipment_type_still_in_use_cannot_be_deleted(): void
+    {
+        // Audit sicurezza 2026-11-25 (A1): equipment.equipment_type_id è
+        // cascadeOnDelete — senza questo controllo, eliminare un tipo
+        // ancora in uso cancellerebbe a cascata TUTTE le attrezzature di
+        // quel tipo, di qualunque gruppo, irreversibilmente.
+        $user = $this->createUser();
+        $equipmentType = $this->createEquipmentType();
+        Equipment::create(['equipment_type_id' => $equipmentType->id, 'name' => 'Estintore 1']);
+
+        $response = $this->actingAs($user)->delete(route('admin.equipment-types.destroy', $equipmentType));
+
+        $response->assertSessionHasErrors(['equipmentType']);
+        $this->assertDatabaseHas('equipment_types', ['id' => $equipmentType->id]);
+        $this->assertDatabaseHas('equipment', ['equipment_type_id' => $equipmentType->id]);
     }
 
     // VALIDAZIONE UNICITÀ

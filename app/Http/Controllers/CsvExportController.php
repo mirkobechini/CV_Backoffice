@@ -96,13 +96,8 @@ class CsvExportController extends Controller
 
     private function exportEquipments()
     {
-        // L'attrezzatura non assegnata a un veicolo non ha un gruppo proprio:
-        // resta inclusa, come nell'indice.
         $equipments = Equipment::with(['vehicle', 'equipmentType'])
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
+            ->visibleToCurrentUser()
             ->get();
 
         $headers = ['Veicolo', 'Tipo', 'Nome', 'Seriale', 'Data Revisione', 'Scadenza'];

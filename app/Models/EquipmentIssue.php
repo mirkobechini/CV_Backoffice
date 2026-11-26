@@ -36,6 +36,21 @@ class EquipmentIssue extends Model
         return $query->whereIn('status', ['open', 'in_progress']);
     }
 
+    /**
+     * @see Equipment::scopeVisibleToGroup() — stesso pattern "non assegnata
+     * = condivisa", qui applicato tramite l'attrezzatura collegata
+     * (audit qualità 2026-11-25, C1).
+     */
+    public function scopeVisibleToGroup(Builder $query, ?int $groupId): Builder
+    {
+        return $query->whereHas('equipment', fn (Builder $q) => $q->visibleToGroup($groupId));
+    }
+
+    public function scopeVisibleToCurrentUser(Builder $query): Builder
+    {
+        return $query->whereHas('equipment', fn (Builder $q) => $q->visibleToCurrentUser());
+    }
+
     public function equipment()
     {
         return $this->belongsTo(Equipment::class);

@@ -158,14 +158,8 @@ class SendSummaryReport extends Command
                             ->whereNull('return_date')
                             ->distinct('vehicle_id')
                             ->count('vehicle_id'),
-                        // L'attrezzatura non assegnata a un veicolo non ha un
-                        // gruppo proprio: resta inclusa, come nell'indice
-                        // attrezzature.
                         'expiringEquipment' => Equipment::with('vehicle')
-                            ->where(function ($q) use ($groupId) {
-                                $q->whereDoesntHave('vehicle')
-                                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
-                            })
+                            ->visibleToGroup($groupId)
                             ->expiringSoonOverall($reminderDays)
                             ->get()
                             ->sortBy('next_due_date')

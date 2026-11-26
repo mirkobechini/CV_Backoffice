@@ -44,9 +44,7 @@ class VehicleShowDataService
             ->where(function ($q) use ($vehicle) {
                 $q->whereNull('vehicle_id')->orWhere('vehicle_id', '!=', $vehicle->id);
             })
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
+            ->visibleToCurrentUser()
             ->orderBy('name')
             ->get();
 

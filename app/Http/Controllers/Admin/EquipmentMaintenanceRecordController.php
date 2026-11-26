@@ -36,13 +36,8 @@ class EquipmentMaintenanceRecordController extends Controller
         $statusFilter = $validated['status_filter'] ?? 'all';
         $search = $request->get('q');
 
-        // Visibile se almeno un'attrezzatura coinvolta è visibile all'utente
-        // (stessa logica permissiva dell'elenco attrezzature: quelle non
-        // assegnate a un veicolo restano visibili a tutti).
         $query = EquipmentMaintenanceRecord::with('provider', 'equipments.equipmentType')
-            ->whereHas('equipments', function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            });
+            ->visibleToCurrentUser();
 
         if ($search) {
             $query->where(function ($sub) use ($search) {
@@ -81,7 +76,7 @@ class EquipmentMaintenanceRecordController extends Controller
         $selectedEquipmentId = request('equipment_id');
         $providers = Provider::orderBy('name')->get();
         $openIssues = EquipmentIssue::open()
-            ->whereHas('equipment', fn ($q) => $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser()))
+            ->visibleToCurrentUser()
             ->get(['id', 'equipment_id', 'description', 'event_date']);
 
         return view('admin.equipment-maintenance-records.create', compact('equipments', 'selectedEquipmentId', 'providers', 'openIssues'));
@@ -249,7 +244,6 @@ class EquipmentMaintenanceRecordController extends Controller
         $this->authorize('update', $equipmentMaintenanceRecord);
 
         $equipmentMaintenanceRecord->loadMissing('issues', 'equipments');
-        $hasIssues = $equipmentMaintenanceRecord->issues->isNotEmpty();
         $linkedEquipmentIds = $equipmentMaintenanceRecord->equipments->pluck('id')->all();
 
         $rules = [
@@ -257,9 +251,13 @@ class EquipmentMaintenanceRecordController extends Controller
             'completed_equipment_ids.*' => 'integer',
         ];
         $messages = [];
-        if ($hasIssues) {
-            $rules['issue_resolved'] = 'required|boolean';
-            $messages['issue_resolved.required'] = 'Seleziona se i guasti collegati sono stati risolti o meno.';
+        // Un sì/no indipendente per ciascun guasto collegato, non più
+        // un'unica scelta valida per tutti — stesso bug già corretto sul
+        // lato veicolo nell'audit 2026-10-19, reintrodotto qui (audit
+        // 2026-11-25, B1).
+        foreach ($equipmentMaintenanceRecord->issues as $issue) {
+            $rules["resolved_issues.{$issue->id}"] = 'required|boolean';
+            $messages["resolved_issues.{$issue->id}.required"] = 'Seleziona se il guasto è stato risolto o meno.';
         }
 
         $data = $request->validate($rules, $messages);
@@ -289,9 +287,7 @@ class EquipmentMaintenanceRecordController extends Controller
     private function selectableEquipments()
     {
         return Equipment::with('equipmentType', 'vehicle')
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
+            ->visibleToCurrentUser()
             ->orderBy('name')
             ->get();
     }

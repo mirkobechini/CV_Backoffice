@@ -297,7 +297,7 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
         $issue->update(['equipment_maintenance_record_id' => $record->id, 'status' => 'in_progress']);
 
         $response = $this->actingAs($user)->patch(route('admin.equipment-maintenance-records.complete', $record), [
-            'issue_resolved' => '1',
+            'resolved_issues' => [$issue->id => '1'],
         ]);
 
         $response->assertRedirect();
@@ -325,10 +325,45 @@ class EquipmentMaintenanceRecordCrudTest extends TestCase
         $issue->update(['equipment_maintenance_record_id' => $record->id, 'status' => 'in_progress']);
 
         $this->actingAs($user)->patch(route('admin.equipment-maintenance-records.complete', $record), [
-            'issue_resolved' => '0',
+            'resolved_issues' => [$issue->id => '0'],
         ]);
 
         $this->assertSame('in_progress', $issue->fresh()->status);
+    }
+
+    public function test_complete_resolves_each_linked_issue_independently(): void
+    {
+        // Audit funzionale 2026-11-25 (B1): un unico sì/no per TUTTI i
+        // guasti collegati era lo stesso bug già corretto sul lato veicolo
+        // nell'audit 2026-10-19 — qui si verifica che due guasti diversi
+        // sullo stesso appuntamento possano avere esiti diversi.
+        $user = $this->createUser();
+        $provider = $this->createProvider();
+        $equipment = $this->createEquipment();
+        $fixed = EquipmentIssue::create([
+            'equipment_id' => $equipment->id,
+            'description' => 'Manometro scarico',
+            'status' => 'open',
+        ]);
+        $stillBroken = EquipmentIssue::create([
+            'equipment_id' => $equipment->id,
+            'description' => 'Tubo rotto',
+            'status' => 'open',
+        ]);
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => today()->subDay(),
+        ]);
+        $record->equipments()->attach($equipment->id);
+        $fixed->update(['equipment_maintenance_record_id' => $record->id, 'status' => 'in_progress']);
+        $stillBroken->update(['equipment_maintenance_record_id' => $record->id, 'status' => 'in_progress']);
+
+        $this->actingAs($user)->patch(route('admin.equipment-maintenance-records.complete', $record), [
+            'resolved_issues' => [$fixed->id => '1', $stillBroken->id => '0'],
+        ]);
+
+        $this->assertSame('closed', $fixed->fresh()->status);
+        $this->assertSame('in_progress', $stillBroken->fresh()->status);
     }
 
     public function test_complete_does_not_require_issue_resolved_when_no_issues_linked(): void

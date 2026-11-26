@@ -130,7 +130,6 @@ class ActivityLogController extends Controller
     private function subjectVisibilityQueries(int $groupId): array
     {
         $byVehicleGroup = fn ($q) => $q->where('group_id', $groupId);
-        $equipmentVisible = fn ($q) => $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', $byVehicleGroup);
 
         return [
             Vehicle::class => Vehicle::withTrashed()->where('group_id', $groupId),
@@ -140,11 +139,10 @@ class ActivityLogController extends Controller
             MileageLog::class => MileageLog::whereHas('vehicle', $byVehicleGroup),
             Tire::class => Tire::withTrashed()->whereHas('vehicle', $byVehicleGroup),
             TireChange::class => TireChange::withTrashed()->whereHas('vehicle', $byVehicleGroup),
-            Equipment::class => Equipment::where($equipmentVisible),
-            EquipmentRevision::class => EquipmentRevision::withTrashed()->whereHas('equipment', $equipmentVisible),
-            EquipmentIssue::class => EquipmentIssue::withTrashed()->whereHas('equipment', $equipmentVisible),
-            EquipmentMaintenanceRecord::class => EquipmentMaintenanceRecord::withTrashed()
-                ->whereHas('equipments', $equipmentVisible),
+            Equipment::class => Equipment::visibleToGroup($groupId),
+            EquipmentRevision::class => EquipmentRevision::withTrashed()->whereHas('equipment', fn ($q) => $q->visibleToGroup($groupId)),
+            EquipmentIssue::class => EquipmentIssue::withTrashed()->visibleToGroup($groupId),
+            EquipmentMaintenanceRecord::class => EquipmentMaintenanceRecord::withTrashed()->visibleToGroup($groupId),
         ];
     }
 

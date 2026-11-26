@@ -50,13 +50,8 @@ class DocumentStatusController extends Controller
 
         [$vehicles, $deadlinesByVehicle] = $this->buildVehicleComplianceData();
 
-        // L'attrezzatura non assegnata a un veicolo non ha un gruppo
-        // proprio: resta visibile a tutti, come nella dashboard/indice.
         $equipment = Equipment::with('vehicle', 'equipmentType')
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
+            ->visibleToCurrentUser()
             ->get();
 
         // Stato complessivo (revisione+collaudo insieme), stesso filtro
