@@ -4,6 +4,14 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Changed
+
+- Notifiche Telegram: un solo messaggio riepilogativo per utente per ogni esecuzione del comando, invece di un messaggio separato per ogni evento (spezzato in più messaggi solo se supererebbe il limite di Telegram). Ogni evento nel riepilogo ha ora un'icona per tipo, come già il campanello in-app (segnalato da Mirko 2026-11-26).
+
+### Fixed
+
+- Il messaggio di guasto attrezzatura non indicava su quale veicolo si trovasse l'attrezzatura (es. un defibrillatore) — ora lo mostra quando l'attrezzatura è assegnata a un mezzo (segnalato da Mirko 2026-11-26).
+
 ### Added
 
 - Appuntamento attrezzature: controllo di sovrapposizione date per attrezzatura (come già per i veicoli), blocco doppio-submit alla creazione (audit funzionale 2026-11-25, D2/D3).

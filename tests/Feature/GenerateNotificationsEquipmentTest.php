@@ -79,6 +79,34 @@ class GenerateNotificationsEquipmentTest extends TestCase
         ]);
     }
 
+    public function test_equipment_issue_notification_names_the_vehicle_when_equipment_is_assigned_to_one(): void
+    {
+        // Segnalato da Mirko il 2026-11-26: senza il veicolo, il messaggio
+        // dice COSA si è guastato ma non DOVE (su quale mezzo) — per
+        // un'attrezzatura come un defibrillatore è l'informazione che serve
+        // davvero per intervenire.
+        $group = $this->defaultGroup();
+        $this->admin($group);
+        $vehicle = $this->vehicle($group);
+        $equipment = Equipment::create([
+            'equipment_type_id' => $this->equipmentType()->id,
+            'vehicle_id' => $vehicle->id,
+            'name' => 'Lifepak 15',
+        ]);
+        EquipmentIssue::create([
+            'equipment_id' => $equipment->id,
+            'description' => 'Non trasmette',
+            'status' => 'open',
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseHas('notifications', [
+            'type' => Notification::TYPE_ISSUE,
+            'title' => 'Guasto attrezzatura aperto: Lifepak 15 (0001)',
+        ]);
+    }
+
     public function test_does_not_duplicate_equipment_issue_notification(): void
     {
         $this->admin();

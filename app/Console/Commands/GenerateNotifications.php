@@ -119,16 +119,57 @@ class GenerateNotifications extends Command
                     continue;
                 }
 
-                foreach ($events as [$title, $message]) {
-                    $telegram->send($user, $title, $message);
-                }
-                $this->info('Sent '.count($events)." Telegram message(s) to user {$userId}.");
+                $sentCount = $this->sendTelegramDigest($telegram, $user, $events);
+                $this->info("Sent {$sentCount} Telegram digest message(s) to user {$userId}.");
             }
         }
 
         $this->info("Generated {$created} notifications.");
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Un solo messaggio Telegram per utente con tutti gli eventi di questo
+     * giro, invece di uno separato per evento: una raffica di N notifiche
+     * push slegate tra loro per lo stesso run era difficile da seguire
+     * (audit UX 2026-11-26). Spezzato in più messaggi solo se il testo
+     * supererebbe il limite di Telegram (4096 caratteri), per restare
+     * corretto anche con decine di eventi nello stesso giorno.
+     *
+     * @param  array<int, array{0: string, 1: string}>  $events
+     * @return int Numero di messaggi Telegram effettivamente inviati.
+     */
+    private function sendTelegramDigest(TelegramNotifier $telegram, User $user, array $events): int
+    {
+        $chunks = [];
+        $current = [];
+        $currentLength = 0;
+
+        foreach ($events as [$title, $message]) {
+            $entry = "{$title}\n{$message}";
+            // +2 per la riga vuota di separazione tra un evento e il successivo.
+            $entryLength = mb_strlen($entry) + 2;
+
+            if ($current && $currentLength + $entryLength > 4096) {
+                $chunks[] = $current;
+                $current = [];
+                $currentLength = 0;
+            }
+
+            $current[] = $entry;
+            $currentLength += $entryLength;
+        }
+
+        if ($current) {
+            $chunks[] = $current;
+        }
+
+        foreach ($chunks as $chunk) {
+            $telegram->send($user, implode("\n\n", $chunk));
+        }
+
+        return count($chunks);
     }
 
     /**
@@ -155,7 +196,12 @@ class GenerateNotifications extends Command
 
         $notifications->notifyUser($user, $type, $title, $message, $url, $marker);
         $emailsByUser[$user->id][] = new EventNotificationMail($type, $title, $message, $url);
-        $telegramEventsByUser[$user->id][] = [$title, $message];
+        // Icona per tipo (stessa mappatura del campanello in-app): senza,
+        // scorrendo la chat Telegram era impossibile distinguere a colpo
+        // d'occhio un guasto da una scadenza da un appuntamento — tutti i
+        // tipi tranne le scadenze scadute erano testo semplice identico
+        // (audit UX 2026-11-26).
+        $telegramEventsByUser[$user->id][] = [Notification::iconForType($type).' '.$title, $message];
         $created++;
     }
 
@@ -245,7 +291,14 @@ class GenerateNotifications extends Command
 
         foreach ($openEquipmentIssues as $issue) {
             $equipmentName = $issue->equipment?->name ?? 'N/A';
-            $title = "Guasto attrezzatura aperto: {$equipmentName}";
+            // Senza il veicolo, il messaggio dice COSA si è guastato ma non
+            // DOVE (su quale mezzo) — per un'attrezzatura che si muove tra i
+            // veicoli (es. un defibrillatore) è l'informazione che serve
+            // davvero per intervenire (segnalato da Mirko il 2026-11-26).
+            $vehicleCode = $issue->vehicle?->internal_code;
+            $title = $vehicleCode
+                ? "Guasto attrezzatura aperto: {$equipmentName} ({$vehicleCode})"
+                : "Guasto attrezzatura aperto: {$equipmentName}";
             $message = $issue->description;
             $url = route('admin.equipment-issues.show', $issue->id);
             $marker = "#equipment-issue-{$issue->id}";
