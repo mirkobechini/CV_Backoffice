@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.5.2] - 2026-11-26
+
 ### Fixed
 
 - Eliminare un tipo di attrezzatura ancora in uso cancellava a cascata TUTTE le attrezzature di quel tipo, di qualunque gruppo, irreversibilmente — ora bloccato con un messaggio chiaro (audit sicurezza 2026-11-25, A1).
