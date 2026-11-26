@@ -201,6 +201,18 @@ body {
     flex-shrink: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    /* Senza questo, scrollare oltre l'inizio/fine del menu su mobile fa
+       "traboccare" lo scroll sulla pagina sotto (scroll chaining del
+       browser) invece di fermarsi qui. */
+    overscroll-behavior: contain;
+}
+
+/* Mentre il menu off-canvas è aperto su mobile/tablet (<992px, unico caso
+   in cui openSidebar() viene chiamata), blocca lo scroll della pagina
+   sotto: senza, uno swipe che raggiunge il fondo del menu continua a
+   scrollare il contenuto dietro il backdrop. */
+body.sidebar-open {
+    overflow: hidden;
 }
 
 .sidebar-brand {

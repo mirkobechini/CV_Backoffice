@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // stessa resta l'unico modo per navigare o chiuderla.
         if (sidebarToggle) sidebarToggle.hidden = true;
         bottomNav?.classList.add('is-hidden');
+        document.body.classList.add('sidebar-open');
     };
 
     const closeSidebar = () => {
@@ -72,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sidebarBackdrop?.classList.remove('is-open');
         if (sidebarToggle) sidebarToggle.hidden = false;
         bottomNav?.classList.remove('is-hidden');
+        document.body.classList.remove('sidebar-open');
     };
 
     if (sidebar && sidebarBackdrop) {

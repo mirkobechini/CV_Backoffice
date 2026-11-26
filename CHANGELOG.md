@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Menu mobile (sidebar off-canvas/bottom sheet): scrollare oltre l'inizio/fine faceva "traboccare" lo scroll sulla pagina dietro invece di fermarsi lì (scroll chaining del browser) (issue-689).
+
 ## [v2.5.0] - 2026-11-25
 
 ### Added
