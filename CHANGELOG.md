@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.5.3] - 2026-11-26
+
+### Changed
+
+- Aggiornati symfony/http-kernel, symfony/mailer, symfony/routing (+ dipendenze indirette) a v8.1.12: 5 CVE segnalate il 2026-11-25, `composer audit` ora limpio (issue-699).
+
 ## [v2.5.2] - 2026-11-26
 
 ### Fixed
