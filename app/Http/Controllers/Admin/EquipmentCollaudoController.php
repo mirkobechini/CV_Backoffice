@@ -52,6 +52,16 @@ class EquipmentCollaudoController extends Controller
 
         $equipments = Equipment::whereIn('id', $data['equipment_ids'])->get();
 
+        // Backstop oltre alla validazione già fatta in
+        // BulkRecordEquipmentRevisionRequest::withValidator(): quel
+        // controllo è oggi corretto, ma senza una verifica anche qui una
+        // futura modifica alla FormRequest rimuoverebbe silenziosamente
+        // l'isolamento di gruppo senza che nessun altro livello se ne
+        // accorga (audit sicurezza 2026-11-25, A3).
+        foreach ($equipments as $equipment) {
+            $this->authorize('update', $equipment);
+        }
+
         // Transazione unica: un fallimento a metà lascerebbe altrimenti
         // alcune attrezzature selezionate aggiornate e altre no, nella
         // stessa richiesta.

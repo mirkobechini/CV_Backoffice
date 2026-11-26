@@ -84,6 +84,18 @@ class EquipmentTypeController extends Controller
     public function destroy(EquipmentType $equipmentType)
     {
         $this->authorize('delete', $equipmentType);
+
+        // EquipmentType è un catalogo globale (nessun group_id): la FK
+        // equipment.equipment_type_id è in cascata, quindi senza questo
+        // controllo eliminarlo cancellerebbe TUTTE le attrezzature di
+        // questo tipo, di QUALUNQUE gruppo, irreversibilmente (Equipment
+        // non ha SoftDeletes) — audit sicurezza 2026-11-25 (A1).
+        if ($equipmentType->equipments()->exists()) {
+            return back()->withErrors([
+                'equipmentType' => 'Non puoi eliminare un tipo di attrezzatura ancora in uso: sposta o elimina prima le attrezzature collegate.',
+            ]);
+        }
+
         $equipmentType->delete();
 
         return redirect()->route('admin.equipment-types.index')->with('status', 'Tipo di attrezzatura eliminato con successo.');

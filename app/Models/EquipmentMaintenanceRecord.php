@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Spatie\Activitylog\Models\Concerns\HasActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -88,6 +89,27 @@ class EquipmentMaintenanceRecord extends Model
         $vehicles = $this->equipments->map(fn (Equipment $e) => $e->vehicle)->filter()->unique('id');
 
         return $vehicles->count() === 1 ? $vehicles->first() : null;
+    }
+
+    /**
+     * Gli id dei gruppi reali coinvolti tramite le attrezzature collegate
+     * (quelle assegnate a un veicolo), senza il collasso a un singolo
+     * veicolo di getVehicleAttribute() sopra. Usato da
+     * HasGroupScopedAccess::belongsToUserGroup() per distinguere "nessuna
+     * attrezzatura assegnata" (nessun gruppo coinvolto, l'appuntamento
+     * resta visibile a tutti, comportamento voluto) da "attrezzature di
+     * PIÙ gruppi reali diversi" (ambiguo per getVehicleAttribute(), che
+     * torna null in entrambi i casi — ma qui l'accesso non deve diventare
+     * universale: va negato a chi non appartiene a nessuno dei gruppi
+     * coinvolti). Audit sicurezza 2026-11-25 (A2).
+     */
+    public function involvedGroupIds(): Collection
+    {
+        return $this->equipments
+            ->map(fn (Equipment $e) => $e->vehicle?->group_id)
+            ->filter()
+            ->unique()
+            ->values();
     }
 
     public function getAppointmentDateFormattedAttribute(): ?string

@@ -4,6 +4,12 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- Eliminare un tipo di attrezzatura ancora in uso cancellava a cascata TUTTE le attrezzature di quel tipo, di qualunque gruppo, irreversibilmente — ora bloccato con un messaggio chiaro (audit sicurezza 2026-11-25, A1).
+- Un appuntamento attrezzature che coinvolge attrezzature di gruppi reali diversi (es. dopo una riassegnazione) poteva essere modificato/eliminato/completato da qualsiasi capo di qualsiasi gruppo, non solo da quelli coinvolti — vero cross-tenant write (audit sicurezza 2026-11-25, A2).
+- Registrazione di revisioni/collaudi in blocco: aggiunto un controllo di autorizzazione esplicito oltre alla sola validazione esistente, come difesa in profondità (audit sicurezza 2026-11-25, A3).
+
 ## [v2.5.1] - 2026-11-26
 
 ### Fixed

@@ -114,10 +114,27 @@ trait HasGroupScopedAccess
 
         $vehicle = $model->vehicle;
 
-        if (! $vehicle) {
-            return true;
+        if ($vehicle) {
+            return $vehicle->group_id === $groupId;
         }
 
-        return $vehicle->group_id === $groupId;
+        // "Nessun veicolo" può significare due cose diverse per un modello
+        // che coinvolge più attrezzature insieme
+        // (EquipmentMaintenanceRecord): nessuna attrezzatura assegnata
+        // (nessun gruppo coinvolto, visibile a tutti, voluto) oppure
+        // attrezzature di PIÙ gruppi reali diversi (ambiguo per
+        // getVehicleAttribute(), che torna null anche in questo caso, ma
+        // qui l'accesso NON deve diventare universale) — audit sicurezza
+        // 2026-11-25 (A2). I modelli che possono finire in questo secondo
+        // caso espongono involvedGroupIds(); gli altri (es. EquipmentIssue,
+        // una sola attrezzatura = ambiguità impossibile) restano permissivi
+        // come prima.
+        if (method_exists($model, 'involvedGroupIds')) {
+            $involvedGroupIds = $model->involvedGroupIds();
+
+            return $involvedGroupIds->isEmpty() || $involvedGroupIds->contains($groupId);
+        }
+
+        return true;
     }
 }
