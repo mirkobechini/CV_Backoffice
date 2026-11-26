@@ -128,6 +128,27 @@ class EquipmentMaintenanceRecord extends Model
             ->values();
     }
 
+    /**
+     * Trova un appuntamento esistente che coinvolge la stessa attrezzatura
+     * e si sovrappone all'intervallo [$startDate, $endDate] — stessa logica
+     * di MaintenanceRecord::findSchedulingConflict() lato veicolo, qui
+     * tramite la relazione equipments() invece di una colonna vehicle_id
+     * diretta (audit funzionale 2026-11-25, D2).
+     */
+    public static function findSchedulingConflict(int $equipmentId, string $startDate, string $endDate, ?int $excludeId = null): ?self
+    {
+        return static::whereHas('equipments', fn (Builder $q) => $q->where('equipment.id', $equipmentId))
+            ->when($excludeId, fn ($query) => $query->where('id', '!=', $excludeId))
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->where('appointment_date', '<=', $endDate)
+                    ->where(function ($q2) use ($startDate) {
+                        $q2->whereNull('return_date')
+                            ->orWhere('return_date', '>=', $startDate);
+                    });
+            })
+            ->first();
+    }
+
     public function getAppointmentDateFormattedAttribute(): ?string
     {
         return $this->appointment_date?->format('d/m/Y');

@@ -121,6 +121,48 @@ class GenerateNotificationsEquipmentTest extends TestCase
         ]);
     }
 
+    public function test_upcoming_equipment_appointment_notification_only_names_the_recipients_own_equipment(): void
+    {
+        // Audit funzionale 2026-11-25 (D4): un appuntamento con attrezzature
+        // di gruppi diversi notifica ciascun gruppo coinvolto — il
+        // messaggio deve nominare solo le SUE attrezzature, non anche
+        // quelle di un gruppo estraneo (rumore/confusione).
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'IIII9999']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'JJJJ0000']);
+        $capoA = $this->admin($groupA);
+        $vehicleA = Vehicle::create([
+            'license_plate' => 'AA111AA', 'internal_code' => '1001',
+            'brand' => 'Fiat', 'model' => 'Ducato',
+            'immatricolation_date' => Carbon::today()->subYears(2), 'group_id' => $groupA->id,
+        ]);
+        $vehicleB = Vehicle::create([
+            'license_plate' => 'BB222BB', 'internal_code' => '1002',
+            'brand' => 'Fiat', 'model' => 'Ducato',
+            'immatricolation_date' => Carbon::today()->subYears(2), 'group_id' => $groupB->id,
+        ]);
+        $type = $this->equipmentType();
+        $equipmentA = Equipment::create(['equipment_type_id' => $type->id, 'vehicle_id' => $vehicleA->id, 'name' => 'Estintore A']);
+        $equipmentB = Equipment::create(['equipment_type_id' => $type->id, 'vehicle_id' => $vehicleB->id, 'name' => 'Estintore B']);
+        $provider = Provider::create(['name' => 'Officina Collaudi', 'type' => 'Centro Revisioni']);
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => Carbon::today()->addDays(3),
+            'activity_type' => EquipmentMaintenanceRecord::ACTIVITY_COLLAUDO,
+        ]);
+        $record->equipments()->attach([$equipmentA->id, $equipmentB->id]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $capoA->id,
+            'title' => 'Appuntamento attrezzature in arrivo: Estintore A',
+        ]);
+        $this->assertDatabaseMissing('notifications', [
+            'user_id' => $capoA->id,
+            'title' => 'Appuntamento attrezzature in arrivo: Estintore A, Estintore B',
+        ]);
+    }
+
     public function test_does_not_notify_equipment_appointment_already_completed(): void
     {
         $this->admin();

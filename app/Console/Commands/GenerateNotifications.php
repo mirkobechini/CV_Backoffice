@@ -336,7 +336,18 @@ class GenerateNotifications extends Command
             ->get();
 
         foreach ($upcomingEquipmentAppointments as $record) {
-            $equipmentNames = $record->equipments->pluck('name')->implode(', ') ?: 'N/A';
+            // Un appuntamento con attrezzature di gruppi diversi notifica
+            // ciascun gruppo coinvolto: il messaggio deve nominare solo le
+            // SUE attrezzature, non anche quelle di un gruppo estraneo
+            // (audit funzionale 2026-11-25, D4) — altrimenti il messaggio
+            // risulta rumoroso/confuso per chi lo riceve.
+            $relevantEquipment = $record->equipments->filter(
+                fn (Equipment $e) => ! $e->vehicle || $e->vehicle->group_id === $groupId
+            );
+            $equipmentNames = $relevantEquipment->isNotEmpty()
+                ? $relevantEquipment->pluck('name')->implode(', ')
+                : $record->equipments->pluck('name')->implode(', ');
+            $equipmentNames = $equipmentNames ?: 'N/A';
             $title = "Appuntamento attrezzature in arrivo: {$equipmentNames}";
             $activitySuffix = $record->activity_type ? " ({$record->activity_type})" : '';
             $message = "Le attrezzature {$equipmentNames} hanno un appuntamento{$activitySuffix} il {$record->appointment_date?->format('d/m/Y')}.";

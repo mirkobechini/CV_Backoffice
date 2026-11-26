@@ -4,6 +4,16 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Added
+
+- Appuntamento attrezzature: controllo di sovrapposizione date per attrezzatura (come già per i veicoli), blocco doppio-submit alla creazione (audit funzionale 2026-11-25, D2/D3).
+
+### Fixed
+
+- Si poteva completare un appuntamento attrezzature con data futura, facendo scattare subito la revisione/collaudo con date incoerenti — bloccato come già sul lato veicolo (audit 2026-11-25, D1).
+- Un appuntamento attrezzature con attrezzature di gruppi diversi notificava entrambi i gruppi nominando anche l'attrezzatura dell'altro gruppo — il messaggio ora nomina solo le attrezzature del destinatario (audit 2026-11-25, D4).
+- `destroy()` di un appuntamento attrezzature poteva rimandare a un 404 se "back" puntava alla show appena eliminata — stesso controllo già presente lato veicolo (audit 2026-11-25, D5).
+
 ## [v2.5.3] - 2026-11-26
 
 ### Changed
