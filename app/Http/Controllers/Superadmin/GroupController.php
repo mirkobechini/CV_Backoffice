@@ -9,10 +9,10 @@ use App\Models\FleetDevice;
 use App\Models\FuelCard;
 use App\Models\Group;
 use App\Models\User;
+use App\Services\AccountMailer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
 class GroupController extends Controller
@@ -86,7 +86,7 @@ class GroupController extends Controller
      * Rimanda l'email per impostare la password al capo del gruppo (utile
      * se non l'ha mai ricevuta, es. dopo aver corretto un'email sbagliata).
      */
-    public function resendCapoPasswordLink(Group $group)
+    public function resendCapoPasswordLink(Group $group, AccountMailer $accountMailer)
     {
         $capo = $group->capo();
 
@@ -94,13 +94,17 @@ class GroupController extends Controller
             abort(404, 'Questo gruppo non ha ancora un capo.');
         }
 
-        Password::sendResetLink(['email' => $capo->email]);
+        $sent = $accountMailer->sendPasswordSetupLink($capo);
 
-        return redirect()->route('superadmin.groups.edit', $group)
-            ->with('status', "Email per impostare la password inviata a {$capo->email}.");
+        return redirect()->route('superadmin.groups.edit', $group)->with(
+            'status',
+            $sent
+                ? "Email per impostare la password inviata a {$capo->email}."
+                : "Invio dell'email a {$capo->email} fallito. Riprova più tardi."
+        );
     }
 
-    public function store(StoreSuperadminGroupRequest $request)
+    public function store(StoreSuperadminGroupRequest $request, AccountMailer $accountMailer)
     {
         $data = $request->validated();
         $newCapo = null;
@@ -131,17 +135,23 @@ class GroupController extends Controller
             return $group;
         });
 
+        $passwordLinkSent = null;
         if ($newCapo) {
-            Password::sendResetLink(['email' => $newCapo->email]);
+            $passwordLinkSent = $accountMailer->sendPasswordSetupLink($newCapo);
             // Inviata subito, non al primo tentativo di accesso bloccato
             // dal middleware 'verified': il capo la trova già pronta
             // insieme a quella per impostare la password.
-            $newCapo->sendEmailVerificationNotification();
+            $accountMailer->sendEmailVerification($newCapo);
         }
 
+        $capoStatus = match ($passwordLinkSent) {
+            true => ' Email per impostare la password inviata al capo.',
+            false => ' Invio dell\'email al capo fallito: usa "Invia di nuovo l\'email per impostare la password" dalla pagina del gruppo.',
+            null => '',
+        };
+
         return redirect()->route('superadmin.licenses.create', $group)
-            ->with('status', "Associazione \"{$group->name}\" creata. Assegna ora una licenza.".
-                ($newCapo ? ' Email per impostare la password inviata al capo.' : ''));
+            ->with('status', "Associazione \"{$group->name}\" creata. Assegna ora una licenza.".$capoStatus);
     }
 
     /**

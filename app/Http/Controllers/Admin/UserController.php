@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Group;
 use App\Models\User;
+use App\Services\AccountMailer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
 /**
@@ -33,7 +33,7 @@ class UserController extends Controller
     /**
      * Crea un nuovo utente e lo aggiunge al gruppo indicato.
      */
-    public function store(Request $request, Group $group)
+    public function store(Request $request, Group $group, AccountMailer $accountMailer)
     {
         $this->authorizeGroupInvites($group);
 
@@ -67,13 +67,21 @@ class UserController extends Controller
 
         $group->addUser($user, $data['role']);
 
-        Password::sendResetLink(['email' => $user->email]);
+        $passwordLinkSent = $accountMailer->sendPasswordSetupLink($user);
         // Inviata subito, non al primo tentativo di accesso bloccato dal
         // middleware 'verified': il nuovo utente la trova già pronta
         // insieme a quella per impostare la password.
-        $user->sendEmailVerificationNotification();
+        $accountMailer->sendEmailVerification($user);
 
-        return redirect()->route('admin.groups.show', $group)->with('status', 'Utente creato con successo. Gli è stata inviata un\'email per impostare la password.');
+        // L'utente è comunque creato: un'email non partita (SMTP/Resend
+        // irraggiungibile) non deve risultare in un 500 che nasconde che
+        // l'account esiste già, ma va segnalato chiaramente — altrimenti
+        // resta un account senza modo di accedere e nessuno se ne accorge.
+        $status = $passwordLinkSent
+            ? 'Utente creato con successo. Gli è stata inviata un\'email per impostare la password.'
+            : 'Utente creato, ma l\'invio dell\'email per impostare la password è fallito. Usa "Password dimenticata" dalla pagina di login per reinviarla, o riprova più tardi.';
+
+        return redirect()->route('admin.groups.show', $group)->with('status', $status);
     }
 
     /**

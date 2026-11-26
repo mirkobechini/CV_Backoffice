@@ -4,6 +4,13 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.5.1] - 2026-11-26
+
+### Fixed
+
+- Creazione utente, "password dimenticata" e rinvio link password (superadmin) davano 500 se l'invio email falliva (SMTP/Resend irraggiungibile), anche quando l'azione principale (creazione utente/gruppo) era già andata a buon fine — ora loggano l'errore e mostrano un messaggio chiaro invece di un 500 (`AccountMailer`) (issue-690).
+- Menu mobile (sidebar off-canvas/bottom sheet): scrollare oltre l'inizio/fine faceva "traboccare" lo scroll sulla pagina dietro invece di fermarsi lì (scroll chaining del browser) (issue-689).
+
 ## [v2.5.0] - 2026-11-25
 
 ### Added
