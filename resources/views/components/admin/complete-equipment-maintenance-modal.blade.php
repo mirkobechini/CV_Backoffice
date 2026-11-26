@@ -45,24 +45,23 @@
                     <div class="modal-body">
                         <p class="mb-3">Confermi il completamento in data odierna?</p>
 
-                        @if ($linkedIssues->isNotEmpty())
-                            <p class="mb-2"><strong>I guasti collegati sono stati risolti?</strong></p>
-
+                        @foreach ($linkedIssues as $issue)
+                            <p class="mb-2 mt-3"><strong>Il guasto "{{ $issue->description }}" è stato aggiustato?</strong></p>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="issue_resolved"
-                                    id="issue_resolved_yes_{{ $modalIdSuffix }}" value="1" required>
-                                <label class="form-check-label" for="issue_resolved_yes_{{ $modalIdSuffix }}">
+                                <input class="form-check-input" type="radio" name="resolved_issues[{{ $issue->id }}]"
+                                    id="resolved_issue_{{ $issue->id }}_yes_{{ $modalIdSuffix }}" value="1" required>
+                                <label class="form-check-label" for="resolved_issue_{{ $issue->id }}_yes_{{ $modalIdSuffix }}">
                                     Sì
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="issue_resolved"
-                                    id="issue_resolved_no_{{ $modalIdSuffix }}" value="0" required>
-                                <label class="form-check-label" for="issue_resolved_no_{{ $modalIdSuffix }}">
+                                <input class="form-check-input" type="radio" name="resolved_issues[{{ $issue->id }}]"
+                                    id="resolved_issue_{{ $issue->id }}_no_{{ $modalIdSuffix }}" value="0" required>
+                                <label class="form-check-label" for="resolved_issue_{{ $issue->id }}_no_{{ $modalIdSuffix }}">
                                     No
                                 </label>
                             </div>
-                        @endif
+                        @endforeach
 
                         @if ($showEquipmentCompletionList)
                             <p class="mb-2 mt-3"><strong>Su quali attrezzature è stato effettuato l'intervento?</strong></p>

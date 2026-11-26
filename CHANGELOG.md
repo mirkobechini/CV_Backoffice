@@ -9,6 +9,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Eliminare un tipo di attrezzatura ancora in uso cancellava a cascata TUTTE le attrezzature di quel tipo, di qualunque gruppo, irreversibilmente — ora bloccato con un messaggio chiaro (audit sicurezza 2026-11-25, A1).
 - Un appuntamento attrezzature che coinvolge attrezzature di gruppi reali diversi (es. dopo una riassegnazione) poteva essere modificato/eliminato/completato da qualsiasi capo di qualsiasi gruppo, non solo da quelli coinvolti — vero cross-tenant write (audit sicurezza 2026-11-25, A2).
 - Registrazione di revisioni/collaudi in blocco: aggiunto un controllo di autorizzazione esplicito oltre alla sola validazione esistente, come difesa in profondità (audit sicurezza 2026-11-25, A3).
+- Completamento appuntamento attrezzature: un solo sì/no per TUTTI i guasti collegati, invece che uno indipendente per ciascuno — stesso bug già corretto sul lato veicolo nel 2026-10-19, reintrodotto qui (audit 2026-11-25, B1).
+- Dashboard non invalidata quando cambia un guasto/appuntamento attrezzature (dati fermi fino a 5 minuti); corretto anche un secondo bug trovato nello stesso punto, una cache di relazione obsoleta quando un'attrezzatura veniva collegata subito dopo la creazione dell'appuntamento (audit 2026-11-25, B2).
 
 ## [v2.5.1] - 2026-11-26
 

@@ -249,7 +249,6 @@ class EquipmentMaintenanceRecordController extends Controller
         $this->authorize('update', $equipmentMaintenanceRecord);
 
         $equipmentMaintenanceRecord->loadMissing('issues', 'equipments');
-        $hasIssues = $equipmentMaintenanceRecord->issues->isNotEmpty();
         $linkedEquipmentIds = $equipmentMaintenanceRecord->equipments->pluck('id')->all();
 
         $rules = [
@@ -257,9 +256,13 @@ class EquipmentMaintenanceRecordController extends Controller
             'completed_equipment_ids.*' => 'integer',
         ];
         $messages = [];
-        if ($hasIssues) {
-            $rules['issue_resolved'] = 'required|boolean';
-            $messages['issue_resolved.required'] = 'Seleziona se i guasti collegati sono stati risolti o meno.';
+        // Un sì/no indipendente per ciascun guasto collegato, non più
+        // un'unica scelta valida per tutti — stesso bug già corretto sul
+        // lato veicolo nell'audit 2026-10-19, reintrodotto qui (audit
+        // 2026-11-25, B1).
+        foreach ($equipmentMaintenanceRecord->issues as $issue) {
+            $rules["resolved_issues.{$issue->id}"] = 'required|boolean';
+            $messages["resolved_issues.{$issue->id}.required"] = 'Seleziona se il guasto è stato risolto o meno.';
         }
 
         $data = $request->validate($rules, $messages);

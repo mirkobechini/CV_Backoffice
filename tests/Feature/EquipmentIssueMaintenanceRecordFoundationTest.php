@@ -206,9 +206,13 @@ class EquipmentIssueMaintenanceRecordFoundationTest extends TestCase
 
     public function test_capo_can_manage_equipment_maintenance_record_spanning_multiple_groups(): void
     {
-        // Caso genuinamente ambiguo (attrezzature di gruppi diversi nello
-        // stesso appuntamento): nessun singolo gruppo proprietario da
-        // verificare, resta permissivo di proposito.
+        // Caso ambiguo (attrezzature di gruppi diversi nello stesso
+        // appuntamento): nessun singolo gruppo proprietario da verificare
+        // via getVehicleAttribute(), ma da audit sicurezza 2026-11-25 (A2)
+        // l'accesso resta limitato ai gruppi REALMENTE coinvolti — qui
+        // passa perché $ownGroup, il gruppo dell'utente, è uno dei due.
+        // Vedi EquipmentMaintenanceRecordGroupScopingTest per il caso di un
+        // capo di un gruppo NON coinvolto, che invece viene negato.
         $ownGroup = $this->createGroup('Mio gruppo');
         $otherGroup = $this->createGroup('Altro gruppo');
         $user = User::factory()->create();

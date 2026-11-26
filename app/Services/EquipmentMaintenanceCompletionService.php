@@ -36,13 +36,15 @@ class EquipmentMaintenanceCompletionService
             }
             $record->save();
 
-            if ($record->issues->isNotEmpty()) {
-                $resolved = (bool) ($data['issue_resolved'] ?? false);
-                $record->issues->each(function (EquipmentIssue $issue) use ($resolved) {
-                    $issue->status = $resolved ? 'closed' : 'in_progress';
-                    $issue->save();
-                });
-            }
+            // Un sì/no indipendente per ciascun guasto collegato
+            // (data['resolved_issues'][$issue->id]), non più un'unica
+            // scelta per tutti — stesso bug già corretto sul lato veicolo
+            // nell'audit 2026-10-19, reintrodotto qui (audit 2026-11-25, B1).
+            $record->issues->each(function (EquipmentIssue $issue) use ($data) {
+                $resolved = (bool) ($data['resolved_issues'][$issue->id] ?? false);
+                $issue->status = $resolved ? 'closed' : 'in_progress';
+                $issue->save();
+            });
 
             $this->applyEquipmentUpdates($record, $data['completed_equipment_ids'] ?? []);
         });
