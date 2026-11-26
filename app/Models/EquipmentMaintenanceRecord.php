@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
@@ -43,6 +44,21 @@ class EquipmentMaintenanceRecord extends Model
         'cost',
         'notes',
     ];
+
+    /**
+     * @see Equipment::scopeVisibleToGroup() — stesso pattern "non assegnata
+     * = condivisa": basta che UNA delle attrezzature collegate sia
+     * visibile al gruppo (audit qualità 2026-11-25, C1).
+     */
+    public function scopeVisibleToGroup(Builder $query, ?int $groupId): Builder
+    {
+        return $query->whereHas('equipments', fn (Builder $q) => $q->visibleToGroup($groupId));
+    }
+
+    public function scopeVisibleToCurrentUser(Builder $query): Builder
+    {
+        return $query->whereHas('equipments', fn (Builder $q) => $q->visibleToCurrentUser());
+    }
 
     protected $casts = [
         'appointment_date' => 'date',

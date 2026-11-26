@@ -39,14 +39,8 @@ class EquipmentIssueController extends Controller
         $statusFilter = $validated['status_filter'] ?? 'all';
         $search = $request->get('q');
 
-        // Stessa logica permissiva dell'elenco attrezzature: quelle non
-        // assegnate a un veicolo (vehicle_id null) non hanno un gruppo
-        // proprio e restano visibili a tutti; solo quelle assegnate
-        // vengono filtrate sul gruppo del veicolo.
         $issuesQuery = EquipmentIssue::with('equipment.equipmentType', 'equipment.vehicle')
-            ->whereHas('equipment', function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            });
+            ->visibleToCurrentUser();
 
         if ($search) {
             $issuesQuery->where(function ($sub) use ($search) {
@@ -97,9 +91,7 @@ class EquipmentIssueController extends Controller
     public function create()
     {
         $equipments = Equipment::with('equipmentType', 'vehicle')
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
+            ->visibleToCurrentUser()
             ->orderBy('name')
             ->get();
         $selectedEquipmentId = request('equipment_id');
@@ -148,9 +140,7 @@ class EquipmentIssueController extends Controller
     public function edit(EquipmentIssue $equipmentIssue)
     {
         $equipments = Equipment::with('equipmentType', 'vehicle')
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
+            ->visibleToCurrentUser()
             ->orderBy('name')
             ->get();
 

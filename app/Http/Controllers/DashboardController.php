@@ -45,27 +45,15 @@ class DashboardController extends Controller
                 ->take(20)
                 ->get();
 
-            // Stesso criterio permissivo già usato per expiringEquipment
-            // sotto: l'attrezzatura non assegnata a un veicolo non ha un
-            // gruppo proprio, resta visibile a tutti.
             $openEquipmentIssues = EquipmentIssue::with('equipment.vehicle')
-                ->whereHas('equipment', function ($q) {
-                    $q->whereDoesntHave('vehicle')
-                        ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-                })
+                ->visibleToCurrentUser()
                 ->open()
                 ->orderByDesc('event_date')
                 ->take(20)
                 ->get();
 
-            // Un appuntamento attrezzature può coinvolgerne più di una
-            // insieme: basta che UNA sia visibile al gruppo perché
-            // l'appuntamento lo sia (stesso criterio dell'elenco dedicato).
             $upcomingEquipmentAppointments = EquipmentMaintenanceRecord::with('provider', 'equipments.vehicle')
-                ->whereHas('equipments', function ($q) {
-                    $q->whereDoesntHave('vehicle')
-                        ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-                })
+                ->visibleToCurrentUser()
                 ->whereNull('return_date')
                 ->orderBy('appointment_date')
                 ->take(5)
@@ -111,13 +99,8 @@ class DashboardController extends Controller
                 ->get()
                 ->filter(fn ($v) => ! $v->hasAllRequiredEquipment());
 
-            // L'attrezzatura non assegnata a un veicolo non ha un gruppo
-            // proprio: resta inclusa, come nell'indice attrezzature.
             $expiringEquipment = Equipment::with('vehicle')
-                ->where(function ($q) {
-                    $q->whereDoesntHave('vehicle')
-                        ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-                })
+                ->visibleToCurrentUser()
                 ->expiringSoonOverall()
                 ->get()
                 ->sortBy('next_due_date')

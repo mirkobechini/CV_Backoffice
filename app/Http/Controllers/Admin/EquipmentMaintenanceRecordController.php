@@ -36,13 +36,8 @@ class EquipmentMaintenanceRecordController extends Controller
         $statusFilter = $validated['status_filter'] ?? 'all';
         $search = $request->get('q');
 
-        // Visibile se almeno un'attrezzatura coinvolta è visibile all'utente
-        // (stessa logica permissiva dell'elenco attrezzature: quelle non
-        // assegnate a un veicolo restano visibili a tutti).
         $query = EquipmentMaintenanceRecord::with('provider', 'equipments.equipmentType')
-            ->whereHas('equipments', function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            });
+            ->visibleToCurrentUser();
 
         if ($search) {
             $query->where(function ($sub) use ($search) {
@@ -81,7 +76,7 @@ class EquipmentMaintenanceRecordController extends Controller
         $selectedEquipmentId = request('equipment_id');
         $providers = Provider::orderBy('name')->get();
         $openIssues = EquipmentIssue::open()
-            ->whereHas('equipment', fn ($q) => $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser()))
+            ->visibleToCurrentUser()
             ->get(['id', 'equipment_id', 'description', 'event_date']);
 
         return view('admin.equipment-maintenance-records.create', compact('equipments', 'selectedEquipmentId', 'providers', 'openIssues'));
@@ -292,9 +287,7 @@ class EquipmentMaintenanceRecordController extends Controller
     private function selectableEquipments()
     {
         return Equipment::with('equipmentType', 'vehicle')
-            ->where(function ($q) {
-                $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-            })
+            ->visibleToCurrentUser()
             ->orderBy('name')
             ->get();
     }

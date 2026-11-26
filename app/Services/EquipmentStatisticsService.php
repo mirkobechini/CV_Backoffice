@@ -19,16 +19,13 @@ class EquipmentStatisticsService
 {
     private function issueBaseQuery(?Carbon $since)
     {
-        return EquipmentIssue::whereHas('equipment', function ($q) {
-            $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-        })->when($since, fn ($q) => $q->where('event_date', '>=', $since));
+        return EquipmentIssue::visibleToCurrentUser()
+            ->when($since, fn ($q) => $q->where('event_date', '>=', $since));
     }
 
     private function maintenanceBaseQuery(?Carbon $since)
     {
-        return EquipmentMaintenanceRecord::whereHas('equipments', function ($q) {
-            $q->whereDoesntHave('vehicle')->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-        })
+        return EquipmentMaintenanceRecord::visibleToCurrentUser()
             ->whereNotNull('cost')
             ->when($since, fn ($q) => $q->where('appointment_date', '>=', $since));
     }

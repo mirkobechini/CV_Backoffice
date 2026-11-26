@@ -49,16 +49,12 @@ class BulkRecordEquipmentRevisionRequest extends FormRequest
                 return;
             }
 
-            // L'attrezzatura non assegnata a un veicolo non ha un gruppo
-            // proprio: resta selezionabile da chiunque, come nell'indice
-            // attrezzature (EquipmentController::index). BelongsToCurrentUserGroup
-            // non va bene qui: richiederebbe sempre una relazione vehicle
-            // valida, escludendo per errore l'attrezzatura non assegnata.
+            // BelongsToCurrentUserGroup non va bene qui: richiederebbe
+            // sempre una relazione vehicle valida, escludendo per errore
+            // l'attrezzatura non assegnata (visibleToCurrentUser() la
+            // include, come nell'indice attrezzature).
             $validCount = Equipment::whereIn('id', $ids)
-                ->where(function ($q) {
-                    $q->whereDoesntHave('vehicle')
-                        ->orWhereHas('vehicle', fn ($vq) => $vq->forCurrentUser());
-                })
+                ->visibleToCurrentUser()
                 ->count();
 
             if ($validCount !== count($ids)) {

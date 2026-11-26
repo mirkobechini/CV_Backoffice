@@ -240,10 +240,7 @@ class GenerateNotifications extends Command
     {
         $openEquipmentIssues = EquipmentIssue::with('equipment.vehicle')
             ->open()
-            ->whereHas('equipment', function ($q) use ($groupId) {
-                $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
-            })
+            ->visibleToGroup($groupId)
             ->get();
 
         foreach ($openEquipmentIssues as $issue) {
@@ -259,13 +256,8 @@ class GenerateNotifications extends Command
 
     private function notifyExpiringEquipment(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
     {
-        // L'attrezzatura non assegnata a un veicolo non ha un gruppo
-        // proprio: resta inclusa, come nell'indice attrezzature.
         $expiringEquipment = Equipment::with('vehicle')
-            ->where(function ($q) use ($groupId) {
-                $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
-            })
+            ->visibleToGroup($groupId)
             ->expiringSoon($reminderDays)
             ->get();
 
@@ -287,10 +279,7 @@ class GenerateNotifications extends Command
     private function notifyExpiringCollaudo(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
     {
         $expiringCollaudo = Equipment::with('vehicle')
-            ->where(function ($q) use ($groupId) {
-                $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
-            })
+            ->visibleToGroup($groupId)
             ->collaudoExpiringSoon($reminderDays)
             ->get();
 
@@ -343,10 +332,7 @@ class GenerateNotifications extends Command
             ->whereNull('return_date')
             ->whereNotNull('appointment_date')
             ->whereBetween('appointment_date', [today(), today()->addDays($reminderDays)])
-            ->whereHas('equipments', function ($q) use ($groupId) {
-                $q->whereDoesntHave('vehicle')
-                    ->orWhereHas('vehicle', fn ($vq) => $vq->forGroup($groupId));
-            })
+            ->visibleToGroup($groupId)
             ->get();
 
         foreach ($upcomingEquipmentAppointments as $record) {

@@ -12,6 +12,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 - Completamento appuntamento attrezzature: un solo sì/no per TUTTI i guasti collegati, invece che uno indipendente per ciascuno — stesso bug già corretto sul lato veicolo nel 2026-10-19, reintrodotto qui (audit 2026-11-25, B1).
 - Dashboard non invalidata quando cambia un guasto/appuntamento attrezzature (dati fermi fino a 5 minuti); corretto anche un secondo bug trovato nello stesso punto, una cache di relazione obsoleta quando un'attrezzatura veniva collegata subito dopo la creazione dell'appuntamento (audit 2026-11-25, B2).
 
+### Changed
+
+- Estratto il pattern "attrezzatura non assegnata = visibile a tutti" (duplicato 22 volte in 12 file) in `Equipment::scopeVisibleToGroup()`/`scopeVisibleToCurrentUser()` e gli equivalenti su `EquipmentIssue`/`EquipmentMaintenanceRecord` — nessun cambio di comportamento (audit qualità 2026-11-25, C1).
+
 ## [v2.5.1] - 2026-11-26
 
 ### Fixed

@@ -62,6 +62,31 @@ class Equipment extends Model
         'max_weight_kg' => 'decimal:2',
     ];
 
+    /**
+     * Attrezzatura visibile per il gruppo indicato: assegnata a un suo
+     * veicolo, oppure non assegnata a nessun veicolo (nessun group_id
+     * proprio, quindi visibile a tutti) — a differenza di
+     * scopeForCurrentUser()/scopeForGroup() di HasVehicleGroupScoping
+     * sopra (che escluderebbero anche l'attrezzatura non assegnata).
+     * Pattern "non assegnata = condivisa" duplicato in 22 punti del
+     * codice prima di questa estrazione (audit qualità 2026-11-25, C1).
+     */
+    public function scopeVisibleToGroup(Builder $query, ?int $groupId): Builder
+    {
+        return $query->where(function (Builder $q) use ($groupId) {
+            $q->whereDoesntHave('vehicle')
+                ->orWhereHas('vehicle', fn (Builder $vq) => $vq->forGroup($groupId));
+        });
+    }
+
+    public function scopeVisibleToCurrentUser(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->whereDoesntHave('vehicle')
+                ->orWhereHas('vehicle', fn (Builder $vq) => $vq->forCurrentUser());
+        });
+    }
+
     public function scopeExpiringSoon(Builder $query, int $days = 30): Builder
     {
         return $query->whereNotNull('expiration_date')
