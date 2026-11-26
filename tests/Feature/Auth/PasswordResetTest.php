@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
@@ -28,6 +29,20 @@ class PasswordResetTest extends TestCase
         $this->post('/forgot-password', ['email' => $user->email]);
 
         Notification::assertSentTo($user, ResetPassword::class);
+    }
+
+    public function test_reset_password_link_request_fails_gracefully_when_sending_throws(): void
+    {
+        // Prima di questo fix, un fallimento nell'invio (SMTP/Resend
+        // irraggiungibile) risultava in un 500 non gestito invece di un
+        // normale errore di validazione mostrato all'utente.
+        $user = User::factory()->create();
+
+        Password::shouldReceive('sendResetLink')->once()->andThrow(new \Exception('SMTP irraggiungibile'));
+
+        $response = $this->post('/forgot-password', ['email' => $user->email]);
+
+        $response->assertSessionHasErrors(['email']);
     }
 
     public function test_reset_password_screen_can_be_rendered(): void

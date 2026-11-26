@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Password;
 use Tests\TestCase;
 
 class GroupCreationTest extends TestCase
@@ -63,6 +64,28 @@ class GroupCreationTest extends TestCase
 
         $capo = User::where('email', 'luca@example.com')->first();
         Notification::assertSentTo($capo, VerifyEmail::class);
+    }
+
+    public function test_group_and_capo_are_still_created_when_sending_the_password_link_fails(): void
+    {
+        // Prima di questo fix, un fallimento nell'invio (SMTP/Resend
+        // irraggiungibile) faceva 500 l'intera richiesta, nonostante
+        // gruppo e capo fossero già stati creati nella stessa transazione.
+        $superadmin = User::factory()->create(['is_superadmin' => true]);
+
+        Password::shouldReceive('sendResetLink')->once()->andThrow(new \Exception('SMTP irraggiungibile'));
+
+        $response = $this->actingAs($superadmin)->post(route('superadmin.groups.store'), [
+            'name' => 'Croce Verde Esempio',
+            'capo_name' => 'Luca Verdi',
+            'capo_email' => 'luca@example.com',
+        ]);
+
+        $group = Group::where('name', 'Croce Verde Esempio')->first();
+        $this->assertNotNull($group);
+        $response->assertRedirect(route('superadmin.licenses.create', $group));
+        $this->assertDatabaseHas('users', ['email' => 'luca@example.com']);
+        $this->assertStringContainsString('fallito', session('status'));
     }
 
     public function test_rejects_duplicate_capo_email(): void
