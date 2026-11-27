@@ -91,14 +91,16 @@
                             <p style="margin-bottom:14px;">
                                 {{ __('Il tuo account non sarà più protetto da un secondo fattore. Inserisci la password per confermare.') }}
                             </p>
-                            <div class="field password-field" style="margin-bottom:0;">
+                            <div class="field" style="margin-bottom:0;">
                                 <label for="two_factor_password">{{ __('Password') }}</label>
-                                <input id="two_factor_password" name="password" type="password"
-                                    class="input @error('password', 'twoFactor') is-invalid @enderror"
-                                    placeholder="{{ __('Password') }}">
-                                <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                                    <i class="fa-solid fa-eye"></i>
-                                </button>
+                                <div class="password-input">
+                                    <input id="two_factor_password" name="password" type="password"
+                                        class="input @error('password', 'twoFactor') is-invalid @enderror"
+                                        placeholder="{{ __('Password') }}">
+                                    <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
                                 @error('password', 'twoFactor')
                                     <div class="field-error">{{ $message }}</div>
                                 @enderror

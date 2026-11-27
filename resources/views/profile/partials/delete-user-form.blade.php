@@ -59,14 +59,16 @@
                             </div>
                         @endif
 
-                        <div class="field password-field" style="margin-bottom:0;">
+                        <div class="field" style="margin-bottom:0;">
                             <label for="password">{{ __('Password') }}</label>
-                            <input id="password" name="password" type="password"
-                                class="input @error('password', 'userDeletion') is-invalid @enderror"
-                                placeholder="{{ __('Password') }}">
-                            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
+                            <div class="password-input">
+                                <input id="password" name="password" type="password"
+                                    class="input @error('password', 'userDeletion') is-invalid @enderror"
+                                    placeholder="{{ __('Password') }}">
+                                <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                            </div>
                             @error('password', 'userDeletion')
                                 <div class="field-error">{{ $message }}</div>
                             @enderror

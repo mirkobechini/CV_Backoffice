@@ -122,12 +122,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Occhiello mostra/nascondi password: delegato, funziona su qualunque
-    // campo con markup .password-field > input + button.password-toggle
+    // campo con markup .password-input > input + button.password-toggle
     document.addEventListener('click', (event) => {
         const toggle = event.target.closest('.password-toggle');
         if (!toggle) return;
 
-        const input = toggle.closest('.password-field')?.querySelector('input');
+        const input = toggle.closest('.password-input')?.querySelector('input');
         if (!input) return;
 
         const showing = input.type === 'text';

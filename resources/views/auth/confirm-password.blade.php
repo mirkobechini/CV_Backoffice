@@ -8,13 +8,15 @@
     <form method="POST" action="{{ route('password.confirm') }}" data-single-submit="true">
         @csrf
 
-        <div class="field password-field">
+        <div class="field">
             <label for="password">{{ __('Password') }}</label>
-            <input id="password" type="password" class="input @error('password') is-invalid @enderror"
-                name="password" required autocomplete="current-password" autofocus>
-            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                <i class="fa-solid fa-eye"></i>
-            </button>
+            <div class="password-input">
+                <input id="password" type="password" class="input @error('password') is-invalid @enderror"
+                    name="password" required autocomplete="current-password" autofocus>
+                <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
             @error('password')
                 <div class="field-error">{{ $message }}</div>
             @enderror

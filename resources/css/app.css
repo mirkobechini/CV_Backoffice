@@ -2682,12 +2682,15 @@ textarea.input {
     font-family: inherit;
 }
 
-/* Campo password con occhiello per mostrare/nascondere il valore */
-.password-field {
+/* Campo password con occhiello per mostrare/nascondere il valore: il
+   wrapper relative sta solo su input+bottone, non su tutto .field (che
+   include anche la label sopra), altrimenti l'occhiello si posiziona
+   accanto alla label invece che dentro il campo. */
+.password-input {
     position: relative;
 }
 
-.password-field .input {
+.password-input .input {
     padding-right: 40px;
 }
 

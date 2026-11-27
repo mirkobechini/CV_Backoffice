@@ -18,25 +18,29 @@
             @enderror
         </div>
 
-        <div class="field password-field">
+        <div class="field">
             <label for="password">{{ __('Nuova password') }}</label>
-            <input id="password" type="password" class="input @error('password') is-invalid @enderror"
-                name="password" required autocomplete="new-password">
-            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                <i class="fa-solid fa-eye"></i>
-            </button>
+            <div class="password-input">
+                <input id="password" type="password" class="input @error('password') is-invalid @enderror"
+                    name="password" required autocomplete="new-password">
+                <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
             @error('password')
                 <div class="field-error">{{ $message }}</div>
             @enderror
         </div>
 
-        <div class="field password-field">
+        <div class="field">
             <label for="password_confirmation">{{ __('Conferma password') }}</label>
-            <input id="password_confirmation" type="password" class="input" name="password_confirmation" required
-                autocomplete="new-password">
-            <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
-                <i class="fa-solid fa-eye"></i>
-            </button>
+            <div class="password-input">
+                <input id="password_confirmation" type="password" class="input" name="password_confirmation" required
+                    autocomplete="new-password">
+                <button type="button" class="password-toggle" aria-label="{{ __('Mostra password') }}">
+                    <i class="fa-solid fa-eye"></i>
+                </button>
+            </div>
         </div>
 
         <button type="submit" class="btn primary lg" data-loading-text="{{ __('Salvataggio...') }}"

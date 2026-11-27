@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Fixed
+
+- L'occhiello mostra/nascondi password (login, reset/conferma password, cambio password profilo, conferma 2FA, conferma eliminazione account) appariva accanto all'etichetta "Password" invece che dentro il campo (segnalato da Mirko 2026-11-27, issue-709).
+
 ## [v2.6.0] - 2026-11-27
 
 ### Changed
