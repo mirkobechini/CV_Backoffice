@@ -207,53 +207,48 @@ class IssueCsvImporter extends AbstractCsvImporter
 
         // AAAA-MM-GG
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
-            try {
-                return Carbon::parse($date);
-            } catch (\Exception $e) {
-                Log::warning("CSV import: data \"{$date}\" nel formato AAAA-MM-GG non valida: {$e->getMessage()}");
-
-                return null;
-            }
+            return $this->tryParseDate(fn () => Carbon::parse($date), $date, 'AAAA-MM-GG');
         }
 
         // GG/MM/AAAA
         if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{4}$/', $date)) {
-            try {
-                return Carbon::createFromFormat('d/m/Y', $date);
-            } catch (\Exception $e) {
-                Log::warning("CSV import: data \"{$date}\" nel formato GG/MM/AAAA non valida: {$e->getMessage()}");
-
-                return null;
-            }
+            return $this->tryParseDate(fn () => Carbon::createFromFormat('d/m/Y', $date), $date, 'GG/MM/AAAA');
         }
 
         // GG/MM (senza anno) — supporta anche G/M senza zero padding
         if (preg_match('/^\d{1,2}\/\d{1,2}$/', $date)) {
-            try {
+            return $this->tryParseDate(function () use ($date) {
                 $parsed = Carbon::createFromFormat('d/m', $date);
                 $today = Carbon::today();
                 // Se mese <= mese corrente, usa anno corrente, altrimenti anno precedente
                 $year = $parsed->month <= $today->month ? $today->year : $today->year - 1;
 
                 return $parsed->setYear($year);
-            } catch (\Exception $e) {
-                Log::warning("CSV import: data \"{$date}\" nel formato GG/MM non valida: {$e->getMessage()}");
-
-                return null;
-            }
+            }, $date, 'GG/MM');
         }
 
         // GG/MM/AA
         if (preg_match('/^\d{1,2}\/\d{1,2}\/\d{1,2}$/', $date)) {
-            try {
-                return Carbon::createFromFormat('d/m/y', $date);
-            } catch (\Exception $e) {
-                Log::warning("CSV import: data \"{$date}\" nel formato GG/MM/AA non valida: {$e->getMessage()}");
-
-                return null;
-            }
+            return $this->tryParseDate(fn () => Carbon::createFromFormat('d/m/y', $date), $date, 'GG/MM/AA');
         }
 
         return null;
+    }
+
+    /**
+     * Esegue $parser e logga/torna null in modo uniforme se solleva — i 4
+     * formati sopra ripetevano lo stesso try/catch (audit qualità
+     * 2026-11-25, F7). Non maschera errori diversi da un parsing fallito:
+     * logga sempre, non ne nasconde la causa.
+     */
+    private function tryParseDate(callable $parser, string $date, string $formatLabel): ?Carbon
+    {
+        try {
+            return $parser();
+        } catch (\Exception $e) {
+            Log::warning("CSV import: data \"{$date}\" nel formato {$formatLabel} non valida: {$e->getMessage()}");
+
+            return null;
+        }
     }
 }

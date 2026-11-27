@@ -6,6 +6,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ### Changed
 
+- Pulizia qualità del codice senza cambi di comportamento: parametro oggetto invece di 3 riferimenti in `GenerateNotifications`, rimossa duplicazione di `GroupPolicy` in `UserController`, estratto helper comune per il parsing date in `IssueCsvImporter`, estratti due trait da `Vehicle.php` e divisi due file di test oltre la soglia dimensionale (audit qualità 2026-11-25, blocco 6, issue-707).
+
 - Notifiche Telegram: un solo messaggio riepilogativo per utente per ogni esecuzione del comando, invece di un messaggio separato per ogni evento (spezzato in più messaggi solo se supererebbe il limite di Telegram). Ogni evento nel riepilogo ha ora un'icona per tipo, come già il campanello in-app (segnalato da Mirko 2026-11-26).
 
 ### Fixed

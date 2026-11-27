@@ -25,7 +25,7 @@ class UserController extends Controller
      */
     public function create(Group $group)
     {
-        $this->authorizeGroupInvites($group);
+        $this->authorize('manageInvites', $group);
 
         return view('admin.users.create', compact('group'));
     }
@@ -35,7 +35,7 @@ class UserController extends Controller
      */
     public function store(Request $request, Group $group, AccountMailer $accountMailer)
     {
-        $this->authorizeGroupInvites($group);
+        $this->authorize('manageInvites', $group);
 
         if (! $group->canAddUser()) {
             return back()->withErrors([
@@ -82,22 +82,5 @@ class UserController extends Controller
             : 'Utente creato, ma l\'invio dell\'email per impostare la password è fallito. Usa "Password dimenticata" dalla pagina di login per reinviarla, o riprova più tardi.';
 
         return redirect()->route('admin.groups.show', $group)->with('status', $status);
-    }
-
-    /**
-     * L'utente deve appartenere al gruppo e poter gestire gli inviti
-     * (capo, o sottocapo se il capo lo ha abilitato).
-     */
-    private function authorizeGroupInvites(Group $group): void
-    {
-        $currentUser = auth()->user();
-
-        if (! $currentUser->groups()->where('groups.id', $group->id)->exists()) {
-            abort(403, 'Non appartieni a questo gruppo.');
-        }
-
-        if (! $group->userCanManageInvites($currentUser)) {
-            abort(403, 'Non puoi creare utenti in questo gruppo.');
-        }
     }
 }
