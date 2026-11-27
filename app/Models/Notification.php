@@ -62,11 +62,15 @@ class Notification extends Model
     }
 
     /**
-     * Icona Bootstrap per il tipo di notifica.
+     * Icona per il tipo di notifica. Statica e riusabile anche fuori da
+     * un'istanza (es. GenerateNotifications per i messaggi Telegram, dove
+     * non esiste ancora una Notification da cui leggere l'accessor) —
+     * stessa mappatura usata qui per il campanello in-app, così le icone
+     * restano coerenti tra i due canali (audit UX 2026-11-26).
      */
-    public function getTypeIconAttribute(): string
+    public static function iconForType(string $type): string
     {
-        return match ($this->type) {
+        return match ($type) {
             self::TYPE_DEADLINE => '📅',
             self::TYPE_ISSUE => '⚠️',
             self::TYPE_EQUIPMENT => '🧯',
@@ -74,5 +78,13 @@ class Notification extends Model
             self::TYPE_TIRE_SEASON => '🛞',
             default => '🔔',
         };
+    }
+
+    /**
+     * Icona Bootstrap per il tipo di notifica.
+     */
+    public function getTypeIconAttribute(): string
+    {
+        return self::iconForType($this->type);
     }
 }

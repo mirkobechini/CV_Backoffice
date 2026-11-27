@@ -13,6 +13,7 @@ use App\Models\MaintenanceRecord;
 use App\Models\Notification;
 use App\Models\NotificationSetting;
 use App\Models\User;
+use App\Services\NotificationBatch;
 use App\Services\NotificationService;
 use App\Services\TelegramNotifier;
 use App\Services\TireSeasonService;
@@ -44,9 +45,7 @@ class GenerateNotifications extends Command
      */
     public function handle(NotificationService $notifications, TireSeasonService $tireSeasonService, TelegramNotifier $telegram): int
     {
-        $created = 0;
-        $emailsByUser = [];
-        $telegramEventsByUser = [];
+        $batch = new NotificationBatch;
 
         $adminUsers = User::whereHas('groups', function ($q) {
             $q->whereIn('group_user.role', [Group::ROLE_CAPO, Group::ROLE_SOTTOCAPO]);
@@ -62,33 +61,33 @@ class GenerateNotifications extends Command
             $groupId = $user->activeGroup()?->id;
 
             if ($user->notificationSetting('notify_on_deadline', true)) {
-                $this->notifyUpcomingDeadlines($user, $groupId, $reminderDays, $notifications, $emailsByUser, $telegramEventsByUser, $created);
-                $this->notifyEscalatedDeadlines($user, $groupId, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+                $this->notifyUpcomingDeadlines($user, $groupId, $reminderDays, $notifications, $batch);
+                $this->notifyEscalatedDeadlines($user, $groupId, $notifications, $batch);
             }
 
             if ($user->notificationSetting('notify_on_issue', true)) {
-                $this->notifyOpenIssues($user, $groupId, $notifications, $emailsByUser, $telegramEventsByUser, $created);
-                $this->notifyOpenEquipmentIssues($user, $groupId, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+                $this->notifyOpenIssues($user, $groupId, $notifications, $batch);
+                $this->notifyOpenEquipmentIssues($user, $groupId, $notifications, $batch);
             }
 
             if ($user->notificationSetting('notify_on_equipment', true)) {
-                $this->notifyExpiringEquipment($user, $groupId, $reminderDays, $notifications, $emailsByUser, $telegramEventsByUser, $created);
-                $this->notifyExpiringCollaudo($user, $groupId, $reminderDays, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+                $this->notifyExpiringEquipment($user, $groupId, $reminderDays, $notifications, $batch);
+                $this->notifyExpiringCollaudo($user, $groupId, $reminderDays, $notifications, $batch);
             }
 
             if ($user->notificationSetting('notify_on_maintenance', true)) {
-                $this->notifyUpcomingAppointments($user, $groupId, $reminderDays, $notifications, $emailsByUser, $telegramEventsByUser, $created);
-                $this->notifyUpcomingEquipmentAppointments($user, $groupId, $reminderDays, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+                $this->notifyUpcomingAppointments($user, $groupId, $reminderDays, $notifications, $batch);
+                $this->notifyUpcomingEquipmentAppointments($user, $groupId, $reminderDays, $notifications, $batch);
             }
 
             if ($user->notificationSetting('notify_on_tire_season', true)) {
-                $this->notifyTireSeasonReminders($user, $groupId, $user->activeGroup(), $tireSeasonService, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+                $this->notifyTireSeasonReminders($user, $groupId, $user->activeGroup(), $tireSeasonService, $notifications, $batch);
             }
         }
 
         // Invia email/Telegram automatici per i nuovi eventi, una per utente e per evento.
         if ($this->option('email')) {
-            foreach ($emailsByUser as $userId => $mails) {
+            foreach ($batch->emailsByUser as $userId => $mails) {
                 $recipient = NotificationSetting::where('user_id', $userId)->where('key', 'report_email')->value('value');
 
                 if (! $recipient) {
@@ -112,21 +111,19 @@ class GenerateNotifications extends Command
                 }
             }
 
-            foreach ($telegramEventsByUser as $userId => $events) {
+            foreach ($batch->telegramEventsByUser as $userId => $events) {
                 $user = $adminUsers->firstWhere('id', $userId);
 
                 if (! $user || ! $telegram->isLinked($user)) {
                     continue;
                 }
 
-                foreach ($events as [$title, $message]) {
-                    $telegram->send($user, $title, $message);
-                }
-                $this->info('Sent '.count($events)." Telegram message(s) to user {$userId}.");
+                $sentCount = $telegram->sendDigest($user, $events);
+                $this->info("Sent {$sentCount} Telegram digest message(s) to user {$userId}.");
             }
         }
 
-        $this->info("Generated {$created} notifications.");
+        $this->info("Generated {$batch->created} notifications.");
 
         return Command::SUCCESS;
     }
@@ -145,21 +142,24 @@ class GenerateNotifications extends Command
         ?string $url,
         string $marker,
         NotificationService $notifications,
-        array &$emailsByUser,
-        array &$telegramEventsByUser,
-        int &$created,
+        NotificationBatch $batch,
     ): void {
         if ($this->alreadyNotified($user->id, $type, $marker)) {
             return;
         }
 
         $notifications->notifyUser($user, $type, $title, $message, $url, $marker);
-        $emailsByUser[$user->id][] = new EventNotificationMail($type, $title, $message, $url);
-        $telegramEventsByUser[$user->id][] = [$title, $message];
-        $created++;
+        $batch->addEmail($user->id, new EventNotificationMail($type, $title, $message, $url));
+        // Icona per tipo (stessa mappatura del campanello in-app): senza,
+        // scorrendo la chat Telegram era impossibile distinguere a colpo
+        // d'occhio un guasto da una scadenza da un appuntamento — tutti i
+        // tipi tranne le scadenze scadute erano testo semplice identico
+        // (audit UX 2026-11-26).
+        $batch->addTelegramEvent($user->id, Notification::iconForType($type).' '.$title, $message);
+        $batch->incrementCreated();
     }
 
-    private function notifyUpcomingDeadlines(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyUpcomingDeadlines(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, NotificationBatch $batch): void
     {
         $upcomingDeadlines = Deadline::with('vehicle')
             ->forGroup($groupId)
@@ -175,7 +175,7 @@ class GenerateNotifications extends Command
             $url = $deadline->vehicle_id ? route('admin.vehicles.show', $deadline->vehicle_id) : null;
             $marker = "#deadline-{$deadline->id}";
 
-            $this->dispatchEvent($user, Notification::TYPE_DEADLINE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_DEADLINE, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
@@ -188,7 +188,7 @@ class GenerateNotifications extends Command
      * lascia passare una nuova notifica/email a ogni nuova settimana invece
      * di bloccarla per sempre dopo la prima.
      */
-    private function notifyEscalatedDeadlines(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyEscalatedDeadlines(User $user, ?int $groupId, NotificationService $notifications, NotificationBatch $batch): void
     {
         $overdueDeadlines = Deadline::with('vehicle')
             ->forGroup($groupId)
@@ -207,11 +207,11 @@ class GenerateNotifications extends Command
             $url = $deadline->vehicle_id ? route('admin.vehicles.show', $deadline->vehicle_id) : null;
             $marker = "#deadline-escalation-{$deadline->id}-{$bucket}";
 
-            $this->dispatchEvent($user, Notification::TYPE_DEADLINE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_DEADLINE, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
-    private function notifyOpenIssues(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyOpenIssues(User $user, ?int $groupId, NotificationService $notifications, NotificationBatch $batch): void
     {
         $openIssues = Issue::with('vehicle')
             ->forGroup($groupId)
@@ -225,7 +225,7 @@ class GenerateNotifications extends Command
             $url = $issue->vehicle_id ? route('admin.vehicles.show', $issue->vehicle_id) : null;
             $marker = "#issue-{$issue->id}";
 
-            $this->dispatchEvent($user, Notification::TYPE_ISSUE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_ISSUE, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
@@ -236,7 +236,7 @@ class GenerateNotifications extends Command
      * non ha un group_id proprio e non è nemmeno sempre assegnata a un
      * veicolo.
      */
-    private function notifyOpenEquipmentIssues(User $user, ?int $groupId, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyOpenEquipmentIssues(User $user, ?int $groupId, NotificationService $notifications, NotificationBatch $batch): void
     {
         $openEquipmentIssues = EquipmentIssue::with('equipment.vehicle')
             ->open()
@@ -245,16 +245,23 @@ class GenerateNotifications extends Command
 
         foreach ($openEquipmentIssues as $issue) {
             $equipmentName = $issue->equipment?->name ?? 'N/A';
-            $title = "Guasto attrezzatura aperto: {$equipmentName}";
+            // Senza il veicolo, il messaggio dice COSA si è guastato ma non
+            // DOVE (su quale mezzo) — per un'attrezzatura che si muove tra i
+            // veicoli (es. un defibrillatore) è l'informazione che serve
+            // davvero per intervenire (segnalato da Mirko il 2026-11-26).
+            $vehicleCode = $issue->vehicle?->internal_code;
+            $title = $vehicleCode
+                ? "Guasto attrezzatura aperto: {$equipmentName} ({$vehicleCode})"
+                : "Guasto attrezzatura aperto: {$equipmentName}";
             $message = $issue->description;
             $url = route('admin.equipment-issues.show', $issue->id);
             $marker = "#equipment-issue-{$issue->id}";
 
-            $this->dispatchEvent($user, Notification::TYPE_ISSUE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_ISSUE, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
-    private function notifyExpiringEquipment(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyExpiringEquipment(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, NotificationBatch $batch): void
     {
         $expiringEquipment = Equipment::with('vehicle')
             ->visibleToGroup($groupId)
@@ -268,7 +275,7 @@ class GenerateNotifications extends Command
             $url = $equipment->vehicle_id ? route('admin.vehicles.show', $equipment->vehicle_id) : null;
             $marker = "#equipment-{$equipment->id}";
 
-            $this->dispatchEvent($user, Notification::TYPE_EQUIPMENT, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_EQUIPMENT, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
@@ -276,7 +283,7 @@ class GenerateNotifications extends Command
      * Collaudo (retest idraulico) in scadenza: ciclo separato dalla
      * revisione ordinaria, rilevante solo per gli estintori.
      */
-    private function notifyExpiringCollaudo(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyExpiringCollaudo(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, NotificationBatch $batch): void
     {
         $expiringCollaudo = Equipment::with('vehicle')
             ->visibleToGroup($groupId)
@@ -290,14 +297,14 @@ class GenerateNotifications extends Command
             $url = $equipment->vehicle_id ? route('admin.vehicles.show', $equipment->vehicle_id) : null;
             $marker = "#equipment-collaudo-{$equipment->id}";
 
-            $this->dispatchEvent($user, Notification::TYPE_EQUIPMENT, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_EQUIPMENT, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
     /**
      * Appuntamenti (officina) in arrivo e non ancora conclusi.
      */
-    private function notifyUpcomingAppointments(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyUpcomingAppointments(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, NotificationBatch $batch): void
     {
         $upcomingAppointments = MaintenanceRecord::with('vehicle')
             ->forGroup($groupId)
@@ -314,7 +321,7 @@ class GenerateNotifications extends Command
             $url = $record->vehicle_id ? route('admin.vehicles.show', $record->vehicle_id) : null;
             $marker = "#maintenance-{$record->id}";
 
-            $this->dispatchEvent($user, Notification::TYPE_MAINTENANCE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_MAINTENANCE, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
@@ -326,7 +333,7 @@ class GenerateNotifications extends Command
      * l'appuntamento lo sia — stesso criterio permissivo già usato
      * nell'elenco appuntamenti attrezzature.
      */
-    private function notifyUpcomingEquipmentAppointments(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyUpcomingEquipmentAppointments(User $user, ?int $groupId, int $reminderDays, NotificationService $notifications, NotificationBatch $batch): void
     {
         $upcomingEquipmentAppointments = EquipmentMaintenanceRecord::with('equipments.vehicle')
             ->whereNull('return_date')
@@ -336,14 +343,25 @@ class GenerateNotifications extends Command
             ->get();
 
         foreach ($upcomingEquipmentAppointments as $record) {
-            $equipmentNames = $record->equipments->pluck('name')->implode(', ') ?: 'N/A';
+            // Un appuntamento con attrezzature di gruppi diversi notifica
+            // ciascun gruppo coinvolto: il messaggio deve nominare solo le
+            // SUE attrezzature, non anche quelle di un gruppo estraneo
+            // (audit funzionale 2026-11-25, D4) — altrimenti il messaggio
+            // risulta rumoroso/confuso per chi lo riceve.
+            $relevantEquipment = $record->equipments->filter(
+                fn (Equipment $e) => ! $e->vehicle || $e->vehicle->group_id === $groupId
+            );
+            $equipmentNames = $relevantEquipment->isNotEmpty()
+                ? $relevantEquipment->pluck('name')->implode(', ')
+                : $record->equipments->pluck('name')->implode(', ');
+            $equipmentNames = $equipmentNames ?: 'N/A';
             $title = "Appuntamento attrezzature in arrivo: {$equipmentNames}";
             $activitySuffix = $record->activity_type ? " ({$record->activity_type})" : '';
             $message = "Le attrezzature {$equipmentNames} hanno un appuntamento{$activitySuffix} il {$record->appointment_date?->format('d/m/Y')}.";
             $url = route('admin.equipment-maintenance-records.show', $record->id);
             $marker = "#equipment-maintenance-{$record->id}";
 
-            $this->dispatchEvent($user, Notification::TYPE_MAINTENANCE, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_MAINTENANCE, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 
@@ -353,7 +371,7 @@ class GenerateNotifications extends Command
      * marker include anno e stagione attesa): se il veicolo torna in regola
      * e poi risbaglia in una stagione successiva, viene notificato di nuovo.
      */
-    private function notifyTireSeasonReminders(User $user, ?int $groupId, ?Group $group, TireSeasonService $tireSeasonService, NotificationService $notifications, array &$emailsByUser, array &$telegramEventsByUser, int &$created): void
+    private function notifyTireSeasonReminders(User $user, ?int $groupId, ?Group $group, TireSeasonService $tireSeasonService, NotificationService $notifications, NotificationBatch $batch): void
     {
         $expectedSeason = $tireSeasonService->expectedSeasonForGroup($group);
         $seasonLabel = $expectedSeason === 'winter' ? 'invernali' : 'estive';
@@ -365,7 +383,7 @@ class GenerateNotifications extends Command
             $url = route('admin.vehicles.show', $vehicle->id);
             $marker = "#tire-season-{$vehicle->id}-".today()->year."-{$expectedSeason}";
 
-            $this->dispatchEvent($user, Notification::TYPE_TIRE_SEASON, $title, $message, $url, $marker, $notifications, $emailsByUser, $telegramEventsByUser, $created);
+            $this->dispatchEvent($user, Notification::TYPE_TIRE_SEASON, $title, $message, $url, $marker, $notifications, $batch);
         }
     }
 

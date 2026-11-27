@@ -260,6 +260,13 @@ Equipment (fire extinguishers, stretchers, DAE, etc.) can have faults (`Equipmen
 - Linking/unlinking an `EquipmentIssue` to an appointment, and reopening it when unlinked, is done with a per-model loop (not a mass `whereIn()->update()`) for the same reason already established for vehicle issues (§8): a bulk update bypasses `LogsActivity` entirely.
 - Completing an equipment appointment only asks "were the linked faults resolved?" when there actually are linked faults — a pure revision/collaudo appointment with no fault involved doesn't force an answer to a question that doesn't apply to it.
 
+### Addendum (2026-11-26, audit funzionale 2026-11-25, Blocco 5)
+
+Due asimmetrie col lato veicolo, confermate come scelte deliberate (non gap dimenticati) da Mirko:
+
+- **Nessun "in officina ora" per le attrezzature**: il lato veicolo distingue "prossimi appuntamenti" (non iniziati) da "in officina" (appuntamento già iniziato, badge/conteggio dedicato), basandosi su `appointment_time` e gli scope `currentlyInWorkshop()`/`notYetStarted()`. `EquipmentMaintenanceRecord` non ha `appointment_time` e mescola i due casi in un'unica lista "prossimi appuntamenti" — sapere "quale attrezzatura è fisicamente dal fornitore in questo momento" è stato giudicato poco utile rispetto al caso veicolo (un mezzo fermo impatta l'operatività, un'attrezzatura in revisione no).
+- **`EquipmentIssue` senza foto, pezzi di ricambio, vista raggruppata**: `Issue` (lato veicolo) supporta tutte e tre. Un guasto su un'attrezzatura (estintore, barella, ecc.) raramente ha pezzi di ricambio da tracciare o richiede una foto — la semplicità del modello resta intenzionale anche su questo fronte, non solo sulla struttura dati già discussa sopra.
+
 ---
 
 ## 13. Optional TOTP two-factor authentication

@@ -79,6 +79,34 @@ class GenerateNotificationsEquipmentTest extends TestCase
         ]);
     }
 
+    public function test_equipment_issue_notification_names_the_vehicle_when_equipment_is_assigned_to_one(): void
+    {
+        // Segnalato da Mirko il 2026-11-26: senza il veicolo, il messaggio
+        // dice COSA si è guastato ma non DOVE (su quale mezzo) — per
+        // un'attrezzatura come un defibrillatore è l'informazione che serve
+        // davvero per intervenire.
+        $group = $this->defaultGroup();
+        $this->admin($group);
+        $vehicle = $this->vehicle($group);
+        $equipment = Equipment::create([
+            'equipment_type_id' => $this->equipmentType()->id,
+            'vehicle_id' => $vehicle->id,
+            'name' => 'Lifepak 15',
+        ]);
+        EquipmentIssue::create([
+            'equipment_id' => $equipment->id,
+            'description' => 'Non trasmette',
+            'status' => 'open',
+        ]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseHas('notifications', [
+            'type' => Notification::TYPE_ISSUE,
+            'title' => 'Guasto attrezzatura aperto: Lifepak 15 (0001)',
+        ]);
+    }
+
     public function test_does_not_duplicate_equipment_issue_notification(): void
     {
         $this->admin();
@@ -118,6 +146,48 @@ class GenerateNotificationsEquipmentTest extends TestCase
         $this->assertDatabaseHas('notifications', [
             'type' => Notification::TYPE_MAINTENANCE,
             'title' => 'Appuntamento attrezzature in arrivo: Estintore magazzino',
+        ]);
+    }
+
+    public function test_upcoming_equipment_appointment_notification_only_names_the_recipients_own_equipment(): void
+    {
+        // Audit funzionale 2026-11-25 (D4): un appuntamento con attrezzature
+        // di gruppi diversi notifica ciascun gruppo coinvolto — il
+        // messaggio deve nominare solo le SUE attrezzature, non anche
+        // quelle di un gruppo estraneo (rumore/confusione).
+        $groupA = Group::create(['name' => 'Gruppo A', 'invite_code' => 'IIII9999']);
+        $groupB = Group::create(['name' => 'Gruppo B', 'invite_code' => 'JJJJ0000']);
+        $capoA = $this->admin($groupA);
+        $vehicleA = Vehicle::create([
+            'license_plate' => 'AA111AA', 'internal_code' => '1001',
+            'brand' => 'Fiat', 'model' => 'Ducato',
+            'immatricolation_date' => Carbon::today()->subYears(2), 'group_id' => $groupA->id,
+        ]);
+        $vehicleB = Vehicle::create([
+            'license_plate' => 'BB222BB', 'internal_code' => '1002',
+            'brand' => 'Fiat', 'model' => 'Ducato',
+            'immatricolation_date' => Carbon::today()->subYears(2), 'group_id' => $groupB->id,
+        ]);
+        $type = $this->equipmentType();
+        $equipmentA = Equipment::create(['equipment_type_id' => $type->id, 'vehicle_id' => $vehicleA->id, 'name' => 'Estintore A']);
+        $equipmentB = Equipment::create(['equipment_type_id' => $type->id, 'vehicle_id' => $vehicleB->id, 'name' => 'Estintore B']);
+        $provider = Provider::create(['name' => 'Officina Collaudi', 'type' => 'Centro Revisioni']);
+        $record = EquipmentMaintenanceRecord::create([
+            'provider_id' => $provider->id,
+            'appointment_date' => Carbon::today()->addDays(3),
+            'activity_type' => EquipmentMaintenanceRecord::ACTIVITY_COLLAUDO,
+        ]);
+        $record->equipments()->attach([$equipmentA->id, $equipmentB->id]);
+
+        $this->artisan('app:generate-notifications');
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $capoA->id,
+            'title' => 'Appuntamento attrezzature in arrivo: Estintore A',
+        ]);
+        $this->assertDatabaseMissing('notifications', [
+            'user_id' => $capoA->id,
+            'title' => 'Appuntamento attrezzature in arrivo: Estintore A, Estintore B',
         ]);
     }
 

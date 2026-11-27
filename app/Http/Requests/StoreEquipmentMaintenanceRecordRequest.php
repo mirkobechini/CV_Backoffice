@@ -95,6 +95,33 @@ class StoreEquipmentMaintenanceRecordRequest extends FormRequest
             if (! empty($completedIssueIds) && array_diff($completedIssueIds, $issueIds)) {
                 $validator->errors()->add('completed_issue_ids', 'Uno o più guasti da completare non appartengono a questo appuntamento.');
             }
+
+            // Stesso controllo già presente lato veicolo
+            // (MaintenanceRecord::findSchedulingConflict()), qui per
+            // attrezzatura: senza, la stessa attrezzatura era prenotabile
+            // in due appuntamenti sovrapposti (audit funzionale 2026-11-25,
+            // D2). Saltato se le date non sono cambiate rispetto al record
+            // esistente (in modifica): un conflitto preesistente e
+            // indipendente dalla modifica corrente non deve bloccare un
+            // salvataggio che non tocca le date.
+            $currentRecord = $this->route('equipmentMaintenanceRecord');
+            $startDate = $this->input('appointment_date');
+            $endDate = $this->input('return_date') ?? $startDate;
+            $datesUnchanged = $currentRecord
+                && $currentRecord->appointment_date?->toDateString() === $startDate
+                && ($currentRecord->return_date?->toDateString() ?? $currentRecord->appointment_date?->toDateString()) === $endDate;
+
+            if (! empty($equipmentIds) && $startDate && ! $datesUnchanged) {
+                foreach ($equipmentIds as $equipmentId) {
+                    $conflict = EquipmentMaintenanceRecord::findSchedulingConflict((int) $equipmentId, $startDate, $endDate, $currentRecord?->id);
+
+                    if ($conflict) {
+                        $conflictEnd = $conflict->return_date?->toDateString() ?? 'in corso';
+                        $validator->errors()->add('equipment_ids', "Un'attrezzatura selezionata è già impegnata in un altro appuntamento dal {$conflict->appointment_date?->toDateString()} al {$conflictEnd}. Impossibile inserire un appuntamento sovrapposto.");
+                        break;
+                    }
+                }
+            }
         });
     }
 }

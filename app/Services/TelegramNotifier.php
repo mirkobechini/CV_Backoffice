@@ -149,6 +149,51 @@ class TelegramNotifier
     }
 
     /**
+     * Un solo messaggio Telegram con tutti gli eventi di un giro, invece di
+     * uno separato per evento: una raffica di N notifiche push slegate tra
+     * loro per lo stesso run era difficile da seguire (audit UX
+     * 2026-11-26). Spezzato in più messaggi solo se il testo supererebbe il
+     * limite di Telegram (4096 caratteri), per restare corretto anche con
+     * decine di eventi nello stesso giorno. Estratto da
+     * GenerateNotifications (audit qualità 2026-11-25, F1/F5): è logica di
+     * invio Telegram, non di generazione delle notifiche.
+     *
+     * @param  array<int, array{0: string, 1: string}>  $events
+     * @return int Numero di messaggi Telegram effettivamente inviati.
+     */
+    public function sendDigest(User $user, array $events): int
+    {
+        $chunks = [];
+        $current = [];
+        $currentLength = 0;
+
+        foreach ($events as [$title, $message]) {
+            $entry = "{$title}\n{$message}";
+            // +2 per la riga vuota di separazione tra un evento e il successivo.
+            $entryLength = mb_strlen($entry) + 2;
+
+            if ($current && $currentLength + $entryLength > 4096) {
+                $chunks[] = $current;
+                $current = [];
+                $currentLength = 0;
+            }
+
+            $current[] = $entry;
+            $currentLength += $entryLength;
+        }
+
+        if ($current) {
+            $chunks[] = $current;
+        }
+
+        foreach ($chunks as $chunk) {
+            $this->send($user, implode("\n\n", $chunk));
+        }
+
+        return count($chunks);
+    }
+
+    /**
      * Invia un file (es. il PDF del report riassuntivo) a un utente, se ha
      * collegato Telegram.
      */

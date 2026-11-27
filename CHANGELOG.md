@@ -4,6 +4,28 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.6.0] - 2026-11-27
+
+### Changed
+
+- Pulizia qualità del codice senza cambi di comportamento: parametro oggetto invece di 3 riferimenti in `GenerateNotifications`, rimossa duplicazione di `GroupPolicy` in `UserController`, estratto helper comune per il parsing date in `IssueCsvImporter`, estratti due trait da `Vehicle.php` e divisi due file di test oltre la soglia dimensionale (audit qualità 2026-11-25, blocco 6, issue-707).
+
+- Notifiche Telegram: un solo messaggio riepilogativo per utente per ogni esecuzione del comando, invece di un messaggio separato per ogni evento (spezzato in più messaggi solo se supererebbe il limite di Telegram). Ogni evento nel riepilogo ha ora un'icona per tipo, come già il campanello in-app (segnalato da Mirko 2026-11-26).
+
+### Fixed
+
+- Il messaggio di guasto attrezzatura non indicava su quale veicolo si trovasse l'attrezzatura (es. un defibrillatore) — ora lo mostra quando l'attrezzatura è assegnata a un mezzo (segnalato da Mirko 2026-11-26).
+
+### Added
+
+- Appuntamento attrezzature: controllo di sovrapposizione date per attrezzatura (come già per i veicoli), blocco doppio-submit alla creazione (audit funzionale 2026-11-25, D2/D3).
+
+### Fixed
+
+- Si poteva completare un appuntamento attrezzature con data futura, facendo scattare subito la revisione/collaudo con date incoerenti — bloccato come già sul lato veicolo (audit 2026-11-25, D1).
+- Un appuntamento attrezzature con attrezzature di gruppi diversi notificava entrambi i gruppi nominando anche l'attrezzatura dell'altro gruppo — il messaggio ora nomina solo le attrezzature del destinatario (audit 2026-11-25, D4).
+- `destroy()` di un appuntamento attrezzature poteva rimandare a un 404 se "back" puntava alla show appena eliminata — stesso controllo già presente lato veicolo (audit 2026-11-25, D5).
+
 ## [v2.5.3] - 2026-11-26
 
 ### Changed

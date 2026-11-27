@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Concerns\DetectsDuplicates;
 use App\Http\Controllers\Concerns\ValidatesBackUrl;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEquipmentMaintenanceRecordRequest;
@@ -13,11 +14,12 @@ use App\Models\Provider;
 use App\Services\EquipmentMaintenanceCompletionService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class EquipmentMaintenanceRecordController extends Controller
 {
-    use ValidatesBackUrl;
+    use DetectsDuplicates, ValidatesBackUrl;
 
     public function __construct(
         private readonly EquipmentMaintenanceCompletionService $completionService,
@@ -89,6 +91,21 @@ class EquipmentMaintenanceRecordController extends Controller
     {
         $data = $request->validated();
         $completedIssueIds = $data['completed_issue_ids'] ?? [];
+
+        // Lato veicolo già protetto da un doppio-click/doppio-submit, qui
+        // mancante (audit funzionale 2026-11-25, D3).
+        $duplicateRecord = $this->findDuplicate(EquipmentMaintenanceRecord::class, [
+            'provider_id' => $data['provider_id'],
+            'appointment_date' => $data['appointment_date'],
+            'return_date' => $data['return_date'] ?? null,
+            'activity_type' => $data['activity_type'] ?? null,
+        ]);
+
+        if ($duplicateRecord) {
+            return redirect()
+                ->route('admin.equipment-maintenance-records.show', $duplicateRecord->id)
+                ->with('status', 'Appuntamento già registrato: creazione duplicata bloccata.');
+        }
 
         $record = DB::transaction(function () use ($data, $completedIssueIds) {
             $record = EquipmentMaintenanceRecord::create([
@@ -209,6 +226,11 @@ class EquipmentMaintenanceRecordController extends Controller
     {
         $this->authorize('delete', $equipmentMaintenanceRecord);
 
+        // Come in MaintenanceRecordController::destroy() (audit funzionale
+        // 2026-11-25, D5): se "back" punta alla show dell'appuntamento
+        // appena eliminato, il redirect darebbe 404.
+        $showUrl = route('admin.equipment-maintenance-records.show', $equipmentMaintenanceRecord);
+
         $equipmentMaintenanceRecord->loadMissing('issues');
 
         // I guasti in lavorazione tornano aperti (loop su modelli singoli,
@@ -225,7 +247,7 @@ class EquipmentMaintenanceRecordController extends Controller
         $equipmentMaintenanceRecord->delete();
 
         $back = $this->safeBackUrl($request->input('back'));
-        if ($back) {
+        if ($back && ! str_starts_with(parse_url($back, PHP_URL_PATH), parse_url($showUrl, PHP_URL_PATH))) {
             return redirect($back)->with('status', 'Appuntamento eliminato con successo.');
         }
 
@@ -270,6 +292,16 @@ class EquipmentMaintenanceRecordController extends Controller
         $completedEquipmentIds = $data['completed_equipment_ids'] ?? [];
         if (! empty(array_diff($completedEquipmentIds, $linkedEquipmentIds))) {
             return back()->withErrors(['completed_equipment_ids' => 'Una o più attrezzature selezionate non appartengono a questo appuntamento.']);
+        }
+
+        // Stesso controllo già presente sul lato veicolo (audit funzionale
+        // 2026-11-25, D1): senza, si poteva completare un appuntamento
+        // futuro facendo scattare subito la registrazione di
+        // revisione/collaudo con date incoerenti.
+        if (! $equipmentMaintenanceRecord->return_date && $equipmentMaintenanceRecord->appointment_date && Carbon::today()->lt($equipmentMaintenanceRecord->appointment_date)) {
+            return redirect()
+                ->back()
+                ->withErrors(['completion' => 'Non puoi completare un appuntamento la cui data non è ancora arrivata ('.$equipmentMaintenanceRecord->appointment_date_formatted.').']);
         }
 
         $this->completionService->complete($equipmentMaintenanceRecord, $data);
