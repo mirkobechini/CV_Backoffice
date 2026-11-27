@@ -4,6 +4,8 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+## [v2.6.0] - 2026-11-27
+
 ### Changed
 
 - Pulizia qualità del codice senza cambi di comportamento: parametro oggetto invece di 3 riferimenti in `GenerateNotifications`, rimossa duplicazione di `GroupPolicy` in `UserController`, estratto helper comune per il parsing date in `IssueCsvImporter`, estratti due trait da `Vehicle.php` e divisi due file di test oltre la soglia dimensionale (audit qualità 2026-11-25, blocco 6, issue-707).
