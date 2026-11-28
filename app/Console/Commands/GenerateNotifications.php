@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\EventNotificationMail;
+use App\Mail\NotificationDigestMail;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\EquipmentIssue;
@@ -85,26 +85,27 @@ class GenerateNotifications extends Command
             }
         }
 
-        // Invia email/Telegram automatici per i nuovi eventi, una per utente e per evento.
+        // Invia email/Telegram automatici per i nuovi eventi: un solo
+        // messaggio riepilogativo per utente per ogni esecuzione, invece di
+        // uno separato per evento (stesso principio già applicato al
+        // digest Telegram, audit UX 2026-11-26/2026-11-28).
         if ($this->option('email')) {
-            foreach ($batch->emailsByUser as $userId => $mails) {
+            foreach ($batch->emailEventsByUser as $userId => $events) {
                 $recipient = NotificationSetting::where('user_id', $userId)->where('key', 'report_email')->value('value');
 
                 if (! $recipient) {
                     continue;
                 }
 
-                // Un errore nell'invio di UNA email (es. SMTP non configurato,
+                // Un errore nell'invio dell'email (es. SMTP non configurato,
                 // crash nella vista) non deve bloccare le email agli altri
                 // destinatari né, soprattutto, impedire al ciclo Telegram sotto
                 // di girare: prima di questo try/catch, un'eccezione qui
                 // interrompeva l'intero comando, quindi nessun messaggio
                 // Telegram veniva mai inviato nello stesso run.
                 try {
-                    foreach ($mails as $mail) {
-                        Mail::to($recipient)->send($mail);
-                    }
-                    $this->info('Sent '.count($mails)." email(s) to {$recipient}.");
+                    Mail::to($recipient)->send(new NotificationDigestMail($events));
+                    $this->info('Sent 1 digest email ('.count($events)." event(s)) to {$recipient}.");
                 } catch (Throwable $e) {
                     $this->error("Errore nell'invio email a {$recipient}: {$e->getMessage()}");
                     Log::error("app:generate-notifications: invio email fallito per user_id {$userId} ({$recipient}): {$e->getMessage()}", ['exception' => $e]);
@@ -149,7 +150,7 @@ class GenerateNotifications extends Command
         }
 
         $notifications->notifyUser($user, $type, $title, $message, $url, $marker);
-        $batch->addEmail($user->id, new EventNotificationMail($type, $title, $message, $url));
+        $batch->addEmailEvent($user->id, $type, $title, $message, $url);
         // Icona per tipo (stessa mappatura del campanello in-app): senza,
         // scorrendo la chat Telegram era impossibile distinguere a colpo
         // d'occhio un guasto da una scadenza da un appuntamento — tutti i

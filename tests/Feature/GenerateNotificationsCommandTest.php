@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Mail\EventNotificationMail;
+use App\Mail\NotificationDigestMail;
 use App\Models\Deadline;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
@@ -329,9 +329,38 @@ class GenerateNotificationsCommandTest extends TestCase
 
         $this->artisan('app:generate-notifications --email');
 
-        Mail::assertSent(EventNotificationMail::class, function ($mail) {
+        Mail::assertSent(NotificationDigestMail::class, function ($mail) {
             return $mail->hasTo('admin@example.com');
         });
+    }
+
+    public function test_batches_multiple_events_into_a_single_digest_email(): void
+    {
+        // Prima di questo fix: un'email separata per ogni evento, una
+        // raffica di N messaggi slegati tra loro per lo stesso giro —
+        // stesso problema già risolto per Telegram (audit UX 2026-11-28).
+        $admin = $this->admin();
+        $vehicle = $this->vehicle();
+        Deadline::create([
+            'vehicle_id' => $vehicle->id,
+            'type' => Deadline::TYPE_TAGLIANDO,
+            'due_date' => Carbon::today()->addDays(5),
+            'status' => Deadline::STATUS_PENDING,
+            'is_renewed' => false,
+        ]);
+        Issue::create([
+            'vehicle_id' => $vehicle->id,
+            'description' => 'Motore non parte',
+            'status' => 'open',
+        ]);
+        NotificationSetting::create(['user_id' => $admin->id, 'key' => 'report_email', 'value' => 'admin@example.com']);
+
+        Mail::fake();
+
+        $this->artisan('app:generate-notifications --email');
+
+        Mail::assertSent(NotificationDigestMail::class, 1);
+        Mail::assertSent(NotificationDigestMail::class, fn ($mail) => count($mail->events) === 2);
     }
 
     public function test_event_notification_email_renders_without_error_with_the_real_body_text(): void
@@ -344,7 +373,9 @@ class GenerateNotificationsCommandTest extends TestCase
         // "htmlspecialchars(): ... Message given" invece di mostrare il
         // testo della notifica. Qui si chiama davvero render(), come
         // succede quando il comando prova a inviare l'email sul serio.
-        $mail = new EventNotificationMail('deadline', 'Titolo di prova', 'Corpo del messaggio di prova', 'https://example.com');
+        $mail = new NotificationDigestMail([
+            ['type' => 'deadline', 'title' => 'Titolo di prova', 'body' => 'Corpo del messaggio di prova', 'url' => 'https://example.com'],
+        ]);
 
         $html = $mail->render();
 

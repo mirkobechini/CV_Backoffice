@@ -4,6 +4,10 @@ Tutte le modifiche significative a questo progetto saranno documentate in questo
 
 ## [Unreleased]
 
+### Changed
+
+- Email di notifica (`app:generate-notifications --email`): un solo messaggio riepilogativo per utente per ogni esecuzione, invece di un'email separata per evento, stesso principio già applicato a Telegram. Layout aggiornato con tema arancione coerente col resto dell'app e icona per tipo come il campanello in-app (segnalato da Mirko 2026-11-28, issue-711).
+
 ### Fixed
 
 - L'occhiello mostra/nascondi password (login, reset/conferma password, cambio password profilo, conferma 2FA, conferma eliminazione account) appariva accanto all'etichetta "Password" invece che dentro il campo (segnalato da Mirko 2026-11-27, issue-709).

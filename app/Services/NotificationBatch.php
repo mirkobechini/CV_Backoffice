@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use App\Mail\EventNotificationMail;
-
 /**
  * Accumula email/eventi Telegram in sospeso durante un giro di
  * GenerateNotifications, invece dei 3 parametri sciolti passati per
@@ -15,17 +13,17 @@ use App\Mail\EventNotificationMail;
  */
 class NotificationBatch
 {
-    /** @var array<int, EventNotificationMail[]> */
-    public array $emailsByUser = [];
+    /** @var array<int, array<int, array{type: string, title: string, body: string, url: ?string}>> */
+    public array $emailEventsByUser = [];
 
     /** @var array<int, array<int, array{0: string, 1: string}>> */
     public array $telegramEventsByUser = [];
 
     public int $created = 0;
 
-    public function addEmail(int $userId, EventNotificationMail $mail): void
+    public function addEmailEvent(int $userId, string $type, string $title, string $body, ?string $url): void
     {
-        $this->emailsByUser[$userId][] = $mail;
+        $this->emailEventsByUser[$userId][] = compact('type', 'title', 'body', 'url');
     }
 
     public function addTelegramEvent(int $userId, string $title, string $message): void
